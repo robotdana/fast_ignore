@@ -13,7 +13,7 @@ AllCops:
     - tmp/**/*
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.5.1
 
 # all of our layout customisations are because we prefer indentation to be
 # always consistently 2 spaces, for blocks, scopes, multiline expressions, etc
@@ -183,4 +183,10 @@ Style/SignalException:
 
 # this wants less descriptive names
 Style/SingleLineBlockParams:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/WordArray:
   Enabled: false
