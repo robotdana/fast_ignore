@@ -2,8 +2,6 @@
 
 class FindIgnore
   class Rule
-    LAST_TWO = (-2..-1).freeze
-
     def initialize(rule)
       @rule = rule
       strip!
@@ -11,24 +9,22 @@ class FindIgnore
 
       @rule = @rule.delete_prefix('!') if negation?
       @rule = @rule.delete_suffix('/') if dir_only?
-    end
-
-    def pattern
-      @rule
+      @rule = "#{prefix}#{@rule}"
+      puts @rule
     end
 
     def negation?
-      @negation ||= @rule[0] == '!'
+      @negation ||= @rule.start_with?('!')
     end
 
     def dir_only?
-      @dir_only ||= @rule[-1] == '/'
+      @dir_only ||= @rule.end_with?('/')
     end
 
     def match?(path, dir)
       return false if !dir && dir_only?
 
-      File.fnmatch?("#{prefix}#{@rule}", path, File::FNM_DOTMATCH | File::FNM_PATHNAME)
+      File.fnmatch?(@rule, path, File::FNM_DOTMATCH | File::FNM_PATHNAME)
     end
 
     def empty?
@@ -36,7 +32,7 @@ class FindIgnore
     end
 
     def comment?
-      @comment ||= @rule[0] == '#'
+      @comment ||= @rule.start_with?('#')
     end
 
     def skip?
@@ -46,14 +42,18 @@ class FindIgnore
     private
 
     def prefix
-      return '' if @rule[0] == '/'
-
-      '**/'
+      @prefix ||= if @rule.start_with?('/')
+        ''
+      elsif @rule.end_with?('/**') || @rule.include?('/**/')
+        '/'
+      else
+        '**/'
+      end
     end
 
     def strip!
       @rule = @rule.chomp
-      @rule = @rule.rstrip unless @rule[LAST_TWO] == '\\ '
+      @rule = @rule.rstrip unless @rule.end_with?('\\ ')
     end
   end
 end

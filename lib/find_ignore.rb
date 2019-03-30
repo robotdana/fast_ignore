@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
-require 'find_ignore/version'
-require 'find_ignore/rule'
+require_relative './find_ignore/gitignore_rule_list'
 
 require 'find'
+
 class FindIgnore
   include Enumerable
 
-  attr_reader :ignore
+  attr_reader :ignore, :rules
 
-  def initialize(ignore: File.join(Dir.pwd, '.gitignore'))
-    @ignore = ignore
+  def initialize(gitignore: true)
+    @rules = []
+    @rules = FindIgnore::GitignoreRuleList.new if gitignore
   end
 
   def enumerator
@@ -27,7 +28,7 @@ class FindIgnore
   end
 
   def root
-    @root ||= ignore && File.dirname(ignore) || Dir.pwd
+    @root ||= Dir.pwd
   end
 
   def allowed?(path, dir: File.directory?(path))
@@ -49,21 +50,15 @@ class FindIgnore
     end
   end
 
-  def rules
-    @rules ||= begin
-      IO.foreach(ignore).map do |rule|
-        FindIgnore::Rule.new(rule)
-      end.reject(&:skip?)
-    rescue Errno::ENOENT
-      []
-    end
-  end
-
   def each(&block)
     enumerator.each(&block)
   end
 
-  def files
-    enumerator.to_a
+  def files(relative: false)
+    if relative
+      enumerator.map { |e| e.delete_prefix("#{Dir.pwd}/") }
+    else
+      enumerator.to_a
+    end
   end
 end
