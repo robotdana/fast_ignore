@@ -10,7 +10,6 @@ class FindIgnore
       @rule = @rule.delete_prefix('!') if negation?
       @rule = @rule.delete_suffix('/') if dir_only?
       @rule = "#{prefix}#{@rule}"
-      puts @rule
     end
 
     def negation?

@@ -24,8 +24,8 @@ class FindIgnore
           yielder << rule unless rule.skip?
         end
 
-        @rules&.each(&prepare_rules)
-        IO.foreach(file).each(&prepare_rules) if file
+        IO.foreach(file).reverse_each(&prepare_rules) if file
+        @rules&.reverse_each(&prepare_rules)
       end
     end
 

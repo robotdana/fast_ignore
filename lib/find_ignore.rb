@@ -40,13 +40,8 @@ class FindIgnore
   def pruned_allowed?(path, dir: File.directory?(path))
     path = path.delete_prefix(root)
 
-    !rules.reduce(false) do |ignored, rule|
-      if rule.negation?
-        ignored = false if ignored && rule.match?(path, dir)
-      else
-        ignored = true if !ignored && rule.match?(path, dir)
-      end
-      ignored
+    rules.each do |rule|
+      return rule.negation? if rule.match?(path, dir)
     end
   end
 
@@ -56,7 +51,7 @@ class FindIgnore
 
   def files(relative: false)
     if relative
-      enumerator.map { |e| e.delete_prefix("#{Dir.pwd}/") }
+      enumerator.map { |e| e.delete_prefix("#{root}/") }
     else
       enumerator.to_a
     end
