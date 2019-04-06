@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    find_ignore (0.1.0)
+    fast_ignore (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -51,7 +51,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.17)
-  find_ignore!
+  fast_ignore!
   pry
   rake (~> 10.0)
   rspec (~> 3.0)

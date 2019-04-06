@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'find_ignore'
+require 'fast_ignore'
 
 require_relative 'support/temp_dir_helper'
 

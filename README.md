@@ -1,15 +1,15 @@
-# FindIgnore
+# FastIgnore
 
-![https://travis-ci.org/robotdana/find_ignore.svg?branch=master]
+![travis](https://travis-ci.org/robotdana/fast_ignore.svg?branch=master)
 
-Filter a directory using a .gitignore file
+Filter a directory using a .gitignore file. Follows all the gitignore formatting rules including `!dir` and `/dir`
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'find_ignore'
+gem 'fast_ignore'
 ```
 
 And then execute:
@@ -18,11 +18,48 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install find_ignore
+    $ gem install fast_ignore
 
 ## Usage
+```ruby
+FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore" }
+```
 
-TODO: Write usage instructions here
+Like many other enumerables, FastIgnore.new.each can return an enumerator
+```ruby
+FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
+```
+
+By default, FastIgnore will return full paths. To return paths relative to the current working directory, use:
+
+```ruby
+FastIgnore.new(relative: true).to_a
+```
+
+You can specify other gitignore-style files to ignore as well. These rules will be appended after the gitignore file in order (order matters for negations)
+```ruby
+FastIgnore.new(files: '/path/to/my/ignore/file').to_a
+FastIgnore.new(files: ['/path/to/my/ignore/file', '/and/another']).to_a
+```
+
+You can also supply an array of rule lines. These rules will be appended after the gitignore and any other files in order (order matters for negations)
+```ruby
+FastIgnore.new(rules: '.DS_Store').to_a
+FastIgnore.new(rules: ['.git', '.gitkeep']).to_a
+```
+
+By default, FastIgnore will look in the directory the script is run in (PWD) for a gitignore file. If it's somewhere else,
+```ruby
+FastIgnore.new(rules: '.git', files: '/path/to/.gitignore', gitignore: false).to_a
+FastIgnore.new(rules: '.git', files: ['/path/to/.gitignore', '/path/to/other/excludesfile'], gitignore: false).to_a
+```
+(You need the rules: '.git' because we're excluding the normal gitignore file)
+
+## Known issues/TODOs
+- Considers rules relative to the location of the gitignore file, to always be relative to PWD instead
+- Can't override path to gitignore file nicley, Ideally it would be `FastIgnore.new(gitignore: path)`
+- Doesn't take into account ignored project excludes in `.git/info/exclude`
+- Doesn't take into account globally ignored files in `git config core.excludesFile`
 
 ## Development
 
@@ -32,7 +69,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/find_ignore.
+Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/fast_ignore.
 
 ## License
 

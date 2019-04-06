@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class FindIgnore
+class FastIgnore
   class Rule
     def initialize(rule)
       @rule = rule

@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
-class FindIgnore
+class FastIgnore
   VERSION = '0.1.0'
 end

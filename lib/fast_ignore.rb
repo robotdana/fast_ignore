@@ -1,24 +1,26 @@
 # frozen_string_literal: true
 
-require_relative './find_ignore/rule'
-require_relative './find_ignore/rule_list'
-require_relative './find_ignore/file_rule_list'
-require_relative './find_ignore/gitignore_rule_list'
+require_relative './fast_ignore/rule'
+require_relative './fast_ignore/rule_list'
+require_relative './fast_ignore/file_rule_list'
+require_relative './fast_ignore/gitignore_rule_list'
 
 require 'find'
 
-class FindIgnore
+class FastIgnore
   include Enumerable
 
-  attr_reader :ignore, :rules
+  attr_reader :rules, :relative
+  alias_method :relative?, :relative
 
-  def initialize(rules: nil, ignorefiles: nil, gitignore: true)
+  def initialize(rules: nil, files: nil, gitignore: true, relative: false)
+    @relative = relative
     @rules = []
-    @rules += FindIgnore::RuleList.new(*Array(rules)).to_a
-    Array(ignorefiles).reverse_each do |file|
-      @rules += FindIgnore::FileRuleList.new(file).to_a
+    @rules += FastIgnore::RuleList.new(*Array(rules)).to_a
+    Array(files).reverse_each do |file|
+      @rules += FastIgnore::FileRuleList.new(file).to_a
     end
-    @rules += FindIgnore::GitignoreRuleList.new.to_a if gitignore
+    @rules += FastIgnore::GitignoreRuleList.new.to_a if gitignore
   end
 
   def enumerator
@@ -28,6 +30,8 @@ class FindIgnore
         next if path == root
         next Find.prune unless pruned_allowed?(path, dir: dir)
         next if dir
+
+        path = path.delete_prefix("#{root}/") if relative?
 
         yielder << path
       end
@@ -53,14 +57,14 @@ class FindIgnore
   end
 
   def each(&block)
-    enumerator.each(&block)
+    if block_given?
+      enumerator.each(&block)
+    else
+      enumerator
+    end
   end
 
-  def files(relative: false)
-    if relative
-      enumerator.map { |e| e.delete_prefix("#{root}/") }
-    else
-      enumerator.to_a
-    end
+  def files
+    to_a
   end
 end

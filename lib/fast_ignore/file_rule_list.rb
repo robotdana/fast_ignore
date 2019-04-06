@@ -2,8 +2,8 @@
 
 require_relative './rule'
 
-class FindIgnore
-  class FileRuleList < FindIgnore::RuleList
+class FastIgnore
+  class FileRuleList < FastIgnore::RuleList
     def initialize(file)
       @lines = IO.foreach(file)
     end

@@ -2,9 +2,9 @@
 
 require 'pathname'
 RSpec::Matchers.define_negated_matcher(:exclude, :include)
-RSpec.describe FindIgnore do
+RSpec.describe FastIgnore do
   it 'has a version number' do
-    expect(FindIgnore::VERSION).not_to be nil
+    expect(FastIgnore::VERSION).not_to be nil
   end
 
   shared_examples 'the gitignore documentation:' do
@@ -362,12 +362,12 @@ RSpec.describe FindIgnore do
   end
 
   describe '#files' do
-    subject { described_class.new.files(relative: true) }
+    subject { described_class.new(relative: true).files }
 
     around { |e| within_temp_dir { e.run } }
 
     context 'without a gitignore file' do
-      subject { described_class.new(gitignore: false).files(relative: true) }
+      subject { described_class.new(gitignore: false, relative: true).files }
 
       it 'returns all files when there is no gitignore' do
         create_file_list 'foo', 'bar'
@@ -393,8 +393,9 @@ RSpec.describe FindIgnore do
       subject do
         described_class.new(
           gitignore: false,
-          ignorefiles: File.join(Dir.pwd, 'fancyignore')
-        ).files(relative: true)
+          files: File.join(Dir.pwd, 'fancyignore'),
+          relative: true
+        ).files
       end
 
       it 'reads the non-gitignore file' do # rubocop:disable RSpec/ExampleLength
@@ -414,8 +415,8 @@ RSpec.describe FindIgnore do
 
     context 'when given a file including gitignore' do
       subject do
-        described_class.new(ignorefiles: File.join(Dir.pwd, 'fancyignore'))
-          .files(relative: true)
+        described_class.new(files: File.join(Dir.pwd, 'fancyignore'), relative: true)
+          .files
       end
 
       it 'reads the non-gitignore file and the gitignore file' do # rubocop:disable RSpec/ExampleLength
@@ -435,7 +436,7 @@ RSpec.describe FindIgnore do
 
     context 'when given an array of rules' do
       subject do
-        described_class.new(gitignore: false, rules: 'foo').files(relative: true)
+        described_class.new(gitignore: false, rules: 'foo', relative: true).files
       end
 
       it 'reads the list of rules' do
@@ -450,7 +451,7 @@ RSpec.describe FindIgnore do
     end
 
     context 'when given an array of rules and gitignore' do
-      subject { described_class.new(rules: 'foo').files(relative: true) }
+      subject { described_class.new(rules: 'foo', relative: true).files }
 
       it 'reads the list of rules and gitignore' do
         create_file_list 'foo', 'bar', 'baz'

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class FindIgnore
+class FastIgnore
   class RuleList
     include Enumerable
 
@@ -21,7 +21,7 @@ class FindIgnore
     def enumerator
       Enumerator.new do |yielder|
         lines.reverse_each do |rule|
-          rule = FindIgnore::Rule.new(rule)
+          rule = FastIgnore::Rule.new(rule)
           yielder << rule unless rule.skip?
         end
       end
