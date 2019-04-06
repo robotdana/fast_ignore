@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require_relative './rule_list'
-
 class FindIgnore
-  class GitignoreRuleList < RuleList
-    def initialize(file: nil)
-      file ||= File.join(Dir.pwd, '.gitignore')
-      super('.git', file: file)
+  class GitignoreRuleList
+    include Enumerable
+
+    def each(&block)
+      FindIgnore::RuleList.new('.git').each(&block)
+      FindIgnore::FileRuleList.new(File.join(Dir.pwd, '.gitignore')).each(&block)
     end
   end
 end

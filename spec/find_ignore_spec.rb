@@ -388,6 +388,80 @@ RSpec.describe FindIgnore do
     end
 
     it_behaves_like 'the gitignore documentation:'
+
+    context 'when given a file other than gitignore' do
+      subject do
+        described_class.new(
+          gitignore: false,
+          ignorefiles: File.join(Dir.pwd, 'fancyignore')
+        ).files(relative: true)
+      end
+
+      it 'reads the non-gitignore file' do # rubocop:disable RSpec/ExampleLength
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        create_file 'fancyignore', <<~FANCYIGNORE
+          foo
+        FANCYIGNORE
+
+        expect(subject).to exclude('foo').and(include('bar', 'baz'))
+      end
+    end
+
+    context 'when given a file including gitignore' do
+      subject do
+        described_class.new(ignorefiles: File.join(Dir.pwd, 'fancyignore'))
+          .files(relative: true)
+      end
+
+      it 'reads the non-gitignore file and the gitignore file' do # rubocop:disable RSpec/ExampleLength
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        create_file 'fancyignore', <<~FANCYIGNORE
+          foo
+        FANCYIGNORE
+
+        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+      end
+    end
+
+    context 'when given an array of rules' do
+      subject do
+        described_class.new(gitignore: false, rules: 'foo').files(relative: true)
+      end
+
+      it 'reads the list of rules' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo').and(include('bar', 'baz'))
+      end
+    end
+
+    context 'when given an array of rules and gitignore' do
+      subject { described_class.new(rules: 'foo').files(relative: true) }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+      end
+    end
   end
 
   describe 'git ls-files' do

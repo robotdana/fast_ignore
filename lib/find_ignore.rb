@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require_relative './find_ignore/rule'
+require_relative './find_ignore/rule_list'
+require_relative './find_ignore/file_rule_list'
 require_relative './find_ignore/gitignore_rule_list'
 
 require 'find'
@@ -9,9 +12,13 @@ class FindIgnore
 
   attr_reader :ignore, :rules
 
-  def initialize(gitignore: true)
+  def initialize(rules: nil, ignorefiles: nil, gitignore: true)
     @rules = []
-    @rules = FindIgnore::GitignoreRuleList.new if gitignore
+    @rules += FindIgnore::RuleList.new(*Array(rules)).to_a
+    Array(ignorefiles).reverse_each do |file|
+      @rules += FindIgnore::FileRuleList.new(file).to_a
+    end
+    @rules += FindIgnore::GitignoreRuleList.new.to_a if gitignore
   end
 
   def enumerator

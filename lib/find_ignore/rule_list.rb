@@ -1,34 +1,30 @@
 # frozen_string_literal: true
 
-require_relative './rule'
-
 class FindIgnore
   class RuleList
     include Enumerable
 
-    def initialize(*rules, file: nil)
-      @rules = rules
-      @file = file
+    def initialize(*lines)
+      @lines = lines
     end
 
     def each(&block)
+      return enumerator unless block_given?
+
       enumerator.each(&block)
     end
 
     private
 
+    attr_reader :lines
+
     def enumerator
       Enumerator.new do |yielder|
-        prepare_rules = lambda do |rule|
+        lines.reverse_each do |rule|
           rule = FindIgnore::Rule.new(rule)
           yielder << rule unless rule.skip?
         end
-
-        IO.foreach(file).reverse_each(&prepare_rules) if file
-        @rules&.reverse_each(&prepare_rules)
       end
     end
-
-    attr_reader :file, :rules
   end
 end
