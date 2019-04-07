@@ -38,29 +38,39 @@ FastIgnore.new(relative: true).to_a
 
 You can specify other gitignore-style files to ignore as well. These rules will be appended after the gitignore file in order (order matters for negations)
 ```ruby
-FastIgnore.new(files: '/path/to/my/ignore/file').to_a
-FastIgnore.new(files: ['/path/to/my/ignore/file', '/and/another']).to_a
+FastIgnore.new(files: '/absolute/path/to/my/ignore/file').to_a
+FastIgnore.new(files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
 ```
-
 You can also supply an array of rule lines. These rules will be appended after the gitignore and any other files in order (order matters for negations)
 ```ruby
 FastIgnore.new(rules: '.DS_Store').to_a
 FastIgnore.new(rules: ['.git', '.gitkeep']).to_a
 ```
 
-By default, FastIgnore will look in the directory the script is run in (PWD) for a gitignore file. If it's somewhere else,
+To only use another ignore file or set of rules, and not try to load a gitignore file:
 ```ruby
-FastIgnore.new(rules: '.git', files: '/path/to/.gitignore', gitignore: false).to_a
-FastIgnore.new(rules: '.git', files: ['/path/to/.gitignore', '/path/to/other/excludesfile'], gitignore: false).to_a
+FastIgnore.new(files: 'absolute/path/to/my/ignore/file', gitignore: false)
+FastIgnore.new(rules: %w{my*rule /and/another !rule}, gitignore: false)
 ```
-(You need the rules: '.git' because we're excluding the normal gitignore file)
+
+By default, FastIgnore will look in the directory the script is run in (PWD) for a gitignore file. If it's somewhere else:
+```ruby
+FastIgnore.new(gitignore: '/absolute/path/to/.gitignore').to_a
+```
+Note that the location of the .gitignore file will affect things like rules beginning with `/` or ending in `/**`
+
+To check if a single file is allowed, use
+```ruby
+FastIgnore.new.allowed?('/absolute/path/to/file')
+```
 
 ## Known issues/TODOs
-- Considers rules relative to the location of the gitignore file, to always be relative to PWD instead
-- Can't override path to gitignore file nicley, Ideally it would be `FastIgnore.new(gitignore: path)`
 - Doesn't take into account ignored project excludes in `.git/info/exclude`
 - Doesn't take into account globally ignored files in `git config core.excludesFile`
-
+  This is probably a wontfix, as you need git to read the config, and may as well just
+  ```ruby
+  `git ls-files`.split("\n")
+  ```
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

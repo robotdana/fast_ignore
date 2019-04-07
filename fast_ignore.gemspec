@@ -10,14 +10,14 @@ Gem::Specification.new do |spec|
   spec.authors = ['Dana Sherson']
   spec.email = ['robot@dana.sh']
 
-  spec.summary = 'Parse gitignore files'
+  spec.summary = 'Parse gitignore files, quickly'
   spec.homepage = 'https://github.com/robotdana/fast_ignore'
   spec.license = 'MIT'
 
   if spec.respond_to?(:metadata)
     spec.metadata['homepage_uri'] = spec.homepage
     spec.metadata['source_code_uri'] = 'https://github.com/robotdana/fast_ignore'
-    spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/CHANGELOG'
+    spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/blob/master/CHANGELOG.md'
   end
 
   # Specify which files should be added to the gem when it is released.
