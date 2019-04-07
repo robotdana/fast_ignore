@@ -4,8 +4,9 @@ class FastIgnore
   class RuleList
     include Enumerable
 
-    def initialize(*lines)
+    def initialize(*lines, root: Dir.pwd)
       @lines = lines
+      @root = root
     end
 
     def each(&block)
@@ -16,12 +17,12 @@ class FastIgnore
 
     private
 
-    attr_reader :lines
+    attr_reader :lines, :root
 
     def enumerator
       Enumerator.new do |yielder|
         lines.reverse_each do |rule|
-          rule = FastIgnore::Rule.new(rule)
+          rule = FastIgnore::Rule.new(rule, root: root)
           yielder << rule unless rule.skip?
         end
       end

@@ -304,6 +304,18 @@ RSpec.describe FastIgnore do
 
           expect(subject).to include('bar/bar/foo', 'bar/abc/foo').and(exclude('abc/bar', 'abc/foo/bar'))
         end
+
+        context 'when the gitigore root is down a level from the pwd' do
+          let(:args) { { gitignore: File.join(Dir.pwd, 'bar', '.gitignore') } }
+
+          it 'matches files relative to the gitignore' do
+            create_file 'bar/.gitignore', <<~GITIGNORE
+              abc/**
+            GITIGNORE
+
+            expect(subject).to include('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(exclude('bar/abc/foo'))
+          end
+        end
       end
 
       describe 'A slash followed by two consecutive asterisks then a slash matches zero or more directories.' do
@@ -361,13 +373,15 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '#files' do
-    subject { described_class.new(relative: true).files }
+  describe '#to_a' do
+    subject { described_class.new(relative: true, **args).to_a }
+
+    let(:args) { {} }
 
     around { |e| within_temp_dir { e.run } }
 
     context 'without a gitignore file' do
-      subject { described_class.new(gitignore: false, relative: true).files }
+      let(:args) { { gitignore: false } }
 
       it 'returns all files when there is no gitignore' do
         create_file_list 'foo', 'bar'
@@ -390,13 +404,7 @@ RSpec.describe FastIgnore do
     it_behaves_like 'the gitignore documentation:'
 
     context 'when given a file other than gitignore' do
-      subject do
-        described_class.new(
-          gitignore: false,
-          files: File.join(Dir.pwd, 'fancyignore'),
-          relative: true
-        ).files
-      end
+      let(:args) { { gitignore: false, files: File.join(Dir.pwd, 'fancyignore') } }
 
       it 'reads the non-gitignore file' do # rubocop:disable RSpec/ExampleLength
         create_file_list 'foo', 'bar', 'baz'
@@ -414,10 +422,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given a file including gitignore' do
-      subject do
-        described_class.new(files: File.join(Dir.pwd, 'fancyignore'), relative: true)
-          .files
-      end
+      let(:args) { { files: File.join(Dir.pwd, 'fancyignore') } }
 
       it 'reads the non-gitignore file and the gitignore file' do # rubocop:disable RSpec/ExampleLength
         create_file_list 'foo', 'bar', 'baz'
@@ -435,9 +440,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given an array of rules' do
-      subject do
-        described_class.new(gitignore: false, rules: 'foo', relative: true).files
-      end
+      let(:args) { { gitignore: false, rules: 'foo' } }
 
       it 'reads the list of rules' do
         create_file_list 'foo', 'bar', 'baz'
@@ -451,7 +454,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given an array of rules and gitignore' do
-      subject { described_class.new(rules: 'foo', relative: true).files }
+      let(:args) { { rules: 'foo' } }
 
       it 'reads the list of rules and gitignore' do
         create_file_list 'foo', 'bar', 'baz'

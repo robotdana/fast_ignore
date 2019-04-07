@@ -10,18 +10,43 @@ require 'find'
 class FastIgnore
   include Enumerable
 
-  attr_reader :rules, :relative
+  attr_reader :rules
+  attr_reader :relative
   alias_method :relative?, :relative
+  attr_reader :root
 
-  def initialize(rules: nil, files: nil, gitignore: true, relative: false)
-    @relative = relative
+  def initialize(
+    rules: nil,
+    files: nil,
+    relative: false,
+    root: Dir.pwd,
+    gitignore: File.join(root, '.gitignore')
+  )
     @rules = []
     @rules += FastIgnore::RuleList.new(*Array(rules)).to_a
     Array(files).reverse_each do |file|
       @rules += FastIgnore::FileRuleList.new(file).to_a
     end
-    @rules += FastIgnore::GitignoreRuleList.new.to_a if gitignore
+    @rules += FastIgnore::GitignoreRuleList.new(gitignore).to_a if gitignore
+    @relative = relative
+    @root = root
   end
+
+  def each(&block)
+    if block_given?
+      enumerator.each(&block)
+    else
+      enumerator
+    end
+  end
+
+  def allowed?(path, dir: File.directory?(path))
+    return true if path == root
+
+    allowed?(File.dirname(path), dir: true) && pruned_allowed?(path, dir: dir)
+  end
+
+  private
 
   def enumerator
     Enumerator.new do |yielder|
@@ -38,33 +63,9 @@ class FastIgnore
     end
   end
 
-  def root
-    @root ||= Dir.pwd
-  end
-
-  def allowed?(path, dir: File.directory?(path))
-    return true if path == root
-
-    allowed?(File.dirname(path), dir: true) && pruned_allowed?(path, dir: dir)
-  end
-
   def pruned_allowed?(path, dir: File.directory?(path))
-    path = path.delete_prefix(root)
-
     rules.each do |rule|
-      return rule.negation? if rule.match?(path, dir)
+      return rule.negation? if rule.match?(path, dir: dir)
     end
-  end
-
-  def each(&block)
-    if block_given?
-      enumerator.each(&block)
-    else
-      enumerator
-    end
-  end
-
-  def files
-    to_a
   end
 end

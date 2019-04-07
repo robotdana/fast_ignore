@@ -2,7 +2,8 @@
 
 class FastIgnore
   class Rule
-    def initialize(rule)
+    def initialize(rule, root: Dir.pwd)
+      @root = root
       @rule = rule
       strip!
       return if skip?
@@ -20,8 +21,10 @@ class FastIgnore
       @dir_only ||= @rule.end_with?('/')
     end
 
-    def match?(path, dir)
+    def match?(path, dir: File.directory?(path))
       return false if !dir && dir_only?
+
+      path = path.delete_prefix(root)
 
       File.fnmatch?(@rule, path, File::FNM_DOTMATCH | File::FNM_PATHNAME)
     end
@@ -39,6 +42,8 @@ class FastIgnore
     end
 
     private
+
+    attr_reader :root
 
     def prefix
       @prefix ||= if @rule.start_with?('/')

@@ -52,11 +52,11 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.17)
   fast_ignore!
-  pry
+  pry (~> 0)
   rake (~> 10.0)
   rspec (~> 3.0)
-  rubocop
-  rubocop-rspec
+  rubocop (~> 0)
+  rubocop-rspec (~> 1)
 
 BUNDLED WITH
    1.17.1
