@@ -4,10 +4,12 @@ module DeletePrefixSuffix
   refine String do
     def delete_prefix!(str)
       slice!(str.length..-1) if start_with?(str)
+      self
     end
 
     def delete_suffix!(str)
       slice!(0..(-str.length - 1)) if end_with?(str)
+      self
     end
 
     def delete_prefix(str)
