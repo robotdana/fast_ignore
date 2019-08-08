@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative './fast_ignore/delete_prefix_suffix'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/rule_list'
 require_relative './fast_ignore/file_rule_list'
@@ -9,6 +10,7 @@ require 'find'
 
 class FastIgnore
   include Enumerable
+  using DeletePrefixSuffix unless RUBY_VERSION >= '2.5'
 
   attr_reader :rules
   attr_reader :relative

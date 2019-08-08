@@ -2,6 +2,8 @@
 
 class FastIgnore
   class Rule
+    using DeletePrefixSuffix unless RUBY_VERSION >= '2.5'
+
     def initialize(rule, root: Dir.pwd)
       @root = root
       @rule = rule
