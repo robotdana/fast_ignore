@@ -11,9 +11,9 @@ AllCops:
     - db/schema*
     - .bundle/**/*
     - tmp/**/*
+    - vendor/**/*
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.3
 
 # all of our layout customisations are because we prefer indentation to be
 # always consistently 2 spaces, for blocks, scopes, multiline expressions, etc
