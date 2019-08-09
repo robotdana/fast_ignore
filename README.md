@@ -1,8 +1,11 @@
 # FastIgnore
 
-![travis](https://travis-ci.org/robotdana/fast_ignore.svg?branch=master)
+[![travis](https://travis-ci.org/robotdana/fast_ignore.svg?branch=master)](https://travis-ci.org/robotdana/fast_ignore)
 
-Filter a directory using a .gitignore file. Follows all the gitignore formatting rules including `!dir` and `/dir`
+Filter a directory tree using a .gitignore file. Recognises all of the gitignore rules.
+```ruby
+FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
+```
 
 ## Installation
 
@@ -13,19 +16,22 @@ gem 'fast_ignore'
 ```
 
 And then execute:
-
-    $ bundle
-
+```sh
+$ bundle
+```
 Or install it yourself as:
-
-    $ gem install fast_ignore
+```sh
+$ gem install fast_ignore
+```
 
 ## Usage
+
 ```ruby
 FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore" }
 ```
 
-Like many other enumerables, FastIgnore.new.each can return an enumerator
+Like many other enumerables, `FastIgnore#each` can return an enumerator
+
 ```ruby
 FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
 ```
@@ -53,7 +59,7 @@ FastIgnore.new(files: 'absolute/path/to/my/ignore/file', gitignore: false)
 FastIgnore.new(rules: %w{my*rule /and/another !rule}, gitignore: false)
 ```
 
-By default, FastIgnore will look in the directory the script is run in (PWD) for a gitignore file. If it's somewhere else:
+By default, FastIgnore will look in the directory the script is run in (`PWD`) for a gitignore file. If it's somewhere else:
 ```ruby
 FastIgnore.new(gitignore: '/absolute/path/to/.gitignore').to_a
 ```
@@ -64,13 +70,17 @@ To check if a single file is allowed, use
 FastIgnore.new.allowed?('/absolute/path/to/file')
 ```
 
-## Known issues/TODOs
-- Doesn't take into account ignored project excludes in `.git/info/exclude`
+## Known issues
+- Doesn't take into account project excludes in `.git/info/exclude`
 - Doesn't take into account globally ignored files in `git config core.excludesFile`
-  This is probably a wontfix, as you need git to read the config, and may as well just
   ```ruby
   `git ls-files`.split("\n")
   ```
+- Doesn't follow this rule in the gitignore documentation because I don't understand what it means that isn't covered by other rules:
+  If the pattern does not contain a slash /, Git treats it as a shell glob pattern and checks for a match against the pathname relative to the location of the .gitignore file
+  (relative to the toplevel of the work tree if not from a .gitignore file)
+  if someone can explain it with examples [make an issue please](https://github.com/robotdana/fast_ignore/issues/new)
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

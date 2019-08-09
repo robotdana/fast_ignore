@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# This is a backport of ruby 2.5's delete_prefix/delete_suffix methods
 module DeletePrefixSuffix
   refine String do
     def delete_prefix!(str)
