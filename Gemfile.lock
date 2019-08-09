@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fast_ignore (0.3.0)
+    fast_ignore (0.3.1)
 
 GEM
   remote: https://rubygems.org/
@@ -53,7 +53,7 @@ DEPENDENCIES
   pry (~> 0)
   rake (~> 10.0)
   rspec (~> 3.0)
-  rubocop (~> 0)
+  rubocop (>= 0.74.0)
   rubocop-rspec (~> 1)
 
 BUNDLED WITH

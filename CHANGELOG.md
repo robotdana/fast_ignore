@@ -1,3 +1,6 @@
+# v0.3.1
+- upgrade rubocop version requirement to avoid github security warning
+
 # v0.3.0
 - Supports 2.3 - 2.6
 
