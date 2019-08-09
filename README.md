@@ -2,7 +2,8 @@
 
 [![travis](https://travis-ci.org/robotdana/fast_ignore.svg?branch=master)](https://travis-ci.org/robotdana/fast_ignore)
 
-Filter a directory tree using a .gitignore file. Recognises all of the gitignore rules.
+Filter a directory tree using a .gitignore file. Recognises all of the [gitignore rules](https://www.git-scm.com/docs/gitignore#_pattern_format) ([except one](#known-issues))
+
 ```ruby
 FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 ```
@@ -72,13 +73,11 @@ FastIgnore.new.allowed?('/absolute/path/to/file')
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`
-- Doesn't take into account globally ignored files in `git config core.excludesFile`
-  ```ruby
-  `git ls-files`.split("\n")
-  ```
+- Doesn't take into account globally ignored files in `git config core.excludesFile`.
 - Doesn't follow this rule in the gitignore documentation because I don't understand what it means that isn't covered by other rules:
-  If the pattern does not contain a slash /, Git treats it as a shell glob pattern and checks for a match against the pathname relative to the location of the .gitignore file
-  (relative to the toplevel of the work tree if not from a .gitignore file)
+
+  > [If the pattern does not contain a slash /, Git treats it as a shell glob pattern and checks for a match against the pathname relative to the location of the `.gitignore` file (relative to the toplevel of the work tree if not from a `.gitignore` file)](https://www.git-scm.com/docs/gitignore#_pattern_format)
+
   if someone can explain it with examples [make an issue please](https://github.com/robotdana/fast_ignore/issues/new)
 
 ## Development
