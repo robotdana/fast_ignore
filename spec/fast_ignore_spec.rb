@@ -385,20 +385,44 @@ RSpec.describe FastIgnore do
 
       it 'returns all files when there is no gitignore' do
         create_file_list 'foo', 'bar'
-        expect(subject).to include('foo', 'bar')
+        expect(subject).to contain_exactly('foo', 'bar')
       end
     end
 
     it 'returns hidden files' do
       create_file_list '.gitignore', '.a', '.b/.c'
 
-      expect(subject).to include('.gitignore', '.a', '.b/.c')
+      expect(subject).to contain_exactly('.gitignore', '.a', '.b/.c')
     end
 
     it 'ignores .git by default' do
       create_file_list '.gitignore', '.git/WHATEVER'
 
       expect(subject).to exclude('.git/WHATEVER')
+    end
+
+    it 'acts as though the soft links to nowhere are not there' do
+      create_file_list 'foo_target', '.gitignore'
+      FileUtils.ln_s('foo_target', 'foo')
+      FileUtils.rm('foo_target')
+
+      expect(subject).to exclude('foo').and(include('.gitignore'))
+    end
+
+    it 'follows soft links' do
+      create_file_list 'foo_target', '.gitignore'
+      FileUtils.ln_s('foo_target', 'foo')
+      expect(subject).to contain_exactly('foo', 'foo_target', '.gitignore')
+    end
+
+    it 'follows soft links to directories' do # rubocop:disable RSpec/ExampleLength
+      create_file_list 'foo_target/foo_target', '.gitignore'
+      gitignore <<~GITIGNORE
+        foo_target
+      GITIGNORE
+
+      FileUtils.ln_s('foo_target/foo_target', 'foo')
+      expect(subject).to contain_exactly('foo', '.gitignore')
     end
 
     it_behaves_like 'the gitignore documentation:'

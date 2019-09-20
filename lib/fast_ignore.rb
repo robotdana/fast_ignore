@@ -50,11 +50,12 @@ class FastIgnore
 
   private
 
-  def enumerator
+  def enumerator # rubocop:disable Metrics/MethodLength
     Enumerator.new do |yielder|
       Find.find(root) do |path|
         dir = File.directory?(path)
         next if path == root
+        next unless File.readable?(path)
         next Find.prune unless pruned_allowed?(path, dir: dir)
         next if dir
 
