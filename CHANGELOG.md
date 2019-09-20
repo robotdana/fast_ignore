@@ -1,3 +1,6 @@
+# v0.3.2
+- handle soft links to nowhere
+
 # v0.3.1
 - upgrade rubocop version requirement to avoid github security warning
 
