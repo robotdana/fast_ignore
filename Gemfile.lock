@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fast_ignore (0.3.2)
+    fast_ignore (0.3.3)
 
 GEM
   remote: https://rubygems.org/

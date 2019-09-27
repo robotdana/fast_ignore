@@ -1,3 +1,6 @@
+# v0.3.3
+- some performance improvements. maybe
+
 # v0.3.2
 - handle soft links to nowhere
 
