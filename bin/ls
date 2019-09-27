@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/fast_ignore'
+
+puts FastIgnore.new(relative: true).to_a.join("\n")
