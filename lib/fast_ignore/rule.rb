@@ -4,33 +4,39 @@ class FastIgnore
   class Rule
     using DeletePrefixSuffix unless RUBY_VERSION >= '2.5'
 
-    def initialize(rule, root: Dir.pwd)
-      @root = root
+    def initialize(rule, root:)
       @rule = rule
       strip!
       return if skip?
 
-      @rule = @rule[1..-1] if negation?
-      @rule = @rule[0..-2] if dir_only?
-      @rule = "#{prefix}#{@rule}"
+      extract_negation
+      extract_dir_only
+
+      @rule = "#{root}#{prefix}#{@rule}"
     end
 
     def negation?
-      return @negation if defined?(@negation)
-
-      @negation ||= @rule.start_with?('!')
+      @negation
     end
 
-    def dir_only?
-      return @dir_only if defined?(@dir_only)
+    def extract_negation
+      @negation = false
+      return unless @rule.start_with?('!')
 
-      @dir_only ||= @rule.end_with?('/')
+      @rule = @rule[1..-1]
+      @negation = true
+    end
+
+    def extract_dir_only
+      @dir_only = false
+      return unless @rule.end_with?('/')
+
+      @rule = @rule[0..-2]
+      @dir_only = true
     end
 
     def match?(path, dir: File.directory?(path))
-      return false if !dir && dir_only?
-
-      path = path.delete_prefix(root)
+      return false if !dir && @dir_only
 
       File.fnmatch?(@rule, path, File::FNM_DOTMATCH | File::FNM_PATHNAME)
     end
@@ -61,7 +67,7 @@ class FastIgnore
       elsif @rule.end_with?('/**') || @rule.include?('/**/')
         '/'
       else
-        '**/'
+        '/**/'
       end
     end
 
