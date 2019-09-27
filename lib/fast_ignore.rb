@@ -66,9 +66,9 @@ class FastIgnore
     end
   end
 
-  def pruned_allowed?(path, dir: File.directory?(path))
+  def pruned_allowed?(path, dir = File.directory?(path))
     rules.each do |rule|
-      return rule.negation? if rule.match?(path, dir: dir)
+      return rule.negation? if rule.match?(path, dir = dir)
     end
   end
 end

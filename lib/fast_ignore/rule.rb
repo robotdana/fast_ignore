@@ -4,6 +4,8 @@ class FastIgnore
   class Rule
     using DeletePrefixSuffix unless RUBY_VERSION >= '2.5'
 
+    FNMATCH_OPTIONS = File::FNM_DOTMATCH | File::FNM_PATHNAME
+
     def initialize(rule, root:)
       @rule = rule
       strip!
@@ -29,16 +31,18 @@ class FastIgnore
 
     def extract_dir_only
       @dir_only = false
+      @not_dir_only = true
       return unless @rule.end_with?('/')
 
       @rule = @rule[0..-2]
       @dir_only = true
+      @not_dir_only = false
     end
 
-    def match?(path, dir: File.directory?(path))
-      return false if !dir && @dir_only
+    def match?(path, dir = File.directory?(path))
+      return false unless dir || @not_dir_only
 
-      File.fnmatch?(@rule, path, File::FNM_DOTMATCH | File::FNM_PATHNAME)
+      File.fnmatch?(@rule, path, FNMATCH_OPTIONS)
     end
 
     def empty?
