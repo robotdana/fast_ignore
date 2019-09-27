@@ -16,10 +16,14 @@ class FastIgnore
     end
 
     def negation?
+      return @negation if defined?(@negation)
+
       @negation ||= @rule.start_with?('!')
     end
 
     def dir_only?
+      return @dir_only if defined?(@dir_only)
+
       @dir_only ||= @rule.end_with?('/')
     end
 
@@ -32,10 +36,14 @@ class FastIgnore
     end
 
     def empty?
+      return @empty if defined?(@empty)
+
       @empty ||= @rule.empty?
     end
 
     def comment?
+      return @comment if defined?(@comment)
+
       @comment ||= @rule.start_with?('#')
     end
 
