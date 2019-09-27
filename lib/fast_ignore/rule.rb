@@ -10,8 +10,8 @@ class FastIgnore
       strip!
       return if skip?
 
-      @rule = @rule.delete_prefix('!') if negation?
-      @rule = @rule.delete_suffix('/') if dir_only?
+      @rule = @rule[1..-1] if negation?
+      @rule = @rule[0..-2] if dir_only?
       @rule = "#{prefix}#{@rule}"
     end
 
