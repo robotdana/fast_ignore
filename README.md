@@ -28,7 +28,7 @@ $ gem install fast_ignore
 ## Usage
 
 ```ruby
-FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore" }
+FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore file" }
 ```
 
 Like many other enumerables, `FastIgnore#each` can return an enumerator
@@ -45,31 +45,63 @@ FastIgnore.new(relative: true).to_a
 
 You can specify other gitignore-style files to ignore as well. These rules will be appended after the gitignore file in order (order matters for negations)
 ```ruby
-FastIgnore.new(files: '/absolute/path/to/my/ignore/file').to_a
-FastIgnore.new(files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
+FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file').to_a
+FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
 ```
-You can also supply an array of rule lines. These rules will be appended after the gitignore and any other files in order (order matters for negations)
+You can also supply an array of rule strings. These rules will be appended after the gitignore and any other files in order (order matters for negations)
 ```ruby
-FastIgnore.new(rules: '.DS_Store').to_a
-FastIgnore.new(rules: ['.git', '.gitkeep']).to_a
+FastIgnore.new(ignore_rules: '.DS_Store').to_a
+FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
 ```
 
-To only use another ignore file or set of rules, and not try to load a gitignore file:
+To use only another ignore file or an array of rules, and not try to load a gitignore file:
 ```ruby
-FastIgnore.new(files: 'absolute/path/to/my/ignore/file', gitignore: false)
-FastIgnore.new(rules: %w{my*rule /and/another !rule}, gitignore: false)
+FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file', gitignore: false)
+FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false)
 ```
 
 By default, FastIgnore will look in the directory the script is run in (`PWD`) for a gitignore file. If it's somewhere else:
 ```ruby
 FastIgnore.new(gitignore: '/absolute/path/to/.gitignore').to_a
 ```
-Note that the location of the .gitignore file will affect things like rules beginning with `/` or ending in `/**`
+Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
 
 To check if a single file is allowed, use
 ```ruby
-FastIgnore.new.allowed?('/absolute/path/to/file')
+FastIgnore.new.allowed?('relative/path')
+FastIgnore.new.allowed?('./relative/path')
+FastIgnore.new.allowed?('/absolute/path')
+FastIgnore.new.allowed?('~/home/path')
 ```
+
+### Using an includes list.
+
+Building on the gitignore format, FastIgnore also accepts a list of allowed or included files.
+
+```
+# a line like this means any files named foo will be included
+# as well as any files within directories named foo
+foo
+# a line beginning with a slash will be anything in a directory that is a child of the PWD
+/foo
+# a line ending in a slash will will include any files in any directories named foo
+# but not any files named foo
+foo/
+# negated rules are slightly different from gitignore
+# in that they're evaluated after all the other the matching files rather than
+# in sequence with other rules
+fo*
+!foe
+# otherwise this format deals with *'s and ?'s and etc as you'd expect from gitignore.
+```
+
+These can be passed either as files or as an array or string rules
+```ruby
+FastIgnore.new(include_files: '/absolute/path/to/my/include/file', gitignore: false)
+FastIgnore.new(include_rules: %w{my*rule /and/another !rule}, gitignore: false)
+```
+
+The string array rules additionally expects to handle all kinds of `ARGV` values, so will correctly resolve absolute paths and paths beginning with `~`, `../` and `./`. Note: it will *not* resolve e.g. `/../` in the middle of a rule that doesn't begin with any of `~`,`../`,`./`,`/`. This is not available for the file form.
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`

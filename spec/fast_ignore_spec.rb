@@ -428,7 +428,7 @@ RSpec.describe FastIgnore do
     it_behaves_like 'the gitignore documentation:'
 
     context 'when given a file other than gitignore' do
-      let(:args) { { gitignore: false, files: File.join(Dir.pwd, 'fancyignore') } }
+      let(:args) { { gitignore: false, ignore_files: File.join(Dir.pwd, 'fancyignore') } }
 
       it 'reads the non-gitignore file' do # rubocop:disable RSpec/ExampleLength
         create_file_list 'foo', 'bar', 'baz'
@@ -446,7 +446,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given a file including gitignore' do
-      let(:args) { { files: File.join(Dir.pwd, 'fancyignore') } }
+      let(:args) { { ignore_files: File.join(Dir.pwd, 'fancyignore') } }
 
       it 'reads the non-gitignore file and the gitignore file' do # rubocop:disable RSpec/ExampleLength
         create_file_list 'foo', 'bar', 'baz'
@@ -463,8 +463,8 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given an array of rules' do
-      let(:args) { { gitignore: false, rules: 'foo' } }
+    context 'when given an array of ignore_rules' do
+      let(:args) { { gitignore: false, ignore_rules: 'foo' } }
 
       it 'reads the list of rules' do
         create_file_list 'foo', 'bar', 'baz'
@@ -477,8 +477,106 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given an array of rules and gitignore' do
-      let(:args) { { rules: 'foo' } }
+    context 'when given an array of ignore_rules and gitignore' do
+      let(:args) { { ignore_rules: 'foo' } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+      end
+    end
+
+    context 'when given an array of include_rules and gitignore' do
+      let(:args) { { include_rules: ['bar', 'baz'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+      end
+    end
+
+    context 'when given an array of include_rules and gitignore' do
+      let(:args) { { include_rules: ['bar', 'baz'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+      end
+    end
+
+    context 'when given an array of include_rules and gitignore' do
+      let(:args) { { include_rules: ['bar'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo/bar', 'baz/bar'
+
+        gitignore <<~GITIGNORE
+          foo
+        GITIGNORE
+
+        expect(subject).to exclude('foo/bar').and(include('baz/bar'))
+      end
+    end
+
+    context 'when given an array of include_rules beginnig with `/` and gitignore' do
+      let(:args) { { include_rules: ['/bar', '/baz'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo/bar/foo', 'foo/bar/baz', 'bar/foo', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('foo/bar/foo', 'foo/bar/baz', 'bar/foo').and(include('baz'))
+      end
+    end
+
+    context 'when given an array of include_rules ending with `/` and gitignore' do
+      let(:args) { { include_rules: ['bar/', 'baz/'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo/baz/foo', 'foo/bar/baz', 'bar/foo', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to exclude('baz', 'foo/bar/baz', 'bar/foo').and(include('foo/baz/foo'))
+      end
+    end
+
+    context 'when given an array of include_rules with `!` and gitignore' do
+      let(:args) { { include_rules: ['fo*', '!foe'] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'food', 'foe', 'for'
+
+        gitignore <<~GITIGNORE
+          for
+        GITIGNORE
+
+        expect(subject).to exclude('for', 'foe').and(include('foo', 'food'))
+      end
+    end
+
+    context 'when given an array of include_rules and gitignore' do
+      let(:args) { { include_rules: ['./bar', "#{Dir.pwd}/baz"] } }
 
       it 'reads the list of rules and gitignore' do
         create_file_list 'foo', 'bar', 'baz'

@@ -2,15 +2,15 @@
 
 class FastIgnore
   class GitignoreRuleList
-    include Enumerable
+    include ::Enumerable
 
     def initialize(file)
       @file = file
     end
 
     def each(&block)
-      FastIgnore::RuleList.new('.git').each(&block)
-      FastIgnore::FileRuleList.new(file).each(&block)
+      ::FastIgnore::RuleList.new('.git').each(&block)
+      ::FastIgnore::FileRuleList.new(file).each(&block)
     end
 
     private

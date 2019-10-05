@@ -2,11 +2,12 @@
 
 class FastIgnore
   class RuleList
-    include Enumerable
+    include ::Enumerable
 
-    def initialize(*lines, root: Dir.pwd)
+    def initialize(*lines, root: ::Dir.pwd, expand_path: false)
       @lines = lines
       @root = root
+      @expand_path = expand_path
     end
 
     def each(&block)
@@ -17,12 +18,12 @@ class FastIgnore
 
     private
 
-    attr_reader :lines, :root
+    attr_reader :lines, :root, :expand_path
 
     def enumerator
-      Enumerator.new do |yielder|
+      ::Enumerator.new do |yielder|
         lines.reverse_each do |rule|
-          rule = FastIgnore::Rule.new(rule, root: root)
+          rule = ::FastIgnore::Rule.new(rule, root: root, expand_path: expand_path)
           yielder << rule unless rule.skip?
         end
       end
