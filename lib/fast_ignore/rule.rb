@@ -2,23 +2,50 @@
 
 class FastIgnore
   class Rule
-    using DeletePrefixSuffix unless RUBY_VERSION >= '2.5'
+    unless ::RUBY_VERSION >= '2.5'
+      require_relative 'backports/delete_prefix_suffix'
+      using ::FastIgnore::Backports::DeletePrefixSuffix
+    end
 
-    FNMATCH_OPTIONS = File::FNM_DOTMATCH | File::FNM_PATHNAME
+    unless ::RUBY_VERSION >= '2.4'
+      require_relative 'backports/match'
+      using ::FastIgnore::Backports::Match
+    end
 
-    def initialize(rule, root:)
+    FNMATCH_OPTIONS = (::File::FNM_DOTMATCH | ::File::FNM_PATHNAME | ::File::FNM_CASEFOLD).freeze
+
+    attr_reader :rule, :glob_prefix
+
+    def initialize(rule, root:, expand_path: false)
       @rule = rule
       strip!
+      extract_dir_only
+      expand_path(root) if expand_path
       return if skip?
 
       extract_negation
-      extract_dir_only
 
       @rule = "#{root}#{prefix}#{@rule}"
     end
 
     def negation?
       @negation
+    end
+
+    def invert
+      @negation = !@negation
+    end
+
+    def glob_pattern
+      @glob_pattern ||= if @dir_only
+        "#{@rule}/**/*"
+      else
+        [@rule, "#{@rule}/**/*"]
+      end
+    end
+
+    def globbable?
+      !@rule.match?(%r{/\*\*/.*[^*/]})
     end
 
     def extract_negation
@@ -31,18 +58,18 @@ class FastIgnore
 
     def extract_dir_only
       @dir_only = false
-      @not_dir_only = true
       return unless @rule.end_with?('/')
 
       @rule = @rule[0..-2]
       @dir_only = true
-      @not_dir_only = false
     end
 
-    def match?(path, dir = File.directory?(path))
-      return false unless dir || @not_dir_only
+    def dir_only?
+      @dir_only
+    end
 
-      File.fnmatch?(@rule, path, FNMATCH_OPTIONS)
+    def match?(path)
+      ::File.fnmatch?(@rule, path, ::FastIgnore::Rule::FNMATCH_OPTIONS)
     end
 
     def empty?
@@ -63,7 +90,9 @@ class FastIgnore
 
     private
 
-    attr_reader :root
+    def expand_path(root)
+      @rule = ::File.expand_path(@rule).delete_prefix(root) if @rule.match?(%r{^(?:[~/]|..?/)})
+    end
 
     def prefix
       @prefix ||= if @rule.start_with?('/')
