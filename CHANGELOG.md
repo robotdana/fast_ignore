@@ -1,3 +1,4 @@
+# v0.4.0
 - include_rules support
 - to make room for this, `:rules` and `:files` keyword arguments are deprecated.
   Please use `:ignore_rules` and `:ignore_files` instead.
