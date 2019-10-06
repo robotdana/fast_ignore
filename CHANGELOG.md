@@ -1,3 +1,6 @@
+# v0.4.1
+- oops i did a regexp wrong
+
 # v0.4.0
 - include_rules support
 - to make room for this, `:rules` and `:files` keyword arguments are deprecated.

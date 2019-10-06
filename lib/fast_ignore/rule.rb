@@ -91,7 +91,7 @@ class FastIgnore
     private
 
     def expand_path(root)
-      @rule = ::File.expand_path(@rule).delete_prefix(root) if @rule.match?(%r{^(?:[~/]|..?/)})
+      @rule = ::File.expand_path(@rule).delete_prefix(root) if @rule.match?(%r{^(?:[~/]|\.{1,2}/)})
     end
 
     def prefix
