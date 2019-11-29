@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'rule'
+require_relative 'rule_parser'
 
 class FastIgnore
   class RuleSet # rubocop:disable Metrics/ClassLength
@@ -15,8 +15,8 @@ class FastIgnore
     def add_rules(rules, root: @root, expand_path: @expand_path)
       Array(rules).each do |rule_string|
         rule_string.each_line do |rule_line|
-          rule = ::FastIgnore::Rule.new(rule_line, root: root, expand_path: expand_path)
-          @rules << rule unless rule.skip?
+          rule = ::FastIgnore::RuleParser.new_rule(rule_line, root: root, expand_path: expand_path)
+          @rules << rule if rule
         end
       end
 
@@ -28,8 +28,8 @@ class FastIgnore
         filename = ::File.expand_path(filename)
         root = ::File.dirname(filename)
         ::IO.foreach(filename) do |rule_string|
-          rule = ::FastIgnore::Rule.new(rule_string, root: root)
-          @rules << rule unless rule.skip?
+          rule = ::FastIgnore::RuleParser.new_rule(rule_string, root: root)
+          @rules << rule if rule
         end
       end
 

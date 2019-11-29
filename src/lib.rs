@@ -3,19 +3,29 @@
 extern crate helix;
 
 struct Rule {
-    negation: bool,
+    rule: str,
     dir_only: bool,
-    rule: str
-}
-
-impl Rule {
-
+    negation: bool
 }
 
 ruby! {
     class FastIgnoreRule {
-        def rust() -> &'static str {
-            "hi from rust"
+        struct {
+            rule: str,
+            dir_only: bool,
+            negation: bool
+        }
+
+        def initialize(helix, rule: str, dir_only: bool, negation: bool) {
+            FastIgnoreRule { helix, rule, dir_only, negation }
+        }
+
+        def negation?(&self) -> bool {
+            self.negation
+        }
+
+        def dir_only?(&self) -> bool {
+
         }
     }
 }
