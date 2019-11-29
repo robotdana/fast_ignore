@@ -32,10 +32,6 @@ class FastIgnore
       @negation
     end
 
-    def invert
-      @negation = !@negation
-    end
-
     def glob_pattern
       @glob_pattern ||= if @dir_only
         "#{@rule}/**/*"
@@ -45,8 +41,22 @@ class FastIgnore
     end
 
     def globbable?
-      !@rule.match?(%r{/\*\*/.*[^*/]})
+      !@negation && !@rule.match?(%r{/\*\*/.*[^*/]})
     end
+
+    def dir_only?
+      @dir_only
+    end
+
+    def match?(path)
+      ::File.fnmatch?(@rule, path, ::FastIgnore::Rule::FNMATCH_OPTIONS)
+    end
+
+    def skip?
+      empty? || comment?
+    end
+
+    private
 
     def extract_negation
       @negation = false
@@ -64,14 +74,6 @@ class FastIgnore
       @dir_only = true
     end
 
-    def dir_only?
-      @dir_only
-    end
-
-    def match?(path)
-      ::File.fnmatch?(@rule, path, ::FastIgnore::Rule::FNMATCH_OPTIONS)
-    end
-
     def empty?
       return @empty if defined?(@empty)
 
@@ -83,12 +85,6 @@ class FastIgnore
 
       @comment ||= @rule.start_with?('#')
     end
-
-    def skip?
-      empty? || comment?
-    end
-
-    private
 
     def expand_path(root)
       @rule = ::File.expand_path(@rule).delete_prefix(root) if @rule.match?(%r{^(?:[~/]|\.{1,2}/)})

@@ -117,6 +117,12 @@ Metrics/BlockLength:
 Metrics/LineLength:
   Max: 120
 
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
 RSpec:
   Enabled: true
   Include:

@@ -562,7 +562,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given an array of include_rules with `!` and gitignore' do
-      let(:args) { { include_rules: ['fo*', '!foe'] } }
+      let(:args) { { include_rules: ['fo*', '!foo', 'food'] } }
 
       it 'reads the list of rules and gitignore' do
         create_file_list 'foo', 'food', 'foe', 'for'
@@ -571,7 +571,7 @@ RSpec.describe FastIgnore do
           for
         GITIGNORE
 
-        expect(subject).to exclude('for', 'foe').and(include('foo', 'food'))
+        expect(subject).to exclude('foo', 'for').and(include('foe', 'food'))
       end
     end
 

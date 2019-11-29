@@ -1,14 +1,46 @@
 # frozen_string_literal: true
 
-require_relative './fast_ignore/rule'
-require_relative './fast_ignore/rule_list'
-require_relative './fast_ignore/file_rule_list'
-require_relative './fast_ignore/gitignore_rule_list'
-
+require_relative './fast_ignore/rule_set'
+require 'helix_runtime'
+require 'fast_ignore/native'
 require 'find'
 
-class FastIgnore # rubocop:disable Metrics/ClassLength
+class FastIgnore
   include ::Enumerable
+
+  def initialize( # rubocop:disable Metrics/ParameterLists
+    relative: false,
+    root: ::Dir.pwd,
+    ignore_rules: nil,
+    ignore_files: nil,
+    gitignore: ::File.join(root, '.gitignore'),
+    include_rules: nil,
+    include_files: nil
+  )
+    rust_initialize(
+      relative,
+      root,
+      ignore_rules,
+      ignore_files,
+      gitignore,
+      include_rules,
+      include_files
+    )
+  end
+
+  def each(&block)
+    if block_given?
+      each_allowed(&block)
+    else
+      enum_for(:each_allowed)
+    end
+  end
+
+  def allowed?(path)
+    allowed_recursive?(::File.expand_path(path))
+  end
+
+  private
 
   unless ::RUBY_VERSION >= '2.5'
     require_relative 'fast_ignore/backports/delete_prefix_suffix'
@@ -19,155 +51,75 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
   alias_method :relative?, :relative
   attr_reader :root
 
-  def initialize( # rubocop:disable Metrics/ParameterLists
-    relative: false,
-    root: ::Dir.pwd,
-    rules: nil,
-    ignore_rules: rules,
-    files: nil,
-    ignore_files: files,
-    gitignore: ::File.join(root, '.gitignore'),
-    include_rules: nil,
-    include_files: nil
+  def rust_initialize( # rubocop:disable Metrics/ParameterLists
+    relative,
+    root,
+    ignore_rules,
+    ignore_files,
+    gitignore,
+    include_rules,
+    include_files
   )
-    if rules || files
-      warn <<~WARNING
-        \e[33mFastIgnore.new `:rules` and `:files` keyword arguments are deprecated.
-        Please use `:ignore_rules` and `:ignore_files` instead.\e[0m
-      WARNING
-    end
-    prepare_include_rules(include_rules, include_files)
-    prepare_ignore_rules(ignore_rules, ignore_files, gitignore)
+    @ignore = ::FastIgnore::RuleSet.new(:ignore)
+    @only = ::FastIgnore::RuleSet.new(:only)
+    @ignore.add_rules('.git')
+    @ignore.add_files(gitignore) if gitignore && ::File.exist?(gitignore)
+    @ignore.add_files(ignore_files)
+    @ignore.add_rules(ignore_rules, root: root)
+    @only.add_files(include_files)
+    @only.add_rules(include_rules, root: root, expand_path: true)
     @relative = relative
     @root = root
   end
 
-  def prepare_ignore_rules(ignore_rules, ignore_files, gitignore)
-    @ignore_rules += ::FastIgnore::RuleList.new(*Array(ignore_rules)).to_a
-    Array(ignore_files).reverse_each do |file|
-      @ignore_rules += ::FastIgnore::FileRuleList.new(file).to_a
-    end
-
-    @ignore_rules += ::FastIgnore::GitignoreRuleList.new(gitignore).to_a if gitignore
-  end
-
-  def prepare_include_rules(include_rules, include_files)
-    include_rules = ::FastIgnore::RuleList.new(*Array(include_rules), expand_path: true).to_a
-    Array(include_files).reverse_each do |file|
-      include_rules += ::FastIgnore::FileRuleList.new(file).to_a
-    end
-
-    @include_rules = include_rules.reject(&:negation?)
-    @ignore_rules = include_rules.select(&:negation?).each(&:invert)
-  end
-
-  def each(&block)
-    if block_given?
-      enumerator.each(&block)
+  def each_allowed(&block)
+    if @only.globbable?
+      glob_allowed(&block)
     else
-      enumerator
+      find_allowed(&block)
     end
   end
 
-  def allowed?(path)
-    allowed_expanded?(::File.expand_path(path))
-  end
-
-  private
-
-  def enumerator
-    if !@include_rules.empty? && @include_rules.all?(&:globbable?)
-      glob_enumerator
-    else
-      find_enumerator
+  def allowed_recursive?(path, dir = ::File.directory?(path))
+    @allowed_recursive ||= {}
+    @allowed_recursive.fetch(path) do
+      @allowed_recursive[path] = @ignore.allowed_recursive?(path, dir) &&
+        @only.allowed_recursive?(path, dir)
     end
   end
 
-  def allowed_expanded?(path, dir = ::File.directory?(path))
-    not_excluded_recursive?(path, dir) && not_ignored_recursive?(path, dir)
-  end
-
-  def glob_enumerator # rubocop:disable Metrics/MethodLength
+  # rustify
+  def glob_allowed
     seen = {}
-    ::Enumerator.new do |yielder|
-      ::Dir.glob(@include_rules.flat_map(&:glob_pattern), ::FastIgnore::Rule::FNMATCH_OPTIONS) do |path|
-        next if seen[path]
+    @only.glob do |path|
+      next if seen[path]
 
-        seen[path] = true
-        next if ::File.directory?(path)
-        next unless ::File.readable?(path)
-        next unless not_ignored_recursive?(path, false)
+      seen[path] = true
+      next if ::File.directory?(path)
+      next unless ::File.readable?(path)
+      next unless @ignore.allowed_recursive?(path, false)
 
-        path = path.delete_prefix("#{root}/") if @relative
-
-        yielder << path
-      end
+      yield prepare_path(path)
     end
   end
 
-  def find_enumerator # rubocop:disable Metrics/MethodLength, Metrics/CyclomaticComplexity
-    ::Enumerator.new do |yielder|
-      ::Find.find(root) do |path|
-        next if path == root
-        next unless ::File.readable?(path)
+  # rustify
+  def find_allowed
+    ::Find.find(root) do |path|
+      next if path == root
+      next unless ::File.readable?(path)
 
-        dir = ::File.directory?(path)
-        next ::Find.prune unless not_ignored?(path, dir)
-        next unless not_excluded_recursive?(path, dir)
-        next if dir
+      dir = ::File.directory?(path)
+      next ::Find.prune unless @ignore.allowed_unrecursive?(path, dir)
+      next if dir
+      next unless @only.allowed_recursive?(path, false)
 
-        path = path.delete_prefix("#{root}/") if @relative
-
-        yielder << path
-      end
+      yield prepare_path(path)
     end
   end
 
-  def not_ignored_recursive?(path, dir = ::File.directory?(path))
-    @not_ignored ||= {}
-    @not_ignored.fetch(path) do
-      @not_ignored[path] = if path == root
-        true
-      else
-        not_ignored_recursive?(::File.dirname(path), true) && not_ignored?(path, dir)
-      end
-    end
-  end
-
-  def not_excluded_recursive?(path, dir = ::File.directory?(path))
-    return true if @include_rules.empty?
-
-    @not_excluded ||= {}
-    @not_excluded.fetch(path) do
-      @not_excluded[path] = if path == root
-        false
-      else
-        not_excluded_recursive?(::File.dirname(path), true) || not_excluded?(path, dir)
-      end
-    end
-  end
-
-  def non_dir_ignore_rules
-    @non_dir_ignore_rules ||= @ignore_rules.reject(&:dir_only?)
-  end
-
-  def non_dir_include_rules
-    @non_dir_include_rules ||= @include_rules.reject(&:dir_only?)
-  end
-
-  def not_excluded?(path, dir)
-    return true if @include_rules.empty?
-
-    (dir ? @include_rules : non_dir_include_rules).find do |rule|
-      rule.match?(path)
-    end
-  end
-
-  def not_ignored?(path, dir)
-    (dir ? @ignore_rules : non_dir_ignore_rules).each do |rule|
-      return rule.negation? if rule.match?(path)
-    end
-
-    true
+  # rustify
+  def prepare_path(path)
+    @relative ? path.delete_prefix("#{root}/") : path
   end
 end
