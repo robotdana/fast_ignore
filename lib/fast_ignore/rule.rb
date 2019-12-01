@@ -1,26 +1,24 @@
 # frozen_string_literal: true
 
+require 'helix_runtime'
+require_relative 'native'
+
 class FastIgnore
   class Rule
-
-    FNMATCH_OPTIONS = (::File::FNM_DOTMATCH | ::File::FNM_PATHNAME | ::File::FNM_CASEFOLD).freeze
-
     def initialize(rule, dir_only, negation)
-      @rule = rule
-      @dir_only = dir_only
-      @negation = negation
+      @native = FastIgnoreRule.new(rule, dir_only, negation)
     end
 
     def negation?
-      @negation
+      @native.negation
     end
 
     def dir_only?
-      @dir_only
+      @native.dir_only
     end
 
     def match?(path)
-      ::File.fnmatch?(@rule, path, ::FastIgnore::Rule::FNMATCH_OPTIONS)
+      @native.fnmatch(path)
     end
   end
 end
