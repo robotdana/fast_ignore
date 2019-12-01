@@ -77,19 +77,20 @@ class FastIgnore
         end
       end
     end
+    @only = ::FastIgnore::RuleSet.new
     unless new_ignore_rules.empty?
-      @ignore.add_rules('*')
+      @only.add_rules('*')
       unless new_ignore_rules.all?(&:anchored?)
-        @ignore.add_rules('!*/')
+        @only.add_rules('!*/')
       end
-      @ignore.rules.concat(new_ignore_rules)
-      @ignore.send(:non_dir_only_rules).concat(new_ignore_rules.reject(&:dir_only?))
+      @only.rules.concat(new_ignore_rules)
+      @only.send(:non_dir_only_rules).concat(new_ignore_rules.reject(&:dir_only?))
     end
+
     @ignore.add_rules('.git')
     @ignore.add_files(gitignore) if gitignore && ::File.exist?(gitignore)
     @ignore.add_files(ignore_files)
     @ignore.add_rules(ignore_rules, root: root)
-    @ignore.add_rules('.gitkeep')
     @relative = relative
     @root = root
   end
@@ -99,10 +100,8 @@ class FastIgnore
   end
 
   def allowed_recursive?(path, dir = ::File.directory?(path))
-    @allowed_recursive ||= {}
-    @allowed_recursive.fetch(path) do
-      @allowed_recursive[path] = @ignore.allowed_recursive?(path, dir)
-    end
+    @ignore.allowed_recursive?(path, dir) &&
+      @only.allowed_recursive?(path, dir)
   end
 
   # rustify
@@ -113,6 +112,7 @@ class FastIgnore
 
       dir = ::File.directory?(path)
       next ::Find.prune unless @ignore.allowed_unrecursive?(path, dir)
+      next ::Find.prune unless @only.allowed_unrecursive?(path, dir)
       next if dir
 
       yield prepare_path(path)
