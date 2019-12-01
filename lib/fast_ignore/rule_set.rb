@@ -3,10 +3,10 @@
 require_relative 'rule_parser'
 
 class FastIgnore
-  class RuleSet # rubocop:disable Metrics/ClassLength
+  class RuleSet
     attr_reader :rules
 
-    def initialize(expand_path: false, root: ::Dir.pwd, project_root: root)
+    def initialize(expand_path: false, root: ::Dir.pwd, allow: false, project_root: root)
       @rules = []
       @non_dir_only_rules = []
       @root = root
@@ -14,12 +14,17 @@ class FastIgnore
       @allowed_recursive = {}
       @project_root = project_root
       @expand_path = expand_path
+      @allow = allow
+      @any_not_anchored = false
+      @empty = true
     end
 
     def add_rules(rules, root: @root, expand_path: @expand_path)
-      Array(rules).each do |rule_string|
+      rules.each do |rule_string|
         rule_string.each_line do |rule_line|
-          add_rule ::FastIgnore::RuleParser.new_rule(rule_line, root: root, expand_path: expand_path)
+          append_rules(
+            *::FastIgnore::RuleParser.new_rule(rule_line, allow: @allow, root: root, expand_path: expand_path)
+          )
         end
       end
 
@@ -27,30 +32,37 @@ class FastIgnore
     end
 
     def add_files(files)
-      Array(files).each do |filename|
+      files.each do |filename|
         filename = ::File.expand_path(filename)
         root = ::File.dirname(filename)
         ::IO.foreach(filename) do |rule_string|
-          add_rule ::FastIgnore::RuleParser.new_rule(rule_string, root: root)
+          append_rules(*::FastIgnore::RuleParser.new_rule(rule_string, allow: @allow, root: root))
         end
       end
 
       clear_cache
     end
 
-    def allowed_unrecursive?(path, dir) # rubocop:disable Metrics/MethodLength
+    def allowed_unrecursive?(path, dir)
       @allowed_unrecursive.fetch(path) do
         (dir ? @rules : @non_dir_only_rules).reverse_each do |rule|
-          if rule.match?(path)
-            return @allowed_unrecursive[path] = rule.negation?
-          end
+          return @allowed_unrecursive[path] = rule.negation? if rule.match?(path)
         end
 
-        @allowed_unrecursive[path] = true
+        @allowed_unrecursive[path] = default?(dir)
       end
     end
 
-    def allowed_recursive?(path, dir) # rubocop:disable Metrics/MethodLength
+    def default?(dir)
+      return true unless @allow
+      return true if @empty
+      return false unless dir
+      return true if @any_not_anchored
+
+      false
+    end
+
+    def allowed_recursive?(path, dir)
       return true if path == @project_root
 
       @allowed_recursive.fetch(path) do
@@ -59,22 +71,18 @@ class FastIgnore
       end
     end
 
-    def empty?
-      @rules.empty?
-    end
-
     private
 
-    def add_rule(rule)
-      return unless rule
-
-      @rules << rule
-      @non_dir_only_rules << rule unless rule.dir_only?
+    def append_rules(anchored, rules)
+      rules.each do |rule|
+        @empty = false
+        @rules << rule
+        @non_dir_only_rules << rule unless rule.dir_only?
+        @any_not_anchored ||= !anchored
+      end
     end
 
-    def non_dir_only_rules
-      @non_dir_only_rules # ||= @rules.reject(&:dir_only?)
-    end
+    attr_reader :non_dir_only_rules
 
     def clear_cache
       @allowed_unrecursive = {}

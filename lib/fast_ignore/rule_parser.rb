@@ -9,30 +9,48 @@ class FastIgnore
       using ::FastIgnore::Backports::Match
     end
 
+    unless ::RUBY_VERSION >= '2.5'
+      require_relative 'fast_ignore/backports/delete_prefix_suffix'
+      using ::FastIgnore::Backports::DeletePrefixSuffix
+    end
+
     # rule or nil
     class << self
-      def new_rule(rule, root:, expand_path: false)
+      def new_rule(rule, root:, allow: false, expand_path: false)
         rule = strip(rule)
         rule, dir_only = extract_dir_only(rule)
         rule = expand_path(rule, root) if expand_path
 
-        return if skip?(rule)
+        return [false, []] if skip?(rule)
 
-        rule, negation = extract_negation(rule)
+        rule, negation = extract_negation(rule, allow)
 
         anchored, prefix = prefix(rule)
 
         rule = "#{root}#{prefix}#{rule}"
 
-        ::FastIgnore::Rule.new(rule, dir_only, negation, anchored)
+        [anchored, rules(rule, allow, root, dir_only, negation)]
       end
 
       private
 
-      def extract_negation(rule)
-        return [rule, false] unless rule.start_with?('!')
+      def rules(rule, allow, root, dir_only, negation)
+        rules = [::FastIgnore::Rule.new(rule, dir_only, negation)]
+        return rules unless allow
 
-        [rule[1..-1], true]
+        rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, negation)
+        parent = File.dirname(rule)
+        while parent != root
+          rules << ::FastIgnore::Rule.new(parent, true, true)
+          parent = File.dirname(parent)
+        end
+        rules
+      end
+
+      def extract_negation(rule, allow)
+        return [rule, allow] unless rule.start_with?('!')
+
+        [rule[1..-1], !allow]
       end
 
       def extract_dir_only(rule)

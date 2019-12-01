@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative './fast_ignore/rule_set'
-require 'find'
+# require 'ruby-prof'
 
 class FastIgnore
   include ::Enumerable
@@ -23,31 +23,44 @@ class FastIgnore
     rust_initialize(
       relative,
       root,
-      ignore_rules,
-      ignore_files,
+      Array(ignore_rules),
+      Array(ignore_files),
       gitignore,
-      include_rules,
-      include_files
+      Array(include_rules),
+      Array(include_files)
     )
   end
 
   def each(&block)
     if block_given?
-      each_allowed(&block)
+      all_allowed.each(&block)
     else
-      enum_for(:each_allowed)
+      all_allowed.each
     end
   end
 
   def allowed?(path)
-    allowed_recursive?(::File.expand_path(path))
+    path = ::File.expand_path(path)
+    dir = ::File.directory?(path)
+    @ignore.allowed_recursive?(path, dir) && @only.allowed_recursive?(path, dir)
+  end
+
+  def all_allowed
+    allowed = []
+    find_children(@root) do |path, dir|
+      next false unless @ignore.allowed_unrecursive?(path, dir)
+      next false unless @only.allowed_unrecursive?(path, dir)
+      next true if dir
+      next false unless ::File.readable?(path)
+
+      allowed << prepare_path(path)
+
+      false
+    end
+    allowed
   end
 
   private
-
-  attr_reader :relative
-  alias_method :relative?, :relative
-  attr_reader :root
 
   def rust_initialize( # rubocop:disable Metrics/ParameterLists
     relative,
@@ -59,68 +72,33 @@ class FastIgnore
     include_files
   )
     @ignore = ::FastIgnore::RuleSet.new
-    only = ::FastIgnore::RuleSet.new
-    only.add_files(include_files)
-    only.add_rules(include_rules, root: root, expand_path: true)
-    new_ignore_rules = only.rules.flat_map do |rule|
-      dirs = rule.rule.dup.delete_prefix("#{root}/").split('/')
-      dirs.flat_map.with_index do |dir, index|
-        if dir == dirs.last
-          dir = "#{root}/#{dirs[0..index].join('/')}"
-          [
-            ::FastIgnore::Rule.new(dir, rule.dir_only?, !rule.negation?, rule.anchored?),
-            ::FastIgnore::Rule.new("#{dir}/**/*", false, !rule.negation?, rule.anchored?)
-          ]
-        else
-          dir = "#{root}/#{dirs[0..index].join('/')}"
-          ::FastIgnore::Rule.new(dir, true, !rule.negation?, rule.anchored?)
-        end
-      end
-    end
-    @only = ::FastIgnore::RuleSet.new
-    unless new_ignore_rules.empty?
-      @only.add_rules('*')
-      unless new_ignore_rules.all?(&:anchored?)
-        @only.add_rules('!*/')
-      end
-      @only.rules.concat(new_ignore_rules)
-      @only.send(:non_dir_only_rules).concat(new_ignore_rules.reject(&:dir_only?))
-    end
+    @only = ::FastIgnore::RuleSet.new(allow: true)
+    @only.add_files(include_files)
+    @only.add_rules(include_rules, root: root, expand_path: true)
 
-    @ignore.add_rules('.git')
-    @ignore.add_files(gitignore) if gitignore && ::File.exist?(gitignore)
+    @ignore.add_rules(['.git'])
+    @ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
     @ignore.add_files(ignore_files)
     @ignore.add_rules(ignore_rules, root: root)
     @relative = relative
     @root = root
   end
 
-  def each_allowed(&block)
-    find_allowed(&block)
-  end
-
-  def allowed_recursive?(path, dir = ::File.directory?(path))
-    @ignore.allowed_recursive?(path, dir) &&
-      @only.allowed_recursive?(path, dir)
-  end
-
-  # rustify
-  def find_allowed
-    ::Find.find(root) do |path|
-      next if path == root
-      next unless ::File.readable?(path)
-
-      dir = ::File.directory?(path)
-      next ::Find.prune unless @ignore.allowed_unrecursive?(path, dir)
-      next ::Find.prune unless @only.allowed_unrecursive?(path, dir)
-      next if dir
-
-      yield prepare_path(path)
-    end
-  end
-
   # rustify
   def prepare_path(path)
-    @relative ? path.delete_prefix("#{root}/") : path
+    @relative ? path.delete_prefix("#{@root}/") : path
+  end
+
+  def find_children(path, &block)
+    Dir.each_child(path) do |child|
+      begin
+        child = ::File.join(path, child)
+        dir = ::File.directory?(child)
+        look_at_children = block.call child, dir
+        find_children(child, &block) if look_at_children
+      rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
+        nil
+      end
+    end
   end
 end
