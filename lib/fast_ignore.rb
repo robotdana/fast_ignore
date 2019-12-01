@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative './fast_ignore/rule_set'
+require_relative './fast_ignore/rule_set_builder'
 # require 'ruby-prof'
 
 class FastIgnore
@@ -71,15 +71,15 @@ class FastIgnore
     include_rules,
     include_files
   )
-    @ignore = ::FastIgnore::RuleSet.new
-    @only = ::FastIgnore::RuleSet.new(allow: true)
+    @ignore = ::FastIgnore::RuleSetBuilder.new(root: root)
+    @only = ::FastIgnore::RuleSetBuilder.new(allow: true, root: root)
     @only.add_files(include_files)
-    @only.add_rules(include_rules, root: root, expand_path: true)
+    @only.add_rules(include_rules, expand_path: true)
 
     @ignore.add_rules(['.git'])
     @ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
     @ignore.add_files(ignore_files)
-    @ignore.add_rules(ignore_rules, root: root)
+    @ignore.add_rules(ignore_rules)
     @relative = relative
     @root = root
   end

@@ -6,41 +6,15 @@ class FastIgnore
   class RuleSet
     attr_reader :rules
 
-    def initialize(expand_path: false, root: ::Dir.pwd, allow: false, project_root: root)
+    def initialize(project_root: Dir.pwd, allow: false)
       @rules = []
       @non_dir_only_rules = []
-      @root = root
       @allowed_unrecursive = {}
       @allowed_recursive = {}
       @project_root = project_root
-      @expand_path = expand_path
-      @allow = allow
       @any_not_anchored = false
       @empty = true
-    end
-
-    def add_rules(rules, root: @root, expand_path: @expand_path)
-      rules.each do |rule_string|
-        rule_string.each_line do |rule_line|
-          append_rules(
-            *::FastIgnore::RuleParser.new_rule(rule_line, allow: @allow, root: root, expand_path: expand_path)
-          )
-        end
-      end
-
-      clear_cache
-    end
-
-    def add_files(files)
-      files.each do |filename|
-        filename = ::File.expand_path(filename)
-        root = ::File.dirname(filename)
-        ::IO.foreach(filename) do |rule_string|
-          append_rules(*::FastIgnore::RuleParser.new_rule(rule_string, allow: @allow, root: root))
-        end
-      end
-
-      clear_cache
+      @allow = allow
     end
 
     def allowed_unrecursive?(path, dir)
@@ -53,15 +27,6 @@ class FastIgnore
       end
     end
 
-    def default?(dir)
-      return true unless @allow
-      return true if @empty
-      return false unless dir
-      return true if @any_not_anchored
-
-      false
-    end
-
     def allowed_recursive?(path, dir)
       return true if path == @project_root
 
@@ -71,7 +36,9 @@ class FastIgnore
       end
     end
 
-    private
+    def parse_rules(rule_line, root: @root, expand_path: false)
+      append_rules(*::FastIgnore::RuleParser.new_rule(rule_line, allow: @allow, root: root, expand_path: expand_path))
+    end
 
     def append_rules(anchored, rules)
       rules.each do |rule|
@@ -82,11 +49,20 @@ class FastIgnore
       end
     end
 
-    attr_reader :non_dir_only_rules
-
     def clear_cache
       @allowed_unrecursive = {}
       @allowed_recursive = {}
+    end
+
+    private
+
+    def default?(dir)
+      return true unless @allow
+      return true if @empty
+      return false unless dir
+      return true if @any_not_anchored
+
+      false
     end
   end
 end
