@@ -138,6 +138,8 @@ fn fnmatch_test_character_group() {
     assert!(!is_match("a[/]c", "ac"));
 
     assert!(is_match("a[[]c", "a[c"));
+    assert!(is_match("a[b\\]]c", "abc"));
+    assert!(is_match("a[b\\]]c", "a]c"));
 }
 
 #[test]
