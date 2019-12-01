@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 helix = "0.7.5"
+ignore = "0.4.10"

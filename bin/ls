@@ -3,4 +3,6 @@
 
 require_relative '../lib/fast_ignore'
 
-puts FastIgnore.new(relative: true, include_rules: ARGV).to_a
+FastIgnore.new(relative: true, include_rules: ARGV).each do |path|
+  puts path
+end

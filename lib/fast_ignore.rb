@@ -1,12 +1,15 @@
 # frozen_string_literal: true
 
 require_relative './fast_ignore/rule_set'
-require 'helix_runtime'
-require 'fast_ignore/native'
 require 'find'
 
 class FastIgnore
   include ::Enumerable
+
+  unless ::RUBY_VERSION >= '2.5'
+    require_relative 'fast_ignore/backports/delete_prefix_suffix'
+    using ::FastIgnore::Backports::DeletePrefixSuffix
+  end
 
   def initialize( # rubocop:disable Metrics/ParameterLists
     relative: false,
@@ -42,11 +45,6 @@ class FastIgnore
 
   private
 
-  unless ::RUBY_VERSION >= '2.5'
-    require_relative 'fast_ignore/backports/delete_prefix_suffix'
-    using ::FastIgnore::Backports::DeletePrefixSuffix
-  end
-
   attr_reader :relative
   alias_method :relative?, :relative
   attr_reader :root
@@ -60,46 +58,50 @@ class FastIgnore
     include_rules,
     include_files
   )
-    @ignore = ::FastIgnore::RuleSet.new(:ignore)
-    @only = ::FastIgnore::RuleSet.new(:only)
+    @ignore = ::FastIgnore::RuleSet.new
+    only = ::FastIgnore::RuleSet.new
+    only.add_files(include_files)
+    only.add_rules(include_rules, root: root, expand_path: true)
+    new_ignore_rules = only.rules.flat_map do |rule|
+      dirs = rule.rule.dup.delete_prefix("#{root}/").split('/')
+      dirs.flat_map.with_index do |dir, index|
+        if dir == dirs.last
+          dir = "#{root}/#{dirs[0..index].join('/')}"
+          [
+            ::FastIgnore::Rule.new(dir, rule.dir_only?, !rule.negation?, rule.anchored?),
+            ::FastIgnore::Rule.new("#{dir}/**/*", false, !rule.negation?, rule.anchored?)
+          ]
+        else
+          dir = "#{root}/#{dirs[0..index].join('/')}"
+          ::FastIgnore::Rule.new(dir, true, !rule.negation?, rule.anchored?)
+        end
+      end
+    end
+    unless new_ignore_rules.empty?
+      @ignore.add_rules('*')
+      unless new_ignore_rules.all?(&:anchored?)
+        @ignore.add_rules('!*/')
+      end
+      @ignore.rules.concat(new_ignore_rules)
+      @ignore.send(:non_dir_only_rules).concat(new_ignore_rules.reject(&:dir_only?))
+    end
     @ignore.add_rules('.git')
     @ignore.add_files(gitignore) if gitignore && ::File.exist?(gitignore)
     @ignore.add_files(ignore_files)
     @ignore.add_rules(ignore_rules, root: root)
-    @only.add_files(include_files)
-    @only.add_rules(include_rules, root: root, expand_path: true)
+    @ignore.add_rules('.gitkeep')
     @relative = relative
     @root = root
   end
 
   def each_allowed(&block)
-    if @only.globbable?
-      glob_allowed(&block)
-    else
-      find_allowed(&block)
-    end
+    find_allowed(&block)
   end
 
   def allowed_recursive?(path, dir = ::File.directory?(path))
     @allowed_recursive ||= {}
     @allowed_recursive.fetch(path) do
-      @allowed_recursive[path] = @ignore.allowed_recursive?(path, dir) &&
-        @only.allowed_recursive?(path, dir)
-    end
-  end
-
-  # rustify
-  def glob_allowed
-    seen = {}
-    @only.glob do |path|
-      next if seen[path]
-
-      seen[path] = true
-      next if ::File.directory?(path)
-      next unless ::File.readable?(path)
-      next unless @ignore.allowed_recursive?(path, false)
-
-      yield prepare_path(path)
+      @allowed_recursive[path] = @ignore.allowed_recursive?(path, dir)
     end
   end
 
@@ -112,7 +114,6 @@ class FastIgnore
       dir = ::File.directory?(path)
       next ::Find.prune unless @ignore.allowed_unrecursive?(path, dir)
       next if dir
-      next unless @only.allowed_recursive?(path, false)
 
       yield prepare_path(path)
     end

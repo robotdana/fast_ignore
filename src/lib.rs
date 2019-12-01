@@ -1,31 +1,24 @@
 #[macro_use]
 
 extern crate helix;
+extern crate ignore;
 
-struct Rule {
-    rule: str,
-    dir_only: bool,
-    negation: bool
-}
+use ignore::WalkBuilder;
 
 ruby! {
-    class FastIgnoreRule {
+    class FastIgnoreNative {
         struct {
-            rule: str,
-            dir_only: bool,
-            negation: bool
+            walk_builder: WalkBuilder,
         }
 
-        def initialize(helix, rule: str, dir_only: bool, negation: bool) {
-            FastIgnoreRule { helix, rule, dir_only, negation }
+        def initialize(helix) {
+            FastIgnoreNative { helix, walk_builder: WalkBuilder::new("./").hidden(false) }
         }
 
-        def negation?(&self) -> bool {
-            self.negation
-        }
-
-        def dir_only?(&self) -> bool {
-
+        def add_file(&mut self, files: Vec<String>) {
+            for s in files {
+                self.walk_builder.add_ignore(s);
+            }
         }
     }
 }
