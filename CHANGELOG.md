@@ -1,3 +1,6 @@
+# v0.5.1
+- restore `.allowed?`. now i have tests for it. oops
+
 # v0.5.0
 - remove deprecated `:rules` and `:files` arguments
 - ! is now evaluated in sequence for include_rules
