@@ -37,11 +37,11 @@ AllCops:
 # end
 
 # to match our preference for consistent indentation
-Layout/AlignHash:
+Layout/HashAlignment:
   EnforcedLastArgumentHashStyle: always_ignore
 
 # to match our preference for consistent indentation
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
 # to match our preference for consistent indentation
@@ -69,15 +69,15 @@ Layout/FirstHashElementLineBreak:
   Enabled: true
 
 # to match our preference for consistent indentation
-Layout/IndentFirstArgument:
+Layout/FirstArgumentIndentation:
   EnforcedStyle: consistent
 
 # to match our preference for consistent indentation
-Layout/IndentFirstArrayElement:
+Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
 # to match our preference for consistent indentation
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 # to match our preference for consistent indentation
@@ -116,6 +116,12 @@ Metrics/BlockLength:
 
 Metrics/LineLength:
   Max: 120
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
 
 RSpec:
   Enabled: true
