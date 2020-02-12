@@ -87,12 +87,9 @@ foo
 # a line ending in a slash will will include any files in any directories named foo
 # but not any files named foo
 foo/
-# negated rules are slightly different from gitignore
-# in that they're evaluated after all the other the matching files rather than
-# in sequence with other rules
 fo*
 !foe
-# otherwise this format deals with *'s and ?'s and etc as you'd expect from gitignore.
+# otherwise this format deals with !'s, *'s and ?'s and etc as you'd expect from gitignore.
 ```
 
 These can be passed either as files or as an array or string rules

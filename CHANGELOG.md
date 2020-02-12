@@ -1,3 +1,9 @@
+# v0.5.0
+- remove deprecated `:rules` and `:files` arguments
+- ! is now evaluated in sequence for include_rules
+- it's a big refactor, sorry if i broke something
+- some performance improvements
+
 # v0.4.1
 - oops i did a regexp wrong
 
