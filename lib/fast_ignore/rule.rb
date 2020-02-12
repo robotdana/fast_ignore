@@ -16,5 +16,9 @@ class FastIgnore
       @dir_only = dir_only
       @negation = negation
     end
+
+    def inspect
+      "#<Rule #{'!' if negation?}#{rule}#{'/' if dir_only?}>"
+    end
   end
 end
