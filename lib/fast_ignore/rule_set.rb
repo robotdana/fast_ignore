@@ -9,9 +9,9 @@ class FastIgnore
     def initialize(project_root: Dir.pwd, allow: false)
       @rules = []
       @non_dir_only_rules = []
-      @allowed_unrecursive = {}
-      @allowed_recursive = {}
       @project_root = project_root
+      @allowed_unrecursive = { @project_root => true }
+      @allowed_recursive = { @project_root => true }
       @any_not_anchored = false
       @empty = true
       @allow = allow
@@ -29,11 +29,9 @@ class FastIgnore
     end
 
     def allowed_recursive?(path, dir)
-      return true if path == @project_root
-
       @allowed_recursive.fetch(path) do
         @allowed_recursive[path] =
-          allowed_recursive?(path, true) && allowed_unrecusrive?(path, dir)
+          allowed_recursive?(::File.dirname(path), true) && allowed_unrecursive?(path, dir)
       end
     end
 
@@ -51,8 +49,8 @@ class FastIgnore
     end
 
     def clear_cache
-      @allowed_unrecursive = {}
-      @allowed_recursive = {}
+      @allowed_unrecursive = { @project_root => true }
+      @allowed_recursive = { @project_root => true }
     end
 
     private

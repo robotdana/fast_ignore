@@ -1,7 +1,35 @@
 # frozen_string_literal: true
 
 require 'pathname'
-RSpec::Matchers.define_negated_matcher(:exclude, :include)
+
+RSpec::Matchers.define(:allow) do |*expected|
+  match do |actual|
+    expect(actual.to_a).to include(*expected)
+    if actual.respond_to?(:allowed?)
+      expected.each do |path|
+        expect(actual).to be_allowed(path)
+      end
+    end
+
+    true
+  end
+end
+RSpec::Matchers.define_negated_matcher(:disallow, :allow)
+
+RSpec::Matchers.define(:allow_exactly) do |*expected|
+  match do |actual|
+    expect(actual.to_a).to contain_exactly(*expected)
+
+    if actual.respond_to?(:allowed?)
+      expected.each do |path|
+        expect(actual).to be_allowed(path)
+      end
+    end
+
+    true
+  end
+end
+
 RSpec.describe FastIgnore do
   it 'has a version number' do
     expect(FastIgnore::VERSION).not_to be nil
@@ -14,7 +42,7 @@ RSpec.describe FastIgnore do
       it 'ignores nothing when gitignore is empty' do
         gitignore ''
 
-        expect(subject).to include('foo', 'bar', 'baz')
+        expect(subject).to allow('foo', 'bar', 'baz')
       end
 
       it 'ignores nothing when gitignore only contains newlines' do
@@ -23,7 +51,7 @@ RSpec.describe FastIgnore do
 
         GITIGNORE
 
-        expect(subject).to include('foo', 'bar', 'baz')
+        expect(subject).to allow('foo', 'bar', 'baz')
       end
 
       it 'ignores mentioned files when gitignore includes newlines' do
@@ -34,7 +62,7 @@ RSpec.describe FastIgnore do
 
         GITIGNORE
 
-        expect(subject).to include('baz').and(exclude('foo', 'bar'))
+        expect(subject).to allow('baz').and(disallow('foo', 'bar'))
       end
     end
 
@@ -47,7 +75,7 @@ RSpec.describe FastIgnore do
           foo
         GITIGNORE
 
-        expect(subject).to include('#foo').and(exclude('foo'))
+        expect(subject).to allow('#foo').and(disallow('foo'))
       end
 
       describe 'Put a backslash ("\") in front of the first hash for patterns that begin with a hash' do
@@ -56,7 +84,7 @@ RSpec.describe FastIgnore do
             \\#foo
           GITIGNORE
 
-          expect(subject).to include('foo').and(exclude('#foo'))
+          expect(subject).to allow('foo').and(disallow('#foo'))
         end
       end
     end
@@ -67,19 +95,19 @@ RSpec.describe FastIgnore do
       it 'ignores trailing spaces in the gitignore file' do
         gitignore 'foo  '
 
-        expect(subject).to include('foo  ', 'foo ').and(exclude('foo'))
+        expect(subject).to allow('foo  ', 'foo ').and(disallow('foo'))
       end
 
       it "doesn't ignore trailing spaces if there's a backslash" do
         gitignore "foo \\ \n"
 
-        expect(subject).to include('foo', 'foo ').and(exclude('foo  '))
+        expect(subject).to allow('foo', 'foo ').and(disallow('foo  '))
       end
 
       it "doesn't ignore trailing spaces if there's a backslash before every space" do
         gitignore "foo\\ \\ \n"
 
-        expect(subject).to include('foo', 'foo ').and(exclude('foo  '))
+        expect(subject).to allow('foo', 'foo ').and(disallow('foo  '))
       end
     end
 
@@ -96,7 +124,7 @@ RSpec.describe FastIgnore do
             foo/
           GITIGNORE
 
-          expect(subject).to include('bar/foo').and(exclude('foo/bar'))
+          expect(subject).to allow('bar/foo').and(disallow('foo/bar'))
         end
       end
     end
@@ -111,7 +139,7 @@ RSpec.describe FastIgnore do
             !foo
           GITIGNORE
 
-          expect(subject).to include('foo').and(exclude('foe'))
+          expect(subject).to allow('foo').and(disallow('foe'))
         end
 
         it 'is read in order' do
@@ -120,14 +148,14 @@ RSpec.describe FastIgnore do
             fo*
           GITIGNORE
 
-          expect(subject).to exclude('foe', 'foo')
+          expect(subject).to disallow('foe', 'foo')
         end
 
         it 'has no effect if not negating anything' do
           gitignore <<~GITIGNORE
             !foo
           GITIGNORE
-          expect(subject).to include('foe', 'foo')
+          expect(subject).to allow('foe', 'foo')
         end
       end
 
@@ -142,7 +170,7 @@ RSpec.describe FastIgnore do
             !foo/bar
           GITIGNORE
 
-          expect(subject).to include('bar/bar').and(exclude('foo/bar', 'foo/foo'))
+          expect(subject).to allow('bar/bar').and(disallow('foo/bar', 'foo/foo'))
         end
       end
 
@@ -156,7 +184,7 @@ RSpec.describe FastIgnore do
             \\!important!.txt
           GITIGNORE
 
-          expect(subject).to include('important!.txt').and(exclude('!important!.txt'))
+          expect(subject).to allow('important!.txt').and(disallow('!important!.txt'))
         end
       end
     end
@@ -178,7 +206,7 @@ RSpec.describe FastIgnore do
             *our
           GITIGNORE
 
-          expect(subject).to include('few', 'fewer').and(exclude('f/our', 'four', 'favour'))
+          expect(subject).to allow('few', 'fewer').and(disallow('f/our', 'four', 'favour'))
         end
 
         it "doesn't match a slash" do
@@ -186,7 +214,7 @@ RSpec.describe FastIgnore do
             f*our
           GITIGNORE
 
-          expect(subject).to include('few', 'fewer', 'f/our').and(exclude('four', 'favour'))
+          expect(subject).to allow('few', 'fewer', 'f/our').and(disallow('four', 'favour'))
         end
 
         it "matches any number of characters in the middle if there's a star" do
@@ -194,7 +222,7 @@ RSpec.describe FastIgnore do
             f*r
           GITIGNORE
 
-          expect(subject).to include('f/our', 'few').and(exclude('four', 'fewer', 'favour'))
+          expect(subject).to allow('f/our', 'few').and(disallow('four', 'fewer', 'favour'))
         end
 
         it "matches any number of characters at the end if there's a star" do
@@ -202,7 +230,7 @@ RSpec.describe FastIgnore do
             few*
           GITIGNORE
 
-          expect(subject).to include('f/our', 'four', 'favour').and(exclude('few', 'fewer'))
+          expect(subject).to allow('f/our', 'four', 'favour').and(disallow('few', 'fewer'))
         end
       end
 
@@ -214,7 +242,7 @@ RSpec.describe FastIgnore do
             ?our
           GITIGNORE
 
-          expect(subject).to include('fouled', 'fear', 'favour', 'fa/our', 'foul').and(exclude('tour', 'four'))
+          expect(subject).to allow('fouled', 'fear', 'favour', 'fa/our', 'foul').and(disallow('tour', 'four'))
         end
 
         it "doesn't match a slash" do
@@ -222,7 +250,7 @@ RSpec.describe FastIgnore do
             fa?our
           GITIGNORE
 
-          expect(subject).to include('fouled', 'fear', 'tour', 'four', 'fa/our', 'foul').and(exclude('favour'))
+          expect(subject).to allow('fouled', 'fear', 'tour', 'four', 'fa/our', 'foul').and(disallow('favour'))
         end
 
         it "matches any number of characters in the middle if there's a star" do
@@ -230,7 +258,7 @@ RSpec.describe FastIgnore do
             f??r
           GITIGNORE
 
-          expect(subject).to include('fouled', 'tour', 'favour', 'fa/our', 'foul').and(exclude('four', 'fear'))
+          expect(subject).to allow('fouled', 'tour', 'favour', 'fa/our', 'foul').and(disallow('four', 'fear'))
         end
 
         it "matches a single number of characters at the end if there's a ?" do
@@ -238,7 +266,7 @@ RSpec.describe FastIgnore do
             fou?
           GITIGNORE
 
-          expect(subject).to include('fouled', 'fear', 'tour', 'favour', 'fa/our').and(exclude('foul', 'four'))
+          expect(subject).to allow('fouled', 'fear', 'tour', 'favour', 'fa/our').and(disallow('foul', 'four'))
         end
       end
 
@@ -250,7 +278,7 @@ RSpec.describe FastIgnore do
             a[ab]
           GITIGNORE
 
-          expect(subject).to include('ac').and(exclude('ab', 'aa'))
+          expect(subject).to allow('ac').and(disallow('ab', 'aa'))
         end
 
         it "doesn't matches a slash even if you specify it" do
@@ -258,7 +286,7 @@ RSpec.describe FastIgnore do
             b[i/]b
           GITIGNORE
 
-          expect(subject).to include('b/b').and(exclude('bib'))
+          expect(subject).to allow('b/b').and(disallow('bib'))
         end
       end
 
@@ -274,7 +302,7 @@ RSpec.describe FastIgnore do
           /*.c
         GITIGNORE
 
-        expect(subject).to include('mozilla-sha1/sha1.c').and(exclude('cat-file.c'))
+        expect(subject).to allow('mozilla-sha1/sha1.c').and(disallow('cat-file.c'))
       end
     end
 
@@ -289,7 +317,7 @@ RSpec.describe FastIgnore do
             **/foo
           GITIGNORE
 
-          expect(subject).to include('bar/bar/bar').and(exclude('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
+          expect(subject).to allow('bar/bar/bar').and(disallow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
         end
       end
 
@@ -302,7 +330,7 @@ RSpec.describe FastIgnore do
             abc/**
           GITIGNORE
 
-          expect(subject).to include('bar/bar/foo', 'bar/abc/foo').and(exclude('abc/bar', 'abc/foo/bar'))
+          expect(subject).to allow('bar/bar/foo', 'bar/abc/foo').and(disallow('abc/bar', 'abc/foo/bar'))
         end
 
         context 'when the gitigore root is down a level from the pwd' do
@@ -313,7 +341,7 @@ RSpec.describe FastIgnore do
               abc/**
             GITIGNORE
 
-            expect(subject).to include('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(exclude('bar/abc/foo'))
+            expect(subject).to allow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(disallow('bar/abc/foo'))
           end
         end
       end
@@ -327,7 +355,7 @@ RSpec.describe FastIgnore do
             a/**/b
           GITIGNORE
 
-          expect(subject).to include('z/y', 'z/a/b', 'z/a/x/b').and(exclude('a/b', 'a/x/b', 'a/x/y/b'))
+          expect(subject).to allow('z/y', 'z/a/b', 'z/a/x/b').and(disallow('a/b', 'a/x/b', 'a/x/y/b'))
         end
       end
 
@@ -341,7 +369,7 @@ RSpec.describe FastIgnore do
                 **our
               GITIGNORE
 
-              expect(subject).to include('few', 'fewer').and(exclude('f/our', 'four', 'favour'))
+              expect(subject).to allow('few', 'fewer').and(disallow('f/our', 'four', 'favour'))
             end
 
             it "doesn't match a slash" do
@@ -349,7 +377,7 @@ RSpec.describe FastIgnore do
                 f**our
               GITIGNORE
 
-              expect(subject).to include('few', 'fewer', 'f/our').and(exclude('four', 'favour'))
+              expect(subject).to allow('few', 'fewer', 'f/our').and(disallow('four', 'favour'))
             end
 
             it 'matches any number of characters in the middle' do
@@ -357,7 +385,7 @@ RSpec.describe FastIgnore do
                 f**r
               GITIGNORE
 
-              expect(subject).to include('f/our', 'few').and(exclude('four', 'fewer', 'favour'))
+              expect(subject).to allow('f/our', 'few').and(disallow('four', 'fewer', 'favour'))
             end
 
             it 'matches any number of characters at the end' do
@@ -365,7 +393,7 @@ RSpec.describe FastIgnore do
                 few**
               GITIGNORE
 
-              expect(subject).to include('f/our', 'four', 'favour').and(exclude('few', 'fewer'))
+              expect(subject).to allow('f/our', 'four', 'favour').and(disallow('few', 'fewer'))
             end
           end
         end
@@ -373,8 +401,8 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '#to_a' do
-    subject { described_class.new(relative: true, **args).to_a }
+  describe 'FastIgnore' do
+    subject { described_class.new(relative: true, **args) }
 
     let(:args) { {} }
 
@@ -385,20 +413,20 @@ RSpec.describe FastIgnore do
 
       it 'returns all files when there is no gitignore' do
         create_file_list 'foo', 'bar'
-        expect(subject).to contain_exactly('foo', 'bar')
+        expect(subject).to allow_exactly('foo', 'bar')
       end
     end
 
     it 'returns hidden files' do
       create_file_list '.gitignore', '.a', '.b/.c'
 
-      expect(subject).to contain_exactly('.gitignore', '.a', '.b/.c')
+      expect(subject).to allow_exactly('.gitignore', '.a', '.b/.c')
     end
 
     it 'ignores .git by default' do
       create_file_list '.gitignore', '.git/WHATEVER'
 
-      expect(subject).to exclude('.git/WHATEVER')
+      expect(subject).to disallow('.git/WHATEVER')
     end
 
     it 'acts as though the soft links to nowhere are not there' do
@@ -406,13 +434,14 @@ RSpec.describe FastIgnore do
       FileUtils.ln_s('foo_target', 'foo')
       FileUtils.rm('foo_target')
 
-      expect(subject).to exclude('foo').and(include('.gitignore'))
+      expect(subject).to disallow('foo').and(allow('.gitignore'))
     end
 
     it 'follows soft links' do
       create_file_list 'foo_target', '.gitignore'
       FileUtils.ln_s('foo_target', 'foo')
-      expect(subject).to contain_exactly('foo', 'foo_target', '.gitignore')
+
+      expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
     end
 
     it 'follows soft links to directories' do # rubocop:disable RSpec/ExampleLength
@@ -422,7 +451,7 @@ RSpec.describe FastIgnore do
       GITIGNORE
 
       FileUtils.ln_s('foo_target/foo_target', 'foo')
-      expect(subject).to contain_exactly('foo', '.gitignore')
+      expect(subject).to allow_exactly('foo', '.gitignore')
     end
 
     it_behaves_like 'the gitignore documentation:'
@@ -441,7 +470,7 @@ RSpec.describe FastIgnore do
           foo
         FANCYIGNORE
 
-        expect(subject).to exclude('foo').and(include('bar', 'baz'))
+        expect(subject).to disallow('foo').and(allow('bar', 'baz'))
       end
     end
 
@@ -459,7 +488,7 @@ RSpec.describe FastIgnore do
           foo
         FANCYIGNORE
 
-        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
       end
     end
 
@@ -473,7 +502,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('foo').and(include('bar', 'baz'))
+        expect(subject).to disallow('foo').and(allow('bar', 'baz'))
       end
     end
 
@@ -487,7 +516,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
       end
     end
 
@@ -501,7 +530,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
       end
     end
 
@@ -515,7 +544,7 @@ RSpec.describe FastIgnore do
           foo
         GITIGNORE
 
-        expect(subject).to exclude('foo/bar').and(include('baz/bar'))
+        expect(subject).to disallow('foo/bar').and(allow('baz/bar'))
       end
     end
 
@@ -529,7 +558,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('foo/bar/foo', 'foo/bar/baz', 'bar/foo').and(include('baz'))
+        expect(subject).to disallow('foo/bar/foo', 'foo/bar/baz', 'bar/foo').and(allow('baz'))
       end
     end
 
@@ -543,7 +572,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('baz', 'foo/bar/baz', 'bar/foo').and(include('foo/baz/foo'))
+        expect(subject).to disallow('baz', 'foo/bar/baz', 'bar/foo').and(allow('foo/baz/foo'))
       end
     end
 
@@ -557,7 +586,7 @@ RSpec.describe FastIgnore do
           for
         GITIGNORE
 
-        expect(subject).to exclude('foo', 'for').and(include('foe', 'food'))
+        expect(subject).to disallow('foo', 'for').and(allow('foe', 'food'))
       end
     end
 
@@ -571,7 +600,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to exclude('foo', 'bar').and(include('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
       end
     end
   end
@@ -589,7 +618,7 @@ RSpec.describe FastIgnore do
     it 'ignore .git by default' do
       create_file_list '.gitignore', '.git/WHATEVER'
 
-      expect(subject).to exclude('.git')
+      expect(subject).to disallow('.git')
     end
 
     it_behaves_like 'the gitignore documentation:'
