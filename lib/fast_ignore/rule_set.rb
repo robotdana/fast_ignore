@@ -10,29 +10,27 @@ class FastIgnore
       @rules = []
       @non_dir_only_rules = []
       @project_root = project_root
-      @allowed_unrecursive = { @project_root => true }
-      @allowed_recursive = { @project_root => true }
+
       @any_not_anchored = false
       @empty = true
       @allow = allow
     end
 
-    def allowed_unrecursive?(path, dir)
-      @allowed_unrecursive.fetch(path) do
-        (dir ? @rules : @non_dir_only_rules).reverse_each do |rule|
-          # 14 = Rule::FNMATCH_OPTIONS
-          return @allowed_unrecursive[path] = rule.negation? if ::File.fnmatch?(rule.rule, path, 14)
-        end
-
-        @allowed_unrecursive[path] = default?(dir)
-      end
-    end
-
     def allowed_recursive?(path, dir)
+      @allowed_recursive ||= { @project_root => true }
       @allowed_recursive.fetch(path) do
         @allowed_recursive[path] =
           allowed_recursive?(::File.dirname(path), true) && allowed_unrecursive?(path, dir)
       end
+    end
+
+    def allowed_unrecursive?(path, dir)
+      (dir ? @rules : @non_dir_only_rules).reverse_each do |rule|
+        # 14 = Rule::FNMATCH_OPTIONS
+        return rule.negation? if ::File.fnmatch?(rule.rule, path, 14)
+      end
+
+      default?(dir)
     end
 
     def parse_rules(rule_line, root: @root, expand_path: false)
@@ -49,8 +47,7 @@ class FastIgnore
     end
 
     def clear_cache
-      @allowed_unrecursive = { @project_root => true }
-      @allowed_recursive = { @project_root => true }
+      @allowed_recursive = nil
     end
 
     private

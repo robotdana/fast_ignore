@@ -15,7 +15,7 @@ class FastIgnore
     using ::FastIgnore::Backports::DirEachChild
   end
 
-  def initialize( # rubocop:disable Metrics/ParameterLists
+  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
     relative: false,
     root: ::Dir.pwd,
     ignore_rules: nil,
@@ -24,24 +24,27 @@ class FastIgnore
     include_rules: nil,
     include_files: nil
   )
-    @ignore = ::FastIgnore::RuleSetBuilder.new(root: root)
-    @only = ::FastIgnore::RuleSetBuilder.new(allow: true, root: root)
-    @only.add_files(Array(include_files))
-    @only.add_rules(Array(include_rules), expand_path: true)
+    @root = root.delete_suffix('/')
+    @root_trailing_slash = "#{@root}/"
+    ignore = ::FastIgnore::RuleSetBuilder.new(root: @root)
+    only = ::FastIgnore::RuleSetBuilder.new(allow: true, root: @root)
+    only.add_files(Array(include_files))
+    only.add_rules(Array(include_rules), expand_path: true)
+    @only = only.rule_set
 
-    @ignore.add_rules(['.git'])
-    @ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
-    @ignore.add_files(Array(ignore_files))
-    @ignore.add_rules(Array(ignore_rules))
+    ignore.add_rules(['.git'])
+    ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
+    ignore.add_files(Array(ignore_files))
+    ignore.add_rules(Array(ignore_rules))
+    @ignore = ignore.rule_set
     @relative = relative
-    @root = root
   end
 
   def each(&block)
     if block_given?
-      all_allowed.each(&block)
+      all_allowed(&block)
     else
-      all_allowed.each
+      enum_for(:all_allowed)
     end
   end
 
@@ -52,33 +55,32 @@ class FastIgnore
   end
 
   def all_allowed
-    allowed = []
-    find_children(@root) do |path, dir|
+    find_children(@root_trailing_slash) do |path, dir|
       next false unless @ignore.allowed_unrecursive?(path, dir)
       next false unless @only.allowed_unrecursive?(path, dir)
       next true if dir
-      next false unless ::File.readable?(path)
 
-      allowed << prepare_path(path)
+      yield prepare_path(path)
 
       false
     end
-    allowed
   end
 
   private
 
   def prepare_path(path)
-    @relative ? path.delete_prefix("#{@root}/") : path
+    @relative ? path.delete_prefix(@root_trailing_slash) : path
   end
 
-  def find_children(path, &block)
+  def find_children(path, &block) # rubocop:disable Metrics/MethodLength
     Dir.each_child(path) do |child|
       begin
-        child = ::File.join(path, child)
-        dir = ::File.directory?(child)
-        look_at_children = block.call child, dir
-        find_children(child, &block) if look_at_children
+        child = path + child
+        stat = ::File.stat(child)
+        next unless stat.readable?
+
+        look_at_children = block.call child, stat.directory?
+        find_children("#{child}/", &block) if look_at_children
       rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
         nil
       end

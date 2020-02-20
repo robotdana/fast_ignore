@@ -4,7 +4,7 @@ require_relative 'rule_set'
 
 class FastIgnore
   class RuleSetBuilder
-    attr_reader :rules
+    attr_reader :rule_set
 
     def initialize(root:, allow: false)
       @rule_set = RuleSet.new(project_root: root, allow: allow)
@@ -32,14 +32,6 @@ class FastIgnore
       end
 
       @rule_set.clear_cache
-    end
-
-    def allowed_unrecursive?(path, dir)
-      @rule_set.allowed_unrecursive?(path, dir)
-    end
-
-    def allowed_recursive?(path, dir)
-      @rule_set.allowed_recursive?(path, dir)
     end
   end
 end
