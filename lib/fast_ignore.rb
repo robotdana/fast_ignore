@@ -39,9 +39,9 @@ class FastIgnore
 
   def each(&block)
     if block_given?
-      all_allowed.each(&block)
+      all_allowed(&block)
     else
-      all_allowed.each
+      enum_for(:all_allowed)
     end
   end
 
@@ -52,18 +52,15 @@ class FastIgnore
   end
 
   def all_allowed
-    allowed = []
     find_children(@root) do |path, dir|
       next false unless @ignore.allowed_unrecursive?(path, dir)
       next false unless @only.allowed_unrecursive?(path, dir)
       next true if dir
-      next false unless ::File.readable?(path)
 
-      allowed << prepare_path(path)
+      yield prepare_path(path)
 
       false
     end
-    allowed
   end
 
   private
@@ -72,12 +69,14 @@ class FastIgnore
     @relative ? path.delete_prefix("#{@root}/") : path
   end
 
-  def find_children(path, &block)
+  def find_children(path, &block) # rubocop:disable Metrics/MethodLength
     Dir.each_child(path) do |child|
       begin
         child = ::File.join(path, child)
-        dir = ::File.directory?(child)
-        look_at_children = block.call child, dir
+        stat = ::File.stat(child)
+        next unless stat.readable?
+
+        look_at_children = block.call child, stat.directory?
         find_children(child, &block) if look_at_children
       rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
         nil

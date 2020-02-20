@@ -20,5 +20,9 @@ class FastIgnore
     def inspect
       "#<Rule #{'!' if negation?}#{rule}#{'/' if dir_only?}>"
     end
+
+    def match?(path)
+      ::File.fnmatch?(@rule, path, 14)
+    end
   end
 end
