@@ -10,13 +10,14 @@ class FastIgnore
       @rules = []
       @non_dir_only_rules = []
       @project_root = project_root
-      @allowed_recursive = { @project_root => true }
+
       @any_not_anchored = false
       @empty = true
       @allow = allow
     end
 
     def allowed_recursive?(path, dir)
+      @allowed_recursive ||= { @project_root => true }
       @allowed_recursive.fetch(path) do
         @allowed_recursive[path] =
           allowed_recursive?(::File.dirname(path), true) && allowed_unrecursive?(path, dir)
@@ -46,7 +47,7 @@ class FastIgnore
     end
 
     def clear_cache
-      @allowed_recursive = { @project_root => true }
+      @allowed_recursive = nil
     end
 
     private
