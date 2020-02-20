@@ -15,7 +15,7 @@ class FastIgnore
     using ::FastIgnore::Backports::DirEachChild
   end
 
-  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength
+  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
     relative: false,
     root: ::Dir.pwd,
     ignore_rules: nil,
@@ -26,15 +26,17 @@ class FastIgnore
   )
     @root = root.delete_suffix('/')
     @root_trailing_slash = "#{@root}/"
-    @ignore = ::FastIgnore::RuleSetBuilder.new(root: @root)
-    @only = ::FastIgnore::RuleSetBuilder.new(allow: true, root: @root)
-    @only.add_files(Array(include_files))
-    @only.add_rules(Array(include_rules), expand_path: true)
+    ignore = ::FastIgnore::RuleSetBuilder.new(root: @root)
+    only = ::FastIgnore::RuleSetBuilder.new(allow: true, root: @root)
+    only.add_files(Array(include_files))
+    only.add_rules(Array(include_rules), expand_path: true)
+    @only = only.rule_set
 
-    @ignore.add_rules(['.git'])
-    @ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
-    @ignore.add_files(Array(ignore_files))
-    @ignore.add_rules(Array(ignore_rules))
+    ignore.add_rules(['.git'])
+    ignore.add_files([gitignore]) if gitignore && ::File.exist?(gitignore)
+    ignore.add_files(Array(ignore_files))
+    ignore.add_rules(Array(ignore_rules))
+    @ignore = ignore.rule_set
     @relative = relative
   end
 
