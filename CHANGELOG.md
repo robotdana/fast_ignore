@@ -1,3 +1,6 @@
+# v0.5.2
+- performance improvements
+
 # v0.5.1
 - restore `.allowed?`. now i have tests for it. oops
 
