@@ -58,6 +58,8 @@ class FastIgnore
       when false
         nil
       else
+        warn 'Deprecation warning! supplying gitignore file path directly is deprecated. '\
+          'Please use gitignore: false and add your path to the ignore_files array'
         from_file(gitignore, project_root: root)
       end
     end

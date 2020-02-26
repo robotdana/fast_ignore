@@ -43,18 +43,21 @@ By default, FastIgnore will return full paths. To return paths relative to the c
 FastIgnore.new(relative: true).to_a
 ```
 
-You can specify other gitignore-style files to ignore as well. These rules will be appended after the gitignore file in order (order matters for negations)
+You can specify other gitignore-style files to ignore as well. Missing files will raise an `Errno::ENOENT` error.
+
 ```ruby
 FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file').to_a
 FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
 ```
-You can also supply an array of rule strings. These rules will be appended after the gitignore and any other files in order (order matters for negations)
+
+You can also supply an array of rule strings.
+
 ```ruby
 FastIgnore.new(ignore_rules: '.DS_Store').to_a
 FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
 ```
 
-To use only another ignore file or an array of rules, and not try to load a gitignore file:
+To use only another ignore file or an array of rules, and not even try to load a gitignore file:
 ```ruby
 FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file', gitignore: false)
 FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false)
@@ -62,11 +65,11 @@ FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false)
 
 By default, FastIgnore will look in the directory the script is run in (`PWD`) for a gitignore file. If it's somewhere else:
 ```ruby
-FastIgnore.new(gitignore: '/absolute/path/to/.gitignore').to_a
+FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore', gitignore: false).to_a
 ```
 Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
 
-To raise if the gitignore file is not found use:
+To raise an `Errno::ENOENT` error if the .gitignore file is not found use:
 ```ruby
 FastIgnore.new(gitignore: true)
 ```
@@ -87,7 +90,7 @@ Building on the gitignore format, FastIgnore also accepts a list of allowed or i
 # a line like this means any files named foo will be included
 # as well as any files within directories named foo
 foo
-# a line beginning with a slash will be anything in a directory that is a child of the PWD
+# a line beginning with a slash will be anything in a directory that is a child of the $PWD
 /foo
 # a line ending in a slash will will include any files in any directories named foo
 # but not any files named foo
@@ -127,7 +130,7 @@ FastIgnore.new(include_files: StringIO.new([File.read('/my/path'), File.read('/a
 To use the additional ARGV handling rules mentioned above for files
 
 ```ruby
-FastIgnore.new(include_rules: ["my/rule", File.read('/my/path')])
+FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')])
 ```
 
 ## Known issues
