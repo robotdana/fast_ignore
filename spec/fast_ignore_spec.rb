@@ -14,7 +14,19 @@ RSpec::Matchers.define(:allow) do |*expected|
     true
   end
 end
-RSpec::Matchers.define_negated_matcher(:disallow, :allow)
+RSpec::Matchers.define_negated_matcher(:exclude, :include)
+RSpec::Matchers.define(:disallow) do |*expected|
+  match do |actual|
+    expect(actual.to_a).to exclude(*expected)
+    if actual.respond_to?(:allowed?)
+      expected.each do |path|
+        expect(actual).not_to be_allowed(path)
+      end
+    end
+
+    true
+  end
+end
 
 RSpec::Matchers.define(:allow_exactly) do |*expected|
   match do |actual|
@@ -590,10 +602,10 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given an array of include_rules with absolute paths and gitignore' do
-      let(:args) { { include_rules: ['./bar', "#{Dir.pwd}/baz"] } }
+    context 'when given an array of argv_rules with absolute paths and gitignore' do
+      let(:args) { { argv_rules: ['./bar', "#{Dir.pwd}/baz"] } }
 
-      it 'reads the list of rules and gitignore' do
+      it 'resolves the paths to the current directory' do
         create_file_list 'foo', 'bar', 'baz'
 
         gitignore <<~GITIGNORE
@@ -601,6 +613,51 @@ RSpec.describe FastIgnore do
         GITIGNORE
 
         expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+      end
+    end
+
+    context 'when given an array of negated argv_rules with absolute paths and gitignore' do
+      let(:args) { { argv_rules: ['*', '!./foo', "!#{Dir.pwd}/baz"] } }
+
+      it 'resolves the paths even when negated' do
+        create_file_list 'foo', 'bar', 'baz', 'boo'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to disallow('foo', 'baz', 'bar').and(allow('boo'))
+      end
+    end
+
+    context 'when given an array of unanchored argv_rules' do
+      let(:args) { { argv_rules: ['**/foo', '*baz'] } }
+
+      it 'treats the rules as unanchored' do
+        create_file_list 'bar/foo', 'bar/baz', 'bar/bar', 'foo', 'baz/foo', 'baz/baz'
+
+        expect(subject).to disallow('bar/bar', 'baz', 'bar')
+          .and(allow('bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'))
+      end
+    end
+
+    context 'when given an array of anchored argv_rules with absolute paths and gitignore' do
+      let(:args) { { argv_rules: ['foo', 'baz'] } }
+
+      it 'anchors the rules to the given dir, for performance reasons' do
+        create_file_list 'bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'
+
+        expect(subject).to disallow('bar/foo', 'bar/baz').and(allow('foo', 'baz/foo', 'baz/baz'))
+      end
+    end
+
+    context 'when given an array of argv_rules and include_rules' do
+      let(:args) { { argv_rules: ['foo', 'baz'], include_rules: ['foo', 'bar'] } }
+
+      it 'adds the rulesets, they must pass both lists' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        expect(subject).to disallow('baz', 'bar').and(allow('foo'))
       end
     end
   end

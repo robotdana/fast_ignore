@@ -169,6 +169,10 @@ Style/IfInsideElse:
 Style/MultipleComparison:
   Enabled: false
 
+# it's microscopically faster
+Style/Not:
+  Enabled: false
+
 # we use %w{} pretty frequently
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:

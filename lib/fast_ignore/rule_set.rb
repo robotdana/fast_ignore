@@ -12,8 +12,8 @@ class FastIgnore
       @project_root = project_root
 
       @any_not_anchored = false
-      @empty = true
       @allow = allow
+      @default = true unless allow
     end
 
     def allowed_recursive?(path, dir)
@@ -30,35 +30,23 @@ class FastIgnore
         return rule.negation? if ::File.fnmatch?(rule.rule, path, 14)
       end
 
-      default?(dir)
-    end
-
-    def parse_rules(rule_line, root: @root, expand_path: false)
-      ::FastIgnore::RuleParser.new_rule(rule_line, rule_set: self, allow: @allow, root: root, expand_path: expand_path)
+      (not @allow) || (@any_not_anchored if dir)
     end
 
     def append_rules(anchored, rules)
       rules.each do |rule|
-        @empty = false
         @rules << rule
         @non_dir_only_rules << rule unless rule.dir_only?
         @any_not_anchored ||= !anchored
       end
     end
 
-    def clear_cache
-      @allowed_recursive = nil
+    def length
+      @rules.length
     end
 
-    private
-
-    def default?(dir)
-      return true unless @allow
-      return true if @empty
-      return false unless dir
-      return true if @any_not_anchored
-
-      false
+    def empty?
+      @rules.empty?
     end
   end
 end

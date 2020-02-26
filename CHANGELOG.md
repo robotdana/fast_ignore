@@ -1,3 +1,11 @@
+# v0.6.0
+- nicer argv handling
+  - add `argv_rules:` option, which resolves paths and considers everything that doesn't start with a `*` to start with a `/`
+- combine the different includes methods and files using AND
+- slightly more realistic version comparison just in case someone releases ruby 2.10
+- can be run with --disable-gems
+- `.allowed?` now more exactly matches `.each`, it returns false for directories and unreadable files.
+
 # v0.5.2
 - performance improvements
 
