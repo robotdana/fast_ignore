@@ -66,6 +66,11 @@ FastIgnore.new(gitignore: '/absolute/path/to/.gitignore').to_a
 ```
 Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
 
+To raise if the gitignore file is not found use:
+```ruby
+FastIgnore.new(gitignore: true)
+```
+
 To check if a single file is allowed, use
 ```ruby
 FastIgnore.new.allowed?('relative/path')
@@ -78,7 +83,7 @@ FastIgnore.new.allowed?('~/home/path')
 
 Building on the gitignore format, FastIgnore also accepts a list of allowed or included files.
 
-```
+```gitignore
 # a line like this means any files named foo will be included
 # as well as any files within directories named foo
 foo
@@ -98,7 +103,32 @@ FastIgnore.new(include_files: '/absolute/path/to/my/include/file', gitignore: fa
 FastIgnore.new(include_rules: %w{my*rule /and/another !rule}, gitignore: false)
 ```
 
-The string array rules additionally expects to handle all kinds of `ARGV` values, so will correctly resolve absolute paths and paths beginning with `~`, `../` and `./`. Note: it will *not* resolve e.g. `/../` in the middle of a rule that doesn't begin with any of `~`,`../`,`./`,`/`. This is not available for the file form.
+There is an additional argument meant for dealing with humans and `ARGV` values.
+
+```ruby
+FastIgnore.new(argv_rules: ['./a/pasted/path', '/or/a/path/from/stdin', 'an/argument', '*.txt'])
+```
+
+It resolves absolute paths, and paths beginning with `~`, `../` and `./` (with and without `!`)
+It assumes all rules are anchored unless they begin with `*` or `!*`.
+
+Note: it will *not* resolve e.g. `/../` in the middle of a rule that doesn't begin with any of `~`,`../`,`./`,`/`.
+
+## Combinations
+
+In the simplest case a file must be allowed by each ignore file, each include file, and each array of rules. That is, they are combined using AND.
+
+To combine files using `OR`, that is, a file may be included by either file it doesn't have to be referred to in both:
+
+```ruby
+FastIgnore.new(include_files: StringIO.new([File.read('/my/path'), File.read('/another/path')]).join("\n"))
+```
+
+To use the additional ARGV handling rules mentioned above for files
+
+```ruby
+FastIgnore.new(include_rules: ["my/rule", File.read('/my/path')])
+```
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`

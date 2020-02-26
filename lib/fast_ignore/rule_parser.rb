@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 
 require_relative 'rule'
+require_relative 'backports'
 
 class FastIgnore
   class RuleParser
-    unless ::RUBY_VERSION >= '2.4'
-      require_relative 'backports/match'
-      using ::FastIgnore::Backports::Match
-    end
-
-    unless ::RUBY_VERSION >= '2.5'
+    if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
       require_relative 'backports/delete_prefix_suffix'
       using ::FastIgnore::Backports::DeletePrefixSuffix
+
+      if ::FastIgnore::Backports.ruby_version_less_than?(2, 4)
+        require_relative 'backports/match'
+        using ::FastIgnore::Backports::Match
+      end
     end
 
     # rule or nil
@@ -19,11 +20,11 @@ class FastIgnore
       def new_rule(rule, root:, rule_set:, allow: false, expand_path: false) # rubocop:disable Metrics/MethodLength
         rule = strip(rule)
         rule, dir_only = extract_dir_only(rule)
-        rule = expand_path(rule, root) if expand_path
 
         return if skip?(rule)
 
         rule, negation = extract_negation(rule, allow)
+        rule = expand_path(rule, root) if expand_path
 
         anchored, prefix = prefix(rule)
 
@@ -79,23 +80,15 @@ class FastIgnore
       end
 
       def expand_path(rule, root)
-        if rule.match?(%r{^(?:[~/]|\.{1,2}/)})
-          ::File.expand_path(rule).delete_prefix(root)
-        else
-          rule
-        end
+        rule = ::File.expand_path(rule).delete_prefix(root) if rule.match?(%r{^(?:[~/]|\.{1,2}/)})
+
+        rule = "/#{rule}" unless rule.start_with?('*') || rule.start_with?('/')
+
+        rule
       end
 
       def skip?(rule)
-        empty?(rule) || comment?(rule)
-      end
-
-      def empty?(rule)
-        rule.empty?
-      end
-
-      def comment?(rule)
-        rule.start_with?('#')
+        rule.empty? || rule.start_with?('#')
       end
     end
   end
