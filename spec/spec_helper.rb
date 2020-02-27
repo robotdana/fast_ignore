@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
-require 'simplecov'
+begin
+  require 'simplecov'
 
-SimpleCov.start do
-  add_filter '/backports/'
-  add_filter '/spec/'
+  SimpleCov.start do
+    add_filter '/backports/'
+    add_filter '/spec/'
+    enable_coverage(:branch)
+  end
+  SimpleCov.minimum_coverage 100
+rescue LoadError
+  nil # no simplecov for you
 end
-SimpleCov.minimum_coverage 100
-SimpleCov.enable_coverage(:branch)
 
 require 'bundler/setup'
 require 'fast_ignore'
