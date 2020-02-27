@@ -4,7 +4,7 @@ begin
   require 'simplecov'
 
   SimpleCov.start do
-    add_filter '/backports/'
+    add_filter '/backports'
     add_filter '/spec/'
     enable_coverage(:branch)
   end

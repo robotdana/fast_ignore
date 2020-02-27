@@ -54,7 +54,6 @@ class FastIgnore
     path = ::File.expand_path(path)
     stat = ::File.stat(path)
     dir = stat.directory?
-    return false unless stat.readable?
     return false if dir
 
     @rule_sets.all? { |r| r.allowed_recursive?(path, dir) }
@@ -73,7 +72,6 @@ class FastIgnore
       begin
         child = path + child
         stat = ::File.stat(child)
-        next unless stat.readable?
 
         dir = stat.directory?
         next unless @rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }

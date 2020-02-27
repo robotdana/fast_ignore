@@ -699,6 +699,16 @@ RSpec.describe FastIgnore do
         expect(subject).to respond_to :first
       end
     end
+
+    context 'when given relative: false' do
+      let(:args) { { relative: false } }
+
+      it 'returns full paths' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        expect(subject).to allow(::File.join(Dir.pwd, 'foo'), ::File.join(Dir.pwd, 'bar'), ::File.join(Dir.pwd, 'baz'))
+      end
+    end
   end
 
   describe 'git ls-files' do
