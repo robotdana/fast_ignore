@@ -420,12 +420,46 @@ RSpec.describe FastIgnore do
 
     around { |e| within_temp_dir { e.run } }
 
-    context 'without a gitignore file' do
+    it 'returns all files when there is no gitignore' do
+      create_file_list 'foo', 'bar'
+      expect(subject).to allow_exactly('foo', 'bar')
+    end
+
+    context 'when gitignore: false' do
       let(:args) { { gitignore: false } }
 
       it 'returns all files when there is no gitignore' do
         create_file_list 'foo', 'bar'
         expect(subject).to allow_exactly('foo', 'bar')
+      end
+
+      it 'ignores the given gitignore file and returns all files anyway' do # rubocop:disable RSpec/ExampleLength
+        create_file_list 'foo', 'bar'
+
+        gitignore <<~GITIGNORE
+          foo
+          bar
+        GITIGNORE
+
+        expect(subject).to allow('foo', 'bar')
+      end
+    end
+
+    context 'when gitignore: true' do
+      let(:args) { { gitignore: true } }
+
+      it 'raises Errno:ENOENT when there is no gitignore' do
+        expect { subject.to_a }.to raise_error(Errno::ENOENT)
+      end
+
+      it 'respects the .gitignore file when it is there' do
+        create_file_list 'foo', 'bar'
+
+        gitignore <<~GITIGNORE
+          foo
+        GITIGNORE
+
+        expect(subject).to allow('bar')
       end
     end
 
@@ -658,6 +692,11 @@ RSpec.describe FastIgnore do
         create_file_list 'foo', 'bar', 'baz'
 
         expect(subject).to disallow('baz', 'bar').and(allow('foo'))
+      end
+
+      it 'returns an enumerator' do
+        expect(subject.each).to be_a Enumerator
+        expect(subject).to respond_to :first
       end
     end
   end

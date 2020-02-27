@@ -17,12 +17,10 @@ class FastIgnore
       @negation = negation
     end
 
+    # :nocov:
     def inspect
       "#<Rule #{'!' if negation?}#{rule}#{'/' if dir_only?}>"
     end
-
-    def match?(path)
-      ::File.fnmatch?(@rule, path, 14)
-    end
+    # :nocov:
   end
 end

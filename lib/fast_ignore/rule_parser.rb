@@ -5,6 +5,7 @@ require_relative 'backports'
 
 class FastIgnore
   class RuleParser
+    # :nocov:
     if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
       require_relative 'backports/delete_prefix_suffix'
       using ::FastIgnore::Backports::DeletePrefixSuffix
@@ -14,6 +15,7 @@ class FastIgnore
         using ::FastIgnore::Backports::Match
       end
     end
+    # :nocov:
 
     # rule or nil
     class << self
