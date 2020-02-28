@@ -9,11 +9,6 @@ class FastIgnore
     if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
       require_relative 'backports/delete_prefix_suffix'
       using ::FastIgnore::Backports::DeletePrefixSuffix
-
-      if ::FastIgnore::Backports.ruby_version_less_than?(2, 4)
-        require_relative 'backports/match'
-        using ::FastIgnore::Backports::Match
-      end
     end
     # :nocov:
 

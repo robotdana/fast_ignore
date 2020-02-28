@@ -14,6 +14,8 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/robotdana/fast_ignore'
   spec.license = 'MIT'
 
+  spec.required_ruby_version = '~> 2.4'
+
   if spec.respond_to?(:metadata)
     spec.metadata['homepage_uri'] = spec.homepage
     spec.metadata['source_code_uri'] = 'https://github.com/robotdana/fast_ignore'
@@ -33,8 +35,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.0'
   spec.add_development_dependency 'rubocop', '>= 0.74.0'
   spec.add_development_dependency 'rubocop-rspec', '~> 1'
-
-  if !RUBY_VERSION.start_with?('2.3.')
-    spec.add_development_dependency 'simplecov', '~> 0.18.5'
-  end
+  spec.add_development_dependency 'simplecov', '~> 0.18.5'
 end

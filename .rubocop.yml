@@ -14,6 +14,7 @@ AllCops:
     - vendor/**/*
   DisplayCopNames: true
   DisplayStyleGuide: true
+  TargetRubyVersion: 2.4
 
 # all of our layout customisations are because we prefer indentation to be
 # always consistently 2 spaces, for blocks, scopes, multiline expressions, etc
@@ -80,6 +81,9 @@ Layout/FirstArrayElementIndentation:
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
+Layout/LineLength:
+  Max: 120
+
 # to match our preference for consistent indentation
 # and hanging assignment looks lost
 Layout/MultilineAssignmentLayout:
@@ -113,9 +117,6 @@ Metrics/BlockLength:
     - describe
     - context
     - shared_examples
-
-Metrics/LineLength:
-  Max: 120
 
 Metrics/CyclomaticComplexity:
   Enabled: false
@@ -200,3 +201,12 @@ Style/SymbolArray:
 
 Style/WordArray:
   Enabled: false
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true

@@ -1,19 +1,15 @@
 # frozen_string_literal: true
 
-begin
-  require 'simplecov'
+require 'bundler/setup'
+require 'simplecov'
 
-  SimpleCov.start do
-    add_filter '/backports'
-    add_filter '/spec/'
-    enable_coverage(:branch)
-  end
-  SimpleCov.minimum_coverage 100
-rescue LoadError
-  nil # no simplecov for you
+SimpleCov.start do
+  add_filter '/backports'
+  add_filter '/spec/'
+  minimum_coverage 100
+  enable_coverage(:branch)
 end
 
-require 'bundler/setup'
 require 'fast_ignore'
 
 require_relative 'support/temp_dir_helper'
