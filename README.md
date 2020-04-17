@@ -71,7 +71,12 @@ Note that the location of the .gitignore file will affect rules beginning with `
 
 To raise an `Errno::ENOENT` error if the .gitignore file is not found use:
 ```ruby
-FastIgnore.new(gitignore: true)
+FastIgnore.new(gitignore: true).to_a
+```
+
+To filter by extensionless files shebang/hashbang/etc:
+```ruby
+FastIgnore.new(include_rules: '*.rb', include_shebangs: 'ruby').to_a
 ```
 
 To check if a single file is allowed, use

@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'rule'
-require_relative 'backports'
-
 class FastIgnore
   class RuleParser
     # :nocov:

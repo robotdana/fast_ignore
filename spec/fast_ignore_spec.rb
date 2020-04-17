@@ -709,6 +709,70 @@ RSpec.describe FastIgnore do
         expect(subject).to allow(::File.join(Dir.pwd, 'foo'), ::File.join(Dir.pwd, 'bar'), ::File.join(Dir.pwd, 'baz'))
       end
     end
+
+    context 'when given include_shebangs and include_rules' do
+      let(:args) { { include_shebangs: [:ruby], include_rules: '*.rb' } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        gitignore <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        expect(subject).to allow('foo', 'baz.rb').and(disallow('ignored_foo', 'bar', 'baz'))
+      end
+    end
+
+    context 'when given only include_shebangs' do
+      let(:args) { { include_shebangs: [:ruby] } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        gitignore <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+      end
+    end
   end
 
   describe 'git ls-files' do

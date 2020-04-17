@@ -1,7 +1,10 @@
-# v0.7.0
+# v0.8.0
 - drop support for ruby 2.3. My plan is to only support supported ruby versions
 - add coverage to the pipeline. removed some methods, added some tests, and now we have 100% test coverage
 - deprecate using `gitignore: '/path/to/gitignore'`. please use `gitignore: false, ignore_files: '/path/to/gitignore'` instead.
+
+# v0.7.0
+- add `include_shebang:` which filters by shebangs
 
 # v0.6.0
 - nicer argv handling

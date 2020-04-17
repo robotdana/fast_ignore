@@ -2,14 +2,6 @@
 
 require 'bundler/setup'
 require 'simplecov'
-
-SimpleCov.start do
-  add_filter '/backports'
-  add_filter '/spec/'
-  minimum_coverage 100
-  enable_coverage(:branch)
-end
-
 require 'fast_ignore'
 
 require_relative 'support/temp_dir_helper'
