@@ -580,6 +580,20 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given an array of include_rules as symbols and gitignore' do
+      let(:args) { { include_rules: [:bar, :baz] } }
+
+      it 'reads the list of rules and gitignore' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore <<~GITIGNORE
+          bar
+        GITIGNORE
+
+        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+      end
+    end
+
     context 'when given a small array of include_rules and gitignore' do
       let(:args) { { include_rules: ['bar'] } }
 
@@ -771,6 +785,70 @@ RSpec.describe FastIgnore do
         GITIGNORE
 
         expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+      end
+    end
+
+    context 'when given only include_shebangs as a single value' do
+      let(:args) { { include_shebangs: :ruby } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        gitignore <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+      end
+    end
+
+    context 'when given only include_shebangs as a string list' do
+      let(:args) { { include_shebangs: "ruby\nbash" } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        gitignore <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        expect(subject).to allow('foo', 'bar').and(disallow('ignored_foo', 'baz', 'baz.rb'))
       end
     end
   end

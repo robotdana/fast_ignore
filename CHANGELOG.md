@@ -1,3 +1,6 @@
+# v0.8.1
+- `include_shebang:` can be given non array value
+
 # v0.8.0
 - drop support for ruby 2.3. My plan is to only support supported ruby versions
 - add coverage to the pipeline. removed some methods, added some tests, and now we have 100% test coverage

@@ -71,11 +71,13 @@ class FastIgnore
 
       rule_set = ::FastIgnore::RuleSet.new(project_root: root, allow: allow, and_no_ext: and_no_ext)
 
-      rules.each_with_object(rule_set) do |rule_string, set|
-        rule_string.each_line do |rule_line|
-          parse_rules(rule_line, rule_set: set, allow: allow, root: root, expand_path: expand_path)
+      rules.each do |rule_string|
+        rule_string.to_s.each_line do |rule_line|
+          parse_rules(rule_line, rule_set: rule_set, allow: allow, root: root, expand_path: expand_path)
         end
       end
+
+      rule_set
     end
 
     def self.parse_rules(rule_line, rule_set:, allow: false, root: Dir.pwd, expand_path: false)

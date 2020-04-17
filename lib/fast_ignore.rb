@@ -118,8 +118,8 @@ class FastIgnore
   end
 
   def prepare_shebang_pattern(rules)
-    return if !rules || rules.empty?
+    return if !rules || (rules = Array(rules)).empty?
 
-    /\A#!.*\b(?:#{rules.map { |s| Regexp.escape(s.to_s) }.join('|')})\b/.freeze
+    /\A#!.*\b(?:#{rules.flat_map { |s| s.to_s.split("\n") }.map { |s| Regexp.escape(s.to_s) }.join('|')})\b/.freeze
   end
 end
