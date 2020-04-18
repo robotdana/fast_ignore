@@ -9,32 +9,28 @@ class FastIgnore
       gitignore: :auto,
       include_rules: nil,
       include_files: nil,
-      argv_rules: nil,
-      and_no_ext: false
+      argv_rules: nil
     )
       rule_sets = [
         from_array(ignore_rules, root: root),
         *from_files(ignore_files, project_root: root),
         from_array('.git', root: root),
         from_gitignore_arg(gitignore, root: root),
-        from_array(include_rules, root: root, allow: true, and_no_ext: and_no_ext),
-        *from_files(include_files, allow: true, project_root: root, and_no_ext: and_no_ext),
-        from_array(argv_rules, root: root, allow: true, expand_path: true, and_no_ext: and_no_ext)
+        from_array(include_rules, root: root, allow: true),
+        *from_files(include_files, allow: true, project_root: root),
+        from_array(argv_rules, root: root, allow: true, expand_path: true)
       ]
 
       rule_sets.compact!
       rule_sets.reject!(&:empty?)
-      if and_no_ext && rule_sets.none?(&:allow?)
-        rule_sets << ::FastIgnore::RuleSet.new(project_root: root, allow: true, and_no_ext: and_no_ext)
-      end
       rule_sets.sort_by!(&:length)
       rule_sets
     end
 
-    def self.from_file(filename, allow: false, project_root: Dir.pwd, and_no_ext: false)
+    def self.from_file(filename, allow: false, project_root: Dir.pwd)
       filename = ::File.expand_path(filename)
       root = ::File.dirname(filename)
-      rule_set = ::FastIgnore::RuleSet.new(project_root: project_root, allow: allow, and_no_ext: and_no_ext)
+      rule_set = ::FastIgnore::RuleSet.new(project_root: project_root, allow: allow)
 
       ::IO.foreach(filename) do |rule_string|
         parse_rules(rule_string, allow: allow, rule_set: rule_set, root: root)
@@ -43,9 +39,9 @@ class FastIgnore
       rule_set
     end
 
-    def self.from_files(files, allow: false, project_root: Dir.pwd, and_no_ext: false)
+    def self.from_files(files, allow: false, project_root: Dir.pwd)
       Array(files).map do |file|
-        from_file(file, allow: allow, project_root: project_root, and_no_ext: and_no_ext)
+        from_file(file, allow: allow, project_root: project_root)
       end
     end
 
@@ -65,11 +61,11 @@ class FastIgnore
       end
     end
 
-    def self.from_array(rules, allow: false, expand_path: false, root: Dir.pwd, and_no_ext: false)
+    def self.from_array(rules, allow: false, expand_path: false, root: Dir.pwd)
       rules = Array(rules)
       return if rules.empty?
 
-      rule_set = ::FastIgnore::RuleSet.new(project_root: root, allow: allow, and_no_ext: and_no_ext)
+      rule_set = ::FastIgnore::RuleSet.new(project_root: root, allow: allow)
 
       rules.each do |rule_string|
         rule_string.to_s.each_line do |rule_line|

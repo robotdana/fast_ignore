@@ -725,7 +725,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given include_shebangs and include_rules' do
-      let(:args) { { include_shebangs: [:ruby], include_rules: '*.rb' } }
+      let(:args) { { include_shebangs: [:ruby], include_rules: ['*.rb', 'Rakefile'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file 'foo', <<~RUBY
@@ -746,13 +746,17 @@ RSpec.describe FastIgnore do
           echo -e "no"
         BASH
 
+        create_file 'Rakefile', <<~RUBY
+          puts "ok"
+        RUBY
+
         create_file_list 'baz', 'baz.rb'
 
         gitignore <<~GITIGNORE
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('foo', 'baz.rb').and(disallow('ignored_foo', 'bar', 'baz'))
+        expect(subject).to allow('foo', 'baz.rb', 'Rakefile').and(disallow('ignored_foo', 'bar', 'baz'))
       end
     end
 

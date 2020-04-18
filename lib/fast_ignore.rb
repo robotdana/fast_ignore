@@ -42,10 +42,11 @@ class FastIgnore
       gitignore: gitignore,
       include_rules: include_rules,
       include_files: include_files,
-      argv_rules: argv_rules,
-      and_no_ext: @shebang_pattern
+      argv_rules: argv_rules
     )
 
+    @include_rule_sets, @ignore_rule_sets = @rule_sets.partition(&:allow?)
+    @has_include_rule_sets = !@include_rule_sets.empty?
     @relative = relative
   end
 
@@ -59,13 +60,15 @@ class FastIgnore
 
   def allowed?(path)
     path = ::File.expand_path(path)
-    stat = ::File.stat(path)
-    dir = stat&.directory?
+    dir = ::File.stat(path).directory? # equivalent to directory? and exist?
+
     return false if dir
+    return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(path, dir) }
+    return @include_rule_sets.all? { |r| r.allowed_recursive?(path, dir) } unless @shebang_pattern
 
-    basename = ::File.basename(path)
-
-    @rule_sets.all? { |r| r.allowed_recursive?(path, dir, basename) } && match_shebang?(path, basename)
+    (@has_include_rule_sets &&
+      @include_rule_sets.all? { |r| r.allowed_unrecursive?(path, false) }) ||
+      match_shebang?(path, ::File.basename(path))
   rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
     false
   end
@@ -76,21 +79,27 @@ class FastIgnore
     @relative ? path.delete_prefix(@root_trailing_slash) : path
   end
 
-  def each_allowed(path = @root_trailing_slash, &block) # rubocop:disable Metrics/MethodLength
+  def each_allowed(path = @root_trailing_slash, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
     Dir.each_child(path) do |basename|
       begin
         child = path + basename
-        stat = ::File.stat(child)
-
-        dir = stat.directory?
+        dir = ::File.stat(child).directory? # equivalent to directory? and exist?
 
         if dir
-          next unless @rule_sets.all? { |r| r.allowed_unrecursive?(child, dir, nil) }
+          next unless @shebang_pattern || @rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
 
           each_allowed("#{child}/", &block)
         else
-          unless @rule_sets.all? { |r| r.allowed_unrecursive?(child, dir, basename) } && match_shebang?(child, basename)
-            next
+          next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+
+          if @shebang_pattern
+            unless (@has_include_rule_sets &&
+                @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }) ||
+                match_shebang?(child, basename)
+              next
+            end
+          else
+            next unless @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
           end
 
           yield prepare_path(child)
@@ -102,8 +111,7 @@ class FastIgnore
   end
 
   def match_shebang?(path, basename)
-    return true unless @shebang_pattern
-    return true if basename.include?('.')
+    return false if basename.include?('.')
 
     begin
       f = ::File.new(path)
@@ -111,7 +119,7 @@ class FastIgnore
       fragment = f.sysread(256)
       f.close
     rescue SystemCallError, EOFError
-      return
+      return false
     end
 
     @shebang_pattern.match?(fragment)
@@ -120,6 +128,9 @@ class FastIgnore
   def prepare_shebang_pattern(rules)
     return if !rules || (rules = Array(rules)).empty?
 
-    /\A#!.*\b(?:#{rules.flat_map { |s| s.to_s.split("\n") }.map { |s| Regexp.escape(s.to_s) }.join('|')})\b/.freeze
+    rules = rules.flat_map { |s| s.to_s.split("\n") }
+    rules_re = rules.map { |s| Regexp.escape(s.to_s) }.join('|')
+
+    /\A#!.*\b(?:#{rules_re})\b/.freeze
   end
 end
