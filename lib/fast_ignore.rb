@@ -60,7 +60,7 @@ class FastIgnore
   def allowed?(path)
     path = ::File.expand_path(path)
     stat = ::File.stat(path)
-    dir = stat.directory?
+    dir = stat&.directory?
     return false if dir
 
     basename = ::File.basename(path)

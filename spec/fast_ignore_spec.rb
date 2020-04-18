@@ -191,7 +191,7 @@ RSpec.describe FastIgnore do
 
         before { create_file_list '!important!.txt', 'important!.txt' }
 
-        it 'matches files starting with a literal ! if its preceeded by a backslash' do
+        it 'matches files starting with a literal ! if its preceded by a backslash' do
           gitignore <<~GITIGNORE
             \\!important!.txt
           GITIGNORE
@@ -345,7 +345,7 @@ RSpec.describe FastIgnore do
           expect(subject).to allow('bar/bar/foo', 'bar/abc/foo').and(disallow('abc/bar', 'abc/foo/bar'))
         end
 
-        context 'when the gitigore root is down a level from the pwd' do
+        context 'when the gitignore root is down a level from the pwd' do
           let(:args) { { gitignore: File.join(Dir.pwd, 'bar', '.gitignore') } }
 
           it 'matches files relative to the gitignore' do
@@ -608,7 +608,7 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given an array of include_rules beginnig with `/` and gitignore' do
+    context 'when given an array of include_rules beginning with `/` and gitignore' do
       let(:args) { { include_rules: ['/bar', '/baz'] } }
 
       it 'reads the list of rules and gitignore' do
