@@ -77,6 +77,7 @@ FastIgnore.new(gitignore: true).to_a
 To filter by extensionless files shebang/hashbang/etc:
 ```ruby
 FastIgnore.new(include_rules: '*.rb', include_shebangs: 'ruby').to_a
+FastIgnore.new(include_rules: '*.sh', include_shebangs: ['sh', 'bash', 'zsh']).to_a
 ```
 
 To check if a single file is allowed, use

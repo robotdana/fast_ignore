@@ -1,5 +1,8 @@
+# v0.8.2
+- fix `include_rules` not matching filenames with no extension when using `include_shebangs:`
+
 # v0.8.1
-- `include_shebang:` can be given non array value
+- `include_shebangs:` can be given non array value
 
 # v0.8.0
 - drop support for ruby 2.3. My plan is to only support supported ruby versions
@@ -7,7 +10,7 @@
 - deprecate using `gitignore: '/path/to/gitignore'`. please use `gitignore: false, ignore_files: '/path/to/gitignore'` instead.
 
 # v0.7.0
-- add `include_shebang:` which filters by shebangs
+- add `include_shebangs:` which filters by shebangs
 
 # v0.6.0
 - nicer argv handling

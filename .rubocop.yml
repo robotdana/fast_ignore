@@ -7,6 +7,7 @@ require: rubocop-rspec
 # Each override should have a comment (even if it's just "default is bad")
 
 AllCops:
+  NewCops: enable
   Exclude:
     - db/schema*
     - .bundle/**/*
