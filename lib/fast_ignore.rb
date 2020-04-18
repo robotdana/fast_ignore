@@ -35,7 +35,7 @@ class FastIgnore
     @root_trailing_slash = "#{@root}/"
     @shebang_pattern = prepare_shebang_pattern(include_shebangs)
 
-    @rule_sets = ::FastIgnore::RuleSetBuilder.from_args(
+    rule_sets = ::FastIgnore::RuleSetBuilder.from_args(
       root: @root,
       ignore_rules: ignore_rules,
       ignore_files: ignore_files,
@@ -45,7 +45,7 @@ class FastIgnore
       argv_rules: argv_rules
     )
 
-    @include_rule_sets, @ignore_rule_sets = @rule_sets.partition(&:allow?)
+    @include_rule_sets, @ignore_rule_sets = rule_sets.partition(&:allow?)
     @has_include_rule_sets = !@include_rule_sets.empty?
     @relative = relative
   end
@@ -85,13 +85,13 @@ class FastIgnore
         child = path + basename
         dir = ::File.stat(child).directory? # equivalent to directory? and exist?
 
+        next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+
         if dir
-          next unless @shebang_pattern || @rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+          next unless @shebang_pattern || @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
 
           each_allowed("#{child}/", &block)
         else
-          next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
-
           if @shebang_pattern
             unless (@has_include_rule_sets &&
                 @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }) ||

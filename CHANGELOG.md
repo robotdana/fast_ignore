@@ -1,3 +1,6 @@
+# v0.8.3
+- fix `ignore_rules` not matching directories when using `include_shebangs:`
+
 # v0.8.2
 - fix `include_rules` not matching filenames with no extension when using `include_shebangs:`
 

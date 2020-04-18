@@ -734,9 +734,19 @@ RSpec.describe FastIgnore do
           puts('ok')
         RUBY
 
+        create_file 'sub/foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
         create_file 'ignored_foo', <<~RUBY
           #!/usr/bin/env ruby -w
 
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_bar/ruby.rb', <<~RUBY
           puts('ok')
         RUBY
 
@@ -754,9 +764,11 @@ RSpec.describe FastIgnore do
 
         gitignore <<~GITIGNORE
           ignored_foo
+          ignored_bar
         GITIGNORE
 
-        expect(subject).to allow('foo', 'baz.rb', 'Rakefile').and(disallow('ignored_foo', 'bar', 'baz'))
+        expect(subject).to allow('sub/foo', 'foo', 'baz.rb', 'Rakefile')
+          .and(disallow('ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb'))
       end
     end
 
@@ -770,7 +782,19 @@ RSpec.describe FastIgnore do
           puts('ok')
         RUBY
 
+        create_file 'sub/foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
         create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_bar/ruby', <<~RUBY
           #!/usr/bin/env ruby -w
 
           puts('ok')
@@ -785,10 +809,12 @@ RSpec.describe FastIgnore do
         create_file_list 'baz', 'baz.rb'
 
         gitignore <<~GITIGNORE
+          ignored_bar
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+        expect(subject).to allow('sub/foo', 'foo')
+          .and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb', 'ignored_bar/ruby'))
       end
     end
 
