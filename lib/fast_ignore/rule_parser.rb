@@ -11,23 +11,22 @@ class FastIgnore
 
     # rule or nil
     class << self
-      def new_rule(rule, root:, rule_set:, allow: false, expand_path: false, file_root: nil) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/ParameterLists
-        rule = strip(rule)
-        rule, dir_only = extract_dir_only(rule)
+      def new_rule(rule, rule_set:, allow: false, expand_path: false, file_root: nil) # rubocop:disable Metrics/MethodLength
+        rule = rule.dup
+        strip(rule)
+        dir_only = extract_dir_only(rule)
 
         return if skip?(rule)
 
-        rule, negation = extract_negation(rule, allow)
+        negation = extract_negation(rule, allow)
 
-        if expand_path
-          rule = expand_path(rule, root)
-          rule = rule.delete_prefix(root)
-        end
+        expand_rule_path(rule, expand_path) if expand_path
+        anchored = anchored?(rule)
+        rule.delete_prefix!('/')
 
-        anchored, prefix = prefix(rule)
-        rule = rule.delete_prefix('/')
+        rule.prepend("#{file_root}#{'**/' unless anchored}") if file_root || (not anchored)
 
-        rule = "#{file_root}#{prefix}#{rule}"
+        rule.freeze
 
         rule_set.append_rules(
           anchored,
@@ -45,46 +44,43 @@ class FastIgnore
         rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, negation)
         parent = File.dirname(rule)
         while parent != DOT
-          rules << ::FastIgnore::Rule.new(parent, true, true)
+          rules << ::FastIgnore::Rule.new(parent.freeze, true, true)
           parent = File.dirname(parent)
         end
         rules
       end
 
       def extract_negation(rule, allow)
-        return [rule, allow] unless rule.start_with?('!')
+        return allow unless rule.start_with?('!')
 
-        [rule[1..-1], !allow]
+        rule.slice!(0)
+
+        !allow
       end
 
       def extract_dir_only(rule)
-        return [rule, false] unless rule.end_with?('/')
+        return false unless rule.end_with?('/')
 
-        [rule[0..-2], true]
+        rule.chop!
+
+        true
       end
 
       def strip(rule)
-        rule = rule.chomp
-        rule = rule.rstrip unless rule.end_with?('\\ ')
-        rule
+        rule.chomp!
+        rule.rstrip! unless rule.end_with?('\\ ')
       end
 
-      def prefix(rule)
-        if rule.start_with?('/')
-          [true, '']
-        elsif rule.end_with?('/**') || rule.include?('/**/')
-          [true, '']
-        else
-          [false, '**/']
-        end
+      def anchored?(rule)
+        rule.start_with?('/') ||
+          rule.end_with?('/**') ||
+          rule.include?('/**/')
       end
 
-      def expand_path(rule, root)
-        rule = ::File.expand_path(rule).delete_prefix(root) if rule.match?(%r{^(?:[~/]|\.{1,2}/)})
-
-        rule = "/#{rule}" unless rule.start_with?('*') || rule.start_with?('/')
-
-        rule
+      def expand_rule_path(rule, root)
+        rule.replace(::File.expand_path(rule)) if rule.match?(%r{^(?:[~/]|\.{1,2}/)})
+        rule.delete_prefix!(root)
+        rule.prepend('/') unless rule.start_with?('*') || rule.start_with?('/')
       end
 
       def skip?(rule)
