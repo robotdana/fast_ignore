@@ -12,7 +12,6 @@ class FastIgnore
       @allowed_recursive = { '.' => true }
       @any_not_anchored = false
       @allow = allow
-      @default = true unless allow
     end
 
     def freeze

@@ -7,7 +7,7 @@ require_relative './fast_ignore/rule_set_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
 
-class FastIgnore # rubocop:disable Metrics/ClassLength
+class FastIgnore
   class Error < StandardError; end
 
   include ::Enumerable
@@ -22,29 +22,18 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
   end
   # :nocov:
 
-  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength
+  def initialize(
     relative: false,
     root: ::Dir.pwd,
-    ignore_rules: nil,
-    ignore_files: nil,
-    gitignore: :auto,
-    include_rules: nil,
-    include_files: nil,
     include_shebangs: nil,
-    argv_rules: nil
+    **rule_set_builder_args
   )
-    @root = root.delete_suffix('/')
-    @root_trailing_slash = "#{@root}/"
+    @root = root.end_with?('/') ? root : "#{root}/"
     @shebang_pattern = prepare_shebang_pattern(include_shebangs)
 
     rule_sets = ::FastIgnore::RuleSetBuilder.from_args(
-      root: @root_trailing_slash,
-      ignore_rules: ignore_rules,
-      ignore_files: ignore_files,
-      gitignore: gitignore,
-      include_rules: include_rules,
-      include_files: include_files,
-      argv_rules: argv_rules
+      root: @root,
+      **rule_set_builder_args
     )
 
     @include_rule_sets, @ignore_rule_sets = rule_sets.partition(&:allow?)
@@ -63,14 +52,14 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
   end
 
   def allowed?(path) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    full_path = ::File.expand_path(path, @root_trailing_slash)
-    return false unless full_path.start_with?(@root_trailing_slash)
+    full_path = ::File.expand_path(path, @root)
+    return false unless full_path.start_with?(@root)
 
     dir = ::File.stat(full_path).directory? # shortcut for exists? && directory?
 
     return false if dir
 
-    relative_path = full_path.delete_prefix(@root_trailing_slash)
+    relative_path = full_path.delete_prefix(@root)
 
     return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) }
     return @include_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) } unless @shebang_pattern
@@ -84,7 +73,7 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
 
   private
 
-  def each_allowed(full_path = @root_trailing_slash, relative_path = '', &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  def each_allowed(full_path = @root, relative_path = '', &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
     ::Dir.each_child(full_path) do |basename|
       begin
         full_child = full_path + basename

@@ -46,6 +46,12 @@ By default, FastIgnore will return full paths. To return paths relative to the c
 FastIgnore.new(relative: true).to_a
 ```
 
+By default, FastIgnore will look at the current working directory (PWD) for looking for .gitignore files, handling array rules, and the path that relative returns.
+To use a different directory:
+```ruby
+FastIgnore.new(root: '/absolute/path/to/root').to_a
+```
+
 You can specify other gitignore-style files to ignore as well. Missing files will raise an `Errno::ENOENT` error.
 
 ```ruby
@@ -62,11 +68,11 @@ FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
 
 To use only another ignore file or an array of rules, and not even try to load a gitignore file:
 ```ruby
-FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file', gitignore: false)
-FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false)
+FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file', gitignore: false).to_a
+FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false).to_a
 ```
 
-By default, FastIgnore will look in the directory the script is run in (`PWD`) for a gitignore file. If it's somewhere else:
+By default, FastIgnore will look in the root directory for a gitignore file. If it's somewhere else:
 ```ruby
 FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore', gitignore: false).to_a
 ```
@@ -111,14 +117,14 @@ fo*
 
 These can be passed either as files or as an array or string rules
 ```ruby
-FastIgnore.new(include_files: '/absolute/path/to/my/include/file', gitignore: false)
-FastIgnore.new(include_rules: %w{my*rule /and/another !rule}, gitignore: false)
+FastIgnore.new(include_files: '/absolute/path/to/my/include/file', gitignore: false).to_a
+FastIgnore.new(include_rules: %w{my*rule /and/another !rule}, gitignore: false).to_a
 ```
 
 There is an additional argument meant for dealing with humans and `ARGV` values.
 
 ```ruby
-FastIgnore.new(argv_rules: ['./a/pasted/path', '/or/a/path/from/stdin', 'an/argument', '*.txt'])
+FastIgnore.new(argv_rules: ['./a/pasted/path', '/or/a/path/from/stdin', 'an/argument', '*.txt']).to_a
 ```
 
 It resolves absolute paths, and paths beginning with `~`, `../` and `./` (with and without `!`)
@@ -133,13 +139,13 @@ In the simplest case a file must be allowed by each ignore file, each include fi
 To combine files using `OR`, that is, a file may be included by either file it doesn't have to be referred to in both:
 
 ```ruby
-FastIgnore.new(include_files: StringIO.new([File.read('/my/path'), File.read('/another/path')]).join("\n"))
+FastIgnore.new(include_files: StringIO.new([File.read('/my/path'), File.read('/another/path')]).join("\n")).to_a
 ```
 
 To use the additional ARGV handling rules mentioned above for files
 
 ```ruby
-FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')])
+FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
 ```
 
 ## Known issues

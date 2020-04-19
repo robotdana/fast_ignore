@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
+
 require 'bundler/setup'
+
 require 'simplecov'
 require 'fast_ignore'
 

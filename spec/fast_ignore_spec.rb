@@ -346,7 +346,7 @@ RSpec.describe FastIgnore do
         end
 
         context 'when the gitignore root is down a level from the pwd' do
-          let(:args) { { gitignore: File.join(Dir.pwd, 'bar', '.gitignore') } }
+          let(:args) { { gitignore: false, ignore_files: File.join(Dir.pwd, 'bar', '.gitignore') } }
 
           it 'matches files relative to the gitignore' do
             create_file 'bar/.gitignore', <<~GITIGNORE
@@ -463,6 +463,14 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when ignore_files is outside root' do
+      let(:args) { { ignore_files: '~/.gitignore' } }
+
+      it 'raises an error' do
+        expect { subject.to_a }.to raise_error(FastIgnore::Error)
+      end
+    end
+
     it 'returns hidden files' do
       create_file_list '.gitignore', '.a', '.b/.c'
 
@@ -480,7 +488,7 @@ RSpec.describe FastIgnore do
       FileUtils.ln_s('foo_target', 'foo')
       FileUtils.rm('foo_target')
 
-      expect(subject.select { |x| File.readable?(x) }.to_a).to contain_exactly('.gitignore')
+      expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
       expect(subject.allowed?('foo')).to be false
     end
 
@@ -710,6 +718,16 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given root with a trailing slash' do
+      let(:args) { { root: Dir.pwd + '/bar/' } }
+
+      it 'returns relative to the root' do
+        create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
+
+        expect(subject).to allow_exactly('foo', 'baz')
+      end
+    end
+
     context 'when given root as a child dir and relative false' do
       let(:args) { { root: Dir.pwd + '/bar', relative: false } }
 
@@ -717,6 +735,7 @@ RSpec.describe FastIgnore do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
 
         expect(subject).to allow_exactly(Dir.pwd + '/bar/foo', Dir.pwd + '/bar/baz')
+          .and(disallow(Dir.pwd + '/bar', Dir.pwd + '/fez'))
       end
     end
 

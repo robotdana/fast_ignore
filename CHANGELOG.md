@@ -1,3 +1,8 @@
+# v0.9.0
+- speed improvements, which may break things (Specifically, only using relative paths internally, is about 30% faster (depending on root depth))
+- using a `ignore_files:` or `include_files:` that are outside the `root: (default $PWD)` will now raise an error.
+- remove deprecated `gitignore:` a path (e.g. `gitignore: '/path/to/gitignore'`). please use `gitignore: false, ignore_files: '/path/to/gitignore'` instead.
+
 # v0.8.3
 - fix `ignore_rules` not matching directories when using `include_shebangs:`
 
