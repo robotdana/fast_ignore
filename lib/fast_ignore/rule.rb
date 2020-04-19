@@ -2,7 +2,11 @@
 
 class FastIgnore
   class Rule
-    FNMATCH_OPTIONS = (::File::FNM_DOTMATCH | ::File::FNM_PATHNAME | ::File::FNM_CASEFOLD).freeze # = 14
+    # FNMATCH_OPTIONS = (
+    #   ::File::FNM_DOTMATCH |
+    #   ::File::FNM_PATHNAME |
+    #   ::File::FNM_CASEFOLD
+    # ).freeze # = 14
 
     attr_reader :negation
     alias_method :negation?, :negation

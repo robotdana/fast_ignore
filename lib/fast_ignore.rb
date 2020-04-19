@@ -63,55 +63,54 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
   end
 
   def allowed?(path) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    path = ::File.expand_path(path)
-    return false if path.start_with?('/') && !path.start_with?(@root_trailing_slash)
+    full_path = ::File.expand_path(path, @root_trailing_slash)
+    return false unless full_path.start_with?(@root_trailing_slash)
 
-    dir = ::File.stat(path).directory? # equivalent to directory? and exist?
-    path = path.delete_prefix(@root_trailing_slash)
+    dir = ::File.stat(full_path).directory? # shortcut for exists? && directory?
 
     return false if dir
-    return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(path, dir) }
-    return @include_rule_sets.all? { |r| r.allowed_recursive?(path, dir) } unless @shebang_pattern
+
+    relative_path = full_path.delete_prefix(@root_trailing_slash)
+
+    return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) }
+    return @include_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) } unless @shebang_pattern
 
     (@has_include_rule_sets &&
-      @include_rule_sets.all? { |r| r.allowed_unrecursive?(path, false) }) ||
-      match_shebang?(path, ::File.basename(path))
-  rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
+      @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, false) }) ||
+      match_shebang?(full_path, ::File.basename(relative_path))
+  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
 
   private
 
-  def prepare_path(path)
-    @relative ? path : @root_trailing_slash + path
-  end
-
-  def each_allowed(path = nil, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    Dir.each_child(path || '.') do |basename|
+  def each_allowed(full_path = @root_trailing_slash, relative_path = '', &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    ::Dir.each_child(full_path) do |basename|
       begin
-        child = path.to_s + basename
-        dir = ::File.stat(child).directory? # equivalent to directory? and exist?
+        full_child = full_path + basename
+        relative_child = relative_path + basename
+        dir = ::File.directory?(full_child)
 
-        next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+        next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
 
         if dir
-          next unless @shebang_pattern || @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+          next unless @shebang_pattern || @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
 
-          each_allowed("#{child}/", &block)
+          each_allowed("#{full_child}/", "#{relative_child}/", &block)
         else
           if @shebang_pattern
             unless (@has_include_rule_sets &&
-                @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }) ||
-                match_shebang?(child, basename)
+                @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }) ||
+                match_shebang?(full_child, basename)
               next
             end
           else
-            next unless @include_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }
+            next unless @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
           end
 
-          yield prepare_path(child)
+          yield(@relative ? relative_child : full_child)
         end
-      rescue Errno::ENOENT, Errno::EACCES, Errno::ENOTDIR, Errno::ELOOP, Errno::ENAMETOOLONG
+      rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
         nil
       end
     end
@@ -125,7 +124,7 @@ class FastIgnore # rubocop:disable Metrics/ClassLength
       # i can't imagine a shebang being longer than 20 characters, lets multiply that by 10 just in case.
       fragment = f.sysread(256)
       f.close
-    rescue SystemCallError, EOFError
+    rescue ::SystemCallError, ::EOFError
       return false
     end
 

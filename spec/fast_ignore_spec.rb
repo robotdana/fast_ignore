@@ -475,12 +475,13 @@ RSpec.describe FastIgnore do
       expect(subject).to disallow('.git/WHATEVER')
     end
 
-    it 'acts as though the soft links to nowhere are not there' do
+    it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
       FileUtils.ln_s('foo_target', 'foo')
       FileUtils.rm('foo_target')
 
-      expect(subject).to disallow('foo').and(allow('.gitignore'))
+      expect(subject.select { |x| File.readable?(x) }.to_a).to contain_exactly('.gitignore')
+      expect(subject.allowed?('foo')).to be false
     end
 
     it 'follows soft links' do
@@ -696,6 +697,26 @@ RSpec.describe FastIgnore do
         create_file_list 'bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'
 
         expect(subject).to disallow('bar/foo', 'bar/baz').and(allow('foo', 'baz/foo', 'baz/baz'))
+      end
+    end
+
+    context 'when given root as a child dir' do
+      let(:args) { { root: Dir.pwd + '/bar' } }
+
+      it 'returns relative to the root' do
+        create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
+
+        expect(subject).to allow_exactly('foo', 'baz')
+      end
+    end
+
+    context 'when given root as a child dir and relative false' do
+      let(:args) { { root: Dir.pwd + '/bar', relative: false } }
+
+      it 'returns relative to the root' do
+        create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
+
+        expect(subject).to allow_exactly(Dir.pwd + '/bar/foo', Dir.pwd + '/bar/baz')
       end
     end
 

@@ -3,13 +3,13 @@
 class FastIgnore
   class RuleSetBuilder
     def self.from_args( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength
-      root: Dir.pwd,
-      ignore_rules: nil,
-      ignore_files: nil,
-      gitignore: :auto,
-      include_rules: nil,
-      include_files: nil,
-      argv_rules: nil
+      root:,
+      ignore_rules:,
+      ignore_files:,
+      gitignore:,
+      include_rules:,
+      include_files:,
+      argv_rules:
     )
       rule_sets = [
         from_array(ignore_rules),
@@ -27,7 +27,7 @@ class FastIgnore
       rule_sets
     end
 
-    def self.from_file(filename, allow: false, project_root: Dir.pwd)
+    def self.from_file(filename, project_root:, allow: false)
       filename = ::File.expand_path(filename)
       root = ::File.dirname(filename) + '/'
       raise FastIgnore::Error, "#{filename} is not within #{project_root}" unless filename.start_with?(project_root)
@@ -42,13 +42,13 @@ class FastIgnore
       rule_set.freeze
     end
 
-    def self.from_files(files, allow: false, project_root: Dir.pwd)
+    def self.from_files(files, project_root:, allow: false)
       Array(files).map do |file|
         from_file(file, allow: allow, project_root: project_root)
       end
     end
 
-    def self.from_gitignore_arg(gitignore, project_root: Dir.pwd) # rubocop:disable Metrics/MethodLength
+    def self.from_gitignore_arg(gitignore, project_root:) # rubocop:disable Metrics/MethodLength
       default_path = ::File.join(project_root, '.gitignore')
       case gitignore
       when :auto

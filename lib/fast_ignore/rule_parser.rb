@@ -77,8 +77,9 @@ class FastIgnore
           rule.include?('/**/')
       end
 
+      EXPAND_PATH_RE = %r{^(?:[~/]|\.{1,2}/)}.freeze
       def expand_rule_path(rule, root)
-        rule.replace(::File.expand_path(rule)) if rule.match?(%r{^(?:[~/]|\.{1,2}/)})
+        rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
         rule.delete_prefix!(root)
         rule.prepend('/') unless rule.start_with?('*') || rule.start_with?('/')
       end
