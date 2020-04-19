@@ -6,18 +6,23 @@ class FastIgnore
     attr_reader :allow
     alias_method :allow?, :allow
 
-    def initialize(project_root: Dir.pwd, allow: false)
+    def initialize(allow: false)
       @dir_rules = []
       @file_rules = []
-      @project_root = project_root
-
+      @allowed_recursive = { '.' => true }
       @any_not_anchored = false
       @allow = allow
       @default = true unless allow
     end
 
+    def freeze
+      @dir_rules.freeze
+      @file_rules.freeze
+
+      super
+    end
+
     def allowed_recursive?(path, dir)
-      @allowed_recursive ||= { @project_root => true }
       @allowed_recursive.fetch(path) do
         @allowed_recursive[path] =
           allowed_recursive?(::File.dirname(path), true) && allowed_unrecursive?(path, dir)

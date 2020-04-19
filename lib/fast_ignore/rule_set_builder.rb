@@ -29,14 +29,17 @@ class FastIgnore
 
     def self.from_file(filename, allow: false, project_root: Dir.pwd)
       filename = ::File.expand_path(filename)
-      root = ::File.dirname(filename)
-      rule_set = ::FastIgnore::RuleSet.new(project_root: project_root, allow: allow)
+      root = ::File.dirname(filename) + '/'
+      raise FastIgnore::Error, "#{filename} is not within #{project_root}" unless filename.start_with?(project_root)
+
+      root = root.delete_prefix(project_root)
+      rule_set = ::FastIgnore::RuleSet.new(allow: allow)
 
       ::IO.foreach(filename) do |rule_string|
-        parse_rules(rule_string, allow: allow, rule_set: rule_set, root: root)
+        parse_rules(rule_string, allow: allow, rule_set: rule_set, root: project_root, file_root: root)
       end
 
-      rule_set
+      rule_set.freeze
     end
 
     def self.from_files(files, allow: false, project_root: Dir.pwd)
@@ -65,7 +68,7 @@ class FastIgnore
       rules = Array(rules)
       return if rules.empty?
 
-      rule_set = ::FastIgnore::RuleSet.new(project_root: root, allow: allow)
+      rule_set = ::FastIgnore::RuleSet.new(allow: allow)
 
       rules.each do |rule_string|
         rule_string.to_s.each_line do |rule_line|
@@ -73,16 +76,17 @@ class FastIgnore
         end
       end
 
-      rule_set
+      rule_set.freeze
     end
 
-    def self.parse_rules(rule_line, rule_set:, allow: false, root: Dir.pwd, expand_path: false)
+    def self.parse_rules(rule_line, rule_set:, allow: false, root: Dir.pwd, expand_path: false, file_root: nil) # rubocop:disable Metrics/ParameterLists
       ::FastIgnore::RuleParser.new_rule(
         rule_line,
         rule_set: rule_set,
         allow: allow,
         root: root,
-        expand_path: expand_path
+        expand_path: expand_path,
+        file_root: file_root
       )
     end
   end

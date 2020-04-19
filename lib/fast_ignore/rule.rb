@@ -15,6 +15,8 @@ class FastIgnore
       @rule = rule
       @dir_only = dir_only
       @negation = negation
+
+      freeze
     end
 
     # :nocov:

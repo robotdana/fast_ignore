@@ -7,7 +7,9 @@ require_relative './fast_ignore/rule_set_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
 
-class FastIgnore
+class FastIgnore # rubocop:disable Metrics/ClassLength
+  class Error < StandardError; end
+
   include ::Enumerable
 
   # :nocov:
@@ -36,7 +38,7 @@ class FastIgnore
     @shebang_pattern = prepare_shebang_pattern(include_shebangs)
 
     rule_sets = ::FastIgnore::RuleSetBuilder.from_args(
-      root: @root,
+      root: @root_trailing_slash,
       ignore_rules: ignore_rules,
       ignore_files: ignore_files,
       gitignore: gitignore,
@@ -48,6 +50,8 @@ class FastIgnore
     @include_rule_sets, @ignore_rule_sets = rule_sets.partition(&:allow?)
     @has_include_rule_sets = !@include_rule_sets.empty?
     @relative = relative
+
+    freeze
   end
 
   def each(&block)
@@ -58,9 +62,12 @@ class FastIgnore
     end
   end
 
-  def allowed?(path)
+  def allowed?(path) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     path = ::File.expand_path(path)
+    return false if path.start_with?('/') && !path.start_with?(@root_trailing_slash)
+
     dir = ::File.stat(path).directory? # equivalent to directory? and exist?
+    path = path.delete_prefix(@root_trailing_slash)
 
     return false if dir
     return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(path, dir) }
@@ -76,13 +83,13 @@ class FastIgnore
   private
 
   def prepare_path(path)
-    @relative ? path.delete_prefix(@root_trailing_slash) : path
+    @relative ? path : @root_trailing_slash + path
   end
 
-  def each_allowed(path = @root_trailing_slash, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    Dir.each_child(path) do |basename|
+  def each_allowed(path = nil, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    Dir.each_child(path || '.') do |basename|
       begin
-        child = path + basename
+        child = path.to_s + basename
         dir = ::File.stat(child).directory? # equivalent to directory? and exist?
 
         next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(child, dir) }

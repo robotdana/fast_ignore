@@ -11,34 +11,40 @@ class FastIgnore
 
     # rule or nil
     class << self
-      def new_rule(rule, root:, rule_set:, allow: false, expand_path: false) # rubocop:disable Metrics/MethodLength
+      def new_rule(rule, root:, rule_set:, allow: false, expand_path: false, file_root: nil) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/ParameterLists
         rule = strip(rule)
         rule, dir_only = extract_dir_only(rule)
 
         return if skip?(rule)
 
         rule, negation = extract_negation(rule, allow)
-        rule = expand_path(rule, root) if expand_path
+
+        if expand_path
+          rule = expand_path(rule, root)
+          rule = rule.delete_prefix(root)
+        end
 
         anchored, prefix = prefix(rule)
+        rule = rule.delete_prefix('/')
 
-        rule = "#{root}#{prefix}#{rule}"
+        rule = "#{file_root}#{prefix}#{rule}"
 
         rule_set.append_rules(
           anchored,
-          rules(rule, allow, root, dir_only, negation)
+          rules(rule, allow, dir_only, negation)
         )
       end
 
       private
 
-      def rules(rule, allow, root, dir_only, negation)
+      DOT = '.'
+      def rules(rule, allow, dir_only, negation)
         rules = [::FastIgnore::Rule.new(rule, dir_only, negation)]
         return rules unless allow
 
         rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, negation)
         parent = File.dirname(rule)
-        while parent != root
+        while parent != DOT
           rules << ::FastIgnore::Rule.new(parent, true, true)
           parent = File.dirname(parent)
         end
@@ -67,9 +73,9 @@ class FastIgnore
         if rule.start_with?('/')
           [true, '']
         elsif rule.end_with?('/**') || rule.include?('/**/')
-          [true, '/']
+          [true, '']
         else
-          [false, '/**/']
+          [false, '**/']
         end
       end
 
