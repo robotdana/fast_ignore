@@ -16,6 +16,7 @@ github
 gitignore
 gitkeep
 hashbang
+includefile
 klass
 nocov
 noninfringement

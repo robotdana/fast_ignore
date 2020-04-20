@@ -9,12 +9,14 @@ require 'simplecov'
 require 'fast_ignore'
 
 require_relative 'support/temp_dir_helper'
+require_relative 'support/matchers'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
     c.include_chain_clauses_in_custom_matcher_descriptions = true
   end
+
   config.mock_with :rspec do |c|
     c.verify_partial_doubles = true
   end

@@ -36,18 +36,23 @@ class FastIgnore
 
       private
 
-      DOT = '.'
       def rules(rule, allow, dir_only, negation)
         rules = [::FastIgnore::Rule.new(rule, dir_only, negation)]
         return rules unless allow
 
         rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, negation)
-        parent = File.dirname(rule)
-        while parent != DOT
-          rules << ::FastIgnore::Rule.new(parent.freeze, true, true)
-          parent = File.dirname(parent)
+        rules + ancestor_rules(rule)
+      end
+
+      def ancestor_rules(parent)
+        ancestor_rules = []
+
+        while (parent = ::File.dirname(parent)) != '.'
+          rule = ::File.basename(parent) == '**' ? "#{parent}/*" : parent.freeze
+          ancestor_rules << ::FastIgnore::Rule.new(rule, true, true)
         end
-        rules
+
+        ancestor_rules
       end
 
       def extract_negation(rule, allow)

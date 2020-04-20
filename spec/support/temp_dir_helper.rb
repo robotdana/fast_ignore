@@ -21,6 +21,10 @@ module TempDirHelper
     def gitignore(body)
       create_file('.gitignore', body)
     end
+
+    def includefile(body)
+      create_file('.include', body)
+    end
   end
 
   def within_temp_dir
