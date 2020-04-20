@@ -1,0 +1,5 @@
+exclude_paths:
+  - vendor
+rules:
+  - names: allowed? # public api
+    skip: true

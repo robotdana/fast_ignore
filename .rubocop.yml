@@ -211,3 +211,6 @@ Style/HashTransformKeys:
 
 Style/HashTransformValues:
   Enabled: true
+
+Style/CommentedKeyword:
+  Enabled: false

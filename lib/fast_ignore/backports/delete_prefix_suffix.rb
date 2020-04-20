@@ -19,7 +19,7 @@ class FastIgnore
           dup.delete_prefix!(str)
         end
 
-        def delete_suffix(str)
+        def delete_suffix(str) # leftovers:allowed
           dup.delete_suffix!(str)
         end
       end
