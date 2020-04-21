@@ -81,9 +81,7 @@ class FastIgnore
       end
 
       def anchored?(rule)
-        rule.start_with?('/') ||
-          rule.end_with?('/**') ||
-          rule.include?('/**/')
+        rule.include?('/') # we've already removed the trailing '/' with extract_dir_only
       end
 
       EXPAND_PATH_RE = %r{^(?:[~/]|\.{1,2}/)}.freeze

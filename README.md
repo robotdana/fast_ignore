@@ -5,7 +5,7 @@
 This started as a way to quickly and natively ruby-ly parse gitignore files and find matching files.
 It's now gained an equivalent includes file functionality, ARGV awareness, and some shebang matching, while still being extremely fast, to be a one-stop file-list for your linter.
 
-Filter a directory tree using a .gitignore file. Recognises all of the [gitignore rules](https://www.git-scm.com/docs/gitignore#_pattern_format) ([except one](#known-issues))
+Filter a directory tree using a .gitignore file. Recognises all of the [gitignore rules](https://www.git-scm.com/docs/gitignore#_pattern_format)
 
 ```ruby
 FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort

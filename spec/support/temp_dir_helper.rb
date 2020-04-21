@@ -12,6 +12,15 @@ module TempDirHelper
       path
     end
 
+    def create_symlink(arg)
+      link, target = arg.to_a.first
+
+      link_path = Pathname.pwd.join(link)
+      link_path.parent.mkpath
+
+      FileUtils.ln_s(Pathname.pwd.join(target), link_path.to_s)
+    end
+
     def create_file_list(*filenames)
       filenames.each do |filename|
         create_file(filename)

@@ -73,11 +73,15 @@ RSpec.describe FastIgnore do
 
     it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
-      FileUtils.ln_s('foo_target', 'foo')
+      create_symlink('foo' => 'foo_target')
       FileUtils.rm('foo_target')
 
+      expect(subject).to allow('foo')
       expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
-      expect(subject.allowed?('foo')).to be false
+    end
+
+    it 'returns false for nonexistent files' do
+      expect(subject).to disallow('utter/nonsense')
     end
 
     it 'follows soft links' do
@@ -394,7 +398,7 @@ RSpec.describe FastIgnore do
         GITIGNORE
 
         expect(subject).to allow('sub/foo', 'foo', 'baz.rb', 'Rakefile')
-          .and(disallow('ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb'))
+          .and(disallow('ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb', 'nonexistent/file'))
       end
     end
 

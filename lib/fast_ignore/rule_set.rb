@@ -2,11 +2,6 @@
 
 class FastIgnore
   class RuleSet
-    attr_reader :rules
-    attr_reader :allow
-    alias_method :allow?, :allow
-    attr_reader :has_shebang_rules
-
     def initialize(allow: false)
       @dir_rules = []
       @file_rules = []

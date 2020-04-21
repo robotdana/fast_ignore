@@ -60,7 +60,7 @@ class FastIgnore
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
 
-    dir = ::File.stat(full_path).directory? # shortcut for exists? && directory?
+    dir = ::File.lstat(full_path).directory?
     return false if dir
 
     relative_path = full_path.delete_prefix(@root)
@@ -78,7 +78,7 @@ class FastIgnore
       begin
         full_child = full_path + filename
         relative_child = relative_path + filename
-        dir = ::File.directory?(full_child)
+        dir = ::File.lstat(full_child).directory?
 
         next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir, filename) }
 

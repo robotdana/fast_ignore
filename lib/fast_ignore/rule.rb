@@ -59,9 +59,10 @@ class FastIgnore
       file.close
       first_line
     rescue ::EOFError, ::SystemCallError
-      first_line
-    ensure
+      # :nocov:
       file&.close
+      # :nocov:
+      first_line
     end
   end
 end

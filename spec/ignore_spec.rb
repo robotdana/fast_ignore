@@ -87,14 +87,44 @@ RSpec.describe FastIgnore do
         # but will not match a regular file or a symbolic link foo
         # (this is consistent with the way how pathspec works in general in Git).
 
-        before { create_file_list 'bar/foo', 'foo/bar' }
+        before do
+          create_file_list 'bar/foo', 'foo/bar', 'bar/baz'
+          create_symlink 'baz/foo' => 'bar'
+        end
 
-        it 'ignores directories but not files that match patterns ending with /' do
+        it 'ignores directories but not files or symbolic links that match patterns ending with /' do
           gitignore <<~GITIGNORE
             foo/
           GITIGNORE
 
-          expect(subject).to allow('bar/foo').and(disallow('foo/bar'))
+          expect(subject).to allow('bar/foo', 'baz/foo', 'bar/baz').and(disallow('foo/bar'))
+        end
+      end
+    end
+
+    # The slash / is used as the directory separator.
+    # Separators may occur at the beginning, middle or end of the .gitignore search pattern.
+    describe 'If there is a separator at the beginning or middle (or both) of the pattern' do
+      before { create_file_list 'doc/frotz/b', 'a/doc/frotz/c', 'd/doc/frotz' }
+
+      describe 'then the pattern is relative to the directory level of the particular .gitignore file itself.' do
+        # For example, a pattern doc/frotz/ matches doc/frotz directory, but not a/doc/frotz directory;
+        # The pattern doc/frotz and /doc/frotz have the same effect in any .gitignore file.
+        # In other words, a leading slash is not relevant if there is already a middle slash in the pattern.
+        it 'includes files relative to the git dir with a middle slash' do
+          gitignore 'doc/frotz'
+
+          expect(subject).to disallow('doc/frotz/b').and(allow('a/doc/frotz/c'))
+        end
+      end
+
+      describe 'Otherwise the pattern may also match at any level below the .gitignore level.' do
+        # frotz/ matches frotz and a/frotz that is a directory
+
+        it 'includes files relative to the git dir with a middle slash' do
+          gitignore 'frotz/'
+
+          expect(subject).to disallow('doc/frotz/b', 'a/doc/frotz/c').and(allow('d/doc/frotz'))
         end
       end
     end
@@ -155,14 +185,6 @@ RSpec.describe FastIgnore do
           GITIGNORE
 
           expect(subject).to allow('important!.txt').and(disallow('!important!.txt'))
-        end
-      end
-    end
-
-    describe 'If the pattern does not contain a slash /, Git treats it as a shell glob pattern' do
-      describe 'and checks for a match against the pathname relative to the location of the .gitignore file' do
-        describe '(relative to the toplevel of the work tree if not from a .gitignore file)' do
-          pending "I can't understand this documentation, so i need to read the source and figure out what it means"
         end
       end
     end
@@ -416,8 +438,9 @@ RSpec.describe FastIgnore do
 
     describe 'with a root set' do
       subject do
-        Dir.chdir File.join(root, '..')
-        described_class.new(relative: true, root: root, **args)
+        Dir.chdir File.join(root, '..') do
+          described_class.new(relative: true, root: root, **args)
+        end
       end
 
       around do |example|

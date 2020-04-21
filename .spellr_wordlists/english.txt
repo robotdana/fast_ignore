@@ -12,6 +12,7 @@ env
 errno
 extensionless
 fancyignore
+frotz
 gemfile
 github
 gitignore

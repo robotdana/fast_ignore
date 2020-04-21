@@ -388,14 +388,15 @@ RSpec.describe FastIgnore do
 
     describe 'with a root set' do
       subject do
-        Dir.chdir File.join(root, '..')
-        described_class.new(
-          relative: true,
-          root: root,
-          gitignore: false,
-          include_files: include_path,
-          **args
-        )
+        Dir.chdir File.join(root, '..') do
+          described_class.new(
+            relative: true,
+            root: root,
+            gitignore: false,
+            include_files: include_path,
+            **args
+          )
+        end
       end
 
       around do |example|
