@@ -30,7 +30,7 @@ class FastIgnore
 
       rule_sets.compact!
       rule_sets.reject!(&:empty?)
-      rule_sets.sort_by!(&:length)
+      rule_sets.sort_by!(&:weight)
       rule_sets
     end
 

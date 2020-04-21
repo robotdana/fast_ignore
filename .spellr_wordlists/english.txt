@@ -8,6 +8,7 @@ cov
 cyclomatic
 enoent
 enumerables
+env
 errno
 extensionless
 fancyignore
@@ -18,6 +19,7 @@ gitkeep
 hashbang
 includefile
 klass
+llo
 nocov
 noninfringement
 params
@@ -34,9 +36,12 @@ rvm
 sherson
 simplecov
 stdin
+substring
 sudo
 tmp
 toplevel
 txt
 unrecursive
+upcase
+usr
 zsh

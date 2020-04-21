@@ -351,7 +351,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given include_shebangs and include_rules' do
-      let(:args) { { include_shebangs: [:ruby], include_rules: ['*.rb', 'Rakefile'] } }
+      let(:args) { { include_rules: ['*.rb', 'Rakefile', '#!:ruby'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file 'foo', <<~RUBY
@@ -361,7 +361,7 @@ RSpec.describe FastIgnore do
         RUBY
 
         create_file 'sub/foo', <<~RUBY
-          #!/usr/bin/env ruby -w
+          #!/usr/bin/env ruby -w --disable-gems
 
           puts('ok')
         RUBY
@@ -398,8 +398,28 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given only ignore_shebangs' do
+      let(:args) { { ignore_rules: ['#!:ruby'] } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('no')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo ok
+        BASH
+
+        expect(subject).to disallow('foo').and(allow('bar'))
+      end
+    end
+
     context 'when given only include_shebangs' do
-      let(:args) { { include_shebangs: [:ruby] } }
+      let(:args) { { include_rules: ['#!:ruby'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file 'foo', <<~RUBY
@@ -445,7 +465,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given only include_shebangs as a single value' do
-      let(:args) { { include_shebangs: :ruby } }
+      let(:args) { { include_rules: '#!:ruby' } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file 'foo', <<~RUBY
@@ -477,7 +497,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given only include_shebangs as a string list' do
-      let(:args) { { include_shebangs: "ruby\nbash" } }
+      let(:args) { { include_rules: "#!:ruby\n#!:bash" } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file 'foo', <<~RUBY

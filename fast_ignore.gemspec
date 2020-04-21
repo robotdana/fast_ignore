@@ -30,7 +30,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '>= 1.17'
-  spec.add_development_dependency 'leftovers', '>= 0.2.0'
+  spec.add_development_dependency 'leftovers', '>= 0.2.1'
   spec.add_development_dependency 'pry', '> 0'
   spec.add_development_dependency 'rake', '>= 12.3.3'
   spec.add_development_dependency 'rspec', '~> 3.0'

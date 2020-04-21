@@ -11,13 +11,15 @@ class FastIgnore
 
     # rule or nil
     class << self
-      def new_rule(rule, rule_set:, allow: false, expand_path: false, file_root: nil) # rubocop:disable Metrics/MethodLength
+      def new_rule(rule, rule_set:, allow: false, expand_path: false, file_root: nil) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         rule = rule.dup
         strip(rule)
-        dir_only = extract_dir_only(rule)
+
+        return rule_set.append_rules(false, shebang_rules(rule, allow)) if extract_shebang(rule)
 
         return if skip?(rule)
 
+        dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
         expand_rule_path(rule, expand_path) if expand_path
@@ -36,11 +38,19 @@ class FastIgnore
 
       private
 
-      def rules(rule, allow, dir_only, negation)
-        rules = [::FastIgnore::Rule.new(rule, dir_only, negation)]
+      def shebang_rules(rule, allow)
+        rules = [::FastIgnore::Rule.new(nil, false, true, allow, /\A#!.*\b#{Regexp.escape(rule)}\b/)]
         return rules unless allow
 
-        rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, negation)
+        rules << ::FastIgnore::Rule.new('**/*', true, false, true)
+        rules
+      end
+
+      def rules(rule, allow, dir_only, negation)
+        rules = [::FastIgnore::Rule.new(rule, dir_only, false, negation)]
+        return rules unless allow
+
+        rules << ::FastIgnore::Rule.new("#{rule}/**/*", false, false, negation)
         rules + ancestor_rules(rule)
       end
 
@@ -49,26 +59,20 @@ class FastIgnore
 
         while (parent = ::File.dirname(parent)) != '.'
           rule = ::File.basename(parent) == '**' ? "#{parent}/*" : parent.freeze
-          ancestor_rules << ::FastIgnore::Rule.new(rule, true, true)
+          ancestor_rules << ::FastIgnore::Rule.new(rule, true, false, true)
         end
 
         ancestor_rules
       end
 
       def extract_negation(rule, allow)
-        return allow unless rule.start_with?('!')
+        return allow unless rule.delete_prefix!('!')
 
-        rule.slice!(0)
-
-        !allow
+        not allow
       end
 
       def extract_dir_only(rule)
-        return false unless rule.end_with?('/')
-
-        rule.chop!
-
-        true
+        rule.delete_suffix!('/')
       end
 
       def strip(rule)
@@ -87,6 +91,10 @@ class FastIgnore
         rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
         rule.delete_prefix!(root)
         rule.prepend('/') unless rule.start_with?('*') || rule.start_with?('/')
+      end
+
+      def extract_shebang(rule)
+        rule.delete_prefix!('#!:') && (rule.strip! || true)
       end
 
       def skip?(rule)

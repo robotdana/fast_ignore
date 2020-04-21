@@ -22,22 +22,27 @@ class FastIgnore
   end
   # :nocov:
 
-  def initialize(
+  def initialize( # rubocop:disable Metrics/MethodLength
     relative: false,
-    root: ::Dir.pwd,
+    root: nil,
     include_shebangs: nil,
     **rule_set_builder_args
   )
-    @root = root.end_with?('/') ? root : "#{root}/"
-    @shebang_pattern = prepare_shebang_pattern(include_shebangs)
+    # :nocov:
+    if include_shebangs && !Array(include_shebangs).empty?
 
-    rule_sets = ::FastIgnore::RuleSetBuilder.from_args(
-      root: @root,
-      **rule_set_builder_args
-    )
+      warn <<~WARNING
+        Removed FastIgnore `include_shebangs:` argument.
+        It will be ignored. Please replace with the include_rules: in the shebang format
+        https://github.com/robotdana/fast_ignore#shebang-rules
+      WARNING
+    end
+    # :nocov:
 
-    @include_rule_sets, @ignore_rule_sets = rule_sets.partition(&:allow?)
-    @has_include_rule_sets = !@include_rule_sets.empty?
+    root = root ? File.expand_path(root, ::Dir.pwd) : ::Dir.pwd
+    @root = "#{root}/"
+
+    @rule_sets = ::FastIgnore::RuleSetBuilder.from_args(root: @root, **rule_set_builder_args)
     @relative = relative
 
     freeze
@@ -51,81 +56,40 @@ class FastIgnore
     end
   end
 
-  def allowed?(path) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+  def allowed?(path)
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
 
     dir = ::File.stat(full_path).directory? # shortcut for exists? && directory?
-
     return false if dir
 
     relative_path = full_path.delete_prefix(@root)
+    filename = ::File.basename(relative_path)
 
-    return false unless @ignore_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) }
-    return @include_rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir) } unless @shebang_pattern
-
-    (@has_include_rule_sets &&
-      @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, false) }) ||
-      match_shebang?(full_path, ::File.basename(relative_path))
+    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir, filename) }
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
 
   private
 
-  def each_allowed(full_path = @root, relative_path = '', &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    ::Dir.each_child(full_path) do |basename|
+  def each_allowed(full_path = @root, relative_path = '', &block) # rubocop:disable Metrics/MethodLength
+    ::Dir.each_child(full_path) do |filename|
       begin
-        full_child = full_path + basename
-        relative_child = relative_path + basename
+        full_child = full_path + filename
+        relative_child = relative_path + filename
         dir = ::File.directory?(full_child)
 
-        next unless @ignore_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
+        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir, filename) }
 
         if dir
-          next unless @shebang_pattern || @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
-
           each_allowed("#{full_child}/", "#{relative_child}/", &block)
         else
-          if @shebang_pattern
-            unless (@has_include_rule_sets &&
-                @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }) ||
-                match_shebang?(full_child, basename)
-              next
-            end
-          else
-            next unless @include_rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir) }
-          end
-
           yield(@relative ? relative_child : full_child)
         end
       rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
         nil
       end
     end
-  end
-
-  def match_shebang?(path, basename)
-    return false if basename.include?('.')
-
-    begin
-      f = ::File.new(path)
-      # i can't imagine a shebang being longer than 20 characters, lets multiply that by 10 just in case.
-      fragment = f.sysread(256)
-      f.close
-    rescue ::SystemCallError, ::EOFError
-      return false
-    end
-
-    @shebang_pattern.match?(fragment)
-  end
-
-  def prepare_shebang_pattern(rules)
-    return if !rules || (rules = Array(rules)).empty?
-
-    rules = rules.flat_map { |s| s.to_s.split("\n") }
-    rules_re = rules.map { |s| Regexp.escape(s.to_s) }.join('|')
-
-    /\A#!.*\b(?:#{rules_re})\b/.freeze
   end
 end

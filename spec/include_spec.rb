@@ -368,10 +368,12 @@ RSpec.describe FastIgnore do
       described_class.new(
         relative: true,
         gitignore: false,
-        include_files: include_path,
+        include_files: include_files,
         **args
       )
     end
+
+    let(:include_files) { include_path }
 
     let(:args) { {} }
     let(:include_path) { File.join(root, '.include') }

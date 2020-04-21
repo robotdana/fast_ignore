@@ -34,60 +34,81 @@ $ gem install fast_ignore
 FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore file" }
 ```
 
-Like many other enumerables, `FastIgnore#each` can return an enumerator
+### `#each`, `#map` etc
+
+The FastIgnore object is an enumerable and responds to all Enumerable methods
+
+```ruby
+FastIgnore.new.to_a
+FastIgnore.new.map { |file| file.upcase }
+```
+
+Like other enumerables, `FastIgnore#each` can return an enumerator
 
 ```ruby
 FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
 ```
 
+### `relative: true`
 By default, FastIgnore will return full paths. To return paths relative to the current working directory, use:
 
 ```ruby
 FastIgnore.new(relative: true).to_a
 ```
 
-By default, FastIgnore will look at the current working directory (PWD) for looking for .gitignore files, handling array rules, and the path that relative returns.
+### `root:`
+
+By default, root is PWD (the current working directory)
+This directory is used for:
+- looking for .gitignore files
+- as the root directory for array rules starting with `/` or ending with `/**`
+- and the path that relative is relative to
+- which files get checked
+
 To use a different directory:
 ```ruby
 FastIgnore.new(root: '/absolute/path/to/root').to_a
+FastIgnore.new(root: '../relative/path/to/root').to_a
 ```
 
-You can specify other gitignore-style files to ignore as well. Missing files will raise an `Errno::ENOENT` error.
+### `gitignore:`
 
+By default, the .gitignore file in root directory is loaded.
+To not do this use
 ```ruby
-FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file').to_a
-FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
+FastIgnore.new(gitignore: false).to_a
 ```
-
-You can also supply an array of rule strings.
-
-```ruby
-FastIgnore.new(ignore_rules: '.DS_Store').to_a
-FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
-```
-
-To use only another ignore file or an array of rules, and not even try to load a gitignore file:
-```ruby
-FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file', gitignore: false).to_a
-FastIgnore.new(ignore_rules: %w{my*rule /and/another !rule}, gitignore: false).to_a
-```
-
-By default, FastIgnore will look in the root directory for a gitignore file. If it's somewhere else:
-```ruby
-FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore', gitignore: false).to_a
-```
-Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
 
 To raise an `Errno::ENOENT` error if the .gitignore file is not found use:
 ```ruby
 FastIgnore.new(gitignore: true).to_a
 ```
 
-To filter by extensionless files shebang/hashbang/etc:
+If the gitignore file is somewhere else
 ```ruby
-FastIgnore.new(include_rules: '*.rb', include_shebangs: 'ruby').to_a
-FastIgnore.new(include_rules: '*.sh', include_shebangs: ['sh', 'bash', 'zsh']).to_a
+FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore', gitignore: false).to_a
 ```
+Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
+
+### `ignore_files:`
+You can specify other gitignore-style files to ignore as well.
+Missing files will raise an `Errno::ENOENT` error.
+
+```ruby
+FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file').to_a
+FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
+```
+
+### `ignore_rules:`
+You can also supply an array of rule strings.
+
+```ruby
+FastIgnore.new(ignore_rules: '.DS_Store').to_a
+FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
+FastIgnore.new(ignore_rules: ".git\n.gitkeep").to_a
+```
+
+# `#allowed?`
 
 To check if a single file is allowed, use
 ```ruby
@@ -97,7 +118,7 @@ FastIgnore.new.allowed?('/absolute/path')
 FastIgnore.new.allowed?('~/home/path')
 ```
 
-### Using an includes list.
+### `include_files:` and `include_rules:`
 
 Building on the gitignore format, FastIgnore also accepts a list of allowed or included files.
 
@@ -132,21 +153,49 @@ It assumes all rules are anchored unless they begin with `*` or `!*`.
 
 Note: it will *not* resolve e.g. `/../` in the middle of a rule that doesn't begin with any of `~`,`../`,`./`,`/`.
 
+### shebang rules
+
+Sometimes you need to match files by their shebang rather than their path or filename
+
+To match extensionless files by shebang/hashbang/etc:
+
+Lines beginning with `#!:` will match whole words in the shebang line of extensionless files.
+e.g.
+```gitignore
+#!:ruby
+```
+will match shebang lines: `#!/usr/bin/env ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
+e.g.
+```gitignore
+#!:bin/ruby
+```
+will match `#!/bin/ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
+Currently only exact substring matches are available, There's no special handling of * or / or etc.
+
+```ruby
+FastIgnore.new(include_rules: ['*.rb', '#!:ruby']).to_a
+FastIgnore.new(ignore_rules: ['*.sh', '#!:sh', '#!:bash', '#!:zsh']).to_a
+```
+
 ## Combinations
 
 In the simplest case a file must be allowed by each ignore file, each include file, and each array of rules. That is, they are combined using AND.
 
-To combine files using `OR`, that is, a file may be included by either file it doesn't have to be referred to in both:
-
+To combine files using `OR`, that is, a file may be matched by either file it doesn't have to be referred to in both:
+provide the files as strings to `include_rules:` or `ignore_rules:`
 ```ruby
-FastIgnore.new(include_files: StringIO.new([File.read('/my/path'), File.read('/another/path')]).join("\n")).to_a
+FastIgnore.new(include_rules: [File.read('/my/path'), File.read('/another/path')])).to_a
 ```
+This does unfortunately lose the file path as the root for `/` and `/**` rules.
+If that's important, combine the files in the file system and use `include_files:` or `ignore_files:` as normal.
 
-To use the additional ARGV handling rules mentioned above for files
+To use the additional ARGV handling rules mentioned above for files, read the file into the array as a string.
 
 ```ruby
 FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
 ```
+
+This does unfortunately lose the file path as the root for `/` and `/**` rules.
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`

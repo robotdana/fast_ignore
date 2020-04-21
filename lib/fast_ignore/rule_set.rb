@@ -5,6 +5,7 @@ class FastIgnore
     attr_reader :rules
     attr_reader :allow
     alias_method :allow?, :allow
+    attr_reader :has_shebang_rules
 
     def initialize(allow: false)
       @dir_rules = []
@@ -21,17 +22,18 @@ class FastIgnore
       super
     end
 
-    def allowed_recursive?(path, dir)
+    def allowed_recursive?(path, dir, filename)
       @allowed_recursive.fetch(path) do
         @allowed_recursive[path] =
-          allowed_recursive?(::File.dirname(path), true) && allowed_unrecursive?(path, dir)
+          allowed_recursive?(::File.dirname(path), true, nil) && allowed_unrecursive?(path, dir, filename)
       end
     end
 
-    def allowed_unrecursive?(path, dir)
+    def allowed_unrecursive?(path, dir, filename)
       (dir ? @dir_rules : @file_rules).reverse_each do |rule|
         # 14 = Rule::FNMATCH_OPTIONS
-        return rule.negation? if ::File.fnmatch?(rule.rule, path, 14)
+
+        return rule.negation? if rule.match?(path, filename)
       end
 
       (not @allow) || (@any_not_anchored if dir)
@@ -39,18 +41,19 @@ class FastIgnore
 
     def append_rules(anchored, rules)
       rules.each do |rule|
-        @dir_rules << rule
-        @file_rules << rule unless rule.dir_only?
+        (@dir_rules << rule) unless rule.file_only?
+        (@file_rules << rule) unless rule.dir_only?
         @any_not_anchored ||= !anchored
+        @has_shebang_rules ||= rule.shebang
       end
     end
 
-    def length
-      @dir_rules.length
+    def weight
+      @dir_rules.length + (@has_shebang_rules ? 10 : 0)
     end
 
     def empty?
-      @dir_rules.empty?
+      @dir_rules.empty? && @file_rules.empty?
     end
   end
 end
