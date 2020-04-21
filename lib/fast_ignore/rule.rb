@@ -10,18 +10,20 @@ class FastIgnore
 
     attr_reader :negation
     alias_method :negation?, :negation
+
     attr_reader :dir_only
     alias_method :dir_only?, :dir_only
-    attr_reader :file_only
-    alias_method :file_only?, :file_only
 
     attr_reader :shebang
-    attr_reader :rule
+    alias_method :file_only?, :shebang
 
-    def initialize(rule, dir_only, file_only, negation, shebang = nil)
+    attr_reader :unanchored
+    alias_method :unanchored?, :unanchored
+
+    def initialize(rule, unanchored, dir_only, negation, shebang = nil)
       @rule = rule
+      @unanchored = unanchored
       @dir_only = dir_only
-      @file_only = file_only
       @negation = negation
       @shebang = shebang
 
@@ -31,9 +33,9 @@ class FastIgnore
     # :nocov:
     def inspect
       if shebang
-        "#<Rule #{'allow ' if negation?}#!:#{shebang.to_s[15..-4]}>"
+        "#<Rule #{'allow ' if @negation}#!:#{@shebang.to_s[15..-4]}>"
       else
-        "#<Rule #{'!' if negation?}#{rule}#{'/' if dir_only?}>"
+        "#<Rule #{'!' if @negation}#{@rule}#{'/' if @dir_only}>"
       end
     end
     # :nocov:
@@ -42,6 +44,7 @@ class FastIgnore
       if @shebang
         match_shebang?(path, filename)
       else
+        # 14 = FNMATCH_OPTIONS
         ::File.fnmatch?(@rule, path, 14)
       end
     end

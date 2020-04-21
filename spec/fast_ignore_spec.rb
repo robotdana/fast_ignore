@@ -86,7 +86,7 @@ RSpec.describe FastIgnore do
 
     it 'follows soft links' do
       create_file_list 'foo_target', '.gitignore'
-      FileUtils.ln_s('foo_target', 'foo')
+      create_symlink('foo' => 'foo_target')
 
       expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
     end
@@ -97,7 +97,7 @@ RSpec.describe FastIgnore do
         foo_target
       GITIGNORE
 
-      FileUtils.ln_s('foo_target/foo_target', 'foo')
+      create_symlink('foo' => 'foo_target/foo_target')
       expect(subject).to allow_exactly('foo', '.gitignore')
     end
 

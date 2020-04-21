@@ -2,12 +2,15 @@
 
 class FastIgnore
   class RuleSet
-    def initialize(allow: false)
-      @dir_rules = []
-      @file_rules = []
+    def initialize(rules, allow)
+      @dir_rules = rules.reject(&:file_only?).freeze
+      @file_rules = rules.reject(&:dir_only?).freeze
+      @any_not_anchored = rules.any?(&:unanchored?)
+      @has_shebang_rules = rules.any?(&:shebang)
       @allowed_recursive = { '.' => true }
-      @any_not_anchored = false
       @allow = allow
+
+      freeze
     end
 
     def freeze
@@ -26,21 +29,10 @@ class FastIgnore
 
     def allowed_unrecursive?(path, dir, filename)
       (dir ? @dir_rules : @file_rules).reverse_each do |rule|
-        # 14 = Rule::FNMATCH_OPTIONS
-
         return rule.negation? if rule.match?(path, filename)
       end
 
-      (not @allow) || (@any_not_anchored if dir)
-    end
-
-    def append_rules(anchored, rules)
-      rules.each do |rule|
-        (@dir_rules << rule) unless rule.file_only?
-        (@file_rules << rule) unless rule.dir_only?
-        @any_not_anchored ||= !anchored
-        @has_shebang_rules ||= rule.shebang
-      end
+      (not @allow) || (dir && @any_not_anchored)
     end
 
     def weight

@@ -2,8 +2,8 @@
 
 require_relative './fast_ignore/backports'
 
-require_relative './fast_ignore/rule_parser'
 require_relative './fast_ignore/rule_set_builder'
+require_relative './fast_ignore/rule_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
 
@@ -22,70 +22,48 @@ class FastIgnore
   end
   # :nocov:
 
-  def initialize( # rubocop:disable Metrics/MethodLength
-    relative: false,
-    root: nil,
-    include_shebangs: nil,
-    **rule_set_builder_args
-  )
-    # :nocov:
-    if include_shebangs && !Array(include_shebangs).empty?
-
-      warn <<~WARNING
-        Removed FastIgnore `include_shebangs:` argument.
-        It will be ignored. Please replace with the include_rules: in the shebang format
-        https://github.com/robotdana/fast_ignore#shebang-rules
-      WARNING
-    end
-    # :nocov:
-
-    root = root ? File.expand_path(root, ::Dir.pwd) : ::Dir.pwd
-    @root = "#{root}/"
-
-    @rule_sets = ::FastIgnore::RuleSetBuilder.from_args(root: @root, **rule_set_builder_args)
+  def initialize(relative: false, root: nil, **rule_set_builder_args)
     @relative = relative
+    @root = "#{File.expand_path(root || '')}/"
+    @rule_sets = ::FastIgnore::RuleSetBuilder.build(root: @root, **rule_set_builder_args)
 
     freeze
   end
 
   def each(&block)
-    if block_given?
-      each_allowed(&block)
-    else
-      enum_for(:each_allowed)
-    end
+    return enum_for(:each) unless block_given?
+
+    each_recursive(@root, '', &block)
   end
 
   def allowed?(path)
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
-
-    dir = ::File.lstat(full_path).directory?
-    return false if dir
+    return false if ::File.lstat(full_path).directory?
 
     relative_path = full_path.delete_prefix(@root)
     filename = ::File.basename(relative_path)
 
-    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, dir, filename) }
+    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, filename) }
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
 
   private
 
-  def each_allowed(full_path = @root, relative_path = '', &block) # rubocop:disable Metrics/MethodLength
-    ::Dir.each_child(full_path) do |filename|
+  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
+    ::Dir.each_child(parent_full_path) do |filename|
       begin
-        full_child = full_path + filename
-        relative_child = relative_path + filename
-        dir = ::File.lstat(full_child).directory?
+        full_path = parent_full_path + filename
+        relative_path = parent_relative_path + filename
+        dir = ::File.lstat(full_path).directory?
 
-        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_child, dir, filename) }
+        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, filename) }
 
         if dir
-          each_allowed("#{full_child}/", "#{relative_child}/", &block)
+          each_recursive(full_path + '/', relative_path + '/', &block)
         else
-          yield(@relative ? relative_child : full_child)
+          yield(@relative ? relative_path : full_path)
         end
       rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
         nil
