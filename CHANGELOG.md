@@ -1,3 +1,13 @@
+# v0.10.0
+- patterns with middle slashes are anchored to the root (like the gitignore documentation, now that it more clearly explains)
+- new shebang pattern (#!:), the previous version was extremely janky.
+  - now you can ignore by shebang pattern
+- symlinks aren't followed when deciding if a path is a directory or not (this now matches git)
+- documentation improvements
+- root can be given as a path relative to PWD
+- includes with 'a/**/d' now matches a/b/c/d properly
+-
+
 # v0.9.0
 - speed improvements, which may break things (Specifically, only using relative paths internally, is about 30% faster (depending on root depth))
 - using a `ignore_files:` or `include_files:` that are outside the `root: (default $PWD)` will now raise an error.

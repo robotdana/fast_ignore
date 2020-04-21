@@ -19,6 +19,7 @@ gitignore
 gitkeep
 hashbang
 includefile
+janky
 klass
 llo
 nocov
@@ -39,6 +40,7 @@ simplecov
 stdin
 substring
 sudo
+symlinks
 tmp
 toplevel
 txt
