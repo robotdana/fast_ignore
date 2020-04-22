@@ -6,7 +6,6 @@
 - documentation improvements
 - root can be given as a path relative to PWD
 - includes with 'a/**/d' now matches a/b/c/d properly
--
 
 # v0.9.0
 - speed improvements, which may break things (Specifically, only using relative paths internally, is about 30% faster (depending on root depth))

@@ -1,6 +1,0 @@
-#!/usr/bin/env ruby --disable-gems
-# frozen_string_literal: true
-
-require_relative '../lib/fast_ignore'
-
-puts FastIgnore.new(relative: true, argv_rules: ARGV).to_a

@@ -24,7 +24,8 @@ class FastIgnore
 
   def initialize(relative: false, root: nil, **rule_set_builder_args)
     @relative = relative
-    @root = "#{File.expand_path(root || '')}/"
+    dir_pwd = Dir.pwd
+    @root = "#{::File.expand_path(root.to_s, dir_pwd)}/"
     @rule_sets = ::FastIgnore::RuleSetBuilder.build(root: @root, **rule_set_builder_args)
 
     freeze
@@ -33,7 +34,10 @@ class FastIgnore
   def each(&block)
     return enum_for(:each) unless block_given?
 
-    each_recursive(@root, '', &block)
+    dir_pwd = Dir.pwd
+    root_from_pwd = @root.start_with?(dir_pwd) ? ".#{@root.delete_prefix(dir_pwd)}" : @root
+
+    each_recursive(root_from_pwd, '', &block)
   end
 
   def allowed?(path)
@@ -63,7 +67,7 @@ class FastIgnore
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)
         else
-          yield(@relative ? relative_path : full_path)
+          yield(@relative ? relative_path : @root + relative_path)
         end
       rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
         nil

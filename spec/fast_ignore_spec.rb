@@ -71,6 +71,10 @@ RSpec.describe FastIgnore do
       expect(subject).to allow_exactly('.gitignore', '.a', '.b/.c')
     end
 
+    it 'allowed? returns false nonexistent files' do
+      expect(subject).not_to be_allowed('utter/nonsense')
+    end
+
     it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
       create_symlink('foo' => 'foo_target')
@@ -305,6 +309,21 @@ RSpec.describe FastIgnore do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
 
         expect(subject).to allow_exactly('foo', 'baz')
+      end
+    end
+
+    context 'when given root as a parent dir' do
+      let(:args) { { root: '../' } }
+
+      it 'returns relative to the root' do # rubocop:disable RSpec/ExampleLength
+        create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
+        gitignore <<~GITIGNORE
+          baz
+        GITIGNORE
+
+        Dir.chdir('bar') do
+          expect(subject).to allow_exactly('bar/foo', 'fez', '.gitignore')
+        end
       end
     end
 

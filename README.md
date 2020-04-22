@@ -200,11 +200,10 @@ This does unfortunately lose the file path as the root for `/` and `/**` rules.
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`
 - Doesn't take into account globally ignored files in `git config core.excludesFile`.
-- Doesn't follow this rule in the gitignore documentation because I don't understand what it means that isn't covered by other rules:
+- Doesn't know what to do if you change the current working directory inside the `FastIgnore#each` block.
+  So don't do that.
 
-  > [If the pattern does not contain a slash /, Git treats it as a shell glob pattern and checks for a match against the pathname relative to the location of the `.gitignore` file (relative to the toplevel of the work tree if not from a `.gitignore` file)](https://www.git-scm.com/docs/gitignore#_pattern_format)
-
-  if someone can explain it with examples [make an issue please](https://github.com/robotdana/fast_ignore/issues/new)
+  (It does handle changing the current working directory between `FastIgnore#allowed?` calls.)
 
 ## Development
 
