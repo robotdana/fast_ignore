@@ -50,10 +50,18 @@ FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
 ```
 
 ### `relative: true`
-By default, FastIgnore will return full paths. To return paths relative to the current working directory, use:
+By default, FastIgnore will return full paths. To return paths relative to the current working directory, or the supplied [`root:`](#root), use:
 
 ```ruby
 FastIgnore.new(relative: true).to_a
+```
+
+### `follow_symlinks: true`
+By default, FastIgnore will match git's behaviour and not follow symbolic links.
+To make it follow symlinks, use:
+
+```ruby
+FastIgnore.new(follow_symlinks: true).to_a
 ```
 
 ### `root:`

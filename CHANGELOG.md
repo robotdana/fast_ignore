@@ -1,3 +1,7 @@
+# v0.10.1
+- Add option to follow symlinks (turns out i needed it)
+- performance improvements
+
 # v0.10.0
 - patterns with middle slashes are anchored to the root (like the gitignore documentation, now that it more clearly explains)
 - new shebang pattern (#!:), the previous version was extremely janky.

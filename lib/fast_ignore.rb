@@ -22,8 +22,9 @@ class FastIgnore
   end
   # :nocov:
 
-  def initialize(relative: false, root: nil, **rule_set_builder_args)
+  def initialize(relative: false, root: nil, follow_symlinks: false, **rule_set_builder_args)
     @relative = relative
+    @follow_symlinks = follow_symlinks
     dir_pwd = Dir.pwd
     @root = "#{::File.expand_path(root.to_s, dir_pwd)}/"
     @rule_sets = ::FastIgnore::RuleSetBuilder.build(root: @root, **rule_set_builder_args)
@@ -40,10 +41,18 @@ class FastIgnore
     each_recursive(root_from_pwd, '', &block)
   end
 
+  def directory?(path)
+    if @follow_symlinks
+      ::File.stat(path).directory?
+    else
+      ::File.lstat(path).directory?
+    end
+  end
+
   def allowed?(path)
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
-    return false if ::File.lstat(full_path).directory?
+    return false if directory?(full_path)
 
     relative_path = full_path.delete_prefix(@root)
     filename = ::File.basename(relative_path)
@@ -60,7 +69,7 @@ class FastIgnore
       begin
         full_path = parent_full_path + filename
         relative_path = parent_relative_path + filename
-        dir = ::File.lstat(full_path).directory?
+        dir = directory?(full_path)
 
         next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, filename) }
 

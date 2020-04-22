@@ -84,25 +84,50 @@ RSpec.describe FastIgnore do
       expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
     end
 
-    it 'returns false for nonexistent files' do
-      expect(subject).to disallow('utter/nonsense')
+    it 'allows soft links to directories' do # rubocop:disable RSpec/ExampleLength
+      create_file_list 'foo_target/foo_child', '.gitignore'
+      gitignore <<~GITIGNORE
+        foo_target
+      GITIGNORE
+
+      create_symlink('foo' => 'foo_target')
+      expect(subject).to allow_exactly('foo', '.gitignore')
     end
 
-    it 'follows soft links' do
+    it 'allows soft links' do
       create_file_list 'foo_target', '.gitignore'
       create_symlink('foo' => 'foo_target')
 
       expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
     end
 
-    it 'follows soft links to directories' do # rubocop:disable RSpec/ExampleLength
-      create_file_list 'foo_target/foo_target', '.gitignore'
-      gitignore <<~GITIGNORE
-        foo_target
-      GITIGNORE
+    context 'with follow_symlinks: true' do
+      let(:args) { { follow_symlinks: true } }
 
-      create_symlink('foo' => 'foo_target/foo_target')
-      expect(subject).to allow_exactly('foo', '.gitignore')
+      it 'ignores soft links to nowhere' do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+        FileUtils.rm('foo_target')
+
+        expect(subject).to disallow('foo', 'foo_target').and(allow('.gitignore'))
+      end
+
+      it 'allows soft links to directories' do # rubocop:disable RSpec/ExampleLength
+        create_file_list 'foo_target/foo_child', '.gitignore'
+        gitignore <<~GITIGNORE
+          foo_target
+        GITIGNORE
+
+        create_symlink('foo' => 'foo_target')
+        expect(subject).to allow_exactly('foo/foo_child', '.gitignore')
+      end
+
+      it 'allows soft links' do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+
+        expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
+      end
     end
 
     context 'when given a file other than gitignore' do
