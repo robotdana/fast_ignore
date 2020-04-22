@@ -36,7 +36,7 @@ class FastIgnore
       end
 
       def shebang_rules(rule, allow)
-        rules = [::FastIgnore::Rule.new(nil, true, false, allow, /\A#!.*\b#{Regexp.escape(rule)}\b/)]
+        rules = [::FastIgnore::Rule.new(nil, true, false, allow, /\A#!.*\b#{Regexp.escape(rule)}\b/.freeze)]
         return rules unless allow
 
         rules << ::FastIgnore::Rule.new('**/*', true, true, true)
@@ -82,7 +82,7 @@ class FastIgnore
       end
 
       def build_gitignore_rules(rule, unanchored, allow, dir_only, negation)
-        rules = [::FastIgnore::Rule.new(rule, unanchored, dir_only, negation)]
+        rules = [::FastIgnore::Rule.new(rule.freeze, unanchored, dir_only, negation)]
         return rules unless allow
 
         rules << ::FastIgnore::Rule.new("#{rule}/**/*", unanchored, false, negation)

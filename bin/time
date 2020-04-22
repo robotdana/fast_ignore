@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'open3'
+RUNS = 30
+SCRIPT = "time #{__dir__}/ls"
+Dir.chdir ARGV[0] do
+  times = Array.new(RUNS).map do
+    run_times = Open3.capture3(SCRIPT)[1]
+    puts run_times.lstrip
+    run_times.scan(/(?:\d+(?:.\d+)?)/)
+  end
+
+  puts format(
+    "\e[1mAverage:\n\e[32m%0.2f real         %0.2f user         %0.2f sys\e[0m", # rubocop:disable Style/FormatStringToken
+    *times.transpose.map { |n| (n.map(&:to_f).sum / RUNS) }
+  )
+end
