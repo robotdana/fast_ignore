@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# use mac terminal not vs code terminal
+# ensure nothing else is watching that dir in the filesystem e.g. webpack
+
 require 'open3'
 RUNS = 30
 SCRIPT = "time #{__dir__}/ls"

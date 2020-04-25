@@ -49,8 +49,27 @@ Like other enumerables, `FastIgnore#each` can return an enumerator
 FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
 ```
 
+### `#allowed?`
+
+To check if a single file is allowed, use
+```ruby
+FastIgnore.new.allowed?('relative/path')
+FastIgnore.new.allowed?('./relative/path')
+FastIgnore.new.allowed?('/absolute/path')
+FastIgnore.new.allowed?('~/home/path')
+```
+
+This is aliased as `===` so you can use the FastIgnore object in case statements.
+```ruby
+case my_path
+when FastIgnore.new then puts my_path
+end
+```
+
+It's recommended to memoize the FastIgnore.new object somehow to avoid having to parse the gitignore file repeatedly.
+
 ### `relative: true`
-By default, FastIgnore will return full paths. To return paths relative to the current working directory, or the supplied [`root:`](#root), use:
+By default, FastIgnore.each will yield full paths. To yield paths relative to the current working directory, or if supplied, [`root:`](#root), use:
 
 ```ruby
 FastIgnore.new(relative: true).to_a
@@ -114,16 +133,6 @@ You can also supply an array of rule strings.
 FastIgnore.new(ignore_rules: '.DS_Store').to_a
 FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
 FastIgnore.new(ignore_rules: ".git\n.gitkeep").to_a
-```
-
-# `#allowed?`
-
-To check if a single file is allowed, use
-```ruby
-FastIgnore.new.allowed?('relative/path')
-FastIgnore.new.allowed?('./relative/path')
-FastIgnore.new.allowed?('/absolute/path')
-FastIgnore.new.allowed?('~/home/path')
 ```
 
 ### `include_files:` and `include_rules:`

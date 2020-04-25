@@ -1,3 +1,6 @@
+# vFuture
+- add FastIgnore#=== as an alias for FastIgnore#allowed? so that FastIgnore objects can be used for case statements.
+
 # v0.10.1
 - Add option to follow symlinks (turns out i needed it)
 - performance improvements

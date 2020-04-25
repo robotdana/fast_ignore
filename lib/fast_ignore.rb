@@ -61,6 +61,7 @@ class FastIgnore
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
+  alias_method :===, :allowed?
 
   private
 
