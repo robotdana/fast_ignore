@@ -1,5 +1,6 @@
 # vFuture
 - add FastIgnore#=== as an alias for FastIgnore#allowed? so that FastIgnore objects can be used for case statements.
+- Fix shebangs in non-pwd-root situations
 
 # v0.10.1
 - Add option to follow symlinks (turns out i needed it)

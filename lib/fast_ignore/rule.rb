@@ -10,17 +10,17 @@ class FastIgnore
 
     attr_reader :negation
     alias_method :negation?, :negation
+    undef :negation
 
     attr_reader :dir_only
     alias_method :dir_only?, :dir_only
-
-    attr_reader :shebang
-    alias_method :file_only?, :shebang
+    undef :dir_only
 
     attr_reader :unanchored
     alias_method :unanchored?, :unanchored
+    undef :unanchored
 
-    def initialize(rule, unanchored, dir_only, negation, shebang = nil)
+    def initialize(rule, unanchored, dir_only, negation)
       @rule = rule
       @unanchored = unanchored
       @dir_only = dir_only
@@ -30,42 +30,22 @@ class FastIgnore
       freeze
     end
 
+    def file_only?
+      false
+    end
+
+    def shebang
+      nil
+    end
+
     # :nocov:
     def inspect
-      if shebang
-        "#<Rule #{'allow ' if @negation}#!:#{@shebang.to_s[15..-4]}>"
-      else
-        "#<Rule #{'!' if @negation}#{@rule}#{'/' if @dir_only}>"
-      end
+      "#<Rule #{'!' if @negation}#{@rule}#{'/' if @dir_only}>"
     end
     # :nocov:
 
-    def match?(path, filename)
-      if @shebang
-        match_shebang?(path, filename)
-      else
-        # 14 = FNMATCH_OPTIONS
-        ::File.fnmatch?(@rule, path, 14)
-      end
-    end
-
-    def match_shebang?(path, filename)
-      return false if filename.include?('.')
-
-      first_line(path)&.match?(@shebang)
-    end
-
-    def first_line(path)
-      file = ::File.new(path)
-      first_line = file.sysread(25)
-      first_line += file.sysread(50) until first_line.include?("\n")
-      file.close
-      first_line
-    rescue ::EOFError, ::SystemCallError
-      # :nocov:
-      file&.close
-      # :nocov:
-      first_line
+    def match?(relative_path, _, _)
+      ::File.fnmatch?(@rule, relative_path, 14)
     end
   end
 end

@@ -6,6 +6,7 @@ require_relative './fast_ignore/rule_set_builder'
 require_relative './fast_ignore/rule_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
+require_relative './fast_ignore/shebang_rule'
 
 class FastIgnore
   class Error < StandardError; end
@@ -25,8 +26,7 @@ class FastIgnore
   def initialize(relative: false, root: nil, follow_symlinks: false, **rule_set_builder_args)
     @relative = relative
     @follow_symlinks = follow_symlinks
-    dir_pwd = Dir.pwd
-    @root = "#{::File.expand_path(root.to_s, dir_pwd)}/"
+    @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
     @rule_sets = ::FastIgnore::RuleSetBuilder.build(root: @root, **rule_set_builder_args)
 
     freeze
@@ -57,7 +57,7 @@ class FastIgnore
     relative_path = full_path.delete_prefix(@root)
     filename = ::File.basename(relative_path)
 
-    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, filename) }
+    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, full_path, filename) }
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
@@ -72,7 +72,7 @@ class FastIgnore
         relative_path = parent_relative_path + filename
         dir = directory?(full_path)
 
-        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, filename) }
+        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename) }
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)

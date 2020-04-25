@@ -398,7 +398,7 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given include_shebangs and include_rules' do
+    context 'when given shebang and include_rules' do
       let(:args) { { include_rules: ['*.rb', 'Rakefile', '#!:ruby'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
@@ -446,7 +446,7 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given only ignore_shebangs' do
+    context 'when given only shebang ignore rule' do
       let(:args) { { ignore_rules: ['#!:ruby'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
@@ -466,7 +466,7 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given only include_shebangs' do
+    context 'when given only shebang include rule' do
       let(:args) { { include_rules: ['#!:ruby'] } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
@@ -539,6 +539,73 @@ RSpec.describe FastIgnore do
         gitignore <<~GITIGNORE
           ignored_foo
         GITIGNORE
+
+        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+      end
+    end
+
+    context 'when given only include_shebangs and a root down a level' do
+      let(:args) { { include_rules: '#!:ruby', root: 'sub' } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'sub/foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'sub/ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'sub/bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'sub/baz', 'sub/baz.rb'
+
+        create_file 'sub/.gitignore', <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+      end
+    end
+
+    context 'when given only include_shebangs and a root up a level' do
+      let(:args) { { include_rules: '#!:ruby', root: '../' } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'ignored_foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        create_file '.gitignore', <<~GITIGNORE
+          ignored_foo
+        GITIGNORE
+
+        Dir.mkdir 'level'
+        Dir.chdir 'level'
 
         expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
       end

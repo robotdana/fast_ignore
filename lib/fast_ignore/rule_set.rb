@@ -20,16 +20,17 @@ class FastIgnore
       super
     end
 
-    def allowed_recursive?(path, dir, filename)
-      @allowed_recursive.fetch(path) do
-        @allowed_recursive[path] =
-          allowed_recursive?(::File.dirname(path), true, nil) && allowed_unrecursive?(path, dir, filename)
+    def allowed_recursive?(relative_path, dir, full_path, filename)
+      @allowed_recursive.fetch(relative_path) do
+        @allowed_recursive[relative_path] =
+          allowed_recursive?(::File.dirname(relative_path), true, nil, nil) &&
+          allowed_unrecursive?(relative_path, dir, full_path, filename)
       end
     end
 
-    def allowed_unrecursive?(path, dir, filename)
+    def allowed_unrecursive?(relative_path, dir, full_path, filename)
       (dir ? @dir_rules : @file_rules).reverse_each do |rule|
-        return rule.negation? if rule.match?(path, filename)
+        return rule.negation? if rule.match?(relative_path, full_path, filename)
       end
 
       (not @allow) || (dir && @any_not_anchored)

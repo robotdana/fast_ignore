@@ -2,7 +2,6 @@
 
 class FastIgnore
   module RuleBuilder
-    # rule or nil
     class << self
       # :nocov:
       if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
@@ -12,9 +11,9 @@ class FastIgnore
       # :nocov:
 
       def build(rule, allow, expand_path, file_root)
-        strip(rule)
-
         return shebang_rules(rule, allow) if remove_shebang(rule)
+
+        strip(rule)
         return [] if skip?(rule)
 
         gitignore_rules(rule, allow, expand_path, file_root)
@@ -36,7 +35,7 @@ class FastIgnore
       end
 
       def shebang_rules(rule, allow)
-        rules = [::FastIgnore::Rule.new(nil, true, false, allow, /\A#!.*\b#{Regexp.escape(rule)}\b/.freeze)]
+        rules = [::FastIgnore::ShebangRule.new(/\A#!.*\b#{Regexp.escape(rule)}\b/.freeze, allow)]
         return rules unless allow
 
         rules << ::FastIgnore::Rule.new('**/*', true, true, true)
