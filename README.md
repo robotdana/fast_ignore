@@ -11,6 +11,8 @@ Filter a directory tree using a .gitignore file. Recognises all of the [gitignor
 FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 ```
 
+Supports ruby 2.4-2.7
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -224,9 +226,13 @@ This does unfortunately lose the file path as the root for `/` and `/**` rules.
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake` to run the tests and linters.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+You can run `bin/console` for an interactive prompt that will allow you to experiment.
+`bin/ls [argv_rules]` will return something equivalent to `git ls-files` and `bin/time [argv_rules]` will give you the average time for 30 runs.
+This repo is too small to stress bin/time more than 0.01s, switch to a large repo and find the average time before and after changes.
+
+To install this gem onto your local machine, run `bundle exec rake install`.
 
 ## Contributing
 
