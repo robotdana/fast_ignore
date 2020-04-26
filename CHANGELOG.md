@@ -1,4 +1,4 @@
-# vFuture
+# v0.10.2
 - add FastIgnore#=== as an alias for FastIgnore#allowed? so that FastIgnore objects can be used for case statements.
 - Fix shebangs in non-pwd-root situations
 
