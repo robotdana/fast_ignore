@@ -23,6 +23,7 @@ gitkeep
 hashbang
 includefile
 janky
+jruby
 klass
 llo
 memoize

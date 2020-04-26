@@ -14,7 +14,7 @@ FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 ## Features
 
 - Fast (faster than using `` `git ls-files`.split("\n") `` for small repos (because it avoids the overhead of ``` `` ```))
-- Supports ruby 2.4 - 2.7
+- Supports ruby 2.4 - 2.7 & jruby
 - supports all gitignore rule patterns
 - doesn't require git to be installed
 - supports a gitignore-esque "include" patterns. (`include_rules:`/`include_files:`)
