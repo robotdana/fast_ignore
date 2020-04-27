@@ -231,7 +231,7 @@ RSpec.describe FastIgnore do
       end
 
       describe '"[]" matches one character in a selected range' do
-        before { create_file_list 'aa', 'ab', 'ac', 'bib', 'b/b' }
+        before { create_file_list 'aa', 'ab', 'ac', 'ad', 'bib', 'b/b', 'bab', 'a[', 'bb', 'a^', 'a[bc' }
 
         it 'matches a single character in a character class' do
           includefile <<~FILE
@@ -241,12 +241,124 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('ac').and(allow('ab', 'aa'))
         end
 
-        it "doesn't matches a slash even if you specify it" do
+        it 'matches a single character in a character class range' do
+          includefile <<~FILE
+            a[a-c]
+          FILE
+
+          expect(subject).to disallow('ad').and(allow('ab', 'aa', 'ac'))
+        end
+
+        it '^ is not' do
+          includefile <<~FILE
+            a[^a-c]
+          FILE
+
+          expect(subject).to allow('ad').and(disallow('ab', 'aa', 'ac'))
+        end
+
+        it '[^/] matches everything' do
+          includefile <<~FILE
+            a[^/]
+          FILE
+
+          expect(subject).to allow('aa', 'ab', 'ac', 'ad', 'a^')
+        end
+
+        it '[^^] matches everything except literal ^' do
+          includefile <<~FILE
+            a[^^]
+          FILE
+
+          expect(subject).to allow('aa', 'ab', 'ac', 'ad').and(disallow('a^'))
+        end
+
+        it '[^/a] matches everything except a' do
+          includefile <<~FILE
+            a[^/a]
+          FILE
+
+          expect(subject).to allow('ab', 'ac', 'ad', 'a^').and(disallow('aa'))
+        end
+
+        it '[/^a] matches literal ^ and a' do
+          includefile <<~FILE
+            a[/^a]
+          FILE
+
+          expect(subject).to disallow('ab', 'ac', 'ad').and(allow('aa', 'a^'))
+        end
+
+        it '[/^] matches literal ^' do
+          includefile <<~FILE
+            a[/^]
+          FILE
+
+          expect(subject).to allow('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
+        end
+
+        it 'later ^ is literal' do
+          includefile <<~FILE
+            a[a-c^]
+          FILE
+
+          expect(subject).to disallow('ad').and(allow('ab', 'aa', 'ac', 'a^'))
+        end
+
+        it "doesn't match a slash even if you specify it last" do
           includefile <<~FILE
             b[i/]b
           FILE
 
           expect(subject).to disallow('b/b').and(allow('bib'))
+        end
+
+        it "doesn't match a slash even if you specify it alone" do
+          includefile <<~FILE
+            b[/]b
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb')
+        end
+
+        it 'empty class matches nothing' do
+          includefile <<~FILE
+            b[]b
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb')
+        end
+
+        it "doesn't match a slash even if you specify it middle" do
+          includefile <<~FILE
+            b[i/a]b
+          FILE
+
+          expect(subject).to disallow('b/b').and(allow('bib', 'bab'))
+        end
+
+        it "doesn't match a slash even if you specify it start" do
+          includefile <<~FILE
+            b[/ai]b
+          FILE
+
+          expect(subject).to disallow('b/b').and(allow('bib', 'bab'))
+        end
+
+        it 'assumes an unfinished [ matches nothing' do
+          includefile <<~FILE
+            a[
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
+        it 'assumes an unfinished [bc matches nothing' do
+          includefile <<~FILE
+            a[bc
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')
         end
       end
 
@@ -260,6 +372,14 @@ RSpec.describe FastIgnore do
       it 'matches only at the beginning of everything' do
         includefile <<~FILE
           /*.c
+        FILE
+
+        expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow('cat-file.c'))
+      end
+
+      it 'matches only at the beginning of everything **' do
+        includefile <<~FILE
+          /**.c
         FILE
 
         expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow('cat-file.c'))
@@ -279,6 +399,14 @@ RSpec.describe FastIgnore do
 
           expect(subject).to disallow('bar/bar/bar').and(allow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
         end
+
+        it 'matches files or directories in all directories ***' do
+          includefile <<~FILE
+            ***/foo
+          FILE
+
+          expect(subject).to disallow('bar/bar/bar').and(allow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
+        end
       end
 
       describe 'A trailing "/**" matches everything inside relative to the location of the .includes file.' do
@@ -288,6 +416,14 @@ RSpec.describe FastIgnore do
         it 'matches files or directories inside the mentioned directory' do
           includefile <<~FILE
             abc/**
+          FILE
+
+          expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow('abc/bar', 'abc/foo/bar'))
+        end
+
+        it 'matches files or directories inside the mentioned directory ***' do
+          includefile <<~FILE
+            abc/***
           FILE
 
           expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow('abc/bar', 'abc/foo/bar'))
@@ -305,6 +441,14 @@ RSpec.describe FastIgnore do
 
             expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow('bar/abc/foo'))
           end
+
+          it 'matches files relative to the include file ***' do
+            create_file 'bar/.include', <<~FILE
+              abc/***
+            FILE
+
+            expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow('bar/abc/foo'))
+          end
         end
       end
 
@@ -315,6 +459,14 @@ RSpec.describe FastIgnore do
         it do
           includefile <<~FILE
             a/**/b
+          FILE
+
+          expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow('a/b', 'a/x/b', 'a/x/y/b'))
+        end
+
+        it '***' do
+          includefile <<~FILE
+            a/***/b
           FILE
 
           expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow('a/b', 'a/x/b', 'a/x/y/b'))

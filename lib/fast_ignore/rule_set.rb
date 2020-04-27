@@ -3,21 +3,15 @@
 class FastIgnore
   class RuleSet
     def initialize(rules, allow)
-      @dir_rules = rules.reject(&:file_only?).freeze
-      @file_rules = rules.reject(&:dir_only?).freeze
+      @dir_rules = squash_rules(rules.reject(&:file_only?)).freeze
+      @file_rules = squash_rules(rules.reject(&:dir_only?)).freeze
       @any_not_anchored = rules.any?(&:unanchored?)
       @has_shebang_rules = rules.any?(&:shebang)
+
       @allowed_recursive = { '.' => true }
       @allow = allow
 
       freeze
-    end
-
-    def freeze
-      @dir_rules.freeze
-      @file_rules.freeze
-
-      super
     end
 
     def allowed_recursive?(relative_path, dir, full_path, filename)
@@ -34,6 +28,16 @@ class FastIgnore
       end
 
       (not @allow) || (dir && @any_not_anchored)
+    end
+
+    def squash_rules(rules)
+      out = rules.chunk_while { |a, b| a.type == b.type }.map do |chunk|
+        next chunk.first if chunk.length == 1
+
+        chunk.first.class.new(Regexp.union(chunk.map(&:rule)), chunk.first.negation?)
+      end
+
+      out
     end
 
     def weight

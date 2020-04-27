@@ -7,6 +7,7 @@ require_relative './fast_ignore/rule_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/shebang_rule'
+require_relative './fast_ignore/fn_match_to_re'
 
 class FastIgnore
   class Error < StandardError; end

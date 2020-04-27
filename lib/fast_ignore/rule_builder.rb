@@ -81,10 +81,10 @@ class FastIgnore
       end
 
       def build_gitignore_rules(rule, unanchored, allow, dir_only, negation)
-        rules = [::FastIgnore::Rule.new(rule.freeze, unanchored, dir_only, negation)]
+        rules = [::FastIgnore::Rule.new(rule, negation, unanchored, dir_only)]
         return rules unless allow
 
-        rules << ::FastIgnore::Rule.new("#{rule}/**/*", unanchored, false, negation)
+        rules << ::FastIgnore::Rule.new("#{rule}/**/*", negation, unanchored, false)
         rules + ancestor_rules(rule, unanchored)
       end
 
@@ -93,7 +93,7 @@ class FastIgnore
 
         while (parent = ::File.dirname(parent)) != '.'
           rule = ::File.basename(parent) == '**' ? "#{parent}/*" : parent.freeze
-          ancestor_rules << ::FastIgnore::Rule.new(rule, unanchored, true, true)
+          ancestor_rules << ::FastIgnore::Rule.new(rule, true, unanchored, true)
         end
 
         ancestor_rules
