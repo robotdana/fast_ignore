@@ -15,13 +15,8 @@ class FastIgnore
   include ::Enumerable
 
   # :nocov:
-  if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
-    require_relative 'fast_ignore/backports/delete_prefix_suffix'
-    using ::FastIgnore::Backports::DeletePrefixSuffix
-
-    require_relative 'fast_ignore/backports/dir_each_child'
-    using ::FastIgnore::Backports::DirEachChild
-  end
+  using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
+  using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
   # :nocov:
 
   def initialize(relative: false, root: nil, follow_symlinks: false, **rule_set_builder_args)
