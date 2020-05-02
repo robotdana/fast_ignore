@@ -11,4 +11,8 @@ RSpec::Core::RakeTask.new(:spec)
 Spellr::RakeTask.generate_task
 Leftovers::RakeTask.generate_task
 
-task default: [:spec, :rubocop, :spellr, :leftovers]
+if RUBY_PLATFORM == 'java'
+  task default: :spec
+else
+  task default: [:spec, :rubocop, :spellr, :leftovers]
+end
