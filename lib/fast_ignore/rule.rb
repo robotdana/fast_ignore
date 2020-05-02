@@ -2,12 +2,6 @@
 
 class FastIgnore
   class Rule
-    # FNMATCH_OPTIONS = (
-    #   ::File::FNM_DOTMATCH |
-    #   ::File::FNM_PATHNAME |
-    #   ::File::FNM_CASEFOLD
-    # ).freeze # = 14
-
     attr_reader :negation
     alias_method :negation?, :negation
     undef :negation
@@ -20,12 +14,16 @@ class FastIgnore
     alias_method :unanchored?, :unanchored
     undef :unanchored
 
-    def initialize(rule, unanchored, dir_only, negation)
-      @rule = rule
+    attr_reader :type
+    attr_reader :rule
+
+    def initialize(rule, negation, unanchored = nil, dir_only = nil)
+      @rule = rule.is_a?(Regexp) ? rule : ::FastIgnore::FNMatchToRegex.call(rule)
       @unanchored = unanchored
       @dir_only = dir_only
       @negation = negation
-      @shebang = shebang
+
+      @type = negation ? 1 : 0
 
       freeze
     end
@@ -44,8 +42,8 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(relative_path, _, _)
-      ::File.fnmatch?(@rule, relative_path, 14)
+    def match?(relative_path, _, _, _)
+      @rule.match?(relative_path)
     end
   end
 end

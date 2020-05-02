@@ -4,10 +4,7 @@ class FastIgnore
   module RuleSetBuilder
     class << self
       # :nocov:
-      if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
-        require_relative 'backports/delete_prefix_suffix'
-        using ::FastIgnore::Backports::DeletePrefixSuffix
-      end
+      using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
       # :nocov:
 
       def build( # rubocop:disable Metrics/ParameterLists

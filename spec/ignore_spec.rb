@@ -263,7 +263,7 @@ RSpec.describe FastIgnore do
       end
 
       describe '"[]" matches one character in a selected range' do
-        before { create_file_list 'aa', 'ab', 'ac', 'bib', 'b/b' }
+        before { create_file_list 'aa', 'ab', 'ac', 'ad', 'bib', 'b/b', 'bab', 'a[', 'bb', 'a^', 'a[bc' }
 
         it 'matches a single character in a character class' do
           gitignore <<~GITIGNORE
@@ -273,12 +273,124 @@ RSpec.describe FastIgnore do
           expect(subject).to allow('ac').and(disallow('ab', 'aa'))
         end
 
-        it "doesn't matches a slash even if you specify it" do
+        it 'matches a single character in a character class range' do
+          gitignore <<~GITIGNORE
+            a[a-c]
+          GITIGNORE
+
+          expect(subject).to allow('ad').and(disallow('ab', 'aa', 'ac'))
+        end
+
+        it '^ is not' do
+          gitignore <<~GITIGNORE
+            a[^a-c]
+          GITIGNORE
+
+          expect(subject).to disallow('ad').and(allow('ab', 'aa', 'ac'))
+        end
+
+        it '[^/] matches everything' do
+          gitignore <<~GITIGNORE
+            a[^/]
+          GITIGNORE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'ad', 'a^')
+        end
+
+        it '[^^] matches everything except literal ^' do
+          gitignore <<~GITIGNORE
+            a[^^]
+          GITIGNORE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'ad').and(allow('a^'))
+        end
+
+        it '[^/a] matches everything except a' do
+          gitignore <<~GITIGNORE
+            a[^/a]
+          GITIGNORE
+
+          expect(subject).to disallow('ab', 'ac', 'ad', 'a^').and(allow('aa'))
+        end
+
+        it '[/^a] matches literal ^ and a' do
+          gitignore <<~GITIGNORE
+            a[/^a]
+          GITIGNORE
+
+          expect(subject).to allow('ab', 'ac', 'ad').and(disallow('aa', 'a^'))
+        end
+
+        it '[/^] matches literal ^' do
+          gitignore <<~GITIGNORE
+            a[/^]
+          GITIGNORE
+
+          expect(subject).to disallow('a^').and(allow('aa', 'ab', 'ac', 'ad'))
+        end
+
+        it 'later ^ is literal' do
+          gitignore <<~GITIGNORE
+            a[a-c^]
+          GITIGNORE
+
+          expect(subject).to allow('ad').and(disallow('ab', 'aa', 'ac', 'a^'))
+        end
+
+        it "doesn't match a slash even if you specify it last" do
           gitignore <<~GITIGNORE
             b[i/]b
           GITIGNORE
 
           expect(subject).to allow('b/b').and(disallow('bib'))
+        end
+
+        it "doesn't match a slash even if you specify it alone" do
+          gitignore <<~GITIGNORE
+            b[/]b
+          GITIGNORE
+
+          expect(subject).to allow('b/b', 'bb')
+        end
+
+        it 'empty class matches nothing' do
+          gitignore <<~GITIGNORE
+            b[]b
+          GITIGNORE
+
+          expect(subject).to allow('b/b', 'bb')
+        end
+
+        it "doesn't match a slash even if you specify it middle" do
+          gitignore <<~GITIGNORE
+            b[i/a]b
+          GITIGNORE
+
+          expect(subject).to allow('b/b').and(disallow('bib', 'bab'))
+        end
+
+        it "doesn't match a slash even if you specify it start" do
+          gitignore <<~GITIGNORE
+            b[/ai]b
+          GITIGNORE
+
+          expect(subject).to allow('b/b').and(disallow('bib', 'bab'))
+        end
+
+        it 'assumes an unfinished [ matches nothing' do
+          gitignore <<~GITIGNORE
+            a[
+          GITIGNORE
+
+          expect(subject).to allow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
+        it 'assumes an unfinished [bc matches nothing' do
+          gitignore <<~GITIGNORE
+            a[bc
+          GITIGNORE
+
+          expect(subject).to allow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')
         end
       end
 
@@ -311,6 +423,14 @@ RSpec.describe FastIgnore do
 
           expect(subject).to allow('bar/bar/bar').and(disallow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
         end
+
+        it 'matches files or directories in all directories when three stars' do
+          gitignore <<~GITIGNORE
+            ***/foo
+          GITIGNORE
+
+          expect(subject).to allow('bar/bar/bar').and(disallow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
+        end
       end
 
       describe 'A trailing "/**" matches everything inside relative to the location of the .gitignore file.' do
@@ -320,6 +440,14 @@ RSpec.describe FastIgnore do
         it 'matches files or directories inside the mentioned directory' do
           gitignore <<~GITIGNORE
             abc/**
+          GITIGNORE
+
+          expect(subject).to allow('bar/bar/foo', 'bar/abc/foo').and(disallow('abc/bar', 'abc/foo/bar'))
+        end
+
+        it 'matches files or directories inside the mentioned directory when ***' do
+          gitignore <<~GITIGNORE
+            abc/***
           GITIGNORE
 
           expect(subject).to allow('bar/bar/foo', 'bar/abc/foo').and(disallow('abc/bar', 'abc/foo/bar'))
@@ -343,9 +471,17 @@ RSpec.describe FastIgnore do
         # For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.'
         before { create_file_list 'a/b', 'a/x/b', 'a/x/y/b', 'z/a/b', 'z/a/x/b', 'z/y' }
 
-        it do
+        it 'matches multiple intermediate dirs' do
           gitignore <<~GITIGNORE
             a/**/b
+          GITIGNORE
+
+          expect(subject).to allow('z/y', 'z/a/b', 'z/a/x/b').and(disallow('a/b', 'a/x/b', 'a/x/y/b'))
+        end
+
+        it 'matches multiple intermediate dirs when ***' do
+          gitignore <<~GITIGNORE
+            a/***/b
           GITIGNORE
 
           expect(subject).to allow('z/y', 'z/a/b', 'z/a/x/b').and(disallow('a/b', 'a/x/b', 'a/x/y/b'))

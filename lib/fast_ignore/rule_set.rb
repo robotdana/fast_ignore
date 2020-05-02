@@ -3,37 +3,41 @@
 class FastIgnore
   class RuleSet
     def initialize(rules, allow)
-      @dir_rules = rules.reject(&:file_only?).freeze
-      @file_rules = rules.reject(&:dir_only?).freeze
+      @dir_rules = squash_rules(rules.reject(&:file_only?)).freeze
+      @file_rules = squash_rules(rules.reject(&:dir_only?)).freeze
       @any_not_anchored = rules.any?(&:unanchored?)
       @has_shebang_rules = rules.any?(&:shebang)
+
       @allowed_recursive = { '.' => true }
       @allow = allow
 
       freeze
     end
 
-    def freeze
-      @dir_rules.freeze
-      @file_rules.freeze
-
-      super
-    end
-
-    def allowed_recursive?(relative_path, dir, full_path, filename)
+    def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)
       @allowed_recursive.fetch(relative_path) do
         @allowed_recursive[relative_path] =
-          allowed_recursive?(::File.dirname(relative_path), true, nil, nil) &&
-          allowed_unrecursive?(relative_path, dir, full_path, filename)
+          allowed_recursive?(::File.dirname(relative_path), true, nil, nil, nil) &&
+          allowed_unrecursive?(relative_path, dir, full_path, filename, content)
       end
     end
 
-    def allowed_unrecursive?(relative_path, dir, full_path, filename)
+    def allowed_unrecursive?(relative_path, dir, full_path, filename, content)
       (dir ? @dir_rules : @file_rules).reverse_each do |rule|
-        return rule.negation? if rule.match?(relative_path, full_path, filename)
+        return rule.negation? if rule.match?(relative_path, full_path, filename, content)
       end
 
       (not @allow) || (dir && @any_not_anchored)
+    end
+
+    def squash_rules(rules)
+      out = rules.chunk_while { |a, b| a.type == b.type }.map do |chunk|
+        next chunk.first if chunk.length == 1
+
+        chunk.first.class.new(Regexp.union(chunk.map(&:rule)), chunk.first.negation?)
+      end
+
+      out
     end
 
     def weight

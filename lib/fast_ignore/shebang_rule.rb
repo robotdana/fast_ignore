@@ -6,11 +6,17 @@ class FastIgnore
     alias_method :negation?, :negation
     undef :negation
 
-    attr_reader :shebang
+    attr_reader :rule
+    alias_method :shebang, :rule
 
-    def initialize(shebang, negation)
-      @shebang = shebang
+    attr_reader :type
+
+    def initialize(rule, negation)
+      @rule = rule
       @negation = negation
+
+      @type = 2
+      @type += 1 if negation
 
       freeze
     end
@@ -29,14 +35,14 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      "#<ShebangRule #{'allow ' if @negation}#!:#{@shebang.to_s[15..-4]}>"
+      "#<ShebangRule #{'allow ' if @negation}#!:#{@rule.to_s[15..-4]}>"
     end
     # :nocov:
 
-    def match?(_, full_path, filename)
+    def match?(_, full_path, filename, content)
       return false if filename.include?('.')
 
-      first_line(full_path)&.match?(@shebang)
+      (content || first_line(full_path))&.match?(@rule)
     end
 
     private

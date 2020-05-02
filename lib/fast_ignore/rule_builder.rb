@@ -4,10 +4,7 @@ class FastIgnore
   module RuleBuilder
     class << self
       # :nocov:
-      if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
-        require_relative 'backports/delete_prefix_suffix'
-        using ::FastIgnore::Backports::DeletePrefixSuffix
-      end
+      using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
       # :nocov:
 
       def build(rule, allow, expand_path, file_root)
@@ -50,8 +47,11 @@ class FastIgnore
         dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
-        expand_rule_path(rule, expand_path) if expand_path
-        unanchored = unanchored?(rule)
+        unanchored = if expand_path
+          expand_rule_path(rule, expand_path)
+        else
+          unanchored?(rule)
+        end
         rule.delete_prefix!('/')
 
         rule.prepend("#{file_root}#{'**/' if unanchored}") if file_root || unanchored
@@ -73,7 +73,7 @@ class FastIgnore
       def expand_rule_path(rule, root)
         rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
         rule.delete_prefix!(root)
-        rule.prepend('/') unless rule.start_with?('*') || rule.start_with?('/')
+        rule.start_with?('*')
       end
 
       def unanchored?(rule)
@@ -81,10 +81,10 @@ class FastIgnore
       end
 
       def build_gitignore_rules(rule, unanchored, allow, dir_only, negation)
-        rules = [::FastIgnore::Rule.new(rule.freeze, unanchored, dir_only, negation)]
+        rules = [::FastIgnore::Rule.new(rule, negation, unanchored, dir_only)]
         return rules unless allow
 
-        rules << ::FastIgnore::Rule.new("#{rule}/**/*", unanchored, false, negation)
+        rules << ::FastIgnore::Rule.new("#{rule}/**/*", negation, unanchored, false)
         rules + ancestor_rules(rule, unanchored)
       end
 
@@ -93,7 +93,7 @@ class FastIgnore
 
         while (parent = ::File.dirname(parent)) != '.'
           rule = ::File.basename(parent) == '**' ? "#{parent}/*" : parent.freeze
-          ancestor_rules << ::FastIgnore::Rule.new(rule, unanchored, true, true)
+          ancestor_rules << ::FastIgnore::Rule.new(rule, true, unanchored, true)
         end
 
         ancestor_rules

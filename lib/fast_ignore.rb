@@ -7,6 +7,7 @@ require_relative './fast_ignore/rule_builder'
 require_relative './fast_ignore/rule_set'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/shebang_rule'
+require_relative './fast_ignore/fn_match_to_re'
 
 class FastIgnore
   class Error < StandardError; end
@@ -14,13 +15,8 @@ class FastIgnore
   include ::Enumerable
 
   # :nocov:
-  if ::FastIgnore::Backports.ruby_version_less_than?(2, 5)
-    require_relative 'fast_ignore/backports/delete_prefix_suffix'
-    using ::FastIgnore::Backports::DeletePrefixSuffix
-
-    require_relative 'fast_ignore/backports/dir_each_child'
-    using ::FastIgnore::Backports::DirEachChild
-  end
+  using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
+  using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
   # :nocov:
 
   def initialize(relative: false, root: nil, follow_symlinks: false, **rule_set_builder_args)
@@ -41,6 +37,22 @@ class FastIgnore
     each_recursive(root_from_pwd, '', &block)
   end
 
+  def allowed?(path, directory: nil, content: nil)
+    full_path = ::File.expand_path(path, @root)
+    return false unless full_path.start_with?(@root)
+    return false if directory.nil? ? directory?(full_path) : directory
+
+    relative_path = full_path.delete_prefix(@root)
+    filename = ::File.basename(relative_path)
+
+    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, full_path, filename, content) }
+  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    false
+  end
+  alias_method :===, :allowed?
+
+  private
+
   def directory?(path)
     if @follow_symlinks
       ::File.stat(path).directory?
@@ -49,22 +61,6 @@ class FastIgnore
     end
   end
 
-  def allowed?(path)
-    full_path = ::File.expand_path(path, @root)
-    return false unless full_path.start_with?(@root)
-    return false if directory?(full_path)
-
-    relative_path = full_path.delete_prefix(@root)
-    filename = ::File.basename(relative_path)
-
-    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, full_path, filename) }
-  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-    false
-  end
-  alias_method :===, :allowed?
-
-  private
-
   def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
     ::Dir.each_child(parent_full_path) do |filename|
       begin
@@ -72,7 +68,7 @@ class FastIgnore
         relative_path = parent_relative_path + filename
         dir = directory?(full_path)
 
-        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename) }
+        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename, nil) }
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)

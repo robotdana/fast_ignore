@@ -10,8 +10,11 @@ enoent
 enumerables
 env
 errno
+esque
 extensionless
 fancyignore
+filesystem
+fnmatch
 frotz
 gemfile
 github
@@ -34,6 +37,7 @@ rspec
 rubo
 rubocop
 rubygems
+rubyish
 rulesets
 rvm
 sherson

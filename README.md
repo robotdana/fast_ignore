@@ -11,7 +11,15 @@ Filter a directory tree using a .gitignore file. Recognises all of the [gitignor
 FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 ```
 
-Supports ruby 2.4-2.7
+## Features
+
+- Fast (faster than using `` `git ls-files`.split("\n") `` for small repos (because it avoids the overhead of ``` `` ```))
+- Supports ruby 2.4 - 2.7
+- supports all gitignore rule patterns
+- doesn't require git to be installed
+- supports a gitignore-esque "include" patterns. (`include_rules:`/`include_files:`)
+- supports an expansion of include patterns, matching expanded paths (`argv_rules:`)
+- supports matching by shebang rather than filename for extensionless files: `#!:`
 
 ## Installation
 
@@ -64,7 +72,8 @@ FastIgnore.new.allowed?('~/home/path')
 This is aliased as `===` so you can use the FastIgnore object in case statements.
 ```ruby
 case my_path
-when FastIgnore.new then puts my_path
+when FastIgnore.new
+  puts(my_path)
 end
 ```
 
@@ -215,6 +224,15 @@ FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
 ```
 
 This does unfortunately lose the file path as the root for `/` and `/**` rules.
+
+### optimising #allowed?
+
+To avoid unnecessary calls to the filesystem, if your code already knows whether or not it's a directory, or if you're checking shebangs and you have already read the content of the file: use
+```ruby
+FastIgnore.new.allowed?('relative/path', directory: false, content: "#!/usr/bin/ruby\n\nputs 'ok'\n")
+```
+This is not required, and if FastIgnore does have to go to the filesystem for this information it's well optimised to only read what is necessary.
+
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`
