@@ -1,3 +1,7 @@
+# v0.11.0
+- major performance improvement (use regexp rather than fnmatch)
+- optionally pass directory: and content: into allowed? if these are already loaded.
+
 # v0.10.2
 - add FastIgnore#=== as an alias for FastIgnore#allowed? so that FastIgnore objects can be used for case statements.
 - Fix shebangs in non-pwd-root situations

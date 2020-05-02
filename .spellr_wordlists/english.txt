@@ -10,9 +10,11 @@ enoent
 enumerables
 env
 errno
+esque
 extensionless
 fancyignore
 filesystem
+fnmatch
 frotz
 gemfile
 github
