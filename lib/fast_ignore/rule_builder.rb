@@ -47,8 +47,11 @@ class FastIgnore
         dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
-        expand_rule_path(rule, expand_path) if expand_path
-        unanchored = unanchored?(rule)
+        unanchored = if expand_path
+          expand_rule_path(rule, expand_path)
+        else
+          unanchored?(rule)
+        end
         rule.delete_prefix!('/')
 
         rule.prepend("#{file_root}#{'**/' if unanchored}") if file_root || unanchored
@@ -70,7 +73,7 @@ class FastIgnore
       def expand_rule_path(rule, root)
         rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
         rule.delete_prefix!(root)
-        rule.prepend('/') unless rule.start_with?('*') || rule.start_with?('/')
+        rule.start_with?('*')
       end
 
       def unanchored?(rule)
