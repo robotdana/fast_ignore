@@ -64,7 +64,8 @@ FastIgnore.new.allowed?('~/home/path')
 This is aliased as `===` so you can use the FastIgnore object in case statements.
 ```ruby
 case my_path
-when FastIgnore.new then puts my_path
+when FastIgnore.new
+  puts(my_path)
 end
 ```
 
@@ -215,6 +216,15 @@ FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
 ```
 
 This does unfortunately lose the file path as the root for `/` and `/**` rules.
+
+### optimising #allowed?
+
+To avoid unnecessary calls to the filesystem, if your code already knows whether or not it's a directory, or if you're checking shebangs and you have already read the content of the file: use
+```ruby
+FastIgnore.new.allowed?('relative/path', directory: false, content: "#!/usr/bin/ruby\n\nputs 'ok'\n")
+```
+This is not required, and if FastIgnore does have to go to the filesystem for this information it's well optimised to only read what is necessary.
+
 
 ## Known issues
 - Doesn't take into account project excludes in `.git/info/exclude`

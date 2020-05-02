@@ -37,6 +37,22 @@ class FastIgnore
     each_recursive(root_from_pwd, '', &block)
   end
 
+  def allowed?(path, directory: nil, content: nil)
+    full_path = ::File.expand_path(path, @root)
+    return false unless full_path.start_with?(@root)
+    return false if directory.nil? ? directory?(full_path) : directory
+
+    relative_path = full_path.delete_prefix(@root)
+    filename = ::File.basename(relative_path)
+
+    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, full_path, filename, content) }
+  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    false
+  end
+  alias_method :===, :allowed?
+
+  private
+
   def directory?(path)
     if @follow_symlinks
       ::File.stat(path).directory?
@@ -45,22 +61,6 @@ class FastIgnore
     end
   end
 
-  def allowed?(path)
-    full_path = ::File.expand_path(path, @root)
-    return false unless full_path.start_with?(@root)
-    return false if directory?(full_path)
-
-    relative_path = full_path.delete_prefix(@root)
-    filename = ::File.basename(relative_path)
-
-    @rule_sets.all? { |r| r.allowed_recursive?(relative_path, false, full_path, filename) }
-  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-    false
-  end
-  alias_method :===, :allowed?
-
-  private
-
   def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
     ::Dir.each_child(parent_full_path) do |filename|
       begin
@@ -68,7 +68,7 @@ class FastIgnore
         relative_path = parent_relative_path + filename
         dir = directory?(full_path)
 
-        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename) }
+        next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename, nil) }
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)

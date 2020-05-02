@@ -12,6 +12,7 @@ env
 errno
 extensionless
 fancyignore
+filesystem
 frotz
 gemfile
 github

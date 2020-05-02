@@ -75,6 +75,16 @@ RSpec.describe FastIgnore do
       expect(subject).not_to be_allowed('utter/nonsense')
     end
 
+    it 'allowed? can be shortcut with directory:' do
+      create_file_list 'a'
+      expect(subject).to be_allowed('a', directory: false)
+    end
+
+    it 'allowed? can be lied to with directory:' do
+      create_file_list 'a/b'
+      expect(subject).to be_allowed('a', directory: false)
+    end
+
     it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
       create_symlink('foo' => 'foo_target')
@@ -640,6 +650,41 @@ RSpec.describe FastIgnore do
         GITIGNORE
 
         expect(subject).to allow('foo', 'bar').and(disallow('ignored_foo', 'baz', 'baz.rb'))
+      end
+    end
+
+    context 'when given only include_shebangs as a string list, allowed? can be shortcut with content' do
+      let(:args) { { include_rules: '#!:ruby' } }
+
+      it 'returns matching files' do
+        content = <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+        create_file 'foo', content
+
+        expect(subject).to be_allowed('foo', content: content)
+      end
+    end
+
+    context 'when given only include_shebangs as a string list, allowed? can be lied to with content' do
+      let(:args) { { include_rules: '#!:bash' } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        real_content = <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+        fake_content = <<~BASH
+          #!/usr/bin/env bash
+
+          echo 'ok'
+        BASH
+        create_file 'foo', real_content
+
+        expect(subject).to be_allowed('foo', content: fake_content)
       end
     end
   end

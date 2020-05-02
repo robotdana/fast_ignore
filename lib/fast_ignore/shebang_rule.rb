@@ -39,10 +39,10 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(_, full_path, filename)
+    def match?(_, full_path, filename, content)
       return false if filename.include?('.')
 
-      first_line(full_path)&.match?(@rule)
+      (content || first_line(full_path))&.match?(@rule)
     end
 
     private

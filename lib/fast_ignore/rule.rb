@@ -2,12 +2,6 @@
 
 class FastIgnore
   class Rule
-    # FNMATCH_OPTIONS = (
-    #   ::File::FNM_DOTMATCH |
-    #   ::File::FNM_PATHNAME |
-    #   ::File::FNM_CASEFOLD
-    # ).freeze # = 14
-
     attr_reader :negation
     alias_method :negation?, :negation
     undef :negation
@@ -48,8 +42,7 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(relative_path, _, _)
-      # ::File.fnmatch?(@rule, relative_path, 14)
+    def match?(relative_path, _, _, _)
       @rule.match?(relative_path)
     end
   end
