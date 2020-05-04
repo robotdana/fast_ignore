@@ -99,10 +99,12 @@ FastIgnore.new(follow_symlinks: true).to_a
 
 By default, root is PWD (the current working directory)
 This directory is used for:
-- looking for .gitignore files
-- as the root directory for array rules starting with `/` or ending with `/**`
+- the location of .git/core/exclude
+- the outermost directory that project .gitignore files are looked for
+- the root directory for array rules starting with `/` or ending with `/**`
 - and the path that relative is relative to
-- which files get checked
+- the ancestor of which files get checked
+- the ancestor of all include_files and ignore_files
 
 To use a different directory:
 ```ruby
@@ -112,7 +114,8 @@ FastIgnore.new(root: '../relative/path/to/root').to_a
 
 ### `gitignore:`
 
-By default, the .gitignore file in root directory is loaded.
+By default, the .gitignore file in the root directory is loaded, plus any .gitignore files in subdirectories, the global ignore file, and .git/info/exclude.
+
 To not do this use
 ```ruby
 FastIgnore.new(gitignore: false).to_a
@@ -125,7 +128,7 @@ FastIgnore.new(gitignore: true).to_a
 
 If the gitignore file is somewhere else
 ```ruby
-FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore', gitignore: false).to_a
+FastIgnore.new(ignore_file: '/absolute/path/to/.gitignore').to_a
 ```
 Note that the location of the .gitignore file will affect rules beginning with `/` or ending in `/**`
 
@@ -134,7 +137,7 @@ You can specify other gitignore-style files to ignore as well.
 Missing files will raise an `Errno::ENOENT` error.
 
 ```ruby
-FastIgnore.new(ignore_files: '/absolute/path/to/my/ignore/file').to_a
+FastIgnore.new(ignore_files: 'relative/path/to/my/ignore/file').to_a
 FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
 ```
 
@@ -240,6 +243,7 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
   So don't do that.
 
   (It does handle changing the current working directory between `FastIgnore#allowed?` calls.)
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake` to run the tests and linters.

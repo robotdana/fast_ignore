@@ -1,3 +1,6 @@
+# v0.12.0
+- Reads all relevant gitignore files (nested .gitignore files, global .gitignore referred to in .gitconfig, and .git/info/exclude)
+
 # v0.11.0
 - major performance improvement (use regexp rather than fnmatch)
 - optionally pass directory: and content: into allowed? if these are already loaded.
