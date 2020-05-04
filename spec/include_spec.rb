@@ -12,7 +12,7 @@ RSpec.describe FastIgnore do
       it 'includes everything when the includes file is empty' do
         includefile ''
 
-        expect(subject).to allow('foo', 'bar', 'baz')
+        expect(subject).to allow_files('foo', 'bar', 'baz')
       end
 
       it 'includes everything when the includes file only contains newlines' do
@@ -21,7 +21,7 @@ RSpec.describe FastIgnore do
 
         FILE
 
-        expect(subject).to allow('foo', 'bar', 'baz')
+        expect(subject).to allow_files('foo', 'bar', 'baz')
       end
 
       it 'includes mentioned files when include file includes newlines' do
@@ -32,7 +32,7 @@ RSpec.describe FastIgnore do
 
         FILE
 
-        expect(subject).to disallow('baz').and(allow('foo', 'bar'))
+        expect(subject).to disallow('baz').and(allow_files('foo', 'bar'))
       end
     end
 
@@ -45,7 +45,7 @@ RSpec.describe FastIgnore do
           foo
         FILE
 
-        expect(subject).to disallow('#foo').and(allow('foo'))
+        expect(subject).to disallow('#foo').and(allow_files('foo'))
       end
 
       describe 'Put a backslash ("\") in front of the first hash for patterns that begin with a hash' do
@@ -54,7 +54,7 @@ RSpec.describe FastIgnore do
             \\#foo
           FILE
 
-          expect(subject).to disallow('foo').and(allow('#foo'))
+          expect(subject).to disallow('foo').and(allow_files('#foo'))
         end
       end
     end
@@ -65,19 +65,19 @@ RSpec.describe FastIgnore do
       it 'ignores trailing spaces in the includes file' do
         includefile 'foo  '
 
-        expect(subject).to disallow('foo  ', 'foo ').and(allow('foo'))
+        expect(subject).to disallow('foo  ', 'foo ').and(allow_files('foo'))
       end
 
       it "doesn't ignore trailing spaces if there's a backslash" do
         includefile "foo \\ \n"
 
-        expect(subject).to disallow('foo', 'foo ').and(allow('foo  '))
+        expect(subject).to disallow('foo', 'foo ').and(allow_files('foo  '))
       end
 
       it "doesn't ignore trailing spaces if there's a backslash before every space" do
         includefile "foo\\ \\ \n"
 
-        expect(subject).to disallow('foo', 'foo ').and(allow('foo  '))
+        expect(subject).to disallow('foo', 'foo ').and(allow_files('foo  '))
       end
     end
 
@@ -94,7 +94,7 @@ RSpec.describe FastIgnore do
             foo/
           FILE
 
-          expect(subject).to disallow('bar/foo').and(allow('foo/bar'))
+          expect(subject).to disallow('bar/foo').and(allow_files('foo/bar'))
         end
       end
     end
@@ -109,7 +109,7 @@ RSpec.describe FastIgnore do
             !foo
           FILE
 
-          expect(subject).to disallow('foo').and(allow('foe'))
+          expect(subject).to disallow('foo').and(allow_files('foe'))
         end
 
         it 'is read in order' do
@@ -118,7 +118,7 @@ RSpec.describe FastIgnore do
             fo*
           FILE
 
-          expect(subject).to allow('foe', 'foo')
+          expect(subject).to allow_files('foe', 'foo')
         end
 
         it 'has no effect if not negating anything' do
@@ -138,7 +138,7 @@ RSpec.describe FastIgnore do
             !foo/bar
           FILE
 
-          expect(subject).to disallow('bar/bar', 'foo/bar').and(allow('foo/foo'))
+          expect(subject).to disallow('bar/bar', 'foo/bar').and(allow_files('foo/foo'))
         end
       end
 
@@ -152,7 +152,7 @@ RSpec.describe FastIgnore do
             \\!important!.txt
           FILE
 
-          expect(subject).to disallow('important!.txt').and(allow('!important!.txt'))
+          expect(subject).to disallow('important!.txt').and(allow_files('!important!.txt'))
         end
       end
     end
@@ -166,7 +166,7 @@ RSpec.describe FastIgnore do
             *our
           FILE
 
-          expect(subject).to disallow('few', 'fewer').and(allow('f/our', 'four', 'favour'))
+          expect(subject).to disallow('few', 'fewer').and(allow_files('f/our', 'four', 'favour'))
         end
 
         it "doesn't match a slash" do
@@ -174,7 +174,7 @@ RSpec.describe FastIgnore do
             f*our
           FILE
 
-          expect(subject).to disallow('few', 'fewer', 'f/our').and(allow('four', 'favour'))
+          expect(subject).to disallow('few', 'fewer', 'f/our').and(allow_files('four', 'favour'))
         end
 
         it "matches any number of characters in the middle if there's a star" do
@@ -182,7 +182,7 @@ RSpec.describe FastIgnore do
             f*r
           FILE
 
-          expect(subject).to disallow('f/our', 'few').and(allow('four', 'fewer', 'favour'))
+          expect(subject).to disallow('f/our', 'few').and(allow_files('four', 'fewer', 'favour'))
         end
 
         it "matches any number of characters at the end if there's a star" do
@@ -190,7 +190,7 @@ RSpec.describe FastIgnore do
             few*
           FILE
 
-          expect(subject).to disallow('f/our', 'four', 'favour').and(allow('few', 'fewer'))
+          expect(subject).to disallow('f/our', 'four', 'favour').and(allow_files('few', 'fewer'))
         end
       end
 
@@ -202,7 +202,7 @@ RSpec.describe FastIgnore do
             ?our
           FILE
 
-          expect(subject).to disallow('fouled', 'fear', 'favour', 'fa/our', 'foul').and(allow('tour', 'four'))
+          expect(subject).to disallow('fouled', 'fear', 'favour', 'fa/our', 'foul').and(allow_files('tour', 'four'))
         end
 
         it "doesn't match a slash" do
@@ -210,7 +210,7 @@ RSpec.describe FastIgnore do
             fa?our
           FILE
 
-          expect(subject).to disallow('fouled', 'fear', 'tour', 'four', 'fa/our', 'foul').and(allow('favour'))
+          expect(subject).to disallow('fouled', 'fear', 'tour', 'four', 'fa/our', 'foul').and(allow_files('favour'))
         end
 
         it "matches any number of characters in the middle if there's a star" do
@@ -218,7 +218,7 @@ RSpec.describe FastIgnore do
             f??r
           FILE
 
-          expect(subject).to disallow('fouled', 'tour', 'favour', 'fa/our', 'foul').and(allow('four', 'fear'))
+          expect(subject).to disallow('fouled', 'tour', 'favour', 'fa/our', 'foul').and(allow_files('four', 'fear'))
         end
 
         it "matches a single number of characters at the end if there's a ?" do
@@ -226,7 +226,7 @@ RSpec.describe FastIgnore do
             fou?
           FILE
 
-          expect(subject).to disallow('fouled', 'fear', 'tour', 'favour', 'fa/our').and(allow('foul', 'four'))
+          expect(subject).to disallow('fouled', 'fear', 'tour', 'favour', 'fa/our').and(allow_files('foul', 'four'))
         end
       end
 
@@ -238,7 +238,7 @@ RSpec.describe FastIgnore do
             a[ab]
           FILE
 
-          expect(subject).to disallow('ac').and(allow('ab', 'aa'))
+          expect(subject).to disallow('ac').and(allow_files('ab', 'aa'))
         end
 
         it 'matches a single character in a character class range' do
@@ -246,7 +246,7 @@ RSpec.describe FastIgnore do
             a[a-c]
           FILE
 
-          expect(subject).to disallow('ad').and(allow('ab', 'aa', 'ac'))
+          expect(subject).to disallow('ad').and(allow_files('ab', 'aa', 'ac'))
         end
 
         it '^ is not' do
@@ -254,7 +254,7 @@ RSpec.describe FastIgnore do
             a[^a-c]
           FILE
 
-          expect(subject).to allow('ad').and(disallow('ab', 'aa', 'ac'))
+          expect(subject).to allow_files('ad').and(disallow('ab', 'aa', 'ac'))
         end
 
         it '[^/] matches everything' do
@@ -262,7 +262,7 @@ RSpec.describe FastIgnore do
             a[^/]
           FILE
 
-          expect(subject).to allow('aa', 'ab', 'ac', 'ad', 'a^')
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'ad', 'a^')
         end
 
         it '[^^] matches everything except literal ^' do
@@ -270,7 +270,7 @@ RSpec.describe FastIgnore do
             a[^^]
           FILE
 
-          expect(subject).to allow('aa', 'ab', 'ac', 'ad').and(disallow('a^'))
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'ad').and(disallow('a^'))
         end
 
         it '[^/a] matches everything except a' do
@@ -278,7 +278,7 @@ RSpec.describe FastIgnore do
             a[^/a]
           FILE
 
-          expect(subject).to allow('ab', 'ac', 'ad', 'a^').and(disallow('aa'))
+          expect(subject).to allow_files('ab', 'ac', 'ad', 'a^').and(disallow('aa'))
         end
 
         it '[/^a] matches literal ^ and a' do
@@ -286,7 +286,7 @@ RSpec.describe FastIgnore do
             a[/^a]
           FILE
 
-          expect(subject).to disallow('ab', 'ac', 'ad').and(allow('aa', 'a^'))
+          expect(subject).to disallow('ab', 'ac', 'ad').and(allow_files('aa', 'a^'))
         end
 
         it '[/^] matches literal ^' do
@@ -294,7 +294,7 @@ RSpec.describe FastIgnore do
             a[/^]
           FILE
 
-          expect(subject).to allow('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
+          expect(subject).to allow_files('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
         end
 
         it 'later ^ is literal' do
@@ -302,7 +302,7 @@ RSpec.describe FastIgnore do
             a[a-c^]
           FILE
 
-          expect(subject).to disallow('ad').and(allow('ab', 'aa', 'ac', 'a^'))
+          expect(subject).to disallow('ad').and(allow_files('ab', 'aa', 'ac', 'a^'))
         end
 
         it "doesn't match a slash even if you specify it last" do
@@ -310,7 +310,7 @@ RSpec.describe FastIgnore do
             b[i/]b
           FILE
 
-          expect(subject).to disallow('b/b').and(allow('bib'))
+          expect(subject).to disallow('b/b').and(allow_files('bib'))
         end
 
         it "doesn't match a slash even if you specify it alone" do
@@ -334,7 +334,7 @@ RSpec.describe FastIgnore do
             b[i/a]b
           FILE
 
-          expect(subject).to disallow('b/b').and(allow('bib', 'bab'))
+          expect(subject).to disallow('b/b').and(allow_files('bib', 'bab'))
         end
 
         it "doesn't match a slash even if you specify it start" do
@@ -342,7 +342,7 @@ RSpec.describe FastIgnore do
             b[/ai]b
           FILE
 
-          expect(subject).to disallow('b/b').and(allow('bib', 'bab'))
+          expect(subject).to disallow('b/b').and(allow_files('bib', 'bab'))
         end
 
         it 'assumes an unfinished [ matches nothing' do
@@ -374,7 +374,7 @@ RSpec.describe FastIgnore do
           /*.c
         FILE
 
-        expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow('cat-file.c'))
+        expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow_files('cat-file.c'))
       end
 
       it 'matches only at the beginning of everything **' do
@@ -382,7 +382,7 @@ RSpec.describe FastIgnore do
           /**.c
         FILE
 
-        expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow('cat-file.c'))
+        expect(subject).to disallow('mozilla-sha1/sha1.c').and(allow_files('cat-file.c'))
       end
     end
 
@@ -397,7 +397,7 @@ RSpec.describe FastIgnore do
             **/foo
           FILE
 
-          expect(subject).to disallow('bar/bar/bar').and(allow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
+          expect(subject).to disallow('bar/bar/bar').and(allow_files('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
         end
 
         it 'matches files or directories in all directories ***' do
@@ -405,7 +405,7 @@ RSpec.describe FastIgnore do
             ***/foo
           FILE
 
-          expect(subject).to disallow('bar/bar/bar').and(allow('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
+          expect(subject).to disallow('bar/bar/bar').and(allow_files('foo', 'bar/foo', 'bar/bar/foo/in_dir'))
         end
       end
 
@@ -418,7 +418,7 @@ RSpec.describe FastIgnore do
             abc/**
           FILE
 
-          expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow('abc/bar', 'abc/foo/bar'))
+          expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow_files('abc/bar', 'abc/foo/bar'))
         end
 
         it 'matches files or directories inside the mentioned directory ***' do
@@ -426,7 +426,7 @@ RSpec.describe FastIgnore do
             abc/***
           FILE
 
-          expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow('abc/bar', 'abc/foo/bar'))
+          expect(subject).to disallow('bar/bar/foo', 'bar/abc/foo').and(allow_files('abc/bar', 'abc/foo/bar'))
         end
 
         context 'when the include file root is down a level from the pwd' do
@@ -439,7 +439,7 @@ RSpec.describe FastIgnore do
               abc/**
             FILE
 
-            expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow('bar/abc/foo'))
+            expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow_files('bar/abc/foo'))
           end
 
           it 'matches files relative to the include file ***' do
@@ -447,7 +447,7 @@ RSpec.describe FastIgnore do
               abc/***
             FILE
 
-            expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow('bar/abc/foo'))
+            expect(subject).to disallow('bar/bar/foo', 'abc/bar', 'abc/foo/bar').and(allow_files('bar/abc/foo'))
           end
         end
       end
@@ -461,7 +461,7 @@ RSpec.describe FastIgnore do
             a/**/b
           FILE
 
-          expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow('a/b', 'a/x/b', 'a/x/y/b'))
+          expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow_files('a/b', 'a/x/b', 'a/x/y/b'))
         end
 
         it '***' do
@@ -469,7 +469,7 @@ RSpec.describe FastIgnore do
             a/***/b
           FILE
 
-          expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow('a/b', 'a/x/b', 'a/x/y/b'))
+          expect(subject).to disallow('z/y', 'z/a/b', 'z/a/x/b').and(allow_files('a/b', 'a/x/b', 'a/x/y/b'))
         end
       end
 
@@ -483,7 +483,7 @@ RSpec.describe FastIgnore do
                 **our
               FILE
 
-              expect(subject).to disallow('few', 'fewer').and(allow('f/our', 'four', 'favour'))
+              expect(subject).to disallow('few', 'fewer').and(allow_files('f/our', 'four', 'favour'))
             end
 
             it "doesn't match a slash" do
@@ -491,7 +491,7 @@ RSpec.describe FastIgnore do
                 f**our
               FILE
 
-              expect(subject).to disallow('few', 'fewer', 'f/our').and(allow('four', 'favour'))
+              expect(subject).to disallow('few', 'fewer', 'f/our').and(allow_files('four', 'favour'))
             end
 
             it 'matches any number of characters in the middle' do
@@ -499,7 +499,7 @@ RSpec.describe FastIgnore do
                 f**r
               FILE
 
-              expect(subject).to disallow('f/our', 'few').and(allow('four', 'fewer', 'favour'))
+              expect(subject).to disallow('f/our', 'few').and(allow_files('four', 'fewer', 'favour'))
             end
 
             it 'matches any number of characters at the end' do
@@ -507,7 +507,7 @@ RSpec.describe FastIgnore do
                 few**
               FILE
 
-              expect(subject).to disallow('f/our', 'four', 'favour').and(allow('few', 'fewer'))
+              expect(subject).to disallow('f/our', 'four', 'favour').and(allow_files('few', 'fewer'))
             end
           end
         end

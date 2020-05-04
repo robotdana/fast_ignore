@@ -20,6 +20,7 @@ FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 - supports a gitignore-esque "include" patterns. (`include_rules:`/`include_files:`)
 - supports an expansion of include patterns, matching expanded paths (`argv_rules:`)
 - supports matching by shebang rather than filename for extensionless files: `#!:`
+- in addition to .gitignore, reads .git/info/excludes and the ignore file mentioned in your ~/.gitconfig
 
 ## Installation
 
@@ -235,13 +236,10 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
 
 
 ## Known issues
-- Doesn't take into account project excludes in `.git/info/exclude`
-- Doesn't take into account globally ignored files in `git config core.excludesFile`.
 - Doesn't know what to do if you change the current working directory inside the `FastIgnore#each` block.
   So don't do that.
 
   (It does handle changing the current working directory between `FastIgnore#allowed?` calls.)
-
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake` to run the tests and linters.

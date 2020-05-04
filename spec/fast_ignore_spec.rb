@@ -35,7 +35,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to allow('foo', 'bar')
+        expect(subject).to allow_files('foo', 'bar')
       end
     end
 
@@ -53,7 +53,114 @@ RSpec.describe FastIgnore do
           foo
         GITIGNORE
 
-        expect(subject).to allow('bar')
+        expect(subject).to allow_files('bar')
+      end
+    end
+
+    describe 'Patterns read from gitignore referred by gitconfig' do
+      before do
+        create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
+
+        gitignore <<~GITIGNORE
+          b/d
+        GITIGNORE
+
+        allow(File).to receive(:exist?).at_least(:once).and_call_original
+        allow(File).to receive(:readlines).at_least(:once).and_call_original
+        allow(ENV).to receive(:[]).at_least(:once).and_call_original
+      end
+
+      it 'recognises .gitconfig gitignore files' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
+          "[core]\n",
+          "\texcludesfile = ~/.global_gitignore\n".dup
+        ])
+
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.global_gitignore")
+          .at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.global_gitignore")
+          .at_least(:once).and_return(["a/b/c\n".dup])
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises default global gitignore file when XDG_CONFIG_HOME is blank' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return('')
+
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(["a/b/c\n".dup])
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises default global gitignore file when XDG_CONFIG_HOME is nil' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(["a/b/c\n".dup])
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises default global gitignore file when gitconfig has no excludesfile and XDG_CONFIG_HOME is nil' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
+          "[user]\n",
+          "\tname = Dana \n".dup
+        ])
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
+          .at_least(:once).and_return(["a/b/c\n".dup])
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises default global gitignore file when XDG_CONFIG_HOME is set' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return('~/.xconfig')
+
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.xconfig/git/ignore")
+          .at_least(:once).and_return(true)
+        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.xconfig/git/ignore")
+          .at_least(:once).and_return(["a/b/c\n".dup])
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises project .gitignore file when no global gitignore' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+
+        create_file 'a/.gitignore', <<~GITIGNORE
+          b/c
+        GITIGNORE
+
+        expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+      end
+
+      it 'recognises project subdir .gitignore file when no global gitignore and no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+
+        gitignore ''
+
+        create_file 'a/.gitignore', <<~GITIGNORE
+          b/c
+        GITIGNORE
+
+        expect(subject).to allow_files('a/b/d', 'b/c', 'b/d').and(disallow('a/b/c'))
       end
     end
 
@@ -90,7 +197,7 @@ RSpec.describe FastIgnore do
       create_symlink('foo' => 'foo_target')
       FileUtils.rm('foo_target')
 
-      expect(subject).to allow('foo')
+      expect(subject).to allow_files('foo')
       expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
     end
 
@@ -119,7 +226,7 @@ RSpec.describe FastIgnore do
         create_symlink('foo' => 'foo_target')
         FileUtils.rm('foo_target')
 
-        expect(subject).to disallow('foo', 'foo_target').and(allow('.gitignore'))
+        expect(subject).to disallow('foo', 'foo_target').and(allow_files('.gitignore'))
       end
 
       it 'allows soft links to directories' do # rubocop:disable RSpec/ExampleLength
@@ -154,7 +261,7 @@ RSpec.describe FastIgnore do
           foo
         FANCYIGNORE
 
-        expect(subject).to disallow('foo').and(allow('bar', 'baz'))
+        expect(subject).to disallow('foo').and(allow_files('bar', 'baz'))
       end
     end
 
@@ -172,7 +279,7 @@ RSpec.describe FastIgnore do
           foo
         FANCYIGNORE
 
-        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
     end
 
@@ -186,7 +293,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo').and(allow('bar', 'baz'))
+        expect(subject).to disallow('foo').and(allow_files('bar', 'baz'))
       end
     end
 
@@ -200,7 +307,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
     end
 
@@ -214,7 +321,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
     end
 
@@ -228,7 +335,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
     end
 
@@ -242,7 +349,7 @@ RSpec.describe FastIgnore do
           foo
         GITIGNORE
 
-        expect(subject).to disallow('foo/bar').and(allow('baz/bar'))
+        expect(subject).to disallow('foo/bar').and(allow_files('baz/bar'))
       end
     end
 
@@ -256,7 +363,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo/bar/foo', 'foo/bar/baz', 'bar/foo').and(allow('baz'))
+        expect(subject).to disallow('foo/bar/foo', 'foo/bar/baz', 'bar/foo').and(allow_files('baz'))
       end
     end
 
@@ -270,7 +377,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('baz', 'foo/bar/baz', 'bar/foo').and(allow('foo/baz/foo'))
+        expect(subject).to disallow('baz', 'foo/bar/baz', 'bar/foo').and(allow_files('foo/baz/foo'))
       end
     end
 
@@ -284,7 +391,7 @@ RSpec.describe FastIgnore do
           for
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'for').and(allow('foe', 'food'))
+        expect(subject).to disallow('foo', 'for').and(allow_files('foe', 'food'))
       end
     end
 
@@ -298,7 +405,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'bar').and(allow('baz'))
+        expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
     end
 
@@ -312,7 +419,7 @@ RSpec.describe FastIgnore do
           bar
         GITIGNORE
 
-        expect(subject).to disallow('foo', 'baz', 'bar').and(allow('boo'))
+        expect(subject).to disallow('foo', 'baz', 'bar').and(allow_files('boo'))
       end
     end
 
@@ -323,7 +430,7 @@ RSpec.describe FastIgnore do
         create_file_list 'bar/foo', 'bar/baz', 'bar/bar', 'foo', 'baz/foo', 'baz/baz'
 
         expect(subject).to disallow('bar/bar', 'baz', 'bar')
-          .and(allow('bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'))
+          .and(allow_files('bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'))
       end
     end
 
@@ -333,7 +440,7 @@ RSpec.describe FastIgnore do
       it 'anchors the rules to the given dir, for performance reasons' do
         create_file_list 'bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'
 
-        expect(subject).to disallow('bar/foo', 'bar/baz').and(allow('foo', 'baz/foo', 'baz/baz'))
+        expect(subject).to disallow('bar/foo', 'bar/baz').and(allow_files('foo', 'baz/foo', 'baz/baz'))
       end
     end
 
@@ -389,7 +496,7 @@ RSpec.describe FastIgnore do
       it 'adds the rulesets, they must pass both lists' do
         create_file_list 'foo', 'bar', 'baz'
 
-        expect(subject).to disallow('baz', 'bar').and(allow('foo'))
+        expect(subject).to disallow('baz', 'bar').and(allow_files('foo'))
       end
 
       it 'returns an enumerator' do
@@ -404,7 +511,9 @@ RSpec.describe FastIgnore do
       it 'returns full paths' do
         create_file_list 'foo', 'bar', 'baz'
 
-        expect(subject).to allow(::File.join(Dir.pwd, 'foo'), ::File.join(Dir.pwd, 'bar'), ::File.join(Dir.pwd, 'baz'))
+        expect(subject).to allow_files(
+          ::File.join(Dir.pwd, 'foo'), ::File.join(Dir.pwd, 'bar'), ::File.join(Dir.pwd, 'baz')
+        )
       end
     end
 
@@ -451,7 +560,7 @@ RSpec.describe FastIgnore do
           ignored_bar
         GITIGNORE
 
-        expect(subject).to allow('sub/foo', 'foo', 'baz.rb', 'Rakefile')
+        expect(subject).to allow_files('sub/foo', 'foo', 'baz.rb', 'Rakefile')
           .and(disallow('ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb', 'nonexistent/file'))
       end
     end
@@ -472,7 +581,7 @@ RSpec.describe FastIgnore do
           echo ok
         BASH
 
-        expect(subject).to disallow('foo').and(allow('bar'))
+        expect(subject).to disallow('foo').and(allow_files('bar'))
       end
     end
 
@@ -517,7 +626,7 @@ RSpec.describe FastIgnore do
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('sub/foo', 'foo')
+        expect(subject).to allow_files('sub/foo', 'foo')
           .and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb', 'ignored_bar/ruby'))
       end
     end
@@ -550,7 +659,7 @@ RSpec.describe FastIgnore do
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+        expect(subject).to allow_files('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
       end
     end
 
@@ -582,7 +691,7 @@ RSpec.describe FastIgnore do
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+        expect(subject).to allow_files('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
       end
     end
 
@@ -617,7 +726,7 @@ RSpec.describe FastIgnore do
         Dir.mkdir 'level'
         Dir.chdir 'level'
 
-        expect(subject).to allow('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
+        expect(subject).to allow_files('foo').and(disallow('ignored_foo', 'bar', 'baz', 'baz.rb'))
       end
     end
 
@@ -649,7 +758,7 @@ RSpec.describe FastIgnore do
           ignored_foo
         GITIGNORE
 
-        expect(subject).to allow('foo', 'bar').and(disallow('ignored_foo', 'baz', 'baz.rb'))
+        expect(subject).to allow_files('foo', 'bar').and(disallow('ignored_foo', 'baz', 'baz.rb'))
       end
     end
 

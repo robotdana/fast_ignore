@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec::Matchers.define(:allow) do |*expected|
+RSpec::Matchers.define(:allow_files) do |*expected|
   match do |actual|
     @actual = actual.to_a
     expect(@actual).to include(*expected)

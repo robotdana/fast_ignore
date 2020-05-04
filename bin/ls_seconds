@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby --disable-all
+# frozen_string_literal: true
+
+require_relative '../lib/fast_ignore'
+
+t1 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+new_a = FastIgnore.new(relative: true, argv_rules: ARGV).to_a
+t2 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts "new #{new_a.count}: #{t2 - t1}"
+fi = FastIgnore.new(relative: true, argv_rules: ARGV)
+fi.to_a
+t3 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+cached_a = fi.to_a
+t4 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts "cached #{cached_a.count}: #{t4 - t3}"
+t5 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+git_a = `git ls-files`.split("\n")
+t6 = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts "git ls-files #{git_a.count}: #{t6 - t5}"
+
+exit 1 unless new_a.length == cached_a.length && new_a.length == git_a.length

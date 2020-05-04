@@ -6,12 +6,8 @@ class FastIgnore
     unless ruby_major.to_i > 2 || ruby_major.to_i == 2 && ruby_minor.to_i > 5
       module DirEachChild
         refine ::Dir.singleton_class do
-          def each_child(path, &block)
-            Dir.entries(path).each do |entry|
-              next if entry == '.' || entry == '..'
-
-              block.call entry
-            end
+          def children(path)
+            Dir.entries(path) - ['.', '..']
           end
         end
       end

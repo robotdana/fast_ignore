@@ -2,7 +2,11 @@
 
 class FastIgnore
   class RuleSet
-    def initialize(rules, allow)
+    attr_reader :gitignore
+    alias_method :gitignore?, :gitignore
+    undef :gitignore
+
+    def initialize(rules, allow, gitignore)
       @dir_rules = squash_rules(rules.reject(&:file_only?)).freeze
       @file_rules = squash_rules(rules.reject(&:dir_only?)).freeze
       @any_not_anchored = rules.any?(&:unanchored?)
@@ -10,8 +14,18 @@ class FastIgnore
 
       @allowed_recursive = { '.' => true }
       @allow = allow
+      @gitignore = gitignore
 
-      freeze
+      freeze unless gitignore?
+    end
+
+    def <<(other)
+      return unless other
+
+      @any_not_anchored ||= other.any_not_anchored
+      @has_shebang_rules ||= other.has_shebang_rules
+      @dir_rules += other.dir_rules
+      @file_rules += other.file_rules
     end
 
     def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)
@@ -47,5 +61,9 @@ class FastIgnore
     def empty?
       @dir_rules.empty? && @file_rules.empty?
     end
+
+    protected
+
+    attr_reader :dir_rules, :file_rules, :any_not_anchored, :has_shebang_rules
   end
 end

@@ -11,12 +11,14 @@ enumerables
 env
 errno
 esque
+excludesfile
 extensionless
 fancyignore
 filesystem
 fnmatch
 frotz
 gemfile
+gitconfig
 github
 gitignore
 gitkeep
@@ -44,6 +46,7 @@ rvm
 sherson
 simplecov
 stdin
+subdir
 substring
 sudo
 symlinks
@@ -54,4 +57,6 @@ unrecursive
 upcase
 usr
 webpack
+xconfig
+xdg
 zsh
