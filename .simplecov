@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 SimpleCov.start do
   add_filter '/backports'
   add_filter '/spec/'
