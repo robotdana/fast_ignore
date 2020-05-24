@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  module RuleSetBuilder
+  module RuleSetBuilder # rubocop:disable Metrics/ModuleLength
     class << self
       # :nocov:
       using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
@@ -70,28 +70,43 @@ class FastIgnore
         return unless gitignore
 
         gi = ::FastIgnore::RuleSet.new([], false, true)
-        gi << from_gitignore_file(gitconfig_global_gitignore_path || default_global_gitignore_path)
-        gi << from_gitignore_file(::File.join(project_root, '.git/info/exclude'))
-        gi << from_gitignore_file(::File.join(project_root, '.gitignore'), soft: gitignore == :auto)
+        gi << from_root_gitignore_file(global_gitignore_path(root: project_root))
+        gi << from_root_gitignore_file(::File.join(project_root, '.git/info/exclude'))
+        gi << from_root_gitignore_file(::File.join(project_root, '.gitignore'), soft: gitignore == :auto)
         gi
       end
 
-      def from_gitignore_file(path, soft: true)
+      def from_root_gitignore_file(path, soft: true)
         return if soft && !::File.exist?(path)
 
         build_rule_set(::File.readlines(path), false, file_root: '', gitignore: true)
       end
 
-      def gitconfig_global_gitignore_path
-        config_path = ::File.expand_path('~/.gitconfig')
+      def global_gitignore_path(root:)
+        gitconfig_gitignore_path(::File.expand_path('.git/config', root)) ||
+          gitconfig_gitignore_path(::File.expand_path('~/.gitconfig')) ||
+          gitconfig_gitignore_path(xdg_config_path) ||
+          gitconfig_gitignore_path('/etc/gitconfig') ||
+          default_global_gitignore_path
+      end
+
+      def gitconfig_gitignore_path(config_path)
+        return unless config_path
         return unless ::File.exist?(config_path)
 
-        ignore_path = ::File.readlines(config_path).find { |l| l.start_with?("\texcludesfile = ") }
+        ignore_path = ::File.readlines(config_path).find { |l| l.sub!(/\A\s*excludesfile\s*=/, '') }
         return unless ignore_path
 
-        ignore_path.delete_prefix!("\texcludesfile = ")
         ignore_path.strip!
+        return ignore_path if ignore_path.empty? # don't expand path in this case
+
         ::File.expand_path(ignore_path)
+      end
+
+      def xdg_config_path
+        return unless ENV['XDG_CONFIG_HOME'] && !ENV['XDG_CONFIG_HOME'].empty?
+
+        ::File.expand_path('git/config', ENV['XDG_CONFIG_HOME'])
       end
 
       def default_global_gitignore_path

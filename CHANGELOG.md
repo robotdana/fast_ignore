@@ -1,3 +1,6 @@
+# v0.12.1
+- Reads all relevant git config files when finding a global .gitignore
+
 # v0.12.0
 - Reads all relevant gitignore files (nested .gitignore files, global .gitignore referred to in .gitconfig, and .git/info/exclude)
 
