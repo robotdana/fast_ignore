@@ -11,7 +11,7 @@ class FastIgnore
         root:,
         ignore_rules: nil,
         ignore_files: nil,
-        gitignore: :auto,
+        gitignore: true,
         include_rules: nil,
         include_files: nil,
         argv_rules: nil
@@ -19,7 +19,7 @@ class FastIgnore
         prepare [
           from_array(ignore_rules),
           *from_files(ignore_files, project_root: root),
-          from_array('.git'),
+          (from_array('.git') if gitignore),
           from_gitignore_arg(gitignore, project_root: root),
           from_array(include_rules, allow: true),
           *from_files(include_files, allow: true, project_root: root),
@@ -72,12 +72,12 @@ class FastIgnore
         gi = ::FastIgnore::RuleSet.new([], false, true)
         gi << from_root_gitignore_file(global_gitignore_path(root: project_root))
         gi << from_root_gitignore_file(::File.join(project_root, '.git/info/exclude'))
-        gi << from_root_gitignore_file(::File.join(project_root, '.gitignore'), soft: gitignore == :auto)
+        gi << from_root_gitignore_file(::File.join(project_root, '.gitignore'))
         gi
       end
 
-      def from_root_gitignore_file(path, soft: true)
-        return if soft && !::File.exist?(path)
+      def from_root_gitignore_file(path)
+        return unless ::File.exist?(path)
 
         build_rule_set(::File.readlines(path), false, file_root: '', gitignore: true)
       end

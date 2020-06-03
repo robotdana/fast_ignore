@@ -1,3 +1,8 @@
+# v0.13.0
+- Attempt to improve documentation structure
+- Remove `gitignore: true` raising `Errno::ENOENT` if root:/.gitignore didn't exist. I can't think of a use. Now `gitignore: true` is just the default behaviour.
+- Don't ignore `.git` if `gitignore: false`.
+
 # v0.12.1
 - Reads all relevant git config files when finding a global .gitignore
 

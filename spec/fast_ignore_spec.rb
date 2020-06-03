@@ -39,24 +39,6 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when gitignore: true' do
-      let(:args) { { gitignore: true } }
-
-      it 'raises Errno:ENOENT when there is no gitignore' do
-        expect { subject.to_a }.to raise_error(Errno::ENOENT)
-      end
-
-      it 'respects the .gitignore file when it is there' do
-        create_file_list 'foo', 'bar'
-
-        gitignore <<~GITIGNORE
-          foo
-        GITIGNORE
-
-        expect(subject).to allow_files('bar')
-      end
-    end
-
     describe 'Patterns read from gitignore referred by gitconfig' do
       before do
         create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'

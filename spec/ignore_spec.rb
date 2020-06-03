@@ -45,7 +45,14 @@ RSpec.describe FastIgnore do
         end
       end
     end
+
+    it 'ignore .git by default' do
+      create_file_list '.gitignore', '.git/WHATEVER', 'WHATEVER'
+
+      expect(subject).to disallow('.git/WHATEVER').and(allow_files('WHATEVER'))
+    end
   end
+
   shared_examples 'the gitignore documentation' do
     describe 'A blank line matches no files, so it can serve as a separator for readability.' do
       before { create_file_list 'foo', 'bar', 'baz' }
@@ -571,14 +578,6 @@ RSpec.describe FastIgnore do
     end
   end
 
-  shared_examples 'common behaviour' do
-    it 'ignore .git by default' do
-      create_file_list '.gitignore', '.git/WHATEVER', 'WHATEVER'
-
-      expect(subject).to disallow('.git/WHATEVER').and(allow_files('WHATEVER'))
-    end
-  end
-
   describe 'FastIgnore' do
     subject { described_class.new(relative: true, **args) }
 
@@ -586,7 +585,6 @@ RSpec.describe FastIgnore do
     let(:gitignore_path) { File.join(root, '.gitignore') }
 
     it_behaves_like 'the gitignore documentation'
-    it_behaves_like 'common behaviour'
     it_behaves_like 'auto nested gitignore files'
 
     describe 'ignore_files:' do
@@ -603,14 +601,12 @@ RSpec.describe FastIgnore do
         let(:ignore_files) { gitignore_path }
 
         it_behaves_like 'the gitignore documentation'
-        it_behaves_like 'common behaviour'
       end
 
       describe 'with array argument' do
         let(:ignore_files) { [gitignore_path, gitignore_path] }
 
         it_behaves_like 'the gitignore documentation'
-        it_behaves_like 'common behaviour'
       end
     end
 
@@ -631,7 +627,6 @@ RSpec.describe FastIgnore do
       let(:root) { Dir.pwd }
 
       it_behaves_like 'the gitignore documentation'
-      it_behaves_like 'common behaviour'
     end
 
     describe 'ignore_rules:' do
@@ -650,14 +645,12 @@ RSpec.describe FastIgnore do
         let(:ignore_rules) { gitignore_read }
 
         it_behaves_like 'the gitignore documentation'
-        it_behaves_like 'common behaviour'
       end
 
       describe 'with array argument' do
         let(:ignore_rules) { gitignore_read.each_line.to_a }
 
         it_behaves_like 'the gitignore documentation'
-        it_behaves_like 'common behaviour'
       end
     end
   end
@@ -669,7 +662,6 @@ RSpec.describe FastIgnore do
     end
 
     it_behaves_like 'the gitignore documentation'
-    it_behaves_like 'common behaviour'
     it_behaves_like 'auto nested gitignore files'
   end
 end

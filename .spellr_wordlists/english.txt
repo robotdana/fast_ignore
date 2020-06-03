@@ -1,11 +1,14 @@
+allowlist
 argv
 backports
 baz
 changelog
+chdir
 codebase
 config
 cov
 cyclomatic
+denylist
 enoent
 enumerables
 env
@@ -50,6 +53,7 @@ stdin
 subdir
 substring
 sudo
+symlink
 symlinks
 tmp
 toplevel
