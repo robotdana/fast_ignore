@@ -22,9 +22,9 @@ class FastIgnore
 
   def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_set_builder_args)
     @relative = relative
-    @follow_symlinks = follow_symlinks
+    @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
     @gitignore_enabled = gitignore
-    @loaded_gitignore_files = Set[''] if gitignore
+    @loaded_gitignore_files = ::Set[''] if gitignore
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
     @rule_sets = ::FastIgnore::RuleSetBuilder.build(root: @root, gitignore: gitignore, **rule_set_builder_args)
 
@@ -43,7 +43,7 @@ class FastIgnore
   def allowed?(path, directory: nil, content: nil)
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
-    return false if directory.nil? ? directory?(full_path) : directory
+    return false if directory.nil? ? @follow_symlinks_method.call(full_path).directory? : directory
 
     relative_path = full_path.delete_prefix(@root)
     load_gitignore_recursive(relative_path) if @gitignore_enabled
@@ -57,14 +57,6 @@ class FastIgnore
   alias_method :===, :allowed?
 
   private
-
-  def directory?(path)
-    if @follow_symlinks
-      ::File.stat(path).directory?
-    else
-      ::File.lstat(path).directory?
-    end
-  end
 
   def load_gitignore_recursive(path)
     paths = []
@@ -93,7 +85,7 @@ class FastIgnore
       begin
         full_path = parent_full_path + filename
         relative_path = parent_relative_path + filename
-        dir = directory?(full_path)
+        dir = @follow_symlinks_method.call(full_path).directory?
 
         next unless @rule_sets.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename, nil) }
 

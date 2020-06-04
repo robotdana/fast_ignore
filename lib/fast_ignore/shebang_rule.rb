@@ -15,8 +15,7 @@ class FastIgnore
       @rule = rule
       @negation = negation
 
-      @type = 2
-      @type += 1 if negation
+      @type = negation ? 3 : 2
 
       freeze
     end

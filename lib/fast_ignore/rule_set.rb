@@ -46,9 +46,10 @@ class FastIgnore
 
     def squash_rules(rules)
       out = rules.chunk_while { |a, b| a.type == b.type }.map do |chunk|
-        next chunk.first if chunk.length == 1
+        first = chunk.first
+        next first if chunk.length == 1
 
-        chunk.first.class.new(Regexp.union(chunk.map(&:rule)), chunk.first.negation?)
+        first.class.new(Regexp.union(chunk.map(&:rule)), first.negation?)
       end
 
       out
