@@ -308,6 +308,7 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
   So don't do that.
 
   (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls) (changing directories doesn't affect the [`root:`](#root) directory, that's frozen at FastIgnore.new (this is a design decision, not an issue)).
+- FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
 
 ## Development
 

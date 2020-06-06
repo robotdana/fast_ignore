@@ -39,6 +39,24 @@ RSpec.describe FastIgnore do
       end
     end
 
+    it 'matches uppercase paths to lowercase patterns' do
+      create_file_list 'FOO'
+      gitignore <<~GITIGNORE
+        foo
+      GITIGNORE
+
+      expect(subject).to disallow('FOO')
+    end
+
+    it 'matches lowercase paths to uppercase patterns' do
+      create_file_list 'foo'
+      gitignore <<~GITIGNORE
+        FOO
+      GITIGNORE
+
+      expect(subject).to disallow('foo')
+    end
+
     describe 'Patterns read from gitignore referred by gitconfig' do
       before do
         create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
@@ -638,6 +656,46 @@ RSpec.describe FastIgnore do
 
         create_file 'bar', <<~BASH
           #!/usr/bin/env bash
+
+          echo ok
+        BASH
+
+        expect(subject).to disallow('foo').and(allow_files('bar'))
+      end
+    end
+
+    context 'when given UPPERCASE shebang ignore rule' do
+      let(:args) { { ignore_rules: ['#!:RUBY'] } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/usr/bin/env ruby -w
+
+          puts('no')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/usr/bin/env bash
+
+          echo ok
+        BASH
+
+        expect(subject).to disallow('foo').and(allow_files('bar'))
+      end
+    end
+
+    context "when given lowercase shebang ignore rule with uppercase shebang (I don't know your life)" do
+      let(:args) { { ignore_rules: ['#!:ruby'] } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file 'foo', <<~RUBY
+          #!/USR/BIN/ENV RUBY
+
+          puts('no')
+        RUBY
+
+        create_file 'bar', <<~BASH
+          #!/USR/BIN/ENV BASH
 
           echo ok
         BASH

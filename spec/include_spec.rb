@@ -512,6 +512,24 @@ RSpec.describe FastIgnore do
           end
         end
       end
+
+      it 'matches uppercase paths to lowercase patterns' do
+        create_file_list 'FOO'
+        includefile <<~FILE
+          foo
+        FILE
+
+        expect(subject).to allow_files('FOO')
+      end
+
+      it 'matches lowercase paths to uppercase patterns' do
+        create_file_list 'foo'
+        includefile <<~FILE
+          FOO
+        FILE
+
+        expect(subject).to allow_files('foo')
+      end
     end
   end
 
