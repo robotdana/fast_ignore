@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
     spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/blob/master/CHANGELOG.md'
   end
 
-  spec.files = FastIgnore.new(include_rules: ['bin/*', 'lib/**/*', 'LICENSE.txt', 'README.md'], relative: true).sort
+  spec.files = FastIgnore.new(include_rules: ['CHANGELOG.md', 'lib', 'LICENSE.txt', 'README.md'], relative: true).sort
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '>= 1.17'
