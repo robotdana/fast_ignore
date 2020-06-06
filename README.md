@@ -176,7 +176,7 @@ Note: the location of the files will affect rules beginning with or containing `
 
 To avoid raising `Errno::ENOENT` when the file doesn't exist:
 ```ruby
-FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another'].select { |f| File.exist?(f) }).to_a
+FastIgnore.new(ignore_files: ['/ignore/file'].select { |f| File.exist?(f) }).to_a
 ```
 
 ### `ignore_rules:`
@@ -211,7 +211,7 @@ Missing files will raise an `Errno::ENOENT` error.
 
 To avoid raising `Errno::ENOENT` when the file doesn't exist:
 ```ruby
-FastIgnore.new(include_files: ['/absolute/include/file', './relative/include/file'].select { |f| File.exist?(f) }).to_a
+FastIgnore.new(include_files: ['include/file'].select { |f| File.exist?(f) }).to_a
 ```
 
 **Note: All paths checked must not be excluded by any ignore files AND each included by include file separately AND the [`include_rules:`](#include_rules) AND the [`argv_rules:`](#argv_rules). see [Combinations](#combinations) for solutions to using OR.**
@@ -266,7 +266,7 @@ e.g.
 will match `#!/bin/ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
 Only exact substring matches are available, There's no special handling of * or / or etc.
 
-These rules can be supplied any way regular rules are, whether in a .gitignore file or files mentioned in `include_files` or `ignore_files` or `include_rules` or `ignore_rules` or `argv_rules`
+These rules can be supplied any way regular rules are, whether in a .gitignore file or files mentioned in [`include_files:`](#include_files) or [`ignore_files:`](#ignore_files) or [`include_rules:`](#include_rules) or [`ignore_rules:`](#ignore_rules) or [`argv_rules:`](#argv_rules)
 ```ruby
 FastIgnore.new(include_rules: ['*.rb', '#!:ruby']).to_a
 FastIgnore.new(ignore_rules: ['*.sh', '#!:sh', '#!:bash', '#!:zsh']).to_a
@@ -286,7 +286,7 @@ FastIgnore.new(include_rules: [File.read('/my/path'), File.read('/another/path')
 This does unfortunately lose the file path as the root for rules containing `/`.
 If that's important, combine the files in the file system and use [`include_files:`](#include_files) or [`ignore_files:`](#ignore_files) as normal.
 
-To use the additional `ARGV` handling of [`argv_rules:](#argv_rules) on a file, read the file into the array.
+To use the additional `ARGV` handling of [`argv_rules:`](#argv_rules) on a file, read the file into the array.
 
 ```ruby
 FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
