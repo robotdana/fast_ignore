@@ -1,6 +1,7 @@
 # FastIgnore
 
 [![travis](https://travis-ci.org/robotdana/fast_ignore.svg?branch=master)](https://travis-ci.org/robotdana/fast_ignore)
+[![Gem Version](https://badge.fury.io/rb/fast_ignore.svg)](https://rubygems.org/gems/fast_ignore)
 
 This started as a way to quickly and natively ruby-ly parse gitignore files and find matching files.
 It's now gained an equivalent includes file functionality, ARGV awareness, and some shebang matching, while still being extremely fast, to be a one-stop file-list for your linter.
