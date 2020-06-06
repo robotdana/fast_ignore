@@ -1,6 +1,7 @@
 /.bundle/
 /coverage/
 /pkg/
+/vendor/
 .rspec_status
 *.gem
 Gemfile.lock

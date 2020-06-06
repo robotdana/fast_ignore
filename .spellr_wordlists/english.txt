@@ -35,6 +35,7 @@ params
 pathspec
 pwd
 rdoc
+readme
 regexp
 rspec
 rubo
