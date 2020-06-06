@@ -12,7 +12,7 @@ Spellr::RakeTask.generate_task
 Leftovers::RakeTask.generate_task
 
 if RUBY_PLATFORM == 'java'
-  task default: :spec
+  task default: [:spec, :build]
 else
-  task default: [:spec, :rubocop, :spellr, :leftovers]
+  task default: [:spec, :rubocop, :spellr, :leftovers, :build]
 end
