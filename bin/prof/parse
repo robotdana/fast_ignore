@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'ruby-prof'
+RubyProf.measure_mode = RubyProf::WALL_TIME
+# RubyProf.measure_mode = RubyProf::ALLOCATIONS
+# RubyProf.measure_mode = RubyProf::MEMORY
+
+RubyProf.start
+
+require_relative '../../lib/fast_ignore'
+FastIgnore.new(relative: true, argv_rules: argv)
+
+profile = RubyProf.stop
+
+printer = RubyProf::GraphPrinter.new(profile)
+printer.print(STDOUT, min_percent: 2, sort_method: :self_time)
