@@ -7,15 +7,15 @@
 require 'open3'
 require 'shellwords'
 RUNS = 30
-SCRIPT = "time #{__dir__}/ls #{Shellwords.join(ARGV)}"
+SCRIPT = ["time", "-p", "#{__dir__}/ls", *ARGV]
 
 times = Array.new(RUNS).map do
-  run_times = Open3.capture3(SCRIPT)[1]
+  run_times = Open3.capture3(*SCRIPT)[1].gsub("\n", ' ')
   puts run_times.lstrip
   run_times.scan(/(?:\d+(?:.\d+)?)/)
 end
 
 puts format(
-  "\e[1mAverage:\n\e[32m%0.2f real         %0.2f user         %0.2f sys\e[0m", # rubocop:disable Style/FormatStringToken
+  "\e[1mAverage:\n\e[32mreal%13.2f user%13.2f sys%14.2f \e[0m", # rubocop:disable Style/FormatStringToken
   *times.transpose.map { |n| (n.map(&:to_f).sum / RUNS) }
 )
