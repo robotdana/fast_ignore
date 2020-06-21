@@ -1,5 +1,6 @@
 # Unreleased
 - performance improvements to shebang_rule
+- add `FastIgnore#to_proc` for no good reason
 
 # v0.13.0
 - Attempt to improve documentation structure

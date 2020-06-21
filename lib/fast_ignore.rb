@@ -57,6 +57,10 @@ class FastIgnore
   end
   alias_method :===, :allowed?
 
+  def to_proc
+    method(:allowed?).to_proc
+  end
+
   private
 
   def load_gitignore_recursive(path)

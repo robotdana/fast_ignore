@@ -424,6 +424,14 @@ RSpec.describe FastIgnore do
 
         expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
       end
+
+      it 'responds to to_proc shenanigans' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore 'bar'
+
+        expect(['foo', 'bar', 'baz'].map(&subject)).to eq [false, false, true]
+      end
     end
 
     context 'when given an array of include_rules as symbols and gitignore' do
