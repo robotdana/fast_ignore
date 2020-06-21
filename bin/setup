@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-IFS=$'\n\t'
-set -vx
+
+if [[ -z "$(which bundle)" ]]; then
+  gem install bundler
+fi
 
 bundle install
-
-# Do any other automated setup that you need to do here

@@ -23,7 +23,7 @@ FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 - supports [matching by shebang](#shebang_rules) rather than filename for extensionless files: `#!:`
 - reads .gitignore in all subdirectories
 - reads .git/info/excludes
-- reads the ignore file mentioned in your git config
+- reads the global gitignore file mentioned in your git config
 
 ## Installation
 
@@ -141,7 +141,7 @@ FastIgnore.new(root: '../relative/path/to/root').to_a
 
 A relative root will be found relative to the current working directory when the FastIgnore instance is initialized, and that will be the last time the current working directory is relevant.
 
-**Note: Changes to the current working directory (e.g. with `Dir.chdir`), after initialising a FastIgnore instance, will _not_ affect the FastIgnore instance. `root:` will always be what it was when the instance was initialized.**
+**Note: Changes to the current working directory (e.g. with `Dir.chdir`), after initialising a FastIgnore instance, will _not_ affect the FastIgnore instance. `root:` will always be what it was when the instance was initialized, even as a default value.**
 
 ### `gitignore:`
 
@@ -302,33 +302,35 @@ FastIgnore.new.allowed?('relative/path', directory: false, content: "#!/usr/bin/
 ```
 This is not required, and if FastIgnore does have to go to the filesystem for this information it's well optimised to only read what is necessary.
 
-
-## Known issues
+## Limitations
 - Doesn't know what to do if you change the current working directory inside the [`FastIgnore#each`](#each_map_etc) block.
   So don't do that.
 
-  (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls) (changing directories doesn't affect the [`root:`](#root) directory, that's frozen at FastIgnore.new (this is a design decision, not an issue)).
+  (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls)
 - FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake` to run the tests and linters.
-
-You can run `bin/console` for an interactive prompt that will allow you to experiment.
-`bin/ls [argv_rules]` will return something equivalent to `git ls-files` and `bin/time [argv_rules]` will give you the average time for 30 runs.
-This repo is too small to stress bin/time more than 0.01s, switch to a large repo and find the average time before and after changes.
-
-To install this gem onto your local machine, run `bundle exec rake install`.
-
-### Goals
-
-1. Match `git ls-files` behaviour quirk for quirk.
-2. Provide a convenient interface for allowlist/denylist files in ruby.
-3. Be fast.
+- Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`
+  - Tracked files that were committed before the matching ignore rule was committed will be returned by `git ls-files`, but not by FastIgnore.
+  - Untracked files will be returned by FastIgnore, but not by `git ls-files`
+  - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by FastIgnore
+  - On a case insensitive file system, with files that differ only by case, `git ls-files` will include all case variations, while FastIgnore will only include whichever variation git placed in the file system.
 
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/fast_ignore.
+
+Some tools that may help:
+
+- `bin/setup`: install development dependencies
+- `bundle exec rspec`: run all tests
+- `bundle exec rake default`: run all tests and linters
+- `bin/console`: open a `pry` console with everything required for experimenting
+- `bin/ls [argv_rules]`: the equivalent of `git ls-files`
+- `bin/prof/ls [argv_rules]`: ruby-prof report for `bin/ls`
+- `bin/prof/parse [argv_rules]`: ruby-prof report for parsing gitignore files and any arguments.
+- `bin/time [argv_rules]`: the average time for 30 runs of `bin/ls`<br>
+  This repo is too small to stress bin/time more than 0.01s, switch to a large repo and find the average time before and after changes.
+- `bin/compare`: compare the speed and output of FastIgnore and `git ls-files`.
+  (suppressing differences that are because of known [limitations](#limitations))
 
 ## License
 

@@ -24,8 +24,8 @@ class FastIgnore
 
       @any_not_anchored ||= other.any_not_anchored
       @has_shebang_rules ||= other.has_shebang_rules
-      @dir_rules += other.dir_rules
-      @file_rules += other.file_rules
+      @dir_rules = squash_rules(@dir_rules + other.dir_rules)
+      @file_rules = squash_rules(@file_rules + other.file_rules)
     end
 
     def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)

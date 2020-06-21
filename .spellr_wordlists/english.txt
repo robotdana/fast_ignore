@@ -59,6 +59,7 @@ tmp
 toplevel
 txt
 unrecursive
+unstaged
 upcase
 usr
 webpack
