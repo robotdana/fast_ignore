@@ -7,13 +7,13 @@ class FastIgnore
       using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
       # :nocov:
 
-      def build(rule, allow, expand_path, file_root)
+      def build(rule, allow, expand_path_with, file_root)
         return shebang_rules(rule, allow) if remove_shebang(rule)
 
         strip(rule)
         return [] if skip?(rule)
 
-        gitignore_rules(rule, allow, expand_path, file_root)
+        gitignore_rules(rule, allow, expand_path_with, file_root)
       end
 
       private
@@ -43,12 +43,12 @@ class FastIgnore
         rule.empty? || rule.start_with?('#')
       end
 
-      def gitignore_rules(rule, allow, expand_path, file_root)
+      def gitignore_rules(rule, allow, expand_path_with, file_root)
         dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
-        unanchored = if expand_path
-          expand_rule_path(rule, expand_path)
+        unanchored = if expand_path_with
+          expand_rule_path(rule, expand_path_with)
         else
           unanchored?(rule)
         end

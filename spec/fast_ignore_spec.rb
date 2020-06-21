@@ -225,21 +225,43 @@ RSpec.describe FastIgnore do
         expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
       end
 
-      it 'recognises project subdir .gitignore file when no global gitignore and no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
+      context 'when no global gitignore' do
+        before do
+          allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
+          allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
 
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+          allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+        end
 
-        gitignore ''
+        it 'recognises project subdir .gitignore file and no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
+          gitignore ''
 
-        create_file 'a/.gitignore', <<~GITIGNORE
-          b/c
-        GITIGNORE
+          create_file 'a/.gitignore', <<~GITIGNORE
+            /b/c
+          GITIGNORE
 
-        expect(subject).to allow_files('a/b/d', 'b/c', 'b/d').and(disallow('a/b/c'))
+          create_file 'b/.gitignore', <<~GITIGNORE
+            /d
+          GITIGNORE
+
+          expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+        end
+
+        it 'recognises project subdir .gitignore file when one is empty when no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
+          gitignore ''
+
+          create_file 'a/.gitignore', <<~GITIGNORE
+            # this is just a comment
+          GITIGNORE
+
+          create_file 'a/b/.gitignore', <<~GITIGNORE
+            /d
+          GITIGNORE
+
+          expect(subject).to allow_files('b/c', 'a/b/c', 'b/d', 'b/d').and(disallow('a/b/d'))
+        end
       end
     end
 
