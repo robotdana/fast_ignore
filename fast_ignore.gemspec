@@ -2,7 +2,6 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'fast_ignore'
 require 'fast_ignore/version'
 
 Gem::Specification.new do |spec|
@@ -23,7 +22,7 @@ Gem::Specification.new do |spec|
     spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/blob/master/CHANGELOG.md'
   end
 
-  spec.files = FastIgnore.new(include_rules: ['CHANGELOG.md', 'lib', 'LICENSE.txt', 'README.md'], relative: true).sort
+  spec.files = Dir.glob('lib/**/*') + ['CHANGELOG.md', 'LICENSE.txt', 'README.md']
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '>= 1.17'
