@@ -32,11 +32,10 @@ class FastIgnore
       end
 
       def shebang_rules(rule, allow)
-        rules = [::FastIgnore::ShebangRule.new(/\A#!.*\b#{Regexp.escape(rule)}\b/i.freeze, allow)]
-        return rules unless allow
+        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{Regexp.escape(rule)}\b/i, allow)
+        return rule unless allow
 
-        rules << ::FastIgnore::Rule.new('**/*', true, true, true)
-        rules
+        [::FastIgnore::Rule.new(//, true, true, true), rule]
       end
 
       def skip?(rule)
@@ -47,16 +46,9 @@ class FastIgnore
         dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
-        unanchored = if expand_path_with
-          expand_rule_path(rule, expand_path_with)
-        else
-          unanchored?(rule)
-        end
-        rule.delete_prefix!('/')
+        expand_rule_path(rule, expand_path_with) if expand_path_with
 
-        rule.prepend("#{file_root}#{'**/' if unanchored}") if file_root || unanchored
-
-        build_gitignore_rules(rule, unanchored, allow, dir_only, negation)
+        ::FastIgnore::GitignoreRuleBuilder.build(rule, negation, dir_only, file_root, allow)
       end
 
       def extract_dir_only(rule)
@@ -69,34 +61,11 @@ class FastIgnore
         not allow
       end
 
-      EXPAND_PATH_RE = %r{^(?:[~/]|\.{1,2}/)}.freeze
+      EXPAND_PATH_RE = %r{(^(?:[~/]|\.{1,2}/)|/\.\./)}.freeze
       def expand_rule_path(rule, root)
         rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
         rule.delete_prefix!(root)
-        rule.start_with?('*')
-      end
-
-      def unanchored?(rule)
-        not rule.include?('/') # we've already removed the trailing '/' with extract_dir_only
-      end
-
-      def build_gitignore_rules(rule, unanchored, allow, dir_only, negation)
-        rules = [::FastIgnore::Rule.new(rule, negation, unanchored, dir_only)]
-        return rules unless allow
-
-        rules << ::FastIgnore::Rule.new("#{rule}/**/*", negation, unanchored, false)
-        rules + ancestor_rules(rule, unanchored)
-      end
-
-      def ancestor_rules(parent, unanchored)
-        ancestor_rules = []
-
-        while (parent = ::File.dirname(parent)) != '.'
-          rule = ::File.basename(parent) == '**' ? "#{parent}/*" : parent.freeze
-          ancestor_rules << ::FastIgnore::Rule.new(rule, true, unanchored, true)
-        end
-
-        ancestor_rules
+        rule.prepend('/') unless rule.start_with?('*')
       end
     end
   end

@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# raise warnings
+module Warning # leftovers:allow
+  def warn(msg) # leftovers:allow
+    raise msg
+  end
+end
+
 require 'pathname'
 
 RSpec.describe FastIgnore do
@@ -280,17 +287,17 @@ RSpec.describe FastIgnore do
     end
 
     it 'allowed? returns false nonexistent files' do
-      expect(subject).not_to be_allowed('utter/nonsense')
+      expect(subject.allowed?('utter/nonsense')).to be false
     end
 
     it 'allowed? can be shortcut with directory:' do
       create_file_list 'a'
-      expect(subject).to be_allowed('a', directory: false)
+      expect(subject.allowed?('a', directory: false)).to be true
     end
 
     it 'allowed? can be lied to with directory:' do
       create_file_list 'a/b'
-      expect(subject).to be_allowed('a', directory: false)
+      expect(subject.allowed?('a', directory: false)).to be true
     end
 
     it 'rescues soft links to nowhere' do
@@ -922,7 +929,7 @@ RSpec.describe FastIgnore do
         RUBY
         create_file 'foo', content
 
-        expect(subject).to be_allowed('foo', content: content)
+        expect(subject.allowed?('foo', content: content)).to be true
       end
     end
 
@@ -942,7 +949,7 @@ RSpec.describe FastIgnore do
         BASH
         create_file 'foo', real_content
 
-        expect(subject).to be_allowed('foo', content: fake_content)
+        expect(subject.allowed?('foo', content: fake_content)).to be true
       end
     end
   end

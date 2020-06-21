@@ -18,7 +18,7 @@ class FastIgnore
     attr_reader :rule
 
     def initialize(rule, negation, unanchored = nil, dir_only = nil)
-      @rule = rule.is_a?(Regexp) ? rule : ::FastIgnore::FNMatchToRegex.call(rule)
+      @rule = rule
       @unanchored = unanchored
       @dir_only = dir_only
       @negation = negation

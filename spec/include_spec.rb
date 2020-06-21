@@ -177,6 +177,14 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('few', 'fewer', 'f/our').and(allow_files('four', 'favour'))
         end
 
+        it "matches any number of characters at the beginning if there's a star followed by a slash" do
+          includefile <<~FILE
+            */our
+          FILE
+
+          expect(subject).to disallow('few', 'fewer', 'four', 'favour').and(allow_files('f/our'))
+        end
+
         it "matches any number of characters in the middle if there's a star" do
           includefile <<~FILE
             f*r
@@ -508,6 +516,15 @@ RSpec.describe FastIgnore do
               FILE
 
               expect(subject).to disallow('f/our', 'four', 'favour').and(allow_files('few', 'fewer'))
+            end
+
+            # not sure if this is a bug but this is git behaviour
+            it 'matches any number of directories including none, when following a character' do
+              includefile <<~FILE
+                f**/our
+              FILE
+
+              expect(subject).to disallow('few', 'fewer', 'favour').and(allow_files('four', 'f/our'))
             end
           end
         end

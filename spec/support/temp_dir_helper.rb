@@ -38,11 +38,13 @@ module TempDirHelper
 
   def within_temp_dir
     dir = Pathname.new(Dir.mktmpdir)
-    Dir.chdir(dir) do
-      extend WithinTempDir
-      yield
-    end
+    original_dir = Dir.pwd
+    Dir.chdir(dir)
+
+    extend WithinTempDir
+    yield
   ensure
+    Dir.chdir(original_dir)
     dir&.rmtree
   end
 end

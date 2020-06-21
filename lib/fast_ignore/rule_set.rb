@@ -45,6 +45,7 @@ class FastIgnore
     end
 
     def squash_rules(rules)
+      # return rules # debugging patterns is easier when rules aren't squashed.
       out = rules.chunk_while { |a, b| a.type == b.type }.map do |chunk|
         first = chunk.first
         next first if chunk.length == 1

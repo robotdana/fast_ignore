@@ -164,6 +164,12 @@ RSpec.describe FastIgnore do
 
           expect(subject).to disallow('doc/frotz/b').and(allow_files('a/doc/frotz/c'))
         end
+
+        it 'treats a double slash as matching nothing' do
+          gitignore 'doc//frotz'
+
+          expect(subject).to allow_files('doc/frotz/b', 'a/doc/frotz/c')
+        end
       end
 
       describe 'Otherwise the pattern may also match at any level below the .gitignore level.' do
@@ -247,6 +253,14 @@ RSpec.describe FastIgnore do
           GITIGNORE
 
           expect(subject).to allow_files('few', 'fewer').and(disallow('f/our', 'four', 'favour'))
+        end
+
+        it "matches any number of characters at the beginning if there's a star followed by a slash" do
+          gitignore <<~GITIGNORE
+            */our
+          GITIGNORE
+
+          expect(subject).to allow_files('few', 'fewer', 'four', 'favour').and(disallow('f/our'))
         end
 
         it "doesn't match a slash" do
@@ -571,6 +585,15 @@ RSpec.describe FastIgnore do
               GITIGNORE
 
               expect(subject).to allow_files('f/our', 'four', 'favour').and(disallow('few', 'fewer'))
+            end
+
+            # not sure if this is a bug but this is git behaviour
+            it 'matches any number of directories including none, when following a character' do
+              gitignore <<~GITIGNORE
+                f**/our
+              GITIGNORE
+
+              expect(subject).to allow_files('few', 'fewer', 'favour').and(disallow('four', 'f/our'))
             end
           end
         end
