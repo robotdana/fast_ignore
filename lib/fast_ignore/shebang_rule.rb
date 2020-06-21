@@ -46,10 +46,18 @@ class FastIgnore
 
     private
 
-    def first_line(path)
+    def first_line(path) # rubocop:disable Metrics/MethodLength
       file = ::File.new(path)
-      first_line = file.sysread(25)
-      first_line += file.sysread(50) until first_line.include?("\n")
+      first_line = new_fragment = file.sysread(64)
+      if first_line.start_with?('#!')
+        until new_fragment.include?("\n")
+          new_fragment = file.sysread(64)
+          first_line += new_fragment
+        end
+      else
+        file.close
+        return
+      end
       file.close
       first_line
     rescue ::EOFError, ::SystemCallError

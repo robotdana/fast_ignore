@@ -1,3 +1,6 @@
+# Unreleased
+- performance improvements to shebang_rule
+
 # v0.13.0
 - Attempt to improve documentation structure
 - Remove `gitignore: true` raising `Errno::ENOENT` if root:/.gitignore didn't exist. I can't think of a use. Now `gitignore: true` is just the default behaviour.

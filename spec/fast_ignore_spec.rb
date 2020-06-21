@@ -607,7 +607,7 @@ RSpec.describe FastIgnore do
         RUBY
 
         create_file 'sub/foo', <<~RUBY
-          #!/usr/bin/env ruby -w --disable-gems
+          #!/usr/bin/env ruby -w --disable-gems --verbose --enable-frozen-string-literal
 
           puts('ok')
         RUBY
