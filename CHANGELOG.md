@@ -1,5 +1,5 @@
-# Unreleased
-- performance improvements
+# v0.14.0
+- significant performance improvements ~50% faster
 - add `FastIgnore#to_proc` for no good reason
 
 # v0.13.0
