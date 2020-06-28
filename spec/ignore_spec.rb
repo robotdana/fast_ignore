@@ -391,6 +391,14 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('a^').and(allow_files('aa', 'ab', 'ac', 'ad'))
         end
 
+        it '[\\^] matches literal ^' do
+          gitignore <<~GITIGNORE
+            a[\\^]
+          GITIGNORE
+
+          expect(subject).to disallow('a^').and(allow_files('aa', 'ab', 'ac', 'ad'))
+        end
+
         it 'later ^ is literal' do
           gitignore <<~GITIGNORE
             a[a-c^]
@@ -420,7 +428,25 @@ RSpec.describe FastIgnore do
             b[]b
           GITIGNORE
 
-          expect(subject).to allow_files('b/b', 'bb')
+          expect(subject).to allow_files('b/b', 'bb', 'aa', 'ab')
+        end
+
+        it 'empty class matches nothing after a rule that is matchable' do
+          gitignore <<~GITIGNORE
+            a*
+            b[]b
+          GITIGNORE
+
+          expect(subject).to allow_files('b/b', 'bb').and(disallow('aa', 'ab'))
+        end
+
+        it 'empty class matches nothing before a rule that is matchable' do
+          gitignore <<~GITIGNORE
+            b[]b
+            a*
+          GITIGNORE
+
+          expect(subject).to allow_files('b/b', 'bb').and(disallow('aa', 'ab'))
         end
 
         it "doesn't match a slash even if you specify it middle" do
@@ -442,6 +468,30 @@ RSpec.describe FastIgnore do
         it 'assumes an unfinished [ matches nothing' do
           gitignore <<~GITIGNORE
             a[
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
+        it 'assumes an escaped [ is literal' do
+          gitignore <<~GITIGNORE
+            a\\[
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(disallow('a['))
+        end
+
+        it 'assumes an escaped [ is literal inside a group' do
+          gitignore <<~GITIGNORE
+            a[\\[]
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(disallow('a['))
+        end
+
+        it 'assumes an unfinished [ matches nothing when negated' do
+          gitignore <<~GITIGNORE
+            !a[
           GITIGNORE
 
           expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')

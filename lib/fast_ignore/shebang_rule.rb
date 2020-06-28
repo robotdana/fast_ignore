@@ -9,13 +9,17 @@ class FastIgnore
     attr_reader :rule
     alias_method :shebang, :rule
 
-    attr_reader :type
+    attr_reader :squashable_type
+
+    def self.squash(rules)
+      new(Regexp.union(rules.map(&:rule)).freeze, rules.first.negation?)
+    end
 
     def initialize(rule, negation)
       @rule = rule
       @negation = negation
 
-      @type = negation ? 3 : 2
+      @squashable_type = negation ? 3 : 2
 
       freeze
     end
@@ -28,8 +32,8 @@ class FastIgnore
       false
     end
 
-    def unanchored?
-      true
+    def anchored?
+      false
     end
 
     # :nocov:

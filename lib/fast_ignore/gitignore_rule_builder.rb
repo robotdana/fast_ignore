@@ -1,185 +1,207 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  module GitignoreRuleBuilder # rubocop:disable Metrics/ModuleLength
-    class << self
-      def build(rule, negation, dir_only, file_path, allow) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-        re = ''.dup
-        segment_re = ''.dup
+  class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
+    def initialize(rule, negation, dir_only, file_path, allow) # rubocop:disable Metrics/MethodLength
+      @re = String.new
+      @segment_re = String.new
+      @allow = allow
+      if @allow
+        @segments = 0
+        @parent_re = String.new
+      end
 
-        unanchored = true
-        first_char = true
-        in_character_group = false
-        has_characters_in_group = false
-        prev_char_escapes = false
-        prev_char_opened_character_group = false
-        negated_character_group = false
-        stars = 0
-        segment_re_empty = true
+      @s = StringScanner.new(rule)
 
-        if allow
-          segments = 0
-          parent_re = ''.dup
+      @dir_only = dir_only
+      @file_path = (file_path if file_path && !file_path.empty?)
+      @negation = negation
+      @anchored = false
+      @trailing_stars = false
+    end
+
+    def process_escaped_char
+      @segment_re << Regexp.escape(@s.matched[1]) if @s.scan(/\\./)
+    end
+
+    def process_character_class
+      return unless @s.skip(/\[/)
+
+      @segment_re << '['
+      process_character_class_body(false)
+    end
+
+    def process_negated_character_class
+      return unless @s.skip(/\[\^/)
+
+      @segment_re << '[^'
+      process_character_class_body(true)
+    end
+
+    def unmatchable_rule!
+      throw :unmatchable_rule, (
+        @allow ? ::FastIgnore::UnmatchableRule.new : []
+      )
+    end
+
+    def process_character_class_end
+      return unless @s.skip(/\]/)
+
+      unmatchable_rule! unless @has_characters_in_group
+
+      @segment_re << ']'
+    end
+
+    def process_character_class_body(negated_class) # rubocop:disable Metrics/MethodLength
+      @has_characters_in_group = false
+      until process_character_class_end
+        if @s.eos?
+          unmatchable_rule!
+        elsif process_escaped_char
+          @has_characters_in_group = true
+        elsif @s.skip(%r{/})
+          next unless negated_class
+
+          @has_characters_in_group = true
+          @segment_re << '/'
+        elsif @s.skip(/-/)
+          @has_characters_in_group = true
+          @segment_re << '-'
+        else @s.scan(%r{[^/\]\-]+})
+             @has_characters_in_group = true
+             @segment_re << Regexp.escape(@s.matched)
+        end
+      end
+    end
+
+    def process_star_star_slash
+      return unless @s.skip(%r{\*{2,}/})
+
+      if @allow
+        if @segment_re.empty?
+          @parent_re << '.*'
+        else
+          process_slash_allow('.*')
+        end
+      end
+      process_slash('(?:.*/)?')
+    end
+
+    def process_star_slash
+      return unless @s.skip(%r{\*/})
+
+      process_slash_allow('[^/]*/') if @allow
+      process_slash('[^/]*/')
+    end
+
+    def process_no_star_slash
+      return unless @s.skip(%r{/})
+
+      process_slash_allow('/') if @allow
+      process_slash('/')
+    end
+
+    def process_slash(append)
+      @re << @segment_re
+      @re << append
+      @segment_re.clear
+      @anchored = true
+    end
+
+    def process_slash_allow(append)
+      @segments += 1
+      @parent_re << '(?:'
+      @parent_re << @segment_re
+      @parent_re << append
+    end
+
+    def process_stars
+      (@segment_re << '[^/]*') if @s.scan(%r{\*+(?=[^*/])})
+    end
+
+    def process_question_mark
+      (@segment_re << '[^/]') if @s.skip(/\?/)
+    end
+
+    def process_text
+      (@segment_re << Regexp.escape(@s.matched)) if @s.scan(%r{[^*/?\[\\]+})
+    end
+
+    def process_end
+      return unless @s.scan(/\*+\z/)
+
+      if @s.matched.length == 1
+        @segment_re << '[^/]*\\z' if @allow
+      end
+      @trailing_stars = true
+    end
+
+    def build # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      @anchored = true if @s.skip(%r{/})
+
+      catch :unmatchable_rule do # rubocop:disable Metrics/BlockLength
+        until @s.eos?
+          process_escaped_char ||
+            process_star_star_slash ||
+            process_star_slash ||
+            process_no_star_slash ||
+            process_stars ||
+            process_end ||
+            process_question_mark ||
+            process_text ||
+            process_negated_character_class ||
+            process_character_class
         end
 
-        rule.each_char do |char| # rubocop:disable Metrics/BlockLength
-          if prev_char_escapes
-            segment_re << Regexp.escape(char)
-            segment_re_empty = false
-            prev_char_escapes = false
-          elsif char == '\\' # single char, just needs to be escaped
-            prev_char_escapes = true
-          elsif in_character_group
-            case char
-            when '/'
-              if negated_character_group
-                has_characters_in_group = true
-                segment_re << char
-              end
-            when '^'
-              if prev_char_opened_character_group
-                segment_re << char
-                negated_character_group = true
-              else
-                segment_re << '\\^'
-                has_characters_in_group = true
-              end
-              # not characters in group
-            when ']'
-              break unless has_characters_in_group
+        @re << @segment_re
 
-              segment_re << ']'
-              in_character_group = false
-              has_characters_in_group = false
-              negated_character_group = false
-              prev_char_opened_character_group = false
-            when '-'
-              has_characters_in_group = true
-              segment_re << char
-            else
-              has_characters_in_group = true
-              segment_re << Regexp.escape(char)
-            end
-            prev_char_opened_character_group = false
-          elsif char == '*'
-            stars += 1
-          elsif char == '/'
-            unless first_char
-              if allow
-                if stars >= 2 && segment_re_empty # rubocop:disable Metrics/BlockNesting
-                  parent_re << '.*'
-                else
-                  segments += 1
-                  parent_re << '(?:'
-
-                  parent_re << segment_re
-                  if stars >= 2 # rubocop:disable Metrics/BlockNesting
-                    parent_re << '.*'
-                  elsif stars == 1 # rubocop:disable Metrics/BlockNesting
-                    parent_re << '[^/]*/'
-                  end
-                end
-              end
-
-              segment_re << if stars >= 2
-                '(?:.*/)?'
-              elsif stars == 1
-                '[^/]*/'
-              else
-                char
-              end
-              re << segment_re
-              segment_re.clear
-              segment_re_empty = true
-              stars = 0
-            end
-            unanchored = false
-          else
-            if stars.positive?
-              segment_re << '[^/]*'
-              segment_re_empty = false
-              stars = 0
-            end
-            case char
-            when '?'
-              segment_re << '[^/]'
-              segment_re_empty = false
-            when '['
-              segment_re << '['
-              segment_re_empty = false
-              in_character_group = true
-              prev_char_opened_character_group = true
-            else
-              segment_re << Regexp.escape(char)
-              segment_re_empty = false
-            end
-          end
-          first_char = false
-        end
-
-        re << segment_re
-
-        return ::FastIgnore::Rule.new(/(?!)/, negation, unanchored, dir_only) if in_character_group
-
-        prefix = if file_path
-          escaped_file_path = Regexp.escape file_path
-          if unanchored
-            "\\A#{escaped_file_path}(?:.*/)?"
-          else
+        prefix = if @file_path
+          escaped_file_path = Regexp.escape @file_path
+          if @anchored
             "\\A#{escaped_file_path}"
+          else
+            "\\A#{escaped_file_path}(?:.*/)?"
           end
         else
-          if unanchored
-            '\\A(?:.*/)?'
-            # Theoretically these could be faster. I'm disappointed they're not
-            # "(?:\\A|/)"
-            # "(?<![^/])"
-          else
+          if @anchored
             '\\A'
+          else
+            '(?:\\A|/)'
           end
         end
 
-        re.prepend(prefix)
+        @re.prepend(prefix)
 
-        if allow
-          if file_path
-            allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
-              segments += 1
+        if @allow
+          if @file_path
+            @allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
+              @segments += 1
               "#{e[0..-2]}(?:/"
             end
 
-            prefix = if unanchored
-              "\\A#{allow_escaped_file_path}(?:.*/)?"
+            prefix = if @anchored
+              "\\A#{@allow_escaped_file_path}"
             else
-              "\\A#{allow_escaped_file_path}"
+              "\\A#{@allow_escaped_file_path}(?:.*/)?"
             end
           end
-          parent_re.prepend(prefix)
-          parent_re << (')?' * segments)
-          if dir_only
-            [
-              # Regexp::IGNORECASE = 1
-              ::FastIgnore::Rule.new(Regexp.new(re, 1), negation, unanchored, dir_only),
-              ::FastIgnore::Rule.new(Regexp.new((re << '/.*'), 1), negation, unanchored, false),
-              ::FastIgnore::Rule.new(Regexp.new(parent_re, 1), true, unanchored, true)
-            ]
-          else
-            re << '(/|\\z)' unless stars.positive?
-            [
-              # Regexp::IGNORECASE = 1
-              ::FastIgnore::Rule.new(Regexp.new(re, 1), negation, unanchored, dir_only),
-              ::FastIgnore::Rule.new(Regexp.new(parent_re, 1), true, unanchored, true)
-            ]
+          @parent_re.prepend(prefix)
+          @parent_re << (')?' * @segments)
+          (@re << '(/|\\z)') unless @dir_only || @trailing_stars
+          rules = [
+            # Regexp::IGNORECASE = 1
+            ::FastIgnore::Rule.new(Regexp.new(@re, 1), @negation, @anchored || @file_path, @dir_only),
+            ::FastIgnore::Rule.new(Regexp.new(@parent_re, 1), true, @anchored || @file_path, true)
+          ]
+          if @dir_only
+            (rules << ::FastIgnore::Rule.new(Regexp.new((@re << '/.*'), 1), @negation, @anchored || @file_path, false))
           end
+          rules
         else
-          if stars == 1
-            re << '[^/]*\\z'
-          elsif stars.zero?
-            re << '\\z'
-          end
+          (@re << '\\z') unless @trailing_stars
 
           # Regexp::IGNORECASE = 1
-          ::FastIgnore::Rule.new(Regexp.new(re, 1), negation, unanchored, dir_only)
+          ::FastIgnore::Rule.new(Regexp.new(@re, 1), @negation, @anchored || @file_path, @dir_only)
         end
       end
     end

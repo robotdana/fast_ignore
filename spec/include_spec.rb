@@ -305,6 +305,14 @@ RSpec.describe FastIgnore do
           expect(subject).to allow_files('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
         end
 
+        it '[\\^] matches literal ^' do
+          includefile <<~FILE
+            a[\\^]
+          FILE
+
+          expect(subject).to allow_files('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
+        end
+
         it 'later ^ is literal' do
           includefile <<~FILE
             a[a-c^]
@@ -329,12 +337,30 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('b/b', 'bb')
         end
 
-        it 'empty class matches nothing' do
+        it 'empty class matches nothing and excludes the whole includes file' do
           includefile <<~FILE
             b[]b
           FILE
 
-          expect(subject).to disallow('b/b', 'bb')
+          expect(subject).to disallow('b/b', 'bb', 'aa', 'ab')
+        end
+
+        it 'empty class matches nothing after a rule that is matchable' do
+          includefile <<~FILE
+            a*
+            b[]b
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb').and(allow_files('aa', 'ab'))
+        end
+
+        it 'empty class matches nothing before a rule that is matchable' do
+          includefile <<~FILE
+            b[]b
+            a*
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb').and(allow_files('aa', 'ab'))
         end
 
         it "doesn't match a slash even if you specify it middle" do
@@ -361,9 +387,42 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
         end
 
+        it 'assumes an escaped [ is literal' do
+          includefile <<~FILE
+            a\\[
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(allow_files('a['))
+        end
+
+        it 'assumes an escaped [ is literal inside a group' do
+          includefile <<~FILE
+            a[\\[]
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(allow_files('a['))
+        end
+
+        it 'assumes an unfinished [ matches nothing when negated' do
+          includefile <<~FILE
+            !a[
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
         it 'assumes an unfinished [bc matches nothing' do
           includefile <<~FILE
             a[bc
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')
+        end
+
+        it 'can handle multiple unmatchable rules in a row' do
+          includefile <<~FILE
+            a[bc
+            a[]a
           FILE
 
           expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')

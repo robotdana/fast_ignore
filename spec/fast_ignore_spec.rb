@@ -250,7 +250,7 @@ RSpec.describe FastIgnore do
           GITIGNORE
 
           create_file 'b/.gitignore', <<~GITIGNORE
-            /d
+            d
           GITIGNORE
 
           expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
@@ -269,6 +269,21 @@ RSpec.describe FastIgnore do
 
           expect(subject).to allow_files('b/c', 'a/b/c', 'b/d', 'b/d').and(disallow('a/b/d'))
         end
+      end
+    end
+
+    context 'with subdir includes file' do
+      before { create_file_list 'a/b/c', 'a/b/d', 'a/b/e', 'b/c', 'b/d', 'a/c' }
+
+      let(:args) { { gitignore: false, include_files: ['a/.includes_file'] } }
+
+      it 'recognises subdir includes file' do
+        create_file 'a/.includes_file', <<~INCLUDEFILE
+          /b/d
+          c
+        INCLUDEFILE
+
+        expect(subject).to allow_files('a/c', 'a/b/d', 'a/b/c').and(disallow('b/c', 'b/d', 'a/b/e'))
       end
     end
 

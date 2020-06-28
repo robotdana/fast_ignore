@@ -10,20 +10,31 @@ class FastIgnore
     alias_method :dir_only?, :dir_only
     undef :dir_only
 
-    attr_reader :unanchored
-    alias_method :unanchored?, :unanchored
-    undef :unanchored
+    attr_reader :anchored
+    alias_method :anchored?, :anchored
+    undef :anchored
 
-    attr_reader :type
+    attr_reader :squashable_type
     attr_reader :rule
 
-    def initialize(rule, negation, unanchored = nil, dir_only = nil)
+    def self.squash(rules)
+      first = rules.first
+      new(Regexp.union(rules.map(&:rule)).freeze, first.negation?, first.anchored?, first.dir_only?)
+    end
+
+    def initialize(rule, negation, anchored, dir_only) # rubocop:disable Metrics/MethodLength
       @rule = rule
-      @unanchored = unanchored
+      @anchored = anchored
       @dir_only = dir_only
       @negation = negation
 
-      @type = negation ? 1 : 0
+      @squashable_type = if anchored && negation
+        1
+      elsif anchored
+        0
+      else
+        Float::NAN # because it doesn't equal itself
+      end
 
       freeze
     end
@@ -38,7 +49,7 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      "#<Rule #{'!' if @negation}#{@rule}#{'/' if @dir_only}>"
+      "#<Rule #{'!' if @negation}#{'/' if @anchored}#{@rule}#{'/' if @dir_only}>"
     end
     # :nocov:
 
