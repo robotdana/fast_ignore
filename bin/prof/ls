@@ -3,9 +3,9 @@
 
 require 'ruby-prof'
 
-# RubyProf.measure_mode = RubyProf::WALL_TIME
+RubyProf.measure_mode = RubyProf::WALL_TIME
 # RubyProf.measure_mode = RubyProf::ALLOCATIONS
-RubyProf.measure_mode = RubyProf::MEMORY
+# RubyProf.measure_mode = RubyProf::MEMORY
 
 RubyProf.start
 

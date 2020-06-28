@@ -9,8 +9,7 @@ class FastIgnore
     def initialize(rules, allow, gitignore)
       @dir_rules = squash_rules(rules.reject(&:file_only?)).freeze
       @file_rules = squash_rules(rules.reject(&:dir_only?)).freeze
-      @any_not_anchored = rules.any?(&:unanchored?)
-      @has_shebang_rules = rules.any?(&:shebang)
+      @has_shebang_rules = rules.any?(&:shebang?)
 
       @allowed_recursive = { '.' => true }
       @allow = allow
@@ -22,10 +21,9 @@ class FastIgnore
     def <<(other)
       return unless other
 
-      @any_not_anchored ||= other.any_not_anchored
       @has_shebang_rules ||= other.has_shebang_rules
-      @dir_rules += other.dir_rules
-      @file_rules += other.file_rules
+      @dir_rules = squash_rules(@dir_rules + other.dir_rules)
+      @file_rules = squash_rules(@file_rules + other.file_rules)
     end
 
     def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)
@@ -41,18 +39,16 @@ class FastIgnore
         return rule.negation? if rule.match?(relative_path, full_path, filename, content)
       end
 
-      (not @allow) || (dir && @any_not_anchored)
+      not @allow
     end
 
     def squash_rules(rules)
-      out = rules.chunk_while { |a, b| a.type == b.type }.map do |chunk|
+      rules.chunk_while { |a, b| a.squashable_type == b.squashable_type }.map do |chunk|
         first = chunk.first
         next first if chunk.length == 1
 
-        first.class.new(Regexp.union(chunk.map(&:rule)), first.negation?)
+        first.squash(chunk)
       end
-
-      out
     end
 
     def weight
@@ -65,6 +61,6 @@ class FastIgnore
 
     protected
 
-    attr_reader :dir_rules, :file_rules, :any_not_anchored, :has_shebang_rules
+    attr_reader :dir_rules, :file_rules, :has_shebang_rules
   end
 end

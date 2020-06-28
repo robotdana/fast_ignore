@@ -7,15 +7,18 @@ class FastIgnore
     undef :negation
 
     attr_reader :rule
-    alias_method :shebang, :rule
 
-    attr_reader :type
+    attr_reader :squashable_type
+
+    def squash(rules)
+      ::FastIgnore::ShebangRule.new(::Regexp.union(rules.map(&:rule)).freeze, negation?)
+    end
 
     def initialize(rule, negation)
       @rule = rule
       @negation = negation
 
-      @type = negation ? 3 : 2
+      @squashable_type = negation ? 3 : 2
 
       freeze
     end
@@ -26,10 +29,6 @@ class FastIgnore
 
     def dir_only?
       false
-    end
-
-    def unanchored?
-      true
     end
 
     # :nocov:
@@ -44,12 +43,24 @@ class FastIgnore
       (content || first_line(full_path))&.match?(@rule)
     end
 
+    def shebang?
+      true
+    end
+
     private
 
-    def first_line(path)
+    def first_line(path) # rubocop:disable Metrics/MethodLength
       file = ::File.new(path)
-      first_line = file.sysread(25)
-      first_line += file.sysread(50) until first_line.include?("\n")
+      first_line = new_fragment = file.sysread(64)
+      if first_line.start_with?('#!')
+        until new_fragment.include?("\n")
+          new_fragment = file.sysread(64)
+          first_line += new_fragment
+        end
+      else
+        file.close
+        return
+      end
       file.close
       first_line
     rescue ::EOFError, ::SystemCallError

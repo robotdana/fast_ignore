@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby --disable-all
+# frozen_string_literal: true
+
+print "require 'fast_ignore':      "
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+require_relative '../lib/fast_ignore'
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+print 'parse FastIgnore.new only:  '
+gitignore_parents = Dir.glob('**/.gitignore').map { |f| ::File.dirname(f) + '/' } - ['./']
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+fi = FastIgnore.new(relative: true)
+gitignore_parents.each do |gitignore_parent|
+  fi.send(:load_gitignore, gitignore_parent, check_exists: false)
+end
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+print 'fresh FastIgnore.new.to_a:  '
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+fast_ignore = FastIgnore.new(relative: true)
+new_a = fast_ignore.to_a
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+print 'cached FastIgnore.new.to_a: '
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+cached_a = fast_ignore.to_a
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+print 'git ls-files:               '
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+git_a = `git -c "core.quotepath=off" ls-files`.split("\n")
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+# take into account indexed ignored things
+files_in_the_index_that_would_be_ignored = `git ls-files -i --exclude-standard`.split("\n")
+files_in_the_index_that_are_deleted = `git diff --no-renames --diff-filter=D --name-only`.split("\n")
+untracked_files = `git ls-files --others --exclude-standard`.split("\n")
+
+ignored_by_fi_not_by_git = (
+  git_a.map(&:downcase) -
+  new_a.map(&:downcase) -
+  files_in_the_index_that_would_be_ignored.map(&:downcase) -
+  files_in_the_index_that_are_deleted.map(&:downcase)
+)
+ignored_by_git_not_by_fi = (
+  new_a.map(&:downcase) -
+  git_a.map(&:downcase) -
+  untracked_files.map(&:downcase)
+)
+exit_status = 0
+
+ignored_by_new_not_by_cached = cached_a - new_a
+ignored_by_cached_not_by_new = new_a - cached_a
+
+unless ignored_by_new_not_by_cached.empty?
+  puts "\e[31mIgnored by fresh FastIgnore.new, not by cached FastIgnore.new:\e[0m"
+  ignored_by_new_not_by_cached.map { |f| puts f }
+  exit_status = 1
+end
+
+unless ignored_by_cached_not_by_new.empty?
+  puts "\e[31mIgnored by cached FastIgnore.new, not by fresh FastIgnore.new:\e[0m"
+  ignored_by_cached_not_by_new.map { |f| puts f }
+  exit_status = 1
+end
+
+unless ignored_by_fi_not_by_git.empty?
+  puts "\e[31mIgnored by FastIgnore, not by git:\e[0m"
+  ignored_by_fi_not_by_git.map { |f| puts f }
+  exit_status = 1
+end
+
+unless ignored_by_git_not_by_fi.empty?
+  puts "\e[31mIgnored by git, not by FastIgnore:\e[0m"
+  ignored_by_git_not_by_fi.map { |f| puts f }
+  exit_status = 1
+end
+
+exit exit_status

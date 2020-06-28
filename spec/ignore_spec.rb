@@ -164,6 +164,12 @@ RSpec.describe FastIgnore do
 
           expect(subject).to disallow('doc/frotz/b').and(allow_files('a/doc/frotz/c'))
         end
+
+        it 'treats a double slash as matching nothing' do
+          gitignore 'doc//frotz'
+
+          expect(subject).to allow_files('doc/frotz/b', 'a/doc/frotz/c')
+        end
       end
 
       describe 'Otherwise the pattern may also match at any level below the .gitignore level.' do
@@ -210,15 +216,52 @@ RSpec.describe FastIgnore do
       describe 'It is not possible to re-include a file if a parent directory of that file is excluded' do
         # Git doesn't list excluded directories for performance reasons
         # so any patterns on contained files have no effect no matter where they are defined
-        before { create_file_list 'foo/bar', 'foo/foo', 'bar/bar' }
 
-        it "doesn't include files inside previously excluded directories" do
+        it "doesn't include files inside previously excluded directories" do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar', 'foo/foo', 'bar/bar'
+
           gitignore <<~GITIGNORE
             foo
             !foo/bar
           GITIGNORE
 
           expect(subject).to allow_files('bar/bar').and(disallow('foo/bar', 'foo/foo'))
+        end
+
+        it 'does include files inside previously excluded directories/*' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/*
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('foo/bar/baz', 'bar/bar', 'foo/baz/baz').and(disallow('foo/foo'))
+        end
+
+        it 'does include files inside previously excluded directories with exact match before the final star' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/ba', 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/ba*
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('foo/bar/baz', 'bar/bar', 'foo/baz/baz', 'foo/foo').and(disallow('foo/ba'))
+        end
+
+        it 'does include files inside previously excluded directories/**' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/**
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('bar/bar').and(disallow('foo/bar/baz', 'foo/foo', 'foo/baz/baz'))
         end
       end
 
@@ -247,6 +290,14 @@ RSpec.describe FastIgnore do
           GITIGNORE
 
           expect(subject).to allow_files('few', 'fewer').and(disallow('f/our', 'four', 'favour'))
+        end
+
+        it "matches any number of characters at the beginning if there's a star followed by a slash" do
+          gitignore <<~GITIGNORE
+            */our
+          GITIGNORE
+
+          expect(subject).to allow_files('few', 'fewer', 'four', 'favour').and(disallow('f/our'))
         end
 
         it "doesn't match a slash" do
@@ -377,6 +428,14 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('a^').and(allow_files('aa', 'ab', 'ac', 'ad'))
         end
 
+        it '[\\^] matches literal ^' do
+          gitignore <<~GITIGNORE
+            a[\\^]
+          GITIGNORE
+
+          expect(subject).to disallow('a^').and(allow_files('aa', 'ab', 'ac', 'ad'))
+        end
+
         it 'later ^ is literal' do
           gitignore <<~GITIGNORE
             a[a-c^]
@@ -406,7 +465,25 @@ RSpec.describe FastIgnore do
             b[]b
           GITIGNORE
 
-          expect(subject).to allow_files('b/b', 'bb')
+          expect(subject).to allow_files('b/b', 'bb', 'aa', 'ab')
+        end
+
+        it 'empty class matches nothing after a rule that is matchable' do
+          gitignore <<~GITIGNORE
+            a*
+            b[]b
+          GITIGNORE
+
+          expect(subject).to allow_files('b/b', 'bb').and(disallow('aa', 'ab'))
+        end
+
+        it 'empty class matches nothing before a rule that is matchable' do
+          gitignore <<~GITIGNORE
+            b[]b
+            a*
+          GITIGNORE
+
+          expect(subject).to allow_files('b/b', 'bb').and(disallow('aa', 'ab'))
         end
 
         it "doesn't match a slash even if you specify it middle" do
@@ -428,6 +505,30 @@ RSpec.describe FastIgnore do
         it 'assumes an unfinished [ matches nothing' do
           gitignore <<~GITIGNORE
             a[
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
+        it 'assumes an escaped [ is literal' do
+          gitignore <<~GITIGNORE
+            a\\[
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(disallow('a['))
+        end
+
+        it 'assumes an escaped [ is literal inside a group' do
+          gitignore <<~GITIGNORE
+            a[\\[]
+          GITIGNORE
+
+          expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(disallow('a['))
+        end
+
+        it 'assumes an unfinished [ matches nothing when negated' do
+          gitignore <<~GITIGNORE
+            !a[
           GITIGNORE
 
           expect(subject).to allow_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
@@ -571,6 +672,15 @@ RSpec.describe FastIgnore do
               GITIGNORE
 
               expect(subject).to allow_files('f/our', 'four', 'favour').and(disallow('few', 'fewer'))
+            end
+
+            # not sure if this is a bug but this is git behaviour
+            it 'matches any number of directories including none, when following a character' do
+              gitignore <<~GITIGNORE
+                f**/our
+              GITIGNORE
+
+              expect(subject).to allow_files('few', 'fewer', 'favour').and(disallow('four', 'f/our'))
             end
           end
         end

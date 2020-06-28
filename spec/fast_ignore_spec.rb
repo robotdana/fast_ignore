@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# raise warnings
+module Warning # leftovers:allow
+  def warn(msg) # leftovers:allow
+    raise msg
+  end
+end
+
 require 'pathname'
 
 RSpec.describe FastIgnore do
@@ -225,21 +232,58 @@ RSpec.describe FastIgnore do
         expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
       end
 
-      it 'recognises project subdir .gitignore file when no global gitignore and no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
+      context 'when no global gitignore' do
+        before do
+          allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
+          allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
 
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+          allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
+          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
+        end
 
-        gitignore ''
+        it 'recognises project subdir .gitignore file and no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
+          gitignore ''
 
-        create_file 'a/.gitignore', <<~GITIGNORE
-          b/c
-        GITIGNORE
+          create_file 'a/.gitignore', <<~GITIGNORE
+            /b/c
+          GITIGNORE
 
-        expect(subject).to allow_files('a/b/d', 'b/c', 'b/d').and(disallow('a/b/c'))
+          create_file 'b/.gitignore', <<~GITIGNORE
+            d
+          GITIGNORE
+
+          expect(subject).to allow_files('a/b/d', 'b/c').and(disallow('a/b/c', 'b/d'))
+        end
+
+        it 'recognises project subdir .gitignore file when one is empty when no project dir gitignore' do # rubocop:disable RSpec/ExampleLength
+          gitignore ''
+
+          create_file 'a/.gitignore', <<~GITIGNORE
+            # this is just a comment
+          GITIGNORE
+
+          create_file 'a/b/.gitignore', <<~GITIGNORE
+            /d
+          GITIGNORE
+
+          expect(subject).to allow_files('b/c', 'a/b/c', 'b/d', 'b/d').and(disallow('a/b/d'))
+        end
+      end
+    end
+
+    context 'with subdir includes file' do
+      before { create_file_list 'a/b/c', 'a/b/d', 'a/b/e', 'b/c', 'b/d', 'a/c' }
+
+      let(:args) { { gitignore: false, include_files: ['a/.includes_file'] } }
+
+      it 'recognises subdir includes file' do
+        create_file 'a/.includes_file', <<~INCLUDEFILE
+          /b/d
+          c
+        INCLUDEFILE
+
+        expect(subject).to allow_files('a/c', 'a/b/d', 'a/b/c').and(disallow('b/c', 'b/d', 'a/b/e'))
       end
     end
 
@@ -258,17 +302,17 @@ RSpec.describe FastIgnore do
     end
 
     it 'allowed? returns false nonexistent files' do
-      expect(subject).not_to be_allowed('utter/nonsense')
+      expect(subject.allowed?('utter/nonsense')).to be false
     end
 
     it 'allowed? can be shortcut with directory:' do
       create_file_list 'a'
-      expect(subject).to be_allowed('a', directory: false)
+      expect(subject.allowed?('a', directory: false)).to be true
     end
 
     it 'allowed? can be lied to with directory:' do
       create_file_list 'a/b'
-      expect(subject).to be_allowed('a', directory: false)
+      expect(subject.allowed?('a', directory: false)).to be true
     end
 
     it 'rescues soft links to nowhere' do
@@ -401,6 +445,14 @@ RSpec.describe FastIgnore do
         GITIGNORE
 
         expect(subject).to disallow('foo', 'bar').and(allow_files('baz'))
+      end
+
+      it 'responds to to_proc shenanigans' do
+        create_file_list 'foo', 'bar', 'baz'
+
+        gitignore 'bar'
+
+        expect(['foo', 'bar', 'baz'].map(&subject)).to eq [false, false, true]
       end
     end
 
@@ -607,7 +659,7 @@ RSpec.describe FastIgnore do
         RUBY
 
         create_file 'sub/foo', <<~RUBY
-          #!/usr/bin/env ruby -w --disable-gems
+          #!/usr/bin/env ruby -w --disable-gems --verbose --enable-frozen-string-literal
 
           puts('ok')
         RUBY
@@ -892,7 +944,7 @@ RSpec.describe FastIgnore do
         RUBY
         create_file 'foo', content
 
-        expect(subject).to be_allowed('foo', content: content)
+        expect(subject.allowed?('foo', content: content)).to be true
       end
     end
 
@@ -912,7 +964,7 @@ RSpec.describe FastIgnore do
         BASH
         create_file 'foo', real_content
 
-        expect(subject).to be_allowed('foo', content: fake_content)
+        expect(subject.allowed?('foo', content: fake_content)).to be true
       end
     end
   end

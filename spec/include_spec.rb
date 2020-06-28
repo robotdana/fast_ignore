@@ -130,15 +130,53 @@ RSpec.describe FastIgnore do
       end
 
       describe 'It is possible to re-ignore a file if a parent directory of that file is included' do
-        before { create_file_list 'foo/bar', 'foo/foo', 'bar/bar' }
+        # This is different than git.
 
-        it 'ignores files inside previously included directories' do
+        it 'ignores files inside previously included directories' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar', 'foo/foo', 'bar/bar'
+
           includefile <<~FILE
             foo
             !foo/bar
           FILE
 
           expect(subject).to disallow('bar/bar', 'foo/bar').and(allow_files('foo/foo'))
+        end
+
+        it 'ignores files inside previously included directories/*' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/*
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'bar/bar', 'foo/baz/baz').and(allow_files('foo/foo'))
+        end
+
+        it 'ignores files inside previously excluded directories with exact match before the final star' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/ba', 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/ba*
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'bar/bar', 'foo/baz/baz', 'foo/foo').and(allow_files('foo/ba'))
+        end
+
+        it 'ignores files inside previously excluded directories/**' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/**
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'foo/baz/baz', 'bar/bar').and(allow_files('foo/foo'))
         end
       end
 
@@ -175,6 +213,14 @@ RSpec.describe FastIgnore do
           FILE
 
           expect(subject).to disallow('few', 'fewer', 'f/our').and(allow_files('four', 'favour'))
+        end
+
+        it "matches any number of characters at the beginning if there's a star followed by a slash" do
+          includefile <<~FILE
+            */our
+          FILE
+
+          expect(subject).to disallow('few', 'fewer', 'four', 'favour').and(allow_files('f/our'))
         end
 
         it "matches any number of characters in the middle if there's a star" do
@@ -297,6 +343,14 @@ RSpec.describe FastIgnore do
           expect(subject).to allow_files('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
         end
 
+        it '[\\^] matches literal ^' do
+          includefile <<~FILE
+            a[\\^]
+          FILE
+
+          expect(subject).to allow_files('a^').and(disallow('aa', 'ab', 'ac', 'ad'))
+        end
+
         it 'later ^ is literal' do
           includefile <<~FILE
             a[a-c^]
@@ -321,12 +375,30 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('b/b', 'bb')
         end
 
-        it 'empty class matches nothing' do
+        it 'empty class matches nothing and excludes the whole includes file' do
           includefile <<~FILE
             b[]b
           FILE
 
-          expect(subject).to disallow('b/b', 'bb')
+          expect(subject).to disallow('b/b', 'bb', 'aa', 'ab')
+        end
+
+        it 'empty class matches nothing after a rule that is matchable' do
+          includefile <<~FILE
+            a*
+            b[]b
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb').and(allow_files('aa', 'ab'))
+        end
+
+        it 'empty class matches nothing before a rule that is matchable' do
+          includefile <<~FILE
+            b[]b
+            a*
+          FILE
+
+          expect(subject).to disallow('b/b', 'bb').and(allow_files('aa', 'ab'))
         end
 
         it "doesn't match a slash even if you specify it middle" do
@@ -353,9 +425,42 @@ RSpec.describe FastIgnore do
           expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
         end
 
+        it 'assumes an escaped [ is literal' do
+          includefile <<~FILE
+            a\\[
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(allow_files('a['))
+        end
+
+        it 'assumes an escaped [ is literal inside a group' do
+          includefile <<~FILE
+            a[\\[]
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab').and(allow_files('a['))
+        end
+
+        it 'assumes an unfinished [ matches nothing when negated' do
+          includefile <<~FILE
+            !a[
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
         it 'assumes an unfinished [bc matches nothing' do
           includefile <<~FILE
             a[bc
+          FILE
+
+          expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')
+        end
+
+        it 'can handle multiple unmatchable rules in a row' do
+          includefile <<~FILE
+            a[bc
+            a[]a
           FILE
 
           expect(subject).to disallow('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[', 'a[bc')
@@ -508,6 +613,15 @@ RSpec.describe FastIgnore do
               FILE
 
               expect(subject).to disallow('f/our', 'four', 'favour').and(allow_files('few', 'fewer'))
+            end
+
+            # not sure if this is a bug but this is git behaviour
+            it 'matches any number of directories including none, when following a character' do
+              includefile <<~FILE
+                f**/our
+              FILE
+
+              expect(subject).to disallow('few', 'fewer', 'favour').and(allow_files('four', 'f/our'))
             end
           end
         end
