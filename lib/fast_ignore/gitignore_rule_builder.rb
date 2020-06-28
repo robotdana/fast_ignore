@@ -131,27 +131,30 @@ class FastIgnore
       return unless @s.scan(/\*+\z/)
 
       if @s.matched.length == 1
-        @segment_re << '[^/]*\\z' if @allow
+        @segment_re << if @segment_re.empty? # at least something. this is to allow subdir negations to work
+          '[^/]+\\z'
+        else
+          '[^/]*\\z'
+        end
       end
       @trailing_stars = true
+    end
+
+    def process_rule
+      until @s.eos?
+        process_escaped_char ||
+          process_star_star_slash || process_star_slash || process_no_star_slash ||
+          process_stars || process_question_mark ||
+          process_negated_character_class || process_character_class ||
+          process_text || process_end
+      end
     end
 
     def build # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       @anchored = true if @s.skip(%r{/})
 
       catch :unmatchable_rule do # rubocop:disable Metrics/BlockLength
-        until @s.eos?
-          process_escaped_char ||
-            process_star_star_slash ||
-            process_star_slash ||
-            process_no_star_slash ||
-            process_stars ||
-            process_end ||
-            process_question_mark ||
-            process_text ||
-            process_negated_character_class ||
-            process_character_class
-        end
+        process_rule
 
         @re << @segment_re
 
@@ -174,15 +177,15 @@ class FastIgnore
         anchored_or_file_path = @anchored || @file_path
         if @allow
           if @file_path
-            @allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
+            allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
               @segments += 1
               "#{e[0..-2]}(?:/"
             end
 
             prefix = if @anchored
-              "\\A#{@allow_escaped_file_path}"
+              "\\A#{allow_escaped_file_path}"
             else
-              "\\A#{@allow_escaped_file_path}(?:.*/)?"
+              "\\A#{allow_escaped_file_path}(?:.*/)?"
             end
           end
           @parent_re.prepend(prefix)

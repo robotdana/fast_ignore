@@ -130,15 +130,53 @@ RSpec.describe FastIgnore do
       end
 
       describe 'It is possible to re-ignore a file if a parent directory of that file is included' do
-        before { create_file_list 'foo/bar', 'foo/foo', 'bar/bar' }
+        # This is different than git.
 
-        it 'ignores files inside previously included directories' do
+        it 'ignores files inside previously included directories' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar', 'foo/foo', 'bar/bar'
+
           includefile <<~FILE
             foo
             !foo/bar
           FILE
 
           expect(subject).to disallow('bar/bar', 'foo/bar').and(allow_files('foo/foo'))
+        end
+
+        it 'ignores files inside previously included directories/*' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/*
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'bar/bar', 'foo/baz/baz').and(allow_files('foo/foo'))
+        end
+
+        it 'ignores files inside previously excluded directories with exact match before the final star' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/ba', 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/ba*
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'bar/bar', 'foo/baz/baz', 'foo/foo').and(allow_files('foo/ba'))
+        end
+
+        it 'ignores files inside previously excluded directories/**' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          includefile <<~FILE
+            /foo/**
+            !/foo/bar/
+            !/foo/baz/
+          FILE
+
+          expect(subject).to disallow('foo/bar/baz', 'foo/baz/baz', 'bar/bar').and(allow_files('foo/foo'))
         end
       end
 

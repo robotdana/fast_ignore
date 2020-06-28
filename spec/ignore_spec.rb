@@ -216,15 +216,52 @@ RSpec.describe FastIgnore do
       describe 'It is not possible to re-include a file if a parent directory of that file is excluded' do
         # Git doesn't list excluded directories for performance reasons
         # so any patterns on contained files have no effect no matter where they are defined
-        before { create_file_list 'foo/bar', 'foo/foo', 'bar/bar' }
 
-        it "doesn't include files inside previously excluded directories" do
+        it "doesn't include files inside previously excluded directories" do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar', 'foo/foo', 'bar/bar'
+
           gitignore <<~GITIGNORE
             foo
             !foo/bar
           GITIGNORE
 
           expect(subject).to allow_files('bar/bar').and(disallow('foo/bar', 'foo/foo'))
+        end
+
+        it 'does include files inside previously excluded directories/*' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/*
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('foo/bar/baz', 'bar/bar', 'foo/baz/baz').and(disallow('foo/foo'))
+        end
+
+        it 'does include files inside previously excluded directories with exact match before the final star' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/ba', 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/ba*
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('foo/bar/baz', 'bar/bar', 'foo/baz/baz', 'foo/foo').and(disallow('foo/ba'))
+        end
+
+        it 'does include files inside previously excluded directories/**' do # rubocop:disable RSpec/ExampleLength
+          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
+
+          gitignore <<~GITIGNORE
+            /foo/**
+            !/foo/bar/
+            !/foo/baz/
+          GITIGNORE
+
+          expect(subject).to allow_files('bar/bar').and(disallow('foo/bar/baz', 'foo/foo', 'foo/baz/baz'))
         end
       end
 
