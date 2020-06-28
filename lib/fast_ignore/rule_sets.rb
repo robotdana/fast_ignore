@@ -63,7 +63,7 @@ class FastIgnore
 
       append_set_from_array('.git')
       gi = ::FastIgnore::RuleSet.new([], false, true)
-      gi << build_from_root_gitignore_file(GlobalGitignore.path(root: @project_root))
+      gi << build_from_root_gitignore_file(::FastIgnore::GlobalGitignore.path(root: @project_root))
       gi << build_from_root_gitignore_file("#{@project_root}.git/info/exclude")
       gi << build_from_root_gitignore_file("#{@project_root}.gitignore")
       @gitignore_rule_set = append_and_return_if_present(gi)
@@ -87,7 +87,7 @@ class FastIgnore
       filename = ::File.expand_path(filename, @project_root)
       return if check_exists && !::File.exist?(filename)
       unless file_root || filename.start_with?(@project_root)
-        raise FastIgnore::Error, "#{filename} is not within #{@project_root}"
+        raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}"
       end
 
       file_root ||= "#{::File.dirname(filename)}/".delete_prefix(@project_root)

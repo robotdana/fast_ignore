@@ -6,34 +6,34 @@ class FastIgnore
     alias_method :negation?, :negation
     undef :negation
 
+    attr_reader :component_rules
+
     attr_reader :dir_only
     alias_method :dir_only?, :dir_only
     undef :dir_only
 
-    attr_reader :anchored
-    alias_method :anchored?, :anchored
-    undef :anchored
-
     attr_reader :squashable_type
     attr_reader :rule
 
-    def self.squash(rules)
-      first = rules.first
-      new(Regexp.union(rules.map(&:rule)).freeze, first.negation?, first.anchored?, first.dir_only?)
+    def squash(rules)
+      # component rules is to improve the performance of repos with many .gitignore files. e.g. linux.
+      rules = rules.flat_map(&:component_rules)
+      ::FastIgnore::Rule.new(::Regexp.union(rules.map(&:rule)).freeze, @negation, @anchored, @dir_only, rules)
     end
 
-    def initialize(rule, negation, anchored, dir_only) # rubocop:disable Metrics/MethodLength
+    def initialize(rule, negation, anchored, dir_only, component_rules = self) # rubocop:disable Metrics/MethodLength
       @rule = rule
       @anchored = anchored
       @dir_only = dir_only
       @negation = negation
+      @component_rules = component_rules
 
       @squashable_type = if anchored && negation
         1
       elsif anchored
         0
       else
-        Float::NAN # because it doesn't equal itself
+        ::Float::NAN # because it doesn't equal itself
       end
 
       freeze
@@ -43,8 +43,8 @@ class FastIgnore
       false
     end
 
-    def shebang
-      nil
+    def shebang?
+      false
     end
 
     # :nocov:

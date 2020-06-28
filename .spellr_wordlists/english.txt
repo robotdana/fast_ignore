@@ -37,6 +37,7 @@ noninfringement
 params
 pathspec
 pwd
+quotepath
 rdoc
 readme
 regexp
@@ -62,6 +63,7 @@ unrecursive
 unstaged
 upcase
 usr
+utf
 webpack
 xconfig
 xdg

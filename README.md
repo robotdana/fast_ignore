@@ -308,6 +308,7 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
 
   (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls)
 - FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
+- FastIgnore always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
 - Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`
   - Tracked files that were committed before the matching ignore rule was committed will be returned by `git ls-files`, but not by FastIgnore.
   - Untracked files will be returned by FastIgnore, but not by `git ls-files`
@@ -322,11 +323,11 @@ Some tools that may help:
 
 - `bin/setup`: install development dependencies
 - `bundle exec rspec`: run all tests
-- `bundle exec rake default`: run all tests and linters
+- `bundle exec rake`: run all tests and linters
 - `bin/console`: open a `pry` console with everything required for experimenting
 - `bin/ls [argv_rules]`: the equivalent of `git ls-files`
 - `bin/prof/ls [argv_rules]`: ruby-prof report for `bin/ls`
-- `bin/prof/parse [argv_rules]`: ruby-prof report for parsing gitignore files and any arguments.
+- `bin/prof/parse [argv_rules]`: ruby-prof report for parsing root and global gitignore files and any arguments.
 - `bin/time [argv_rules]`: the average time for 30 runs of `bin/ls`<br>
   This repo is too small to stress bin/time more than 0.01s, switch to a large repo and find the average time before and after changes.
 - `bin/compare`: compare the speed and output of FastIgnore and `git ls-files`.

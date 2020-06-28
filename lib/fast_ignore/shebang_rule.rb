@@ -7,12 +7,11 @@ class FastIgnore
     undef :negation
 
     attr_reader :rule
-    alias_method :shebang, :rule
 
     attr_reader :squashable_type
 
-    def self.squash(rules)
-      new(Regexp.union(rules.map(&:rule)).freeze, rules.first.negation?)
+    def squash(rules)
+      ::FastIgnore::ShebangRule.new(::Regexp.union(rules.map(&:rule)).freeze, negation?)
     end
 
     def initialize(rule, negation)
@@ -32,10 +31,6 @@ class FastIgnore
       false
     end
 
-    def anchored?
-      false
-    end
-
     # :nocov:
     def inspect
       "#<ShebangRule #{'allow ' if @negation}#!:#{@rule.to_s[15..-4]}>"
@@ -46,6 +41,10 @@ class FastIgnore
       return false if filename.include?('.')
 
       (content || first_line(full_path))&.match?(@rule)
+    end
+
+    def shebang?
+      true
     end
 
     private

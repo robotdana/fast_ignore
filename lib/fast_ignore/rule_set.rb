@@ -9,7 +9,7 @@ class FastIgnore
     def initialize(rules, allow, gitignore)
       @dir_rules = squash_rules(rules.reject(&:file_only?)).freeze
       @file_rules = squash_rules(rules.reject(&:dir_only?)).freeze
-      @has_shebang_rules = rules.any?(&:shebang)
+      @has_shebang_rules = rules.any?(&:shebang?)
 
       @allowed_recursive = { '.' => true }
       @allow = allow
@@ -47,7 +47,7 @@ class FastIgnore
         first = chunk.first
         next first if chunk.length == 1
 
-        first.class.squash(chunk)
+        first.squash(chunk)
       end
     end
 

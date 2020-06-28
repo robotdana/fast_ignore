@@ -3,15 +3,15 @@
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
     def initialize(rule, negation, dir_only, file_path, allow) # rubocop:disable Metrics/MethodLength
-      @re = String.new
-      @segment_re = String.new
+      @re = ::String.new
+      @segment_re = ::String.new
       @allow = allow
       if @allow
         @segments = 0
-        @parent_re = String.new
+        @parent_re = ::String.new
       end
 
-      @s = StringScanner.new(rule)
+      @s = ::StringScanner.new(rule)
 
       @dir_only = dir_only
       @file_path = (file_path if file_path && !file_path.empty?)
@@ -21,7 +21,7 @@ class FastIgnore
     end
 
     def process_escaped_char
-      @segment_re << Regexp.escape(@s.matched[1]) if @s.scan(/\\./)
+      @segment_re << ::Regexp.escape(@s.matched[1]) if @s.scan(/\\./)
     end
 
     def process_character_class
@@ -40,7 +40,7 @@ class FastIgnore
 
     def unmatchable_rule!
       throw :unmatchable_rule, (
-        @allow ? ::FastIgnore::UnmatchableRule.new : []
+        @allow ? ::FastIgnore::UnmatchableRule : []
       )
     end
 
@@ -69,7 +69,7 @@ class FastIgnore
           @segment_re << '-'
         else @s.scan(%r{[^/\]\-]+})
              @has_characters_in_group = true
-             @segment_re << Regexp.escape(@s.matched)
+             @segment_re << ::Regexp.escape(@s.matched)
         end
       end
     end
@@ -124,7 +124,7 @@ class FastIgnore
     end
 
     def process_text
-      (@segment_re << Regexp.escape(@s.matched)) if @s.scan(%r{[^*/?\[\\]+})
+      (@segment_re << ::Regexp.escape(@s.matched)) if @s.scan(%r{[^*/?\[\\]+})
     end
 
     def process_end
@@ -156,7 +156,7 @@ class FastIgnore
         @re << @segment_re
 
         prefix = if @file_path
-          escaped_file_path = Regexp.escape @file_path
+          escaped_file_path = ::Regexp.escape @file_path
           if @anchored
             "\\A#{escaped_file_path}"
           else
@@ -171,7 +171,7 @@ class FastIgnore
         end
 
         @re.prepend(prefix)
-
+        anchored_or_file_path = @anchored || @file_path
         if @allow
           if @file_path
             @allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
@@ -190,18 +190,18 @@ class FastIgnore
           (@re << '(/|\\z)') unless @dir_only || @trailing_stars
           rules = [
             # Regexp::IGNORECASE = 1
-            ::FastIgnore::Rule.new(Regexp.new(@re, 1), @negation, @anchored || @file_path, @dir_only),
-            ::FastIgnore::Rule.new(Regexp.new(@parent_re, 1), true, @anchored || @file_path, true)
+            ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only),
+            ::FastIgnore::Rule.new(::Regexp.new(@parent_re, 1), true, anchored_or_file_path, true)
           ]
           if @dir_only
-            (rules << ::FastIgnore::Rule.new(Regexp.new((@re << '/.*'), 1), @negation, @anchored || @file_path, false))
+            (rules << ::FastIgnore::Rule.new(::Regexp.new((@re << '/.*'), 1), @negation, anchored_or_file_path, false))
           end
           rules
         else
           (@re << '\\z') unless @trailing_stars
 
           # Regexp::IGNORECASE = 1
-          ::FastIgnore::Rule.new(Regexp.new(@re, 1), @negation, @anchored || @file_path, @dir_only)
+          ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only)
         end
       end
     end

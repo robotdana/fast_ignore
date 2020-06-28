@@ -32,7 +32,7 @@ class FastIgnore
       end
 
       def shebang_rules(rule, allow)
-        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{Regexp.escape(rule)}\b/i, allow)
+        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{::Regexp.escape(rule)}\b/i, allow)
         return rule unless allow
 
         [::FastIgnore::Rule.new(//, true, true, true), rule]

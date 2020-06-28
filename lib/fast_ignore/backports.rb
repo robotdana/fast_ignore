@@ -2,12 +2,12 @@
 
 class FastIgnore
   module Backports
-    ruby_major, ruby_minor = RUBY_VERSION.split('.', 2)
+    ruby_major, ruby_minor = ::RUBY_VERSION.split('.', 2)
     unless ruby_major.to_i > 2 || ruby_major.to_i == 2 && ruby_minor.to_i > 5
       module DirEachChild
         refine ::Dir.singleton_class do
           def children(path)
-            Dir.entries(path) - ['.', '..']
+            ::Dir.entries(path) - ['.', '..']
           end
         end
       end

@@ -1,13 +1,23 @@
 #!/usr/bin/env ruby --disable-all
 # frozen_string_literal: true
 
-print "require 'fast_ignore': "
+print "require 'fast_ignore':      "
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 require_relative '../lib/fast_ignore'
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s
 
-print 'FastIgnore.new.to_a: '
+print 'parse FastIgnore.new only:  '
+gitignore_parents = Dir.glob('**/.gitignore').map { |f| ::File.dirname(f) + '/' } - ['./']
+start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+fi = FastIgnore.new(relative: true)
+gitignore_parents.each do |gitignore_parent|
+  fi.send(:load_gitignore, gitignore_parent, check_exists: false)
+end
+finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+puts (finish - start).to_s
+
+print 'fresh FastIgnore.new.to_a:  '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 fast_ignore = FastIgnore.new(relative: true)
 new_a = fast_ignore.to_a
@@ -20,9 +30,9 @@ cached_a = fast_ignore.to_a
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s
 
-print 'git ls-files: '
+print 'git ls-files:               '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-git_a = `git ls-files`.split("\n")
+git_a = `git -c "core.quotepath=off" ls-files`.split("\n")
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s
 
