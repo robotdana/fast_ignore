@@ -56,24 +56,23 @@ RSpec.describe FastIgnore do
     end
 
     describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
-      before { create_file_list 'foo', 'foo ', 'foo  ' }
+      before { create_file_list 'foo', 'foo ', 'foo  ', 'foo\\' }
 
       it 'ignores trailing spaces in the gitignore file' do
         gitignore 'foo  '
 
-        expect(subject).not_to match_files('foo  ', 'foo ')
+        expect(subject).not_to match_files('foo  ', 'foo ', 'foo\\')
         expect(subject).to match_files('foo')
       end
 
       it "doesn't ignore trailing spaces if there's a backslash" do
         gitignore "foo \\ \n"
 
-        expect(subject).not_to match_files('foo', 'foo ')
+        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
         expect(subject).to match_files('foo  ')
       end
 
       it 'considers trailing backslashes to be literal' do
-        create_file path: 'foo\\'
         gitignore "foo\\\n"
 
         expect(subject).not_to match_files('foo  ', 'foo ', 'foo')
@@ -83,8 +82,15 @@ RSpec.describe FastIgnore do
       it "doesn't ignore trailing spaces if there's a backslash before every space" do
         gitignore "foo\\ \\ \n"
 
-        expect(subject).not_to match_files('foo', 'foo ')
+        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
         expect(subject).to match_files('foo  ')
+      end
+
+      it "doesn't ignore trailing spaces if there's a backslash before the non last space" do
+        gitignore "foo\\  \n"
+
+        expect(subject).not_to match_files('foo', 'foo  ', 'foo\\')
+        expect(subject).to match_files('foo ')
       end
     end
 
@@ -684,7 +690,7 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '#new' do
+  describe '.new' do
     subject { described_class.new(relative: true, **args) }
 
     before { $doing_include = false }

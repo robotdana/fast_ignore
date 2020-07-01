@@ -20,7 +20,7 @@ class FastIgnore
 
       def strip(rule)
         rule.chomp!
-        rule.rstrip! unless rule.end_with?('\\ ')
+        rule.sub!(/(?<!\\) +\z/, '')
       end
 
       def remove_shebang(rule)

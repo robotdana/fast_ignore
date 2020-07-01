@@ -14,7 +14,7 @@ RSpec.describe FastIgnore do
     expect(FastIgnore::VERSION).not_to be nil
   end
 
-  describe 'FastIgnore' do
+  describe '.new' do
     subject { described_class.new(relative: true, **args) }
 
     let(:args) { {} }
@@ -26,7 +26,7 @@ RSpec.describe FastIgnore do
       expect(subject).to allow_exactly('foo', 'bar')
     end
 
-    context 'when gitignore: false' do
+    describe 'gitignore: false' do
       let(:args) { { gitignore: false } }
 
       it 'returns all files when there is no gitignore' do
@@ -287,16 +287,16 @@ RSpec.describe FastIgnore do
       expect(subject).to allow_exactly('.gitignore', '.a', '.b/.c')
     end
 
-    it 'allowed? returns false nonexistent files' do
+    it '#allowed? returns false nonexistent files' do
       expect(subject.allowed?('utter/nonsense')).to be false
     end
 
-    it 'allowed? can be shortcut with directory:' do
+    it '#allowed? can be shortcut with directory:' do
       create_file_list 'a'
       expect(subject.allowed?('a', directory: false)).to be true
     end
 
-    it 'allowed? can be lied to with directory:' do
+    it '#allowed? can be lied to with directory:' do
       create_file_list 'a/b'
       expect(subject.allowed?('a', directory: false)).to be true
     end

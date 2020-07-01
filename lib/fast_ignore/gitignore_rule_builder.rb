@@ -15,21 +15,29 @@ class FastIgnore
       @trailing_two_stars = false
     end
 
+    def append(value)
+      @segment_re << value
+    end
+
+    def append_escaped(value)
+      append(::Regexp.escape(value))
+    end
+
     def process_escaped_char
-      @segment_re << ::Regexp.escape(@s.matched[1]) if @s.scan(/\\./)
+      append_escaped(@s.matched[1]) if @s.scan(/\\./)
     end
 
     def process_character_class
       return unless @s.skip(/\[/)
 
-      @segment_re << '['
+      append('[')
       process_character_class_body(false)
     end
 
     def process_negated_character_class
       return unless @s.skip(/\[\^/)
 
-      @segment_re << '[^'
+      append('[^')
       process_character_class_body(true)
     end
 
@@ -42,7 +50,7 @@ class FastIgnore
 
       unmatchable_rule! unless @has_characters_in_group
 
-      @segment_re << ']'
+      append(']')
     end
 
     def process_character_class_body(negated_class) # rubocop:disable Metrics/MethodLength
@@ -56,13 +64,13 @@ class FastIgnore
           next unless negated_class
 
           @has_characters_in_group = true
-          @segment_re << '/'
+          append('/')
         elsif @s.skip(/-/)
           @has_characters_in_group = true
-          @segment_re << '-'
+          append('-')
         else @s.scan(%r{[^/\]\-]+})
              @has_characters_in_group = true
-             @segment_re << ::Regexp.escape(@s.matched)
+             append_escaped(@s.matched)
         end
       end
     end
@@ -93,24 +101,24 @@ class FastIgnore
     end
 
     def process_stars
-      (@segment_re << '[^/]*') if @s.scan(%r{\*+(?=[^*/])})
+      append('[^/]*') if @s.scan(%r{\*+(?=[^*/])})
     end
 
     def process_question_mark
-      (@segment_re << '[^/]') if @s.skip(/\?/)
+      append('[^/]') if @s.skip(/\?/)
     end
 
     def process_text
-      (@segment_re << ::Regexp.escape(@s.matched)) if @s.scan(%r{[^*/?\[\\]+})
+      append_escaped(@s.matched) if @s.scan(%r{[^*/?\[\\]+})
     end
 
     def process_star_end
       return unless @s.scan(/\*\z/)
 
-      @segment_re << if @segment_re.empty? # at least something. this is to allow subdir negations to work
-        '[^/]+'
+      if @segment_re.empty? # at least something. this is to allow subdir negations to work
+        append('[^/]+')
       else
-        '[^/]*'
+        append('[^/]*')
       end
     end
 
@@ -121,7 +129,7 @@ class FastIgnore
     end
 
     def process_trailing_backslash
-      (@segment_re << Regexp.escape('\\')) if @s.skip(/\\$/)
+      append_escaped('\\') if @s.skip(/\\$/)
     end
 
     def process_rule # rubocop:disable Metrics/AbcSize

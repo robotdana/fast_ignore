@@ -61,7 +61,7 @@ class FastIgnore
         ::FastIgnore::Rule.new(::Regexp.new(@parent_re, 1), true, anchored_or_file_path, true)
       ]
       if @dir_only
-        (rules << ::FastIgnore::Rule.new(::Regexp.new((@re << '/.*'), 1), @negation, anchored_or_file_path, false))
+        (rules << ::FastIgnore::Rule.new(::Regexp.new((@re << '/'), 1), @negation, anchored_or_file_path, false))
       end
       rules
     end
