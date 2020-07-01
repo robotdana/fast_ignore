@@ -13,20 +13,47 @@ class FastIgnore
       throw :unmatchable_rule, ::FastIgnore::UnmatchableRule
     end
 
-    def process_star_star_slash # rubocop:disable Metrics/MethodLength
-      return unless @s.skip(%r{\*{2,}/})
+    def append_segment_star_star_slash
+      @segments += 1
+      @parent_re << '(?:'
+      @parent_re << @segment_re
+    end
 
-      unless @segment_re.empty?
-        @segments += 1
-        @parent_re << '(?:'
-        @parent_re << @segment_re
-      end
+    def append_star_star_slash
       @parent_re << '.*'
 
       @re << @segment_re
       @re << '(?:.*/)?'
       @segment_re.clear
       @anchored = true
+    end
+
+    def process_slash_star_star_slash
+      return unless @s.skip(%r{/\*{2,}/})
+
+      append_star_star_slash
+    end
+
+    def process_slash_star_star_slash_star_end
+      return unless @s.skip(%r{/\*{2,}/\*\z})
+
+      append_star_star_slash
+      append('[^/]+')
+    end
+
+    def process_star_star_slash
+      return unless @s.skip(%r{\*{2,}/})
+
+      append_segment_star_star_slash
+      append_star_star_slash
+    end
+
+    def process_star_star_slash_star_end
+      return unless @s.skip(%r{\*{2,}/\*\z})
+
+      append_segment_star_star_slash
+      append_star_star_slash
+      append('[^/]+')
     end
 
     def process_slash(append)
@@ -38,7 +65,15 @@ class FastIgnore
       super
     end
 
-    def build_rules # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def process_end
+      @segment_re << '(/|\\z)'
+    end
+
+    def end_processed?
+      @dir_only || super
+    end
+
+    def prepare_parent_re # rubocop:disable Metrics/MethodLength
       parent_prefix = prefix
       if @file_path
         allow_escaped_file_path = ::Regexp.escape(@file_path).gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
@@ -54,15 +89,23 @@ class FastIgnore
       end
       @parent_re.prepend(parent_prefix)
       @parent_re << (')?' * @segments)
-      (@re << '(/|\\z)') unless @dir_only || @trailing_two_stars
-      rules = [
-        # Regexp::IGNORECASE = 1
-        ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only),
-        ::FastIgnore::Rule.new(::Regexp.new(@parent_re, 1), true, anchored_or_file_path, true)
-      ]
-      if @dir_only
-        (rules << ::FastIgnore::Rule.new(::Regexp.new((@re << '/'), 1), @negation, anchored_or_file_path, false))
-      end
+    end
+
+    def build_parent_dir_rule
+      prepare_parent_re
+
+      # Regexp::IGNORECASE = 1
+      ::FastIgnore::Rule.new(::Regexp.new(@parent_re, 1), true, anchored_or_file_path, true)
+    end
+
+    def build_child_file_rule
+      # Regexp::IGNORECASE = 1
+      ::FastIgnore::Rule.new(::Regexp.new(@re << '/.', 1), @negation, anchored_or_file_path, false)
+    end
+
+    def build_rule
+      rules = [super, build_parent_dir_rule]
+      (rules << build_child_file_rule) if @dir_only
       rules
     end
   end

@@ -45,40 +45,82 @@ class FastIgnore
       throw :unmatchable_rule, []
     end
 
-    def process_character_class_end
-      return unless @s.skip(/\]/)
+    def process_character_class_body(negated_class) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      has_characters_in_group = false
+      until @s.skip(/\]/)
+        if @s.eos?
+          unmatchable_rule!
+        elsif process_escaped_char
+          has_characters_in_group = true
+        elsif @s.skip(%r{/})
+          next unless negated_class
 
-      unmatchable_rule! unless @has_characters_in_group
+          has_characters_in_group = true
+          append('/')
+        elsif @s.skip(/-/)
+          has_characters_in_group = true
+          append('-')
+        elsif @s.scan(%r{[^/\]\-]+})
+          has_characters_in_group = true
+          append_escaped(@s.matched)
+          # :nocov:
+        else
+          unrecognized_character
+          # :nocov:
+        end
+      end
+
+      unmatchable_rule! unless has_characters_in_group
 
       append(']')
     end
 
-    def process_character_class_body(negated_class) # rubocop:disable Metrics/MethodLength
-      @has_characters_in_group = false
-      until process_character_class_end
-        if @s.eos?
-          unmatchable_rule!
-        elsif process_escaped_char
-          @has_characters_in_group = true
-        elsif @s.skip(%r{/})
-          next unless negated_class
+    def process_slash_star_star_slash_star_end
+      return unless @s.skip(%r{/\*{2,}/\*\z})
 
-          @has_characters_in_group = true
-          append('/')
-        elsif @s.skip(/-/)
-          @has_characters_in_group = true
-          append('-')
-        else @s.scan(%r{[^/\]\-]+})
-             @has_characters_in_group = true
-             append_escaped(@s.matched)
-        end
-      end
+      process_slash('/(?:.*/)?')
+      append('[^/]+')
+    end
+
+    def process_slash_star_star_slash
+      return unless @s.skip(%r{/\*{2,}/})
+
+      process_slash('/(?:.*/)?')
+    end
+
+    def process_star_star_slash_star_end
+      return unless @s.skip(%r{\*{2,}/\*\z})
+
+      process_slash('(?:.*/)?')
+      append('[^/]+')
     end
 
     def process_star_star_slash
       return unless @s.skip(%r{\*{2,}/})
 
       process_slash('(?:.*/)?')
+    end
+
+    def process_leading_star_star_slash
+      return unless @s.skip(%r{\*{2,}/})
+
+      @anchored = :never
+
+      process_leading_star_star_slash
+    end
+
+    def process_leading_star_star_slash_star_end
+      return unless @s.skip(%r{\*{2,}/\*\z})
+
+      @anchored = :never
+      append('[^/]+')
+    end
+
+    def process_star_slash_star_end
+      return unless @s.skip(%r{\*/\*\z})
+
+      process_slash('[^/]*/')
+      append('[^/]+')
     end
 
     def process_star_slash
@@ -93,15 +135,23 @@ class FastIgnore
       process_slash('/')
     end
 
+    def process_no_star_slash_star_end
+      return unless @s.skip(%r{/\*\z})
+
+      process_slash('/')
+      append('[^/]+')
+    end
+
     def process_slash(append)
+      @anchored ||= true
+
       @re << @segment_re
       @re << append
       @segment_re.clear
-      @anchored = true
     end
 
     def process_stars
-      append('[^/]*') if @s.scan(%r{\*+(?=[^*/])})
+      append('[^/]*') if @s.scan(/\*+/)
     end
 
     def process_question_mark
@@ -109,17 +159,13 @@ class FastIgnore
     end
 
     def process_text
-      append_escaped(@s.matched) if @s.scan(%r{[^*/?\[\\]+})
+      @s.scan(%r{[^*/?\[\\]+}) && append_escaped(@s.matched)
     end
 
     def process_star_end
       return unless @s.scan(/\*\z/)
 
-      if @segment_re.empty? # at least something. this is to allow subdir negations to work
-        append('[^/]+')
-      else
-        append('[^/]*')
-      end
+      append('[^/]*')
     end
 
     def process_two_star_end
@@ -132,14 +178,46 @@ class FastIgnore
       append_escaped('\\') if @s.skip(/\\$/)
     end
 
-    def process_rule # rubocop:disable Metrics/AbcSize
+    def process_end
+      append('\\z')
+    end
+
+    def end_processed?
+      @trailing_two_stars
+    end
+
+    # :nocov:
+    def unrecognized_character
+      raise "Unrecognized character '#{@s.peek(1)}' in rule '#{@rule}'"
+    end
+    # :nocov:
+
+    def process_rule # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      process_leading_star_star_slash_star_end ||
+        process_leading_star_star_slash
+
       until @s.eos?
-        process_escaped_char || process_trailing_backslash ||
-          process_star_star_slash || process_star_slash || process_no_star_slash ||
-          process_stars || process_question_mark ||
-          process_negated_character_class || process_character_class ||
-          process_text || process_star_end || process_two_star_end
+        process_escaped_char ||
+          process_trailing_backslash ||
+          process_slash_star_star_slash_star_end ||
+          process_slash_star_star_slash ||
+          process_star_star_slash_star_end ||
+          process_star_star_slash ||
+          process_star_slash_star_end ||
+          process_star_slash ||
+          process_no_star_slash_star_end ||
+          process_no_star_slash ||
+          process_two_star_end ||
+          process_star_end ||
+          process_stars ||
+          process_question_mark ||
+          process_negated_character_class ||
+          process_character_class ||
+          process_text ||
+          unrecognized_character
       end
+
+      process_end unless end_processed?
     end
 
     def prefix # rubocop:disable Metrics/MethodLength
@@ -158,9 +236,7 @@ class FastIgnore
       end
     end
 
-    def build_rules
-      (@re << '\\z') unless @trailing_two_stars
-
+    def build_rule
       # Regexp::IGNORECASE = 1
       ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only)
     end
@@ -174,11 +250,12 @@ class FastIgnore
 
       catch :unmatchable_rule do
         process_rule
+        @anchored = false if @anchored == :never
 
         @re << @segment_re
 
         @re.prepend(prefix)
-        build_rules
+        build_rule
       end
     end
   end
