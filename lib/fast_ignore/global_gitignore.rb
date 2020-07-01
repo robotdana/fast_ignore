@@ -11,6 +11,8 @@ class FastIgnore
           default_global_gitignore_path
       end
 
+      private
+
       def gitconfig_gitignore_path(config_path)
         return unless config_path
         return unless ::File.exist?(config_path)
@@ -25,17 +27,23 @@ class FastIgnore
       end
 
       def xdg_config_path
-        return unless ::ENV['XDG_CONFIG_HOME'] && !::ENV['XDG_CONFIG_HOME'].empty?
-
-        ::File.expand_path('git/config', ::ENV['XDG_CONFIG_HOME'])
+        xdg_config_home? && ::File.expand_path('git/config', xdg_config_home)
       end
 
       def default_global_gitignore_path
-        if ::ENV['XDG_CONFIG_HOME'] && !::ENV['XDG_CONFIG_HOME'].empty?
-          ::File.expand_path('git/ignore', ::ENV['XDG_CONFIG_HOME'])
+        if xdg_config_home?
+          ::File.expand_path('git/ignore', xdg_config_home)
         else
           ::File.expand_path('~/.config/git/ignore')
         end
+      end
+
+      def xdg_config_home
+        ::ENV['XDG_CONFIG_HOME']
+      end
+
+      def xdg_config_home?
+        xdg_config_home && (not xdg_config_home.empty?)
       end
     end
   end
