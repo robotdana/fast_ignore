@@ -2,14 +2,9 @@
 
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, negation, dir_only, file_path, allow) # rubocop:disable Metrics/MethodLength
+    def initialize(rule, negation, dir_only, file_path)
       @re = ::String.new
       @segment_re = ::String.new
-      @allow = allow
-      if @allow
-        @segments = 0
-        @parent_re = ::String.new
-      end
 
       @s = ::StringScanner.new(rule)
 
@@ -39,9 +34,7 @@ class FastIgnore
     end
 
     def unmatchable_rule!
-      throw :unmatchable_rule, (
-        @allow ? ::FastIgnore::UnmatchableRule : []
-      )
+      throw :unmatchable_rule, []
     end
 
     def process_character_class_end
@@ -77,27 +70,18 @@ class FastIgnore
     def process_star_star_slash
       return unless @s.skip(%r{\*{2,}/})
 
-      if @allow
-        if @segment_re.empty?
-          @parent_re << '.*'
-        else
-          process_slash_allow('.*')
-        end
-      end
       process_slash('(?:.*/)?')
     end
 
     def process_star_slash
       return unless @s.skip(%r{\*/})
 
-      process_slash_allow('[^/]*/') if @allow
       process_slash('[^/]*/')
     end
 
     def process_no_star_slash
       return unless @s.skip(%r{/})
 
-      process_slash_allow('/') if @allow
       process_slash('/')
     end
 
@@ -106,13 +90,6 @@ class FastIgnore
       @re << append
       @segment_re.clear
       @anchored = true
-    end
-
-    def process_slash_allow(append)
-      @segments += 1
-      @parent_re << '(?:'
-      @parent_re << @segment_re
-      @parent_re << append
     end
 
     def process_stars
@@ -127,18 +104,20 @@ class FastIgnore
       (@segment_re << ::Regexp.escape(@s.matched)) if @s.scan(%r{[^*/?\[\\]+})
     end
 
-    def process_end
-      return unless @s.scan(/\*+\z/)
+    def process_star_end
+      return unless @s.scan(/\*\z/)
 
-      if @s.matched.length == 1
-        @segment_re << if @segment_re.empty? # at least something. this is to allow subdir negations to work
-          '[^/]+'
-        else
-          '[^/]*'
-        end
+      @segment_re << if @segment_re.empty? # at least something. this is to allow subdir negations to work
+        '[^/]+'
       else
-        @trailing_two_stars = true
+        '[^/]*'
       end
+    end
+
+    def process_two_star_end
+      return unless @s.scan(/\*{2,}\z/)
+
+      @trailing_two_stars = true
     end
 
     def process_trailing_backslash
@@ -151,66 +130,47 @@ class FastIgnore
           process_star_star_slash || process_star_slash || process_no_star_slash ||
           process_stars || process_question_mark ||
           process_negated_character_class || process_character_class ||
-          process_text || process_end
+          process_text || process_star_end || process_two_star_end
       end
     end
 
-    def build # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def prefix # rubocop:disable Metrics/MethodLength
+      if @file_path
+        if @anchored
+          "\\A#{::Regexp.escape(@file_path)}"
+        else
+          "\\A#{::Regexp.escape(@file_path)}(?:.*/)?"
+        end
+      else
+        if @anchored
+          '\\A'
+        else
+          '(?:\\A|/)'
+        end
+      end
+    end
+
+    def build_rules
+      (@re << '\\z') unless @trailing_two_stars
+
+      # Regexp::IGNORECASE = 1
+      ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only)
+    end
+
+    def anchored_or_file_path
+      @anchored || @file_path
+    end
+
+    def build
       @anchored = true if @s.skip(%r{/})
 
-      catch :unmatchable_rule do # rubocop:disable Metrics/BlockLength
+      catch :unmatchable_rule do
         process_rule
 
         @re << @segment_re
 
-        prefix = if @file_path
-          escaped_file_path = ::Regexp.escape @file_path
-          if @anchored
-            "\\A#{escaped_file_path}"
-          else
-            "\\A#{escaped_file_path}(?:.*/)?"
-          end
-        else
-          if @anchored
-            '\\A'
-          else
-            '(?:\\A|/)'
-          end
-        end
-
         @re.prepend(prefix)
-        anchored_or_file_path = @anchored || @file_path
-        if @allow
-          if @file_path
-            allow_escaped_file_path = escaped_file_path.gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
-              @segments += 1
-              "#{e[0..-2]}(?:/"
-            end
-
-            prefix = if @anchored
-              "\\A#{allow_escaped_file_path}"
-            else
-              "\\A#{allow_escaped_file_path}(?:.*/)?"
-            end
-          end
-          @parent_re.prepend(prefix)
-          @parent_re << (')?' * @segments)
-          (@re << '(/|\\z)') unless @dir_only || @trailing_two_stars
-          rules = [
-            # Regexp::IGNORECASE = 1
-            ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only),
-            ::FastIgnore::Rule.new(::Regexp.new(@parent_re, 1), true, anchored_or_file_path, true)
-          ]
-          if @dir_only
-            (rules << ::FastIgnore::Rule.new(::Regexp.new((@re << '/.*'), 1), @negation, anchored_or_file_path, false))
-          end
-          rules
-        else
-          (@re << '\\z') unless @trailing_two_stars
-
-          # Regexp::IGNORECASE = 1
-          ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only)
-        end
+        build_rules
       end
     end
   end

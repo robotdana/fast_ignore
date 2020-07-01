@@ -46,9 +46,12 @@ class FastIgnore
         dir_only = extract_dir_only(rule)
         negation = extract_negation(rule, allow)
 
-        expand_rule_path(rule, expand_path_with) if expand_path_with
-
-        ::FastIgnore::GitignoreRuleBuilder.new(rule, negation, dir_only, file_root, allow).build
+        if allow
+          expand_rule_path(rule, expand_path_with) if expand_path_with
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, negation, dir_only, file_root).build
+        else
+          ::FastIgnore::GitignoreRuleBuilder.new(rule, negation, dir_only, file_root).build
+        end
       end
 
       def extract_dir_only(rule)
