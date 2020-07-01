@@ -5,10 +5,14 @@ require 'tmpdir'
 
 module TempDirHelper
   module WithinTempDir
-    def create_file(filename, body = '')
-      path = Pathname.pwd.join(filename)
+    def create_file(*lines, path:)
+      path = Pathname.pwd.join(path)
       path.parent.mkpath
-      path.write(body)
+      if lines.empty?
+        path.write('')
+      else
+        path.write(lines.join("\n").chomp + "\n")
+      end
       path
     end
 
@@ -23,16 +27,12 @@ module TempDirHelper
 
     def create_file_list(*filenames)
       filenames.each do |filename|
-        create_file(filename)
+        create_file(path: filename)
       end
     end
 
-    def gitignore(body)
-      create_file('.gitignore', body)
-    end
-
-    def includefile(body)
-      create_file('.include', body)
+    def gitignore(*lines, path: '.gitignore')
+      create_file(*lines, path: path)
     end
   end
 

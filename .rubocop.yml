@@ -167,6 +167,10 @@ Style/Documentation:
 Style/IfInsideElse:
   Enabled: false
 
+Style/GlobalVars:
+  Exclude:
+    - spec/**/*
+
 # [a, b].include?(x) is more unclear than a == x || b == x
 Style/MultipleComparison:
   Enabled: false

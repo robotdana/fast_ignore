@@ -57,6 +57,7 @@ sudo
 symlink
 symlinks
 tmp
+todo
 toplevel
 txt
 unrecursive
