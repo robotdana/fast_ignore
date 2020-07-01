@@ -72,6 +72,14 @@ RSpec.describe FastIgnore do
         expect(subject).to match_files('foo  ')
       end
 
+      it 'considers trailing backslashes to be literal' do
+        create_file path: 'foo\\'
+        gitignore "foo\\\n"
+
+        expect(subject).not_to match_files('foo  ', 'foo ', 'foo')
+        expect(subject).to match_files('foo\\')
+      end
+
       it "doesn't ignore trailing spaces if there's a backslash before every space" do
         gitignore "foo\\ \\ \n"
 

@@ -141,9 +141,13 @@ class FastIgnore
       end
     end
 
-    def process_rule
+    def process_trailing_backslash
+      (@segment_re << Regexp.escape('\\')) if @s.skip(/\\$/)
+    end
+
+    def process_rule # rubocop:disable Metrics/AbcSize
       until @s.eos?
-        process_escaped_char ||
+        process_escaped_char || process_trailing_backslash ||
           process_star_star_slash || process_star_slash || process_no_star_slash ||
           process_stars || process_question_mark ||
           process_negated_character_class || process_character_class ||
