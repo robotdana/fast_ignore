@@ -224,41 +224,110 @@ RSpec.describe FastIgnore do
 
     describe 'Otherwise, Git treats the pattern as a shell glob' do
       describe '"*" matches anything except "/"' do
-        before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour' }
+        describe 'single level' do
+          before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour' }
 
-        it "matches any number of characters at the beginning if there's a star" do
-          gitignore '*our'
+          it "matches any number of characters at the beginning if there's a star" do
+            gitignore '*our'
 
-          expect(subject).not_to match_files('few', 'fewer')
-          expect(subject).to match_files('f/our', 'four', 'favour')
+            expect(subject).not_to match_files('few', 'fewer')
+            expect(subject).to match_files('f/our', 'four', 'favour')
+          end
+
+          it "matches any number of characters at the beginning if there's a star followed by a slash" do
+            gitignore '*/our'
+
+            expect(subject).not_to match_files('few', 'fewer', 'four', 'favour')
+            expect(subject).to match_files('f/our')
+          end
+
+          it "doesn't match a slash" do
+            gitignore 'f*our'
+
+            expect(subject).not_to match_files('few', 'fewer', 'f/our')
+            expect(subject).to match_files('four', 'favour')
+          end
+
+          it "matches any number of characters in the middle if there's a star" do
+            gitignore 'f*r'
+
+            expect(subject).not_to match_files('f/our', 'few')
+            expect(subject).to match_files('four', 'fewer', 'favour')
+          end
+
+          it "matches any number of characters at the end if there's a star" do
+            gitignore 'few*'
+
+            expect(subject).not_to match_files('f/our', 'four', 'favour')
+            expect(subject).to match_files('few', 'fewer')
+          end
         end
 
-        it "matches any number of characters at the beginning if there's a star followed by a slash" do
-          gitignore '*/our'
+        describe 'multi level' do
+          before { create_file_list 'a/b/c', 'a/b/d', 'a/c/c', 'a/c/d', 'b/b/c', 'b/b/d', 'b/c/c', 'b/c/d' }
 
-          expect(subject).not_to match_files('few', 'fewer', 'four', 'favour')
-          expect(subject).to match_files('f/our')
-        end
+          it 'matches a whole directory' do
+            gitignore 'a/*/c'
 
-        it "doesn't match a slash" do
-          gitignore 'f*our'
+            expect(subject).to match_files('a/b/c', 'a/c/c')
+            expect(subject).not_to match_files('a/b/d', 'a/c/d', 'b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
 
-          expect(subject).not_to match_files('few', 'fewer', 'f/our')
-          expect(subject).to match_files('four', 'favour')
-        end
+          it 'matches an exact partial match at start' do
+            gitignore 'a/b*/c'
 
-        it "matches any number of characters in the middle if there's a star" do
-          gitignore 'f*r'
+            expect(subject).to match_files('a/b/c')
+            expect(subject).not_to match_files('a/b/d', 'a/c/c', 'a/c/d', 'b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
 
-          expect(subject).not_to match_files('f/our', 'few')
-          expect(subject).to match_files('four', 'fewer', 'favour')
-        end
+          it 'matches an exact partial match at end' do
+            gitignore 'a/*b/c'
 
-        it "matches any number of characters at the end if there's a star" do
-          gitignore 'few*'
+            expect(subject).to match_files('a/b/c')
+            expect(subject).not_to match_files('a/b/d', 'a/c/c', 'a/c/d', 'b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
 
-          expect(subject).not_to match_files('f/our', 'four', 'favour')
-          expect(subject).to match_files('few', 'fewer')
+          it 'matches multiple directories when sequential /*/' do
+            gitignore 'a/*/*'
+
+            expect(subject).to match_files('a/b/c', 'a/b/d', 'a/c/c', 'a/c/d')
+            expect(subject).not_to match_files('b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
+
+          it 'matches multiple directories when beginning sequential /*/' do
+            gitignore '*/*/c'
+
+            expect(subject).to match_files('b/b/c', 'a/b/c', 'a/c/c', 'b/c/c')
+            expect(subject).not_to match_files('a/b/d', 'a/c/d', 'b/b/d', 'b/c/d')
+          end
+
+          it 'matches multiple directories when ending with /**/*/' do
+            gitignore 'a/**/*'
+
+            expect(subject).to match_files('a/b/c', 'a/b/d', 'a/c/c', 'a/c/d')
+            expect(subject).not_to match_files('b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
+
+          it 'matches multiple directories when ending with **/*/' do
+            gitignore 'a**/*'
+
+            expect(subject).to match_files('a/b/c', 'a/b/d', 'a/c/c', 'a/c/d')
+            expect(subject).not_to match_files('b/b/c', 'b/b/d', 'b/c/c', 'b/c/d')
+          end
+
+          it 'matches multiple directories when beginning with **/*/' do
+            gitignore '**/*/c'
+
+            expect(subject).to match_files('b/b/c', 'a/b/c', 'a/c/c', 'b/c/c', 'a/c/d', 'b/c/d')
+            expect(subject).not_to match_files('a/b/d', 'b/b/d')
+          end
+
+          it 'matches multiple directories when beginning with **/*' do
+            gitignore '**/*c'
+
+            expect(subject).to match_files('b/b/c', 'a/b/c', 'a/c/c', 'b/c/c', 'a/c/d', 'b/c/d')
+            expect(subject).not_to match_files('a/b/d', 'b/b/d')
+          end
         end
       end
 
@@ -478,6 +547,41 @@ RSpec.describe FastIgnore do
 
           expect(subject).not_to match_files('bar/bar/bar')
           expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches files or directories in all directories when repeated' do
+          gitignore '**/**/foo'
+
+          expect(subject).not_to match_files('bar/bar/bar')
+          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches files or directories in all directories with **/*' do
+          gitignore '**/*'
+
+          expect(subject).to match_files('bar/bar/bar', 'foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches files or directories in all directories when also followed by a star before text' do
+          gitignore '**/*foo'
+
+          expect(subject).not_to match_files('bar/bar/bar')
+          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches files or directories in all directories when also followed by a star within text' do
+          gitignore '**/f*o'
+
+          expect(subject).not_to match_files('bar/bar/bar')
+          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches files or directories in all directories when also followed by a star after text' do
+          gitignore '**/fo*'
+
+          expect(subject).not_to match_files('bar/bar/bar')
+          expect(subject).to match_files('foo', 'bar/foo')
+          expect(subject).to match_files('bar/bar/foo/in_dir')
         end
 
         it 'matches files or directories in all directories when three stars' do

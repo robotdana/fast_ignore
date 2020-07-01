@@ -17,7 +17,7 @@ class FastIgnore
       @file_path = (file_path if file_path && !file_path.empty?)
       @negation = negation
       @anchored = false
-      @trailing_stars = false
+      @trailing_two_stars = false
     end
 
     def process_escaped_char
@@ -132,12 +132,13 @@ class FastIgnore
 
       if @s.matched.length == 1
         @segment_re << if @segment_re.empty? # at least something. this is to allow subdir negations to work
-          '[^/]+\\z'
+          '[^/]+'
         else
-          '[^/]*\\z'
+          '[^/]*'
         end
+      else
+        @trailing_two_stars = true
       end
-      @trailing_stars = true
     end
 
     def process_rule
@@ -190,7 +191,7 @@ class FastIgnore
           end
           @parent_re.prepend(prefix)
           @parent_re << (')?' * @segments)
-          (@re << '(/|\\z)') unless @dir_only || @trailing_stars
+          (@re << '(/|\\z)') unless @dir_only || @trailing_two_stars
           rules = [
             # Regexp::IGNORECASE = 1
             ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only),
@@ -201,7 +202,7 @@ class FastIgnore
           end
           rules
         else
-          (@re << '\\z') unless @trailing_stars
+          (@re << '\\z') unless @trailing_two_stars
 
           # Regexp::IGNORECASE = 1
           ::FastIgnore::Rule.new(::Regexp.new(@re, 1), @negation, anchored_or_file_path, @dir_only)
