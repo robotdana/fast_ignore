@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+module Warning # leftovers:allow
+  def warn(msg) # leftovers:allow
+    raise msg
+  end
+end
+
 require 'fileutils'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
 

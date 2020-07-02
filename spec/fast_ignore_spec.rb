@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-# raise warnings
-module Warning # leftovers:allow
-  def warn(msg) # leftovers:allow
-    raise msg
-  end
-end
-
 require 'pathname'
 
 RSpec.describe FastIgnore do

@@ -27,41 +27,25 @@ class FastIgnore
       append_escaped(@s.matched[1]) if @s.scan(/\\./)
     end
 
-    def process_character_class
-      return unless @s.skip(/\[/)
-
-      append('[')
-      process_character_class_body(false)
-    end
-
-    def process_negated_character_class
-      return unless @s.skip(/\[\^/)
-
-      append('[^')
-      process_character_class_body(true)
-    end
-
     def unmatchable_rule!
       throw :unmatchable_rule, []
     end
 
-    def process_character_class_body(negated_class) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      has_characters_in_group = false
+    def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      return unless @s.skip(/\[/)
+
+      append('(?!/)[')
+      append('^') if @s.skip(/(\^|!)/)
+
+      unmatchable_rule! if @s.skip(/\]/)
+
       until @s.skip(/\]/)
         if @s.eos?
           unmatchable_rule!
         elsif process_escaped_char
-          has_characters_in_group = true
-        elsif @s.skip(%r{/})
-          next unless negated_class
-
-          has_characters_in_group = true
-          append('/')
         elsif @s.skip(/-/)
-          has_characters_in_group = true
           append('-')
-        elsif @s.scan(%r{[^/\]\-]+})
-          has_characters_in_group = true
+        elsif @s.scan(/[^\]\-\\]+/)
           append_escaped(@s.matched)
           # :nocov:
         else
@@ -69,8 +53,6 @@ class FastIgnore
           # :nocov:
         end
       end
-
-      unmatchable_rule! unless has_characters_in_group
 
       append(']')
     end
@@ -175,7 +157,7 @@ class FastIgnore
     end
 
     def process_trailing_backslash
-      append_escaped('\\') if @s.skip(/\\$/)
+      unmatchable_rule! if @s.skip(/\\$/)
     end
 
     def process_end
@@ -197,8 +179,8 @@ class FastIgnore
         process_leading_star_star_slash
 
       until @s.eos?
-        process_escaped_char ||
-          process_trailing_backslash ||
+        process_trailing_backslash ||
+          process_escaped_char ||
           process_slash_star_star_slash_star_end ||
           process_slash_star_star_slash ||
           process_star_star_slash_star_end ||
@@ -211,7 +193,6 @@ class FastIgnore
           process_star_end ||
           process_stars ||
           process_question_mark ||
-          process_negated_character_class ||
           process_character_class ||
           process_text ||
           unrecognized_character

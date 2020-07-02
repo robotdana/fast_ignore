@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-$doing_include = false
 RSpec.describe FastIgnore do
   around { |e| within_temp_dir { e.run } }
 
@@ -55,42 +54,93 @@ RSpec.describe FastIgnore do
       end
     end
 
-    describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
-      before { create_file_list 'foo', 'foo ', 'foo  ', 'foo\\' }
+    describe 'with unquoted subject' do
+      # unfortunately git likes to output path names with quotes and escaped backslashes.
+      # we need the string without quotes and without escaped backslashes.
+      let(:unquoted_subject) do
+        next subject unless subject.is_a?(Array)
 
-      it 'ignores trailing spaces in the gitignore file' do
-        gitignore 'foo  '
+        subject.map do |path|
+          next path unless path[0] == '"' && path[-1] == '"'
 
-        expect(subject).not_to match_files('foo  ', 'foo ', 'foo\\')
-        expect(subject).to match_files('foo')
+          path[1..-2].gsub('\\\\', '\\')
+        end
       end
 
-      it "doesn't ignore trailing spaces if there's a backslash" do
-        gitignore "foo \\ \n"
+      describe 'literal backslashes in filenames' do
+        before { create_file_list 'foo', 'foo\\', 'foo\\\\', '\\\\foo', '\\foo', 'fo\\o/\\foo' }
 
-        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
-        expect(subject).to match_files('foo  ')
+        it "never matches backslashes when they're not in the pattern" do
+          gitignore 'foo'
+
+          expect(unquoted_subject).to match_files('foo')
+          expect(unquoted_subject).not_to match_files('foo\\', '\\\\foo', 'foo\\\\', '\\foo', 'fo\\o/\\foo')
+        end
+
+        it 'matches an escaped backslash at the end of the pattern' do
+          gitignore 'foo\\\\'
+
+          expect(unquoted_subject).to match_files('foo\\')
+          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
+        end
+
+        it 'never matches a literal backslash at the end of the pattern' do
+          gitignore 'foo\\'
+
+          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
+        end
+
+        it 'matches an escaped backslash at the start of the pattern' do
+          gitignore '\\\\foo'
+
+          expect(unquoted_subject).to match_files('\\foo', 'fo\\o/\\foo')
+          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'foo\\\\')
+        end
+
+        it 'matches a literal escaped f at the start of the pattern' do
+          gitignore '\\foo'
+
+          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
+          expect(unquoted_subject).to match_files('foo')
+        end
       end
 
-      it 'considers trailing backslashes to be literal' do
-        gitignore "foo\\\n"
+      describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
+        before { create_file_list 'foo', 'foo ', 'foo  ', 'foo\\' }
 
-        expect(subject).not_to match_files('foo  ', 'foo ', 'foo')
-        expect(subject).to match_files('foo\\')
-      end
+        it 'ignores trailing spaces in the gitignore file' do
+          gitignore 'foo  '
 
-      it "doesn't ignore trailing spaces if there's a backslash before every space" do
-        gitignore "foo\\ \\ \n"
+          expect(unquoted_subject).not_to match_files('foo  ', 'foo ')
+          expect(unquoted_subject).to match_files('foo')
+        end
 
-        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
-        expect(subject).to match_files('foo  ')
-      end
+        it "doesn't ignore trailing spaces if there's a backslash" do
+          gitignore "foo \\ \n"
 
-      it "doesn't ignore trailing spaces if there's a backslash before the non last space" do
-        gitignore "foo\\  \n"
+          expect(unquoted_subject).not_to match_files('foo', 'foo ', 'foo\\')
+          expect(unquoted_subject).to match_files('foo  ')
+        end
 
-        expect(subject).not_to match_files('foo', 'foo  ', 'foo\\')
-        expect(subject).to match_files('foo ')
+        it 'considers trailing backslashes to never be matched' do
+          gitignore "foo\\\n"
+
+          expect(unquoted_subject).not_to match_files('foo  ', 'foo ', 'foo', 'foo\\')
+        end
+
+        it "doesn't ignore trailing spaces if there's a backslash before every space" do
+          gitignore "foo\\ \\ \n"
+
+          expect(unquoted_subject).not_to match_files('foo', 'foo ', 'foo\\')
+          expect(unquoted_subject).to match_files('foo  ')
+        end
+
+        it "doesn't ignore trailing spaces if there's a backslash before the non last space" do
+          gitignore "foo\\  \n"
+
+          expect(unquoted_subject).not_to match_files('foo', 'foo  ', 'foo\\')
+          expect(unquoted_subject).to match_files('foo ')
+        end
       end
     end
 
@@ -378,7 +428,9 @@ RSpec.describe FastIgnore do
       end
 
       describe '"[]" matches one character in a selected range' do
-        before { create_file_list 'aa', 'ab', 'ac', 'ad', 'bib', 'b/b', 'bab', 'a[', 'bb', 'a^', 'a[bc' }
+        before do
+          create_file_list 'aa', 'ab', 'ac', 'ad', 'bib', 'b/b', 'bab', 'a[', 'bb', 'a^', 'a[bc', 'a!', 'a+', 'a-', 'a$'
+        end
 
         it 'matches a single character in a character class' do
           gitignore 'a[ab]'
@@ -394,8 +446,109 @@ RSpec.describe FastIgnore do
           expect(subject).to match_files('ab', 'aa', 'ac')
         end
 
+        it 'interprets a / after a character class range as not there' do
+          gitignore 'a[a-c/]'
+
+          expect(subject).not_to match_files('ad')
+          expect(subject).to match_files('ab', 'aa', 'ac')
+        end
+
+        it 'interprets a / before a character class range as not there' do
+          gitignore 'a[/a-c]'
+
+          expect(subject).not_to match_files('ad')
+          expect(subject).to match_files('ab', 'aa', 'ac')
+        end
+
+        it 'interprets a / before the dash in a character class range as any character from / to c' do
+          gitignore 'a[+/-c]'
+
+          # case insensitive match means 'd' is matched by the 'D' between '/' and 'c'.
+          expect(subject).not_to match_files('a!', 'a$')
+          expect(subject).to match_files('ab', 'aa', 'ac', 'a[', 'ad', 'a^', 'a+')
+        end
+
+        it 'interprets a / after the dash in a character class range as any character from start to /' do
+          gitignore 'a["-/c]'
+
+          expect(subject).not_to match_files('ab', 'aa', 'a[', 'ad', 'a^')
+          expect(subject).to match_files('a+', 'a-', 'a$', 'ac') # +, -, $ are between " and /
+        end
+
+        it 'interprets a slash then dash then character to be a character range' do
+          gitignore 'a[/-c]'
+
+          expect(subject).not_to match_files('a-', 'a+', 'a$', 'a!')
+          expect(subject).to match_files('ac', 'ab', 'aa', 'a[', 'ad', 'a^')
+        end
+
+        it 'interprets a character then dash then slash to be a character range' do
+          gitignore 'a["-/]'
+
+          expect(subject).not_to match_files('ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+          expect(subject).to match_files('a+', 'a-', 'a$')
+        end
+
+        context 'without raising warnings' do
+          # these edge cases raise warnings
+          # they're edge-casey enough if you hit them you deserve warnings.
+          before { allow(Warning).to receive(:warn) }
+
+          it 'interprets dash dash character as a character range beginning with -' do
+            gitignore 'a[--c]'
+
+            expect(subject).not_to match_files('a+', 'a$')
+            expect(subject).to match_files('a-', 'ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+          end
+
+          it 'interprets character dash dash as a character range ending with -' do
+            gitignore 'a["--]'
+
+            expect(subject).not_to match_files('ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+            expect(subject).to match_files('a-', 'a+', 'a$')
+          end
+
+          it 'interprets dash dash dash as a character range of only with -' do
+            gitignore 'a[---]'
+
+            expect(subject).not_to match_files('a+', 'a$', 'ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+            expect(subject).to match_files('a-')
+          end
+
+          it 'interprets character dash dash dash as a character range of only with " to - with literal -' do
+            gitignore 'a["---]'
+
+            expect(subject).not_to match_files('ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+            expect(subject).to match_files('a+', 'a$', 'a-')
+          end
+
+          it 'interprets dash dash dash character as a character range of only - with literal c' do
+            gitignore 'a[---c]'
+
+            expect(subject).not_to match_files('ab', 'a[', 'ad', 'a^', 'aa', 'ab')
+            expect(subject).to match_files('a-', 'ac')
+          end
+
+          it 'interprets character dash dash character as a character range ending with - and a literal c' do
+            # this could just as easily be interpreted the other way around (" is the literal, --c is the range),
+            # but ruby regex and git seem to tread this edge case the same
+            gitignore 'a["--c]'
+
+            expect(subject).not_to match_files('ab', 'a[', 'ad', 'a^', 'aa', 'ab')
+            expect(subject).to match_files('a-', 'ac', 'a+', 'a$')
+          end
+        end
+
         it '^ is not' do
           gitignore 'a[^a-c]'
+
+          expect(subject).to match_files('ad')
+          expect(subject).not_to match_files('ab', 'aa', 'ac')
+        end
+
+        # this doesn't appear to be documented anywhere i just stumbled onto it
+        it '! is also not' do
+          gitignore 'a[!a-c]'
 
           expect(subject).to match_files('ad')
           expect(subject).not_to match_files('ab', 'aa', 'ac')

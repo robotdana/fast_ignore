@@ -15,6 +15,18 @@ RSpec::Matchers.define(:match_files) do |*expected|
 
     true
   end
+
+  match_when_negated do |actual|
+    @actual = actual.to_a
+
+    if $doing_include
+      expect(@actual).not_to allow_files(*expected)
+    else
+      expect(@actual).to allow_files(*expected)
+    end
+
+    true
+  end
 end
 
 RSpec::Matchers.define(:allow_files) do |*expected|
@@ -32,11 +44,9 @@ RSpec::Matchers.define(:allow_files) do |*expected|
 
   match_when_negated do |actual|
     @actual = actual.to_a
-    expect(@actual).to exclude(*expected)
-    if actual.respond_to?(:allowed?)
-      expected.each do |path|
-        expect(actual).not_to be_allowed(path)
-      end
+    expected.each do |path|
+      expect(@actual).not_to include(path)
+      expect(actual).not_to be_allowed(path) if actual.respond_to?(:allowed?)
     end
 
     true
