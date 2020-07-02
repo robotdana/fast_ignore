@@ -23,7 +23,8 @@ class FastIgnore
         rule = ::FastIgnore::ShebangRule.new(pattern, allow, file_root&.shebang_path_pattern)
         return rule unless allow
 
-        rules = Array(gitignore_rules('*/'.dup, allow, file_root))
+        rules = gitignore_rules('*/'.dup, allow, file_root)
+        rules.pop # don't want the include all children one.
         rules << rule
         rules
       end
