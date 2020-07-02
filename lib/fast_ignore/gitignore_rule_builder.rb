@@ -4,8 +4,6 @@ class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
     def initialize(rule, negation, dir_only, file_path)
       @re = ::String.new
-      @segment_re = ::String.new
-
       @s = ::StringScanner.new(rule)
 
       @dir_only = dir_only
@@ -16,7 +14,7 @@ class FastIgnore
     end
 
     def append(value)
-      @segment_re << value
+      @re << value
     end
 
     def append_escaped(value)
@@ -62,6 +60,7 @@ class FastIgnore
 
       process_slash('/(?:.*/)?')
       append('[^/]+')
+      process_end
     end
 
     def process_slash_star_star_slash
@@ -75,6 +74,7 @@ class FastIgnore
 
       process_slash('(?:.*/)?')
       append('[^/]+')
+      process_end
     end
 
     def process_star_star_slash
@@ -96,6 +96,7 @@ class FastIgnore
 
       @anchored = :never
       append('[^/]+')
+      process_end
     end
 
     def process_star_slash_star_end
@@ -103,6 +104,7 @@ class FastIgnore
 
       process_slash('[^/]*/')
       append('[^/]+')
+      process_end
     end
 
     def process_star_slash
@@ -122,14 +124,13 @@ class FastIgnore
 
       process_slash('/')
       append('[^/]+')
+      process_end
     end
 
-    def process_slash(append)
+    def process_slash(value)
       @anchored ||= true
 
-      @re << @segment_re
-      @re << append
-      @segment_re.clear
+      append(value)
     end
 
     def process_stars
@@ -148,12 +149,13 @@ class FastIgnore
       return unless @s.scan(/\*\z/)
 
       append('[^/]*')
+      process_end
     end
 
     def process_two_star_end
       return unless @s.scan(/\*{2,}\z/)
 
-      @trailing_two_stars = true
+      true
     end
 
     def process_trailing_backslash
@@ -161,44 +163,41 @@ class FastIgnore
     end
 
     def process_end
-      append('\\z')
-    end
+      return unless @s.eos?
 
-    def end_processed?
-      @trailing_two_stars
+      append('\\z')
     end
 
     # :nocov:
     def unrecognized_character
-      raise "Unrecognized character '#{@s.peek(1)}' in rule '#{@rule}'"
+      raise "Unrecognized character '#{@s.peek(1)}' in rule '#{@s.string}'"
     end
     # :nocov:
 
     def process_rule # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-      process_leading_star_star_slash_star_end ||
+      (process_leading_star_star_slash_star_end && return) ||
         process_leading_star_star_slash
 
-      until @s.eos?
+      loop do
         process_trailing_backslash ||
           process_escaped_char ||
-          process_slash_star_star_slash_star_end ||
+          (process_slash_star_star_slash_star_end && break) ||
           process_slash_star_star_slash ||
-          process_star_star_slash_star_end ||
+          (process_star_star_slash_star_end && break) ||
           process_star_star_slash ||
-          process_star_slash_star_end ||
+          (process_star_slash_star_end && break) ||
           process_star_slash ||
-          process_no_star_slash_star_end ||
+          (process_no_star_slash_star_end && break) ||
           process_no_star_slash ||
-          process_two_star_end ||
-          process_star_end ||
+          (process_two_star_end && break) ||
+          (process_star_end && break) ||
           process_stars ||
           process_question_mark ||
           process_character_class ||
+          (process_end && break) ||
           process_text ||
           unrecognized_character
       end
-
-      process_end unless end_processed?
     end
 
     def prefix # rubocop:disable Metrics/MethodLength
@@ -232,8 +231,6 @@ class FastIgnore
       catch :unmatchable_rule do
         process_rule
         @anchored = false if @anchored == :never
-
-        @re << @segment_re
 
         @re.prepend(prefix)
         build_rule

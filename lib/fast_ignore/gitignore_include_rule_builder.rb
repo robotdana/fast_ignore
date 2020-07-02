@@ -7,10 +7,15 @@ class FastIgnore
 
       @segments = 0
       @parent_re = ::String.new
+      @segment_re = ::String.new
     end
 
     def unmatchable_rule!
       throw :unmatchable_rule, ::FastIgnore::UnmatchableRule
+    end
+
+    def append(value)
+      @segment_re << value
     end
 
     def append_segment_star_star_slash
@@ -62,15 +67,17 @@ class FastIgnore
       @parent_re << @segment_re
       @parent_re << append
 
-      super
+      @anchored ||= true
+      @re << @segment_re
+      @segment_re.clear
+
+      @re << append
     end
 
     def process_end
-      @segment_re << '(/|\\z)'
-    end
+      return unless @s.eos?
 
-    def end_processed?
-      @dir_only || super
+      @dir_only || append('(/|\\z)')
     end
 
     def prepare_parent_re # rubocop:disable Metrics/MethodLength
@@ -104,6 +111,12 @@ class FastIgnore
       rules = [super, build_parent_dir_rule]
       (rules << build_child_file_rule) if @dir_only
       rules
+    end
+
+    def process_rule
+      super
+
+      @re << @segment_re
     end
   end
 end
