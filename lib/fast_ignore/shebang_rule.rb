@@ -44,7 +44,7 @@ class FastIgnore
 
     def match?(path, full_path, filename, content)
       return false if filename.include?('.')
-      return false unless !@file_path_pattern || @file_path_pattern.match?(path)
+      return false unless (not @file_path_pattern) || @file_path_pattern.match?(path)
 
       (content || first_line(full_path))&.match?(@rule)
     end
