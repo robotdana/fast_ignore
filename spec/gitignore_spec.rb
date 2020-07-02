@@ -12,13 +12,30 @@ RSpec.describe FastIgnore do
       describe 'with patterns in the higher level files being overridden by those in lower level files.' do
         before do
           create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
-          gitignore 'b/d'
-          gitignore 'b/c', path: 'a/.gitignore'
         end
 
         it 'matches files in context by files' do
+          gitignore '**/b/d'
+          gitignore 'b/c', path: 'a/.gitignore'
+
+          expect(subject).not_to match_files('b/c', 'a/.gitignore')
+          expect(subject).to match_files('a/b/d', 'a/b/c', 'b/d')
+        end
+
+        it 'overrides parent rules in lower level files' do
+          gitignore '**/b/d'
+          gitignore '!b/d', 'b/c', path: 'a/.gitignore'
+
           expect(subject).not_to match_files('a/b/d', 'b/c', 'a/.gitignore')
           expect(subject).to match_files('a/b/c', 'b/d')
+        end
+
+        it 'overrides parent negations in lower level files' do
+          gitignore '**/b/*', '!**/b/d'
+          gitignore 'b/d', '!b/c', path: 'a/.gitignore'
+
+          expect(subject).not_to match_files('b/d', 'a/b/c', 'a/.gitignore')
+          expect(subject).to match_files('b/c', 'a/b/d')
         end
       end
 
