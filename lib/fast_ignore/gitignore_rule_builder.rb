@@ -10,162 +10,237 @@ class FastIgnore
       @file_path = file_path
       @negation = negation
       @anchored = false
-      @trailing_two_stars = false
-    end
-
-    def append(value)
-      @re << value
-    end
-
-    def append_escaped(value)
-      append(::Regexp.escape(value))
-    end
-
-    def process_escaped_char
-      append_escaped(@s.matched[1]) if @s.scan(/\\./)
     end
 
     def unmatchable_rule!
       throw :unmatchable_rule, []
     end
 
+    def anchored!
+      @anchored ||= true
+    end
+
+    def never_anchored!
+      @anchored = :never
+    end
+
+    def emit(value)
+      @re << value
+    end
+
+    def emit_escaped(value)
+      emit(::Regexp.escape(value))
+    end
+
+    def backslash_escape?
+      @s.scan(/\\./)
+    end
+
+    def emit_backslash_escape
+      emit_escaped(@s.matched[1])
+    end
+
+    def emit_character_class_start
+      emit('(?!/)[')
+    end
+
+    def emit_character_class_negation
+      emit('^')
+    end
+
+    def character_class_start?
+      @s.skip(/\[/)
+    end
+
+    def character_class_end?
+      @s.skip(/\]/)
+    end
+
+    def character_class_negation?
+      @s.skip(/(\^|!)/)
+    end
+
+    def string_end?
+      @s.eos?
+    end
+
+    def character_class_range_operator?
+      @s.skip(/-/)
+    end
+
+    def emit_character_class_range_operator
+      emit('-')
+    end
+
+    def emit_match
+      emit_escaped(@s.matched)
+    end
+
+    def character_class_literal?
+      @s.scan(/[^\]\-\\]+/)
+    end
+
+    def emit_character_class_end
+      emit(']')
+    end
+
     def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      return unless @s.skip(/\[/)
+      emit_character_class_start
+      emit_character_class_negation if character_class_negation?
+      unmatchable_rule! if character_class_end?
 
-      append('(?!/)[')
-      append('^') if @s.skip(/(\^|!)/)
+      until character_class_end?
+        break unmatchable_rule! if string_end?
+        break unmatchable_rule! if backslash_end?
+        next emit_backslash_escape if backslash_escape?
+        next emit_character_class_range_operator if character_class_range_operator?
 
-      unmatchable_rule! if @s.skip(/\]/)
-
-      until @s.skip(/\]/)
-        if @s.eos?
-          unmatchable_rule!
-        elsif process_escaped_char
-        elsif @s.skip(/-/)
-          append('-')
-        elsif @s.scan(/[^\]\-\\]+/)
-          append_escaped(@s.matched)
-          # :nocov:
+        if character_class_literal?
+          emit_match
+        # :nocov:
         else
-          unrecognized_character
+          # I'm pretty sure literal matches everything else
+          # but in case i forgot anything don't endless loop
+          # everything cov is not forgotten
+          break unrecognized_character
           # :nocov:
         end
       end
 
-      append(']')
+      emit_character_class_end
     end
 
-    def process_slash_star_star_slash_star_end
-      return unless @s.skip(%r{/\*{2,}/\*\z})
-
-      process_slash('/(?:.*/)?')
-      append('[^/]+')
-      process_end
+    def slash_star_star_slash_star_end?
+      @s.skip(%r{/\*{2,}/\*\z})
     end
 
-    def process_slash_star_star_slash
-      return unless @s.skip(%r{/\*{2,}/})
-
-      process_slash('/(?:.*/)?')
+    def emit_slash
+      anchored!
+      emit('/')
     end
 
-    def process_star_star_slash_star_end
-      return unless @s.skip(%r{\*{2,}/\*\z})
-
-      process_slash('(?:.*/)?')
-      append('[^/]+')
-      process_end
+    def emit_slash_star_star_slash
+      emit_slash
+      emit_star_star_slash
     end
 
-    def process_star_star_slash
-      return unless @s.skip(%r{\*{2,}/})
-
-      process_slash('(?:.*/)?')
+    def emit_star_star_slash
+      emit('(?:.*/)?')
     end
 
-    def process_leading_star_star_slash
-      return unless @s.skip(%r{\*{2,}/})
+    def emit_star_end_after_slash
+      emit('[^/]+')
+      emit_end_anchor
+    end
 
+    def emit_star
+      emit('[^/]*')
+    end
+
+    def emit_slash_star_star_slash_star_end
+      emit_slash_star_star_slash
+      emit_star_end_after_slash
+    end
+
+    def slash_star_star_slash?
+      @s.skip(%r{/\*{2,}/})
+    end
+
+    def star_star_slash_star_end?
+      @s.skip(%r{\*{2,}/\*\z})
+    end
+
+    def emit_star_star_slash_star_end
+      emit_star_star_slash
+      emit_star_end_after_slash
+    end
+
+    def star_star_slash?
+      @s.skip(%r{\*{2,}/})
+    end
+
+    def emit_leading_star_star_slash
+      never_anchored!
+
+      emit_leading_star_star_slash if star_star_slash?
+    end
+
+    def emit_leading_star_star_slash_star_end
+      never_anchored!
       @anchored = :never
-
-      process_leading_star_star_slash
+      emit_star_end_after_slash
     end
 
-    def process_leading_star_star_slash_star_end
-      return unless @s.skip(%r{\*{2,}/\*\z})
-
-      @anchored = :never
-      append('[^/]+')
-      process_end
+    def star_slash_star_end?
+      @s.skip(%r{\*/\*\z})
     end
 
-    def process_star_slash_star_end
-      return unless @s.skip(%r{\*/\*\z})
-
-      process_slash('[^/]*/')
-      append('[^/]+')
-      process_end
+    def emit_star_slash_star_end
+      emit_star_slash
+      emit_star_end_after_slash
     end
 
-    def process_star_slash
-      return unless @s.skip(%r{\*/})
-
-      process_slash('[^/]*/')
+    def star_slash?
+      @s.skip(%r{\*/})
     end
 
-    def process_no_star_slash
-      return unless @s.skip(%r{/})
-
-      process_slash('/')
+    def emit_star_slash
+      emit_star
+      emit_slash
     end
 
-    def process_no_star_slash_star_end
-      return unless @s.skip(%r{/\*\z})
-
-      process_slash('/')
-      append('[^/]+')
-      process_end
+    def slash?
+      @s.skip(%r{/})
     end
 
-    def process_slash(value)
-      @anchored ||= true
-
-      append(value)
+    def slash_star_end?
+      @s.skip(%r{/\*\z})
     end
 
-    def process_stars
-      append('[^/]*') if @s.scan(/\*+/)
+    def emit_slash_star_end
+      emit_slash
+      emit_star_end_after_slash
     end
 
-    def process_question_mark
-      append('[^/]') if @s.skip(/\?/)
+    def stars?
+      @s.scan(/\*+/)
     end
 
-    def process_text
-      @s.scan(%r{[^*/?\[\\]+}) && append_escaped(@s.matched)
+    def question_mark?
+      @s.skip(/\?/)
     end
 
-    def process_star_end
-      return unless @s.scan(/\*\z/)
-
-      append('[^/]*')
-      process_end
+    def emit_question_mark
+      emit('[^/]')
     end
 
-    def process_two_star_end
-      return unless @s.scan(/\*{2,}\z/)
-
-      true
+    def literal?
+      @s.scan(%r{[^*/?\[\\]+})
     end
 
-    def process_trailing_backslash
-      unmatchable_rule! if @s.skip(/\\$/)
+    def star_end?
+      @s.scan(/\*\z/)
     end
 
-    def process_end
-      return unless @s.eos?
+    def emit_star_end
+      emit_star
+      emit_end_anchor
+    end
 
-      append('\\z')
+    def star_star_end?
+      @s.scan(/\*{2,}\z/)
+    end
+
+    def backslash_end?
+      @s.skip(/\\\z/)
+    end
+
+    def emit_end_anchor
+      emit('\\z')
+    end
+
+    def emit_star_star_end
+      # intentionally left blank
     end
 
     # :nocov:
@@ -175,28 +250,37 @@ class FastIgnore
     # :nocov:
 
     def process_rule # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-      (process_leading_star_star_slash_star_end && return) ||
-        process_leading_star_star_slash
+      emit_leading_star_star_slash_star_end if star_star_slash_star_end?
+      emit_leading_star_star_slash if star_star_slash?
 
       loop do
-        process_trailing_backslash ||
-          process_escaped_char ||
-          (process_slash_star_star_slash_star_end && break) ||
-          process_slash_star_star_slash ||
-          (process_star_star_slash_star_end && break) ||
-          process_star_star_slash ||
-          (process_star_slash_star_end && break) ||
-          process_star_slash ||
-          (process_no_star_slash_star_end && break) ||
-          process_no_star_slash ||
-          (process_two_star_end && break) ||
-          (process_star_end && break) ||
-          process_stars ||
-          process_question_mark ||
-          process_character_class ||
-          (process_end && break) ||
-          process_text ||
-          unrecognized_character
+        break unmatchable_rule! if backslash_end?
+        next emit_backslash_escape if backslash_escape?
+        break emit_slash_star_star_slash_star_end if slash_star_star_slash_star_end?
+        next emit_slash_star_star_slash if slash_star_star_slash?
+        next emit_star_star_slash_star_end if star_star_slash_star_end?
+        next emit_star_star_slash if star_star_slash?
+        break emit_star_slash_star_end if star_slash_star_end?
+        next emit_star_slash if star_slash?
+        break emit_slash_star_end if slash_star_end?
+        next emit_slash if slash?
+        break emit_star_star_end if star_star_end?
+        break emit_star_end if star_end?
+        next emit_star if stars?
+        next emit_question_mark if question_mark?
+        next process_character_class if character_class_start?
+        break emit_end_anchor if string_end?
+
+        if literal?
+          emit_match
+        # :nocov:
+        else
+          # I'm pretty sure literal matches everything else
+          # but in case i forgot anything don't endless loop
+          # everything cov is not forgotten
+          break unrecognized_character
+          # :nocov:
+        end
       end
     end
 

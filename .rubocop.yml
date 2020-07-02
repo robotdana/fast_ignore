@@ -179,6 +179,9 @@ Style/MultipleComparison:
 Style/Not:
   Enabled: false
 
+Style/GuardClause:
+  Enabled: false
+
 # we use %w{} pretty frequently
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:

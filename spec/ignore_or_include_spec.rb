@@ -661,6 +661,12 @@ RSpec.describe FastIgnore do
           expect(subject).not_to match_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
         end
 
+        it 'assumes an unfinished [ followed by \ matches nothing' do
+          gitignore 'a[\\'
+
+          expect(subject).not_to match_files('aa', 'ab', 'ac', 'bib', 'b/b', 'bab', 'a[')
+        end
+
         it 'assumes an escaped [ is literal' do
           gitignore 'a\['
 
