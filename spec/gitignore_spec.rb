@@ -65,8 +65,6 @@ RSpec.describe FastIgnore do
   describe '.new' do
     subject { described_class.new(relative: true, **args) }
 
-    before { $doing_include = false }
-
     let(:args) { {} }
     let(:gitignore_path) { File.join(root, '.gitignore') }
 
@@ -78,8 +76,6 @@ RSpec.describe FastIgnore do
       `git init && git add -N .`
       `git ls-files`.split("\n")
     end
-
-    before { $doing_include = false }
 
     it_behaves_like 'gitignore: true'
   end

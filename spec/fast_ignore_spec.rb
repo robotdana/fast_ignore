@@ -520,6 +520,17 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given an argv_rules with ending /' do
+      let(:args) { { argv_rules: ['./foo/'] } }
+
+      it 'treats the rule as dir only' do
+        create_file_list 'foo/bar', 'bar/foo'
+
+        expect(subject).not_to allow_files('bar/foo')
+        expect(subject).to allow_files('foo/bar')
+      end
+    end
+
     context 'when given an array of anchored argv_rules with absolute paths and gitignore' do
       let(:args) { { argv_rules: ['foo', 'baz'] } }
 

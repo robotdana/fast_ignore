@@ -2,18 +2,26 @@
 
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, negation, dir_only, file_path)
+    def initialize(rule, file_path)
       @re = ::String.new
       @s = ::StringScanner.new(rule)
 
-      @dir_only = dir_only
       @file_path = file_path
-      @negation = negation
+      @negation = false
       @anchored = false
+      @dir_only = false
+    end
+
+    def negated!
+      @negation = true
+    end
+
+    def blank!
+      throw :abort_build, []
     end
 
     def unmatchable_rule!
-      throw :unmatchable_rule, []
+      throw :abort_build, []
     end
 
     def anchored!
@@ -28,258 +36,201 @@ class FastIgnore
       @re << value
     end
 
+    def dir_only!
+      @dir_only = true
+    end
+
     def emit_escaped(value)
       emit(::Regexp.escape(value))
-    end
-
-    def backslash_escape?
-      @s.scan(/\\./)
-    end
-
-    def emit_backslash_escape
-      emit_escaped(@s.matched[1])
-    end
-
-    def emit_character_class_start
-      emit('(?!/)[')
-    end
-
-    def emit_character_class_negation
-      emit('^')
-    end
-
-    def character_class_start?
-      @s.skip(/\[/)
     end
 
     def character_class_end?
       @s.skip(/\]/)
     end
 
-    def character_class_negation?
-      @s.skip(/(\^|!)/)
-    end
-
-    def string_end?
-      @s.eos?
-    end
-
-    def character_class_range_operator?
-      @s.skip(/-/)
-    end
-
-    def emit_character_class_range_operator
-      emit('-')
+    def end?
+      @s.skip(/\s*\z/)
     end
 
     def emit_match
       emit_escaped(@s.matched)
     end
 
-    def character_class_literal?
-      @s.scan(/[^\]\-\\]+/)
-    end
-
-    def emit_character_class_end
-      emit(']')
-    end
-
-    def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      emit_character_class_start
-      emit_character_class_negation if character_class_negation?
-      unmatchable_rule! if character_class_end?
-
-      until character_class_end?
-        break unmatchable_rule! if string_end?
-        break unmatchable_rule! if backslash_end?
-        next emit_backslash_escape if backslash_escape?
-        next emit_character_class_range_operator if character_class_range_operator?
-
-        if character_class_literal?
-          emit_match
-        # :nocov:
-        else
-          # I'm pretty sure literal matches everything else
-          # but in case i forgot anything don't endless loop
-          # everything cov is not forgotten
-          break unrecognized_character
-          # :nocov:
-        end
-      end
-
-      emit_character_class_end
-    end
-
-    def slash_star_star_slash_star_end?
-      @s.skip(%r{/\*{2,}/\*\z})
-    end
-
-    def emit_slash
+    def emit_dir
       anchored!
       emit('/')
     end
 
-    def emit_slash_star_star_slash
-      emit_slash
-      emit_star_star_slash
-    end
-
-    def emit_star_star_slash
+    def emit_any_dir
+      anchored!
       emit('(?:.*/)?')
     end
 
-    def emit_star_end_after_slash
-      emit('[^/]+')
-      emit_end_anchor
+    def emit_any_non_dir
+      emit_one_non_dir
+      emit('*')
     end
 
-    def emit_star
-      emit('[^/]*')
+    def emit_many_non_dir
+      emit_one_non_dir
+      emit('+')
     end
 
-    def emit_slash_star_star_slash_star_end
-      emit_slash_star_star_slash
-      emit_star_end_after_slash
-    end
-
-    def slash_star_star_slash?
-      @s.skip(%r{/\*{2,}/})
-    end
-
-    def star_star_slash_star_end?
-      @s.skip(%r{\*{2,}/\*\z})
-    end
-
-    def emit_star_star_slash_star_end
-      emit_star_star_slash
-      emit_star_end_after_slash
-    end
-
-    def star_star_slash?
-      @s.skip(%r{\*{2,}/})
-    end
-
-    def emit_leading_star_star_slash
-      never_anchored!
-
-      emit_leading_star_star_slash if star_star_slash?
-    end
-
-    def emit_leading_star_star_slash_star_end
-      never_anchored!
-      @anchored = :never
-      emit_star_end_after_slash
-    end
-
-    def star_slash_star_end?
-      @s.skip(%r{\*/\*\z})
-    end
-
-    def emit_star_slash_star_end
-      emit_star_slash
-      emit_star_end_after_slash
-    end
-
-    def star_slash?
-      @s.skip(%r{\*/})
-    end
-
-    def emit_star_slash
-      emit_star
-      emit_slash
+    def emit_one_non_dir
+      emit('[^/]')
     end
 
     def slash?
       @s.skip(%r{/})
     end
 
-    def slash_star_end?
-      @s.skip(%r{/\*\z})
+    def emit_end_anchor
+      emit('\\z')
+      break!
     end
 
-    def emit_slash_star_end
-      emit_slash
-      emit_star_end_after_slash
+    def backslash?
+      @s.skip(/\\/)
+    end
+
+    def break!
+      throw :break
+    end
+
+    def emit_next_character
+      return unless @s.scan(/./)
+
+      emit_escaped(@s.matched)
     end
 
     def stars?
-      @s.scan(/\*+/)
+      @s.skip(/\*+/)
     end
 
-    def question_mark?
-      @s.skip(/\?/)
+    def star?
+      @s.skip(/\*/)
     end
 
-    def emit_question_mark
-      emit('[^/]')
+    def nothing_emitted?
+      @re.empty?
     end
 
-    def literal?
-      @s.scan(%r{[^*/?\[\\]+})
+    def process_backslash
+      return unless backslash?
+
+      emit_next_character || unmatchable_rule!
     end
 
-    def star_end?
-      @s.scan(/\*\z/)
-    end
+    def process_star_end_after_slash
+      return true unless @s.skip(/\*\s*\z/)
 
-    def emit_star_end
-      emit_star
+      emit_many_non_dir
       emit_end_anchor
     end
 
-    def star_star_end?
-      @s.scan(/\*{2,}\z/)
+    def process_slash
+      return unless slash?
+
+      if end?
+        dir_only!
+      elsif slash?
+        unmatchable_rule!
+      else
+        emit_dir
+        process_star_end_after_slash
+      end
     end
 
-    def backslash_end?
-      @s.skip(/\\\z/)
-    end
+    def process_star # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      return unless star?
 
-    def emit_end_anchor
-      emit('\\z')
-    end
-
-    def emit_star_star_end
-      # intentionally left blank
-    end
-
-    # :nocov:
-    def unrecognized_character
-      raise "Unrecognized character '#{@s.peek(1)}' in rule '#{@s.string}'"
-    end
-    # :nocov:
-
-    def process_rule # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-      emit_leading_star_star_slash_star_end if star_star_slash_star_end?
-      emit_leading_star_star_slash if star_star_slash?
-
-      loop do
-        break unmatchable_rule! if backslash_end?
-        next emit_backslash_escape if backslash_escape?
-        break emit_slash_star_star_slash_star_end if slash_star_star_slash_star_end?
-        next emit_slash_star_star_slash if slash_star_star_slash?
-        next emit_star_star_slash_star_end if star_star_slash_star_end?
-        next emit_star_star_slash if star_star_slash?
-        break emit_star_slash_star_end if star_slash_star_end?
-        next emit_star_slash if star_slash?
-        break emit_slash_star_end if slash_star_end?
-        next emit_slash if slash?
-        break emit_star_star_end if star_star_end?
-        break emit_star_end if star_end?
-        next emit_star if stars?
-        next emit_question_mark if question_mark?
-        next process_character_class if character_class_start?
-        break emit_end_anchor if string_end?
-
-        if literal?
-          emit_match
-        # :nocov:
+      if stars?
+        if slash?
+          if end?
+            emit_any_non_dir
+            dir_only!
+          elsif slash?
+            unmatchable_rule!
+          else
+            if nothing_emitted? # rubocop:disable Metrics/BlockNesting
+              never_anchored!
+            else
+              emit_any_dir
+            end
+            process_star_end_after_slash
+          end
+        elsif end?
+          break!
         else
-          # I'm pretty sure literal matches everything else
-          # but in case i forgot anything don't endless loop
-          # everything cov is not forgotten
-          break unrecognized_character
-          # :nocov:
+          emit_any_non_dir
+        end
+      else
+        emit_any_non_dir
+      end
+    end
+
+    def process_question_mark
+      emit('[^/]') if @s.skip(/\?/)
+    end
+
+    def process_character_class_dash
+      emit('-') if @s.skip(/-/)
+    end
+
+    def process_character_class_literal
+      emit_match if @s.scan(/[^\]\-\\]+/)
+    end
+
+    def process_character_class_end
+      emit(']') if character_class_end?
+    end
+
+    def process_character_class
+      return unless @s.skip(/\[/)
+
+      emit('(?!/)[')
+      emit('^') if @s.skip(/\^|!/)
+      unmatchable_rule! if character_class_end?
+
+      until process_character_class_end
+        process_backslash ||
+          process_character_class_dash ||
+          process_character_class_literal ||
+          unmatchable_rule!
+      end
+    end
+
+    def process_literal
+      emit_match if @s.scan(%r{[^*/?\[\\\s]+})
+    end
+
+    def process_whitespace
+      return unless @s.scan(/\s+/)
+
+      last_match = @s.matched
+      emit_escaped(last_match) unless end?
+      true
+    end
+
+    def process_end
+      blank! if nothing_emitted?
+
+      emit_end_anchor
+    end
+
+    def process_rule # rubocop:disable Metrics/MethodLength
+      anchored! if slash?
+
+      catch :break do
+        loop do
+          process_backslash ||
+            process_slash ||
+            process_star ||
+            process_question_mark ||
+            process_character_class ||
+            process_literal ||
+            process_whitespace ||
+            process_end
         end
       end
     end
@@ -310,10 +261,11 @@ class FastIgnore
     end
 
     def build
-      @anchored = true if @s.skip(%r{/})
-
-      catch :unmatchable_rule do
+      catch :abort_build do
+        blank! if @s.skip(/#/)
+        negated! if @s.skip(/!/)
         process_rule
+
         @anchored = false if @anchored == :never
 
         @re.prepend(prefix)

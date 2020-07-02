@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
-$doing_include = false
-
-RSpec::Matchers.define_negated_matcher(:exclude, :include)
 RSpec::Matchers.define(:match_files) do |*expected|
   match do |actual|
     @actual = actual.to_a
 
-    if $doing_include
+    if defined?($doing_include) && $doing_include
       expect(@actual).to allow_files(*expected)
     else
       expect(@actual).not_to allow_files(*expected)
@@ -19,7 +16,7 @@ RSpec::Matchers.define(:match_files) do |*expected|
   match_when_negated do |actual|
     @actual = actual.to_a
 
-    if $doing_include
+    if defined?($doing_include) && $doing_include
       expect(@actual).not_to allow_files(*expected)
     else
       expect(@actual).to allow_files(*expected)
@@ -52,8 +49,6 @@ RSpec::Matchers.define(:allow_files) do |*expected|
     true
   end
 end
-
-RSpec::Matchers.define_negated_matcher(:exclude, :include)
 
 RSpec::Matchers.define(:allow_exactly) do |*expected|
   match do |actual|

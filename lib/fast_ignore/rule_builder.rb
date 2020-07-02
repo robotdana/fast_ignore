@@ -8,68 +8,32 @@ class FastIgnore
       # :nocov:
 
       def build(rule, allow, expand_path_with, file_root)
-        return shebang_rules(rule, allow, file_root) if remove_shebang(rule)
-
-        strip(rule)
-        return [] if skip?(rule)
-
-        gitignore_rules(rule, allow, expand_path_with, file_root)
+        if rule.delete_prefix!('#!:')
+          shebang_rules(rule, allow, file_root)
+        else
+          gitignore_rules(rule, allow, file_root, expand_path_with)
+        end
       end
 
       private
 
-      def strip(rule)
-        rule.chomp!
-        rule.sub!(/(?<!\\) +\z/, '')
-      end
-
-      def remove_shebang(rule)
-        return unless rule.delete_prefix!('#!:')
-
-        rule.strip!
-
-        true
-      end
-
       def shebang_rules(shebang, allow, file_root)
+        shebang.strip!
         pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
         rule = ::FastIgnore::ShebangRule.new(pattern, allow, file_root&.shebang_path_pattern)
         return rule unless allow
 
-        Array(gitignore_rules('*/'.dup, allow, nil, file_root)) + [rule]
+        rules = Array(gitignore_rules('*/'.dup, allow, file_root))
+        rules << rule
+        rules
       end
 
-      def skip?(rule)
-        rule.empty? || rule.start_with?('#')
-      end
-
-      def gitignore_rules(rule, allow, expand_path_with, file_root)
-        dir_only = extract_dir_only(rule)
-        negation = extract_negation(rule, allow)
-
+      def gitignore_rules(rule, allow, file_root, expand_path_with = nil)
         if allow
-          expand_rule_path(rule, expand_path_with) if expand_path_with
-          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, negation, dir_only, file_root).build
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, file_root, expand_path_with).build
         else
-          ::FastIgnore::GitignoreRuleBuilder.new(rule, negation, dir_only, file_root).build
+          ::FastIgnore::GitignoreRuleBuilder.new(rule, file_root).build
         end
-      end
-
-      def extract_dir_only(rule)
-        rule.delete_suffix!('/')
-      end
-
-      def extract_negation(rule, allow)
-        return allow unless rule.delete_prefix!('!')
-
-        not allow
-      end
-
-      EXPAND_PATH_RE = %r{(^(?:[~/]|\.{1,2}/)|/\.\./)}.freeze
-      def expand_rule_path(rule, root)
-        rule.replace(::File.expand_path(rule)) if rule.match?(EXPAND_PATH_RE)
-        rule.delete_prefix!(root)
-        rule.prepend('/') unless rule.start_with?('*')
       end
     end
   end

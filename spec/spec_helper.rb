@@ -6,6 +6,8 @@ module Warning # leftovers:allow
   end
 end
 
+$doing_include = false
+
 require 'fileutils'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
 

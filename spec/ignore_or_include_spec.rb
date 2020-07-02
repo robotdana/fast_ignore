@@ -190,8 +190,15 @@ RSpec.describe FastIgnore do
       describe 'Otherwise the pattern may also match at any level below the .gitignore level.' do
         # frotz/ matches frotz and a/frotz that is a directory
 
-        it 'includes files relative to the git dir with a middle slash' do
+        it 'includes files relative to anywhere with only an end slash' do
           gitignore 'frotz/'
+
+          expect(subject).to match_files('doc/frotz/b', 'a/doc/frotz/c')
+          expect(subject).not_to match_files('d/doc/frotz')
+        end
+
+        it 'strips trailing space before deciding a rule is dir_only' do
+          gitignore 'frotz/ '
 
           expect(subject).to match_files('doc/frotz/b', 'a/doc/frotz/c')
           expect(subject).not_to match_files('d/doc/frotz')
@@ -722,6 +729,19 @@ RSpec.describe FastIgnore do
           expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
         end
 
+        it 'matches nothing with double slash' do
+          gitignore '**//foo'
+
+          expect(subject).not_to match_files('bar/bar/bar', 'foo', 'bar/foo', 'bar/bar/foo/in_dir')
+        end
+
+        it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
+          gitignore '**/'
+
+          expect(subject).to match_files('bar/bar/bar', 'bar/foo', 'bar/bar/foo/in_dir')
+          expect(subject).not_to match_files('foo')
+        end
+
         it 'matches files or directories in all directories when repeated' do
           gitignore '**/**/foo'
 
@@ -776,6 +796,13 @@ RSpec.describe FastIgnore do
           expect(subject).to match_files('abc/bar', 'abc/foo/bar')
         end
 
+        it 'matches all directories inside the mentioned directory' do
+          gitignore 'abc/**/'
+
+          expect(subject).not_to match_files('abc/bar', 'bar/bar/foo', 'bar/abc/foo')
+          expect(subject).to match_files('abc/foo/bar')
+        end
+
         it 'matches files or directories inside the mentioned directory when ***' do
           gitignore 'abc/***'
 
@@ -806,7 +833,7 @@ RSpec.describe FastIgnore do
       describe 'Other consecutive asterisks are considered regular asterisks' do
         describe 'and will match according to the previous rules' do
           context 'with two stars' do
-            before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour' }
+            before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour', 'file/four' }
 
             it 'matches any number of characters at the beginning' do
               gitignore '**our'
@@ -843,6 +870,13 @@ RSpec.describe FastIgnore do
               expect(subject).not_to match_files('few', 'fewer', 'favour')
               expect(subject).to match_files('four', 'f/our')
             end
+
+            it 'anchors, when following a character' do
+              gitignore 'f**/our'
+
+              expect(subject).not_to match_files('few', 'fewer', 'favour', 'file/four')
+              expect(subject).to match_files('four', 'f/our')
+            end
           end
         end
       end
@@ -851,8 +885,6 @@ RSpec.describe FastIgnore do
 
   describe '.new' do
     subject { described_class.new(relative: true, **args) }
-
-    before { $doing_include = false }
 
     let(:args) { {} }
     let(:gitignore_path) { File.join(root, '.gitignore') }
@@ -938,7 +970,11 @@ RSpec.describe FastIgnore do
         )
       end
 
-      before { $doing_include = true }
+      around do |example|
+        $doing_include = true
+        example.run
+        $doing_include = false
+      end
 
       let(:include_files) { include_path }
 
@@ -989,7 +1025,11 @@ RSpec.describe FastIgnore do
         )
       end
 
-      before { $doing_include = true }
+      around do |example|
+        $doing_include = true
+        example.run
+        $doing_include = false
+      end
 
       let(:include_path) { File.join(root, '.gitignore') }
       let(:include_read) { File.exist?(include_path) ? File.read(include_path) : '' }
@@ -1014,8 +1054,6 @@ RSpec.describe FastIgnore do
       `git init && git add -N .`
       `git ls-files`.split("\n")
     end
-
-    before { $doing_include = false }
 
     it_behaves_like 'the gitignore documentation'
   end
