@@ -649,8 +649,8 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given shebang rule scoped by a file' do
-      let(:args) { { include_files: 'a/.include' } }
+    context 'when given include shebang rule scoped by a file' do
+      let(:args) { { gitignore: false, include_files: 'a/.include' } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         create_file <<~RUBY, path: 'a/foo'
@@ -669,6 +669,29 @@ RSpec.describe FastIgnore do
 
         expect(subject).not_to allow_files('foo')
         expect(subject).to allow_files('a/foo')
+      end
+    end
+
+    context 'when given ignore shebang rule scoped by a file' do
+      let(:args) { { gitignore: false, ignore_files: 'a/.ignore' } }
+
+      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+        create_file <<~RUBY, path: 'a/foo'
+          #!/usr/bin/env ruby -w
+
+          puts('no')
+        RUBY
+
+        create_file <<~RUBY, path: 'foo'
+          #!/usr/bin/env ruby
+
+          puts('ok')
+        RUBY
+
+        create_file '#!:ruby', '#!:bash', path: 'a/.ignore'
+
+        expect(subject).not_to allow_files('a/foo')
+        expect(subject).to allow_files('foo')
       end
     end
 

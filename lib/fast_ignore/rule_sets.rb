@@ -83,14 +83,12 @@ class FastIgnore
       ::FastIgnore::RuleSet.new(rules, allow, gitignore)
     end
 
-    def build_set_from_file(filename, allow: false, file_root: nil, gitignore: false, check_exists: false)
+    def build_set_from_file(filename, allow: false, gitignore: false, check_exists: false)
       filename = ::File.expand_path(filename, @project_root)
       return if check_exists && !::File.exist?(filename)
-      unless file_root || filename.start_with?(@project_root)
-        raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}"
-      end
+      raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}" unless filename.start_with?(@project_root)
 
-      file_root ||= "#{::File.dirname(filename)}/".delete_prefix(@project_root)
+      file_root = ::FastIgnore::FileRoot.build(filename, @project_root)
       build_rule_set(::File.readlines(filename), allow, file_root: file_root, gitignore: gitignore)
     end
 

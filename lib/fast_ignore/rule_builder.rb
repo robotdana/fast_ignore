@@ -31,12 +31,12 @@ class FastIgnore
         true
       end
 
-      def shebang_rules(rule, allow, file_path)
-        file_path_pattern = /\A#{::Regexp.escape(file_path)}./ if file_path && !file_path.empty?
-        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{::Regexp.escape(rule)}\b/i, allow, file_path_pattern)
+      def shebang_rules(shebang, allow, file_root)
+        pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
+        rule = ::FastIgnore::ShebangRule.new(pattern, allow, file_root&.shebang_path_pattern)
         return rule unless allow
 
-        Array(gitignore_rules('*/'.dup, allow, nil, file_path)) + [rule]
+        Array(gitignore_rules('*/'.dup, allow, nil, file_root)) + [rule]
       end
 
       def skip?(rule)

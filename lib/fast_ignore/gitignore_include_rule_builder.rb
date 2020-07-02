@@ -76,15 +76,12 @@ class FastIgnore
     def prepare_parent_re # rubocop:disable Metrics/MethodLength
       parent_prefix = prefix
       if @file_path
-        allow_escaped_file_path = ::Regexp.escape(@file_path).gsub(%r{(?<!\\)(?:\\\\)*/}) do |e|
-          @segments += 1
-          "#{e[0..-2]}(?:/"
-        end
+        @segments += @file_path.escaped_segments_length
 
         parent_prefix = if @anchored
-          "\\A#{allow_escaped_file_path}"
+          "\\A#{@file_path.escaped_segments_joined}"
         else
-          "\\A#{allow_escaped_file_path}(?:.*/)?"
+          "\\A#{@file_path.escaped_segments_joined}(?:.*/)?"
         end
       end
       @parent_re.prepend(parent_prefix)

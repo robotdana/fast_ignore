@@ -9,7 +9,7 @@ class FastIgnore
       @s = ::StringScanner.new(rule)
 
       @dir_only = dir_only
-      @file_path = (file_path if file_path && !file_path.empty?)
+      @file_path = file_path
       @negation = negation
       @anchored = false
       @trailing_two_stars = false
@@ -204,9 +204,9 @@ class FastIgnore
     def prefix # rubocop:disable Metrics/MethodLength
       if @file_path
         if @anchored
-          "\\A#{::Regexp.escape(@file_path)}"
+          "\\A#{@file_path.escaped}"
         else
-          "\\A#{::Regexp.escape(@file_path)}(?:.*/)?"
+          "\\A#{@file_path.escaped}(?:.*/)?"
         end
       else
         if @anchored
