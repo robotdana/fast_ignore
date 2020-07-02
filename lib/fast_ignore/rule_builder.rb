@@ -8,7 +8,7 @@ class FastIgnore
       # :nocov:
 
       def build(rule, allow, expand_path_with, file_root)
-        return shebang_rules(rule, allow) if remove_shebang(rule)
+        return shebang_rules(rule, allow, file_root) if remove_shebang(rule)
 
         strip(rule)
         return [] if skip?(rule)
@@ -31,11 +31,12 @@ class FastIgnore
         true
       end
 
-      def shebang_rules(rule, allow)
-        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{::Regexp.escape(rule)}\b/i, allow)
+      def shebang_rules(rule, allow, file_path)
+        file_path_pattern = /\A#{::Regexp.escape(file_path)}./ if file_path && !file_path.empty?
+        rule = ::FastIgnore::ShebangRule.new(/\A#!.*\b#{::Regexp.escape(rule)}\b/i, allow, file_path_pattern)
         return rule unless allow
 
-        [::FastIgnore::Rule.new(//, true, true, true), rule]
+        Array(gitignore_rules('*/'.dup, allow, nil, file_path)) + [rule]
       end
 
       def skip?(rule)

@@ -8,17 +8,20 @@ class FastIgnore
 
     attr_reader :rule
 
+    attr_reader :file_path_pattern
+
     attr_reader :squashable_type
 
     def squash(rules)
-      ::FastIgnore::ShebangRule.new(::Regexp.union(rules.map(&:rule)).freeze, negation?)
+      ::FastIgnore::ShebangRule.new(::Regexp.union(rules.map(&:rule)).freeze, negation?, file_path_pattern)
     end
 
-    def initialize(rule, negation)
+    def initialize(rule, negation, file_path_pattern)
       @rule = rule
       @negation = negation
+      @file_path_pattern = file_path_pattern
 
-      @squashable_type = negation ? 3 : 2
+      @squashable_type = (negation ? 13 : 12) + file_path_pattern.object_id
 
       freeze
     end
@@ -33,12 +36,15 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      "#<ShebangRule #{'allow ' if @negation}#!:#{@rule.to_s[15..-4]}>"
+      allow_fragment = 'allow ' if @negation
+      in_fragment = " in #{@file_path_pattern}" if @file_path_pattern
+      "#<ShebangRule #{allow_fragment}#!:#{@rule.to_s[15..-4]}#{in_fragment}>"
     end
     # :nocov:
 
-    def match?(_, full_path, filename, content)
+    def match?(path, full_path, filename, content)
       return false if filename.include?('.')
+      return false unless !@file_path_pattern || @file_path_pattern.match?(path)
 
       (content || first_line(full_path))&.match?(@rule)
     end

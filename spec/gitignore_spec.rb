@@ -45,7 +45,7 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '#new' do
+  describe '.new' do
     subject { described_class.new(relative: true, **args) }
 
     before { $doing_include = false }
