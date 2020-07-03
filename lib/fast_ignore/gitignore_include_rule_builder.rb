@@ -9,7 +9,6 @@ class FastIgnore
     def initialize(rule, file_path, expand_path_from = nil)
       super(rule, file_path)
 
-      @current_segment_re = ::String.new
       @parent_segments = []
       @negation = true
       @expand_path_from = expand_path_from
@@ -33,23 +32,19 @@ class FastIgnore
       throw :abort_build, ::FastIgnore::UnmatchableRule
     end
 
-    def emit(value)
-      @current_segment_re << value
-    end
-
     def nothing_emitted?
-      @current_segment_re.empty? && @parent_segments.empty?
+      @re.empty? && @parent_segments.empty?
     end
 
     def emit_dir
       anchored!
 
-      @parent_segments << @current_segment_re
-      @current_segment_re = ::String.new
+      @parent_segments << @re
+      @re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
     end
 
-    def emit_end_anchor
-      @dir_only || emit('(/|\\z)')
+    def emit_end
+      @dir_only || @re.append_end_dir_or_anchor
       break!
     end
 
@@ -84,13 +79,15 @@ class FastIgnore
 
     def build_child_file_rule
       # Regexp::IGNORECASE = 1
-      ::FastIgnore::Rule.new(::Regexp.new(@re + '/.', 1), @negation, anchored_or_file_path, false)
+      ::FastIgnore::Rule.new(@re.append_dir.to_regexp, @negation, anchored_or_file_path, false)
     end
 
     def build_rule
-      @re << @parent_segments.join('/')
-      @re << '/' unless @parent_segments.empty?
-      @re << @current_segment_re
+      joined_re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
+      joined_re.append(@parent_segments.join('/'))
+      joined_re.append_dir unless @parent_segments.empty?
+      joined_re.append(@re)
+      @re = joined_re
 
       rules = [super, build_parent_dir_rule]
       (rules << build_child_file_rule) if @dir_only
