@@ -1,3 +1,10 @@
+# v0.15.0
+- fixed a handful of character class edge cases to match git behavior
+  - mostly ranges with - or / as one end of the range
+- major refactoring of the regexp builder that shouldn't have any behaviour implications but should make development easier (e.g. seeing those unhandled edge cases).
+- improved speed of repos with many sub-gitignore files
+- mentioned submodules in the readme as yet another thing git does that this project doesn't because submodule details are hidden in the git index.
+
 # v0.14.0
 - significant performance improvements ~50% faster
 - add `FastIgnore#to_proc` for no good reason

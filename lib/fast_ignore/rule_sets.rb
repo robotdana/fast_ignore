@@ -35,13 +35,16 @@ class FastIgnore
       @array.all? { |r| r.allowed_unrecursive?(relative_path, dir, full_path, filename, nil) }
     end
 
-    def append_subdir_gitignore(relative_path:, check_exists: true)
-      new_gitignore = build_set_from_file(relative_path, gitignore: true, check_exists: check_exists)
-      return if !new_gitignore || new_gitignore.empty?
-
+    def append_subdir_gitignore(relative_path:, check_exists: true) # rubocop:disable Metrics/MethodLength
       if @gitignore_rule_set
+        new_gitignore = build_set_from_file(relative_path, gitignore: true, check_exists: check_exists, squash: false)
+        return if !new_gitignore || new_gitignore.empty?
+
         @gitignore_rule_set << new_gitignore
       else
+        new_gitignore = build_set_from_file(relative_path, gitignore: true, check_exists: check_exists)
+        return if !new_gitignore || new_gitignore.empty?
+
         @array << new_gitignore
         @gitignore_rule_set = new_gitignore
         @array.sort_by!(&:weight) && @array.freeze
@@ -75,21 +78,21 @@ class FastIgnore
       build_rule_set(::File.readlines(path), false, gitignore: true)
     end
 
-    def build_rule_set(rules, allow, expand_path_with: nil, file_root: nil, gitignore: false)
+    def build_rule_set(rules, allow, expand_path_with: nil, file_root: nil, gitignore: false, squash: true) # rubocop:disable Metrics/ParameterLists
       rules = rules.flat_map do |rule|
         ::FastIgnore::RuleBuilder.build(rule, allow, expand_path_with, file_root)
       end
 
-      ::FastIgnore::RuleSet.new(rules, allow, gitignore)
+      ::FastIgnore::RuleSet.new(rules, allow, gitignore, squash)
     end
 
-    def build_set_from_file(filename, allow: false, gitignore: false, check_exists: false)
+    def build_set_from_file(filename, allow: false, gitignore: false, check_exists: false, squash: true)
       filename = ::File.expand_path(filename, @project_root)
       return if check_exists && !::File.exist?(filename)
       raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}" unless filename.start_with?(@project_root)
 
       file_root = ::FastIgnore::FileRoot.build(filename, @project_root)
-      build_rule_set(::File.readlines(filename), allow, file_root: file_root, gitignore: gitignore)
+      build_rule_set(::File.readlines(filename), allow, file_root: file_root, gitignore: gitignore, squash: squash)
     end
 
     def append_sets_from_files(files, allow: false)

@@ -11,6 +11,10 @@ class FastIgnore
         5
       end
 
+      def component_rules_count
+        1
+      end
+
       def dir_only?
         false
       end

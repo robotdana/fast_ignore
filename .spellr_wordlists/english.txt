@@ -40,6 +40,7 @@ pwd
 quotepath
 rdoc
 readme
+recurse
 regexp
 rspec
 rubo
@@ -52,6 +53,8 @@ sherson
 simplecov
 stdin
 subdir
+submodule
+submodules
 substring
 sudo
 symlink

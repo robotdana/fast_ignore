@@ -314,6 +314,7 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
   - Untracked files will be returned by FastIgnore, but not by `git ls-files`
   - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by FastIgnore
   - On a case insensitive file system, with files that differ only by case, `git ls-files` will include all case variations, while FastIgnore will only include whichever variation git placed in the file system.
+  - FastIgnore is unaware of submodules and just treats them like regular directories. For example: `git ls-files --recurse-submodules` won't use the parent repo's gitignore on a submodule, while FastIgnore doesn't know it's a submodule and will.
 
 ## Contributing
 

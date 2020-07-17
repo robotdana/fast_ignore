@@ -16,6 +16,10 @@ class FastIgnore
       ::FastIgnore::ShebangRule.new(::Regexp.union(rules.map(&:rule)).freeze, negation?, file_path_pattern)
     end
 
+    def component_rules_count
+      1
+    end
+
     def initialize(rule, negation, file_path_pattern)
       @rule = rule
       @negation = negation

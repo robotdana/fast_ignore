@@ -32,7 +32,7 @@ puts (finish - start).to_s
 
 print 'git ls-files:               '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-git_a = `git -c "core.quotepath=off" ls-files`.split("\n")
+git_a = `git -c "core.quotepath=off" ls-files --recurse-submodules`.split("\n")
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s
 
