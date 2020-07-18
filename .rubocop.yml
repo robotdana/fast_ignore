@@ -221,3 +221,6 @@ Style/HashTransformValues:
 
 Style/CommentedKeyword:
   Enabled: false
+
+Style/AccessorGrouping:
+  EnforcedStyle: separated

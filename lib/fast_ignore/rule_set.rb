@@ -69,6 +69,8 @@ class FastIgnore
 
     protected
 
-    attr_reader :dir_rules, :file_rules, :has_shebang_rules
+    attr_reader :dir_rules
+    attr_reader :file_rules
+    attr_reader :has_shebang_rules
   end
 end
