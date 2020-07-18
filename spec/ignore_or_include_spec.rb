@@ -471,8 +471,9 @@ RSpec.describe FastIgnore do
           gitignore 'a[+/-c]'
 
           # case insensitive match means 'd' is matched by the 'D' between '/' and 'c'.
+          # so ad doesn't show up in either list because it depends on git case sensitivity
           expect(subject).not_to match_files('a!', 'a$')
-          expect(subject).to match_files('ab', 'aa', 'ac', 'a[', 'ad', 'a^', 'a+')
+          expect(subject).to match_files('ab', 'aa', 'ac', 'a[', 'a^', 'a+')
         end
 
         it 'interprets a / after the dash in a character class range as any character from start to /' do
@@ -485,8 +486,10 @@ RSpec.describe FastIgnore do
         it 'interprets a slash then dash then character to be a character range' do
           gitignore 'a[/-c]'
 
+          # case insensitive match means 'd' is matched by the 'D' between '/' and 'c'.
+          # so ad doesn't show up in either list because it depends on git case sensitivity
           expect(subject).not_to match_files('a-', 'a+', 'a$', 'a!')
-          expect(subject).to match_files('ac', 'ab', 'aa', 'a[', 'ad', 'a^')
+          expect(subject).to match_files('ac', 'ab', 'aa', 'a[', 'a^')
         end
 
         it 'interprets a character then dash then slash to be a character range' do
@@ -501,11 +504,13 @@ RSpec.describe FastIgnore do
           # they're edge-casey enough if you hit them you deserve warnings.
           before { allow(Warning).to receive(:warn) }
 
+          # case insensitive match means 'd' is matched by the 'D' between '-' and 'c'.
+          # so ad doesn't show up in either list because it depends on git case sensitivity
           it 'interprets dash dash character as a character range beginning with -' do
             gitignore 'a[--c]'
 
             expect(subject).not_to match_files('a+', 'a$')
-            expect(subject).to match_files('a-', 'ab', 'ac', 'a[', 'ad', 'a^', 'aa', 'ab', 'ac')
+            expect(subject).to match_files('a-', 'ab', 'ac', 'a[', 'a^', 'aa', 'ab', 'ac')
           end
 
           it 'interprets character dash dash as a character range ending with -' do
