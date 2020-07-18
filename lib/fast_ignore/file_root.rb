@@ -2,6 +2,10 @@
 
 class FastIgnore
   class FileRoot
+    # :nocov:
+    using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
+    # :nocov:
+
     def self.build(file_path, project_root)
       file_root = "#{::File.dirname(file_path)}/".delete_prefix(project_root)
 
