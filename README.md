@@ -309,12 +309,13 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
   (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls)
 - FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
 - FastIgnore always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
-- Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`
+- Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead
   - Tracked files that were committed before the matching ignore rule was committed will be returned by `git ls-files`, but not by FastIgnore.
   - Untracked files will be returned by FastIgnore, but not by `git ls-files`
   - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by FastIgnore
   - On a case insensitive file system, with files that differ only by case, `git ls-files` will include all case variations, while FastIgnore will only include whichever variation git placed in the file system.
   - FastIgnore is unaware of submodules and just treats them like regular directories. For example: `git ls-files --recurse-submodules` won't use the parent repo's gitignore on a submodule, while FastIgnore doesn't know it's a submodule and will.
+  - FastIgnore will only return the files actually on the file system when using `git sparse-checkout`.
 
 ## Contributing
 
