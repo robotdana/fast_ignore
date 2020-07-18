@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-module Warning # leftovers:allow
-  def warn(msg) # leftovers:allow
-    raise msg
+if RUBY_PLATFORM != 'java'
+  module Warning # leftovers:allow
+    def warn(msg) # leftovers:allow
+      raise msg
+    end
   end
 end
 
