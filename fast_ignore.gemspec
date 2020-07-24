@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   if spec.respond_to?(:metadata)
     spec.metadata['homepage_uri'] = spec.homepage
     spec.metadata['source_code_uri'] = 'https://github.com/robotdana/fast_ignore'
-    spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/blob/master/CHANGELOG.md'
+    spec.metadata['changelog_uri'] = 'https://github.com/robotdana/fast_ignore/blob/main/CHANGELOG.md'
   end
 
   spec.files = Dir.glob('lib/**/*') + ['CHANGELOG.md', 'LICENSE.txt', 'README.md']
