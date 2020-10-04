@@ -15,4 +15,4 @@ FastIgnore.new(relative: true, argv_rules: ARGV).to_a
 profile = RubyProf.stop
 
 printer = RubyProf::GraphPrinter.new(profile)
-printer.print(STDOUT, min_percent: 2, sort_method: :self_time)
+printer.print($stdout, min_percent: 2, sort_method: :self_time)

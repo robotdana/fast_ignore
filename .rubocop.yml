@@ -224,3 +224,14 @@ Style/CommentedKeyword:
 
 Style/AccessorGrouping:
   EnforcedStyle: separated
+
+# sometimes it's more performant
+Style/StringConcatenation:
+  Enabled: false
+
+# sometimes it's more performant
+Style/OptionalBooleanParameter:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false

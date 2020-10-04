@@ -86,7 +86,7 @@ class FastIgnore
     @loaded_gitignore_files << parent_path
   end
 
-  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
     children = ::Dir.children(parent_full_path)
     load_gitignore(parent_relative_path, check_exists: false) if @gitignore_enabled && children.include?('.gitignore')
 

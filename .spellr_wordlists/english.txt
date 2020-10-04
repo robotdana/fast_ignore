@@ -32,10 +32,12 @@ jruby
 klass
 llo
 memoize
+memoized
 nocov
 noninfringement
 params
 pathspec
+performant
 pwd
 quotepath
 rdoc

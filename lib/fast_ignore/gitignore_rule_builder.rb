@@ -100,7 +100,7 @@ class FastIgnore
       end
     end
 
-    def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def process_character_class # rubocop:disable Metrics/MethodLength
       return unless @s.character_class_start?
 
       @re.append_character_class_open
