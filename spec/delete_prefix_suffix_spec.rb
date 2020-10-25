@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../lib/fast_ignore/backports'
-RSpec.describe FastIgnore::Backports do # rubocop:disable RSpec/EmptyExampleGroup
+RSpec.describe FastIgnore::Backports do
   if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
     using ::FastIgnore::Backports::DeletePrefixSuffix
 
