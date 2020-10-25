@@ -1,3 +1,6 @@
+# v0.15.1
+- Updated dependencies to allow running on ruby 3.0.0.preview1
+
 # v0.15.0
 - fixed a handful of character class edge cases to match git behavior
   - mostly ranges with - or / as one end of the range

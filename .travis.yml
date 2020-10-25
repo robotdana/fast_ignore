@@ -12,5 +12,7 @@ rvm:
 
 jobs:
   include:
+    rvm: 2.5
     name: 'Ruby: 3.0.0.preview1'
     before_install: rvm get head && rvm use --install --binary 3.0.0.preview1
+    cache: bundler
