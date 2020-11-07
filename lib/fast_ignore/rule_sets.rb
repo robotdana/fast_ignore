@@ -27,12 +27,12 @@ class FastIgnore
       @array.freeze if @gitignore_rule_set
     end
 
-    def allowed_recursive?(candidate, root)
-      @array.all? { |r| r.allowed_recursive?(candidate, root) }
+    def allowed_recursive?(candidate)
+      @array.all? { |r| r.allowed_recursive?(candidate) }
     end
 
-    def allowed_unrecursive?(candidate, root)
-      @array.all? { |r| r.allowed_unrecursive?(candidate, root) }
+    def allowed_unrecursive?(candidate)
+      @array.all? { |r| r.allowed_unrecursive?(candidate) }
     end
 
     def append_subdir_gitignore(relative_path:, check_exists: true) # rubocop:disable Metrics/MethodLength
@@ -65,7 +65,7 @@ class FastIgnore
       return @gitignore_rule_set = nil unless gitignore
 
       append_set_from_array('.git')
-      gi = ::FastIgnore::RuleSet.new([], false, true)
+      gi = ::FastIgnore::RuleSet.new([], false, true, @project_root)
       gi << build_from_root_gitignore_file(::FastIgnore::GlobalGitignore.path(root: @project_root))
       gi << build_from_root_gitignore_file("#{@project_root}.git/info/exclude")
       gi << build_from_root_gitignore_file("#{@project_root}.gitignore")
@@ -83,7 +83,7 @@ class FastIgnore
         ::FastIgnore::RuleBuilder.build(rule, allow, expand_path_with, file_root)
       end
 
-      ::FastIgnore::RuleSet.new(rules, allow, gitignore, squash)
+      ::FastIgnore::RuleSet.new(rules, allow, gitignore, @project_root, squash)
     end
 
     def build_set_from_file(filename, allow: false, gitignore: false, check_exists: false, squash: true)
