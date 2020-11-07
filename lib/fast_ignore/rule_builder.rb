@@ -17,9 +17,12 @@ class FastIgnore
 
       private
 
+      # how long can a shebang be?
+      # https://www.in-ulm.de/~mascheck/various/shebang/
+      # apparently cygwin 65536, and a limit is better than no limit
       def shebang_rules(shebang, allow, file_root)
         shebang.strip!
-        pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
+        pattern = /\A#![^\n]{,#{65_536 - shebang.length}}\b#{::Regexp.escape(shebang)}\b/i
         rule = ::FastIgnore::ShebangRule.new(pattern, allow, file_root&.shebang_path_pattern)
         return rule unless allow
 

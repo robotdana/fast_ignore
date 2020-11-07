@@ -46,38 +46,15 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(path, full_path, filename, content)
-      return false if filename.include?('.')
-      return false unless (not @file_path_pattern) || @file_path_pattern.match?(path)
+    def match?(candidate)
+      return false if candidate.filename.include?('.')
+      return false unless (not @file_path_pattern) || @file_path_pattern.match?(candidate.relative_path_to_root)
 
-      (content || first_line(full_path))&.match?(@rule)
+      candidate.first_line&.match?(@rule)
     end
 
     def shebang?
       true
-    end
-
-    private
-
-    def first_line(path) # rubocop:disable Metrics/MethodLength
-      file = ::File.new(path)
-      first_line = new_fragment = file.sysread(64)
-      if first_line.start_with?('#!')
-        until new_fragment.include?("\n")
-          new_fragment = file.sysread(64)
-          first_line += new_fragment
-        end
-      else
-        file.close
-        return
-      end
-      file.close
-      first_line
-    rescue ::EOFError, ::SystemCallError
-      # :nocov:
-      file&.close
-      # :nocov:
-      first_line
     end
   end
 end

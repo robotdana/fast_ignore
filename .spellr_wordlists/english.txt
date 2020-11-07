@@ -8,6 +8,7 @@ codebase
 config
 cov
 cyclomatic
+cygwin
 denylist
 enoent
 enumerables
@@ -31,6 +32,7 @@ janky
 jruby
 klass
 llo
+mascheck
 memoize
 memoized
 nocov

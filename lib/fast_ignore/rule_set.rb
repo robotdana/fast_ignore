@@ -26,17 +26,17 @@ class FastIgnore
       @file_rules = squash_rules(@file_rules + other.file_rules)
     end
 
-    def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)
-      @allowed_recursive.fetch(relative_path) do
-        @allowed_recursive[relative_path] =
-          allowed_recursive?(::File.dirname(relative_path), true, nil, nil, nil) &&
-          allowed_unrecursive?(relative_path, dir, full_path, filename, content)
+    def allowed_recursive?(candidate)
+      @allowed_recursive.fetch(candidate.relative_path_to_root) do
+        @allowed_recursive[candidate.relative_path_to_root] =
+          allowed_recursive?(candidate.parent) &&
+          allowed_unrecursive?(candidate)
       end
     end
 
-    def allowed_unrecursive?(relative_path, dir, full_path, filename, content)
-      (dir ? @dir_rules : @file_rules).reverse_each do |rule|
-        return rule.negation? if rule.match?(relative_path, full_path, filename, content)
+    def allowed_unrecursive?(candidate)
+      (candidate.directory? ? @dir_rules : @file_rules).reverse_each do |rule|
+        return rule.negation? if rule.match?(candidate)
       end
 
       not @allow

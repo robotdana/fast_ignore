@@ -16,6 +16,7 @@ require_relative './fast_ignore/file_root'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/unmatchable_rule'
 require_relative './fast_ignore/shebang_rule'
+require_relative './fast_ignore/candidate'
 
 class FastIgnore
   class Error < StandardError; end
@@ -55,9 +56,9 @@ class FastIgnore
     relative_path = full_path.delete_prefix(@root)
     load_gitignore_recursive(relative_path) if @gitignore_enabled
 
-    filename = ::File.basename(relative_path)
+    candidate = ::FastIgnore::Candidate.new(full_path, relative_path, nil, directory, content)
 
-    @rule_sets.allowed_recursive?(relative_path, full_path, filename, content)
+    @rule_sets.allowed_recursive?(candidate)
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
@@ -86,7 +87,7 @@ class FastIgnore
     @loaded_gitignore_files << parent_path
   end
 
-  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
+  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
     children = ::Dir.children(parent_full_path)
     load_gitignore(parent_relative_path, check_exists: false) if @gitignore_enabled && children.include?('.gitignore')
 
@@ -95,8 +96,9 @@ class FastIgnore
         full_path = parent_full_path + filename
         relative_path = parent_relative_path + filename
         dir = @follow_symlinks_method.call(full_path).directory?
+        candidate = ::FastIgnore::Candidate.new(full_path, relative_path, filename, dir, nil)
 
-        next unless @rule_sets.allowed_unrecursive?(relative_path, dir, full_path, filename)
+        next unless @rule_sets.allowed_unrecursive?(candidate)
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)
