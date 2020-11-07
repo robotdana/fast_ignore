@@ -67,7 +67,7 @@ class FastIgnore
 
     candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)
 
-    @rule_sets.allowed_recursive?(candidate, @root)
+    @rule_sets.allowed_recursive?(candidate)
   end
   alias_method :===, :allowed?
 
@@ -104,7 +104,7 @@ class FastIgnore
       dir = @follow_symlinks_method.call(full_path).directory?
       candidate = ::FastIgnore::RootCandidate.new(full_path, filename, dir, nil)
 
-      next unless @rule_sets.allowed_unrecursive?(candidate, @root)
+      next unless @rule_sets.allowed_unrecursive?(candidate)
 
       if dir
         each_recursive(full_path + '/', relative_path + '/', &block)

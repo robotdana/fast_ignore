@@ -6,7 +6,7 @@ class FastIgnore
     alias_method :gitignore?, :gitignore
     undef :gitignore
 
-    def initialize(rules, allow, gitignore, _squash = true)
+    def initialize(rules, allow, gitignore, root, _squash = true)
       # @dir_rules = (squash ? squash_rules(rules.reject(&:file_only?)) : rules.reject(&:file_only?)).freeze
       # @file_rules = (squash ? squash_rules(rules.reject(&:dir_only?)) : rules.reject(&:dir_only?)).freeze
       @dir_rules = rules.reject(&:file_only?).freeze
@@ -17,6 +17,7 @@ class FastIgnore
       @allowed_recursive = { ::FastIgnore::RootCandidate::RootDir => true, nil => true }
       @allow = allow
       @gitignore = gitignore
+      @root = root
 
       freeze unless gitignore?
     end
@@ -31,17 +32,17 @@ class FastIgnore
       @file_rules = (@file_rules + other.file_rules).freeze
     end
 
-    def allowed_recursive?(root_candidate, root)
-      relative_candidate = root_candidate.relative_candidate(root)
-      @allowed_recursive.fetch(relative_candidate) do
-        @allowed_recursive[relative_candidate] =
-          allowed_recursive?(root_candidate.parent, root) &&
-          allowed_unrecursive?(root_candidate, root)
+    def allowed_recursive?(root_candidate)
+      relative_candidate = root_candidate.relative_candidate(@root)
+      @allowed_recursive.fetch(relative_candidate&.relative_path) do
+        @allowed_recursive[relative_candidate.relative_path] =
+          allowed_recursive?(root_candidate.parent) &&
+          allowed_unrecursive?(root_candidate)
       end
     end
 
-    def allowed_unrecursive?(root_candidate, root)
-      relative_candidate = root_candidate.relative_candidate(root)
+    def allowed_unrecursive?(root_candidate)
+      relative_candidate = root_candidate.relative_candidate(@root)
       val = match?(relative_candidate)
 
       if val
