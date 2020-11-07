@@ -30,6 +30,7 @@ class FastIgnore
       @anchored = anchored
       @dir_only = dir_only
       @negation = negation
+      @return_value = negation ? :negated : true
       # @component_rules = component_rules
       # @component_rules_count = component_rules == self ? 1 : component_rules.length
 
@@ -59,7 +60,7 @@ class FastIgnore
     # :nocov:
 
     def match?(candidate)
-      @rule.match?(candidate.relative_path_to_root)
+      @return_value if @rule.match?(candidate.relative_path)
     end
   end
 end

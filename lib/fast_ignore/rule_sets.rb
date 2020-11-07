@@ -27,12 +27,12 @@ class FastIgnore
       @array.freeze if @gitignore_rule_set
     end
 
-    def allowed_recursive?(candidate)
-      @array.all? { |r| r.allowed_recursive?(candidate) }
+    def allowed_recursive?(candidate, root)
+      @array.all? { |r| r.allowed_recursive?(candidate, root) }
     end
 
-    def allowed_unrecursive?(candidate)
-      @array.all? { |r| r.allowed_unrecursive?(candidate) }
+    def allowed_unrecursive?(candidate, root)
+      @array.all? { |r| r.allowed_unrecursive?(candidate, root) }
     end
 
     def append_subdir_gitignore(relative_path:, check_exists: true) # rubocop:disable Metrics/MethodLength

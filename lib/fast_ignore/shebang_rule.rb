@@ -24,6 +24,7 @@ class FastIgnore
       @rule = rule
       @negation = negation
       @file_path_pattern = file_path_pattern
+      @return_value = negation ? :negated : true
 
       # @squashable_type = (negation ? 13 : 12) + file_path_pattern.object_id
 
@@ -48,9 +49,9 @@ class FastIgnore
 
     def match?(candidate)
       return false if candidate.filename.include?('.')
-      return false unless (not @file_path_pattern) || @file_path_pattern.match?(candidate.relative_path_to_root)
+      return false unless (not @file_path_pattern) || @file_path_pattern.match?(candidate.relative_path)
 
-      candidate.first_line&.match?(@rule)
+      @return_value if candidate.first_line&.match?(@rule)
     end
 
     def shebang?

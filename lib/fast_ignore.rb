@@ -16,7 +16,8 @@ require_relative './fast_ignore/file_root'
 require_relative './fast_ignore/rule'
 require_relative './fast_ignore/unmatchable_rule'
 require_relative './fast_ignore/shebang_rule'
-require_relative './fast_ignore/candidate'
+require_relative './fast_ignore/root_candidate'
+require_relative './fast_ignore/relative_candidate'
 
 class FastIgnore
   class Error < StandardError; end
@@ -42,10 +43,10 @@ class FastIgnore
   def each(&block)
     return enum_for(:each) unless block_given?
 
-    dir_pwd = ::Dir.pwd
-    root_from_pwd = @root.start_with?(dir_pwd) ? ".#{@root.delete_prefix(dir_pwd)}" : @root
+    # dir_pwd = ::Dir.pwd
+    # root_from_pwd = @root.start_with?(dir_pwd) ? ".#{@root.delete_prefix(dir_pwd)}" : @root
 
-    each_recursive(root_from_pwd, '', &block)
+    each_recursive(@root, '', &block)
   end
 
   def allowed?(path, directory: nil, content: nil)
@@ -56,9 +57,9 @@ class FastIgnore
     relative_path = full_path.delete_prefix(@root)
     load_gitignore_recursive(relative_path) if @gitignore_enabled
 
-    candidate = ::FastIgnore::Candidate.new(full_path, relative_path, nil, directory, content)
+    candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)
 
-    @rule_sets.allowed_recursive?(candidate)
+    @rule_sets.allowed_recursive?(candidate, @root)
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
@@ -96,9 +97,9 @@ class FastIgnore
         full_path = parent_full_path + filename
         relative_path = parent_relative_path + filename
         dir = @follow_symlinks_method.call(full_path).directory?
-        candidate = ::FastIgnore::Candidate.new(full_path, relative_path, filename, dir, nil)
+        candidate = ::FastIgnore::RootCandidate.new(full_path, filename, dir, nil)
 
-        next unless @rule_sets.allowed_unrecursive?(candidate)
+        next unless @rule_sets.allowed_unrecursive?(candidate, @root)
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)
