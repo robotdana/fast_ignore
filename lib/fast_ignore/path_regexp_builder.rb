@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  class GitignoreRuleRegexpBuilder < String
+  class PathRegexpBuilder < String
+
     def to_regexp
       # Regexp::IGNORECASE = 1
       ::Regexp.new(self, 1)
@@ -58,7 +59,7 @@ class FastIgnore
     end
 
     def append_character_class_open
-      append('(?!/)[')
+      append('(?!/)[') # why?
     end
 
     def append_character_class_negation

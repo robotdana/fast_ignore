@@ -42,6 +42,18 @@ class FastIgnore
       skip(/\*\s*\z/)
     end
 
+    def two_star_end?
+      skip(/\*{2,}\s*\z/)
+    end
+
+    def star_slash_end?
+      skip(%r{\*/\s*\z})
+    end
+
+    def two_star_slash_end?
+      skip(%r{\*{2,}/\s*\z})
+    end
+
     def question_mark?
       skip(/\?/)
     end

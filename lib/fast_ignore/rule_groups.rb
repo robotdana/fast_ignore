@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  class RuleSets
+  class RuleGroups
     # :nocov:
     using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
     # :nocov:

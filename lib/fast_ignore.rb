@@ -4,20 +4,20 @@ require_relative './fast_ignore/backports'
 
 require 'set'
 require 'strscan'
-require_relative './fast_ignore/rule_sets'
-require_relative './fast_ignore/rule_set'
-require_relative './fast_ignore/global_gitignore'
-require_relative './fast_ignore/rule_builder'
-require_relative './fast_ignore/gitignore_rule_builder'
-require_relative './fast_ignore/gitignore_include_rule_builder'
-require_relative './fast_ignore/gitignore_rule_regexp_builder'
-require_relative './fast_ignore/gitignore_rule_scanner'
-require_relative './fast_ignore/rule'
-require_relative './fast_ignore/rule_group'
-require_relative './fast_ignore/unmatchable_rule'
-require_relative './fast_ignore/shebang_rule'
-require_relative './fast_ignore/root_candidate'
-require_relative './fast_ignore/relative_candidate'
+require_relative 'fast_ignore/rule_groups'
+require_relative 'fast_ignore/rule_set'
+require_relative 'fast_ignore/global_gitignore'
+require_relative 'fast_ignore/rule_builder'
+require_relative 'fast_ignore/gitignore_rule_builder'
+require_relative 'fast_ignore/gitignore_include_rule_builder'
+require_relative 'fast_ignore/path_regexp_builder'
+require_relative 'fast_ignore/gitignore_rule_scanner'
+require_relative 'fast_ignore/rule'
+require_relative 'fast_ignore/rule_group'
+require_relative 'fast_ignore/unmatchable_rule'
+require_relative 'fast_ignore/shebang_rule'
+require_relative 'fast_ignore/root_candidate'
+require_relative 'fast_ignore/relative_candidate'
 
 class FastIgnore
   class Error < StandardError; end
@@ -29,13 +29,13 @@ class FastIgnore
   using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
   # :nocov:
 
-  def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_set_builder_args)
+  def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
     @relative = relative
     @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
     @gitignore_enabled = gitignore
     @loaded_gitignore_files = ::Set[''] if gitignore
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
-    @rule_sets = ::FastIgnore::RuleSets.new(root: @root, gitignore: gitignore, **rule_set_builder_args)
+    @rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
 
     freeze
   end
@@ -59,7 +59,7 @@ class FastIgnore
 
     candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)
 
-    @rule_sets.allowed_recursive?(candidate)
+    @rule_groups.allowed_recursive?(candidate)
   rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
     false
   end
@@ -83,7 +83,7 @@ class FastIgnore
   def load_gitignore(parent_path, check_exists: true)
     return if @loaded_gitignore_files.include?(parent_path)
 
-    @rule_sets.append_subdir_gitignore(relative_path: parent_path + '.gitignore', check_exists: check_exists)
+    @rule_groups.append_subdir_gitignore(relative_path: parent_path + '.gitignore', check_exists: check_exists)
 
     @loaded_gitignore_files << parent_path
   end
@@ -99,7 +99,7 @@ class FastIgnore
         dir = @follow_symlinks_method.call(full_path).directory?
         candidate = ::FastIgnore::RootCandidate.new(full_path, filename, dir, nil)
 
-        next unless @rule_sets.allowed_unrecursive?(candidate)
+        next unless @rule_groups.allowed_unrecursive?(candidate)
 
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)
