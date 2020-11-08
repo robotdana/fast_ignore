@@ -2,11 +2,10 @@
 
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, file_path)
+    def initialize(rule)
       @re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
       @s = ::FastIgnore::GitignoreRuleScanner.new(rule)
 
-      @file_path = file_path
       @negation = false
       @anchored = false
       @dir_only = false
@@ -143,28 +142,20 @@ class FastIgnore
       end
     end
 
-    def prefix # rubocop:disable Metrics/MethodLength
+    def prefix
       out = ::FastIgnore::GitignoreRuleRegexpBuilder.new
-      if @file_path
-        out.append_start_anchor.append(@file_path.escaped)
-        out.append_any_dir unless @anchored
+
+      if @anchored
+        out.append_start_anchor
       else
-        if @anchored
-          out.append_start_anchor
-        else
-          out.append_start_dir_or_anchor
-        end
+        out.append_start_dir_or_anchor
       end
       out
     end
 
     def build_rule
       @re.prepend(prefix)
-      ::FastIgnore::Rule.new(@re.to_regexp, @negation, anchored_or_file_path, @dir_only)
-    end
-
-    def anchored_or_file_path
-      @anchored || @file_path
+      ::FastIgnore::Rule.new(@re.to_regexp, @negation, @anchored, @dir_only)
     end
 
     def build

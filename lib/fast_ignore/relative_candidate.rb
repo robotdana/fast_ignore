@@ -9,14 +9,6 @@ class FastIgnore
       @root_candidate = root_candidate
     end
 
-    def parent
-      @root_candidate.parent
-    end
-
-    def relative_candidate(relative_to)
-      @root_candidate.relative_candidate(relative_to)
-    end
-
     def directory?
       @root_candidate.directory?
     end

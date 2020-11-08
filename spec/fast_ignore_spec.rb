@@ -958,7 +958,7 @@ RSpec.describe FastIgnore do
     end
 
     context 'when given only include_shebangs as a string list, allowed? can be lied to with content' do
-      let(:args) { { include_rules: '#!:bash' } }
+      let(:args) { { include_rules: '#!:bash', gitignore: false } }
 
       it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
         real_content = <<~RUBY

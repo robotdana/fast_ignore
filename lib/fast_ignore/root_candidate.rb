@@ -2,12 +2,14 @@
 
 class FastIgnore
   class RootCandidate
+    attr_reader :full_path
+
     def initialize(full_path, filename, directory, content)
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
       @first_line = content
-      @relative_candidate = {}
+      @relative_to = {}
     end
 
     def parent
@@ -19,9 +21,9 @@ class FastIgnore
       )
     end
 
-    def relative_candidate(relative_to)
-      @relative_candidate.fetch(relative_to) do
-        @relative_candidate[relative_to] = build_candidate_relative_to(relative_to)
+    def relative_to(dir)
+      @relative_to.fetch(dir) do
+        @relative_to[dir] = build_candidate_relative_to(dir)
       end
     end
 
@@ -65,8 +67,8 @@ class FastIgnore
 
     private
 
-    def build_candidate_relative_to(relative_to)
-      relative_path = @full_path.dup.delete_prefix!(relative_to)
+    def build_candidate_relative_to(dir)
+      relative_path = @full_path.dup.delete_prefix!(dir)
       return unless relative_path
 
       ::FastIgnore::RelativeCandidate.new(relative_path, self)

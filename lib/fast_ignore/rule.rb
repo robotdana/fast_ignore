@@ -30,7 +30,7 @@ class FastIgnore
       @anchored = anchored
       @dir_only = dir_only
       @negation = negation
-      @return_value = negation ? :negated : true
+      @return_value = negation ? :allow : :ignore
       # @component_rules = component_rules
       # @component_rules_count = component_rules == self ? 1 : component_rules.length
 
@@ -55,7 +55,7 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      "#<Rule #{'!' if @negation}#{'/' if @anchored}#{@rule}#{'/' if @dir_only}>"
+      "#<Rule #{@return_value} #{'dir_only ' if @dir_only}#{@rule.inspect}>"
     end
     # :nocov:
 
