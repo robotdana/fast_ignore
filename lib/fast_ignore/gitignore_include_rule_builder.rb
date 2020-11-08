@@ -2,12 +2,13 @@
 
 class FastIgnore
   class GitignoreIncludeRuleBuilder < GitignoreRuleBuilder
-    def initialize(rule, file_path, expand_path_from = nil)
-      super(rule, file_path)
+    def initialize(rule, expand_path_from = nil, allow_children: true)
+      super(rule)
 
       @parent_segments = []
       @negation = true
       @expand_path_from = expand_path_from
+      @allow_children = allow_children
     end
 
     def expand_rule_path
@@ -45,19 +46,9 @@ class FastIgnore
       break!
     end
 
-    def parent_dir_re # rubocop:disable Metrics/MethodLength
+    def parent_dir_re
       segment_joins_count = @parent_segments.length
-      parent_prefix = if @file_path
-        segment_joins_count += @file_path.escaped_segments_length
-
-        if @anchored
-          +"\\A#{@file_path.escaped_segments_joined}"
-        else
-          +"\\A#{@file_path.escaped_segments_joined}(?:.*/)?"
-        end
-      else
-        prefix
-      end
+      parent_prefix = prefix
 
       out = parent_prefix
       unless @parent_segments.empty?
@@ -66,16 +57,16 @@ class FastIgnore
         out << '/'
       end
       out << (')?' * segment_joins_count)
-      out
+      out #+ "(/|\\z)"
     end
 
     def build_parent_dir_rule
       # Regexp::IGNORECASE = 1
-      ::FastIgnore::Rule.new(::Regexp.new(parent_dir_re, 1), true, anchored_or_file_path, true)
+      ::FastIgnore::Rule.new(::Regexp.new(parent_dir_re, 1), true, @anchored, true)
     end
 
     def build_child_file_rule
-      ::FastIgnore::Rule.new(@re.append_dir.to_regexp, @negation, anchored_or_file_path, false)
+      ::FastIgnore::Rule.new(@re.append_dir.to_regexp, @negation, @anchored, false)
     end
 
     def build_rule
@@ -86,7 +77,7 @@ class FastIgnore
       @re = joined_re
 
       rules = [super, build_parent_dir_rule]
-      (rules << build_child_file_rule) if @dir_only
+      (rules << build_child_file_rule) if @dir_only && @allow_children
       rules
     end
 

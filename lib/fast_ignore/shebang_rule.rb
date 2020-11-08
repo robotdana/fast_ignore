@@ -20,11 +20,10 @@ class FastIgnore
     #   1
     # end
 
-    def initialize(rule, negation, file_path_pattern)
+    def initialize(rule, negation)
       @rule = rule
       @negation = negation
-      @file_path_pattern = file_path_pattern
-      @return_value = negation ? :negated : true
+      @return_value = negation ? :allow : :ignore
 
       # @squashable_type = (negation ? 13 : 12) + file_path_pattern.object_id
 
@@ -41,15 +40,12 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      allow_fragment = 'allow ' if @negation
-      in_fragment = " in #{@file_path_pattern}" if @file_path_pattern
-      "#<ShebangRule #{allow_fragment}#!:#{@rule.to_s[15..-4]}#{in_fragment}>"
+      "#<ShebangRule #{@return_value} /#{@rule.to_s[26..-4]}/>"
     end
     # :nocov:
 
     def match?(candidate)
       return false if candidate.filename.include?('.')
-      return false unless (not @file_path_pattern) || @file_path_pattern.match?(candidate.relative_path)
 
       @return_value if candidate.first_line&.match?(@rule)
     end

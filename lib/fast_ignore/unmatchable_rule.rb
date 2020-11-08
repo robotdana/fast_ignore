@@ -3,18 +3,6 @@
 class FastIgnore
   class UnmatchableRule
     class << self
-      def squash(_)
-        self
-      end
-
-      def squashable_type
-        5
-      end
-
-      def component_rules_count
-        1
-      end
-
       def dir_only?
         false
       end

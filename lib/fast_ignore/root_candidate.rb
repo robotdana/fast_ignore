@@ -3,23 +3,27 @@
 class FastIgnore
   class RootCandidate
     module RootDir
-      def for_comparison
-        "\0.\0"
-      end
+      class << self
+        def for_comparison
+          "\0/\0"
+        end
 
-      def eql?(other)
-        "\0.\0" == other.for_comparison
-      end
-      alias_method :==, :eql?
+        def eql?(other)
+          other.for_comparison == "\0/\0"
+        end
+        alias_method :==, :eql?
 
-      def hash
-        "\0.\0".hash
-      end
+        def hash
+          "\0/\0".hash
+        end
 
-      def relative_candidate(_)
-        self
+        def relative_to(_)
+          self
+        end
       end
     end
+
+    attr_reader :full_path
 
     def initialize(full_path, filename, directory, content)
       @full_path = full_path
@@ -27,6 +31,7 @@ class FastIgnore
       (@directory = directory) unless directory.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
       @relative_candidate = {}
+      @relative_to = {}
     end
 
     def parent
@@ -52,9 +57,9 @@ class FastIgnore
       @hash ||= for_comparison.hash
     end
 
-    def relative_candidate(relative_to)
-      @relative_candidate.fetch(relative_to) do
-        @relative_candidate[relative_to] = build_candidate_relative_to(relative_to)
+    def relative_to(dir)
+      @relative_to.fetch(dir) do
+        @relative_to[dir] = build_candidate_relative_to(dir)
       end
     end
 
@@ -95,8 +100,8 @@ class FastIgnore
 
     private
 
-    def build_candidate_relative_to(relative_to)
-      relative_path = @full_path.dup.delete_prefix!(relative_to)
+    def build_candidate_relative_to(dir)
+      relative_path = @full_path.dup.delete_prefix!(dir)
       return unless relative_path
 
       ::FastIgnore::RelativeCandidate.new(relative_path, self)
