@@ -27,7 +27,7 @@ class FastIgnore
         return rule unless allow
 
         # also allow all directories in case they include a file with the matching shebang file
-        [::FastIgnore::Rule.new(//, true, true, true), rule]
+        [::FastIgnore::AllowAnyDirRule, rule]
       end
 
       def gitignore_rules(rule, allow, expand_path_with = nil)

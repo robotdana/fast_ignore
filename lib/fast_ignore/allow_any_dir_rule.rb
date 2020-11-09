@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  module UnmatchableRule
+  module AllowAnyDirRule
     class << self
       def dir_only?
-        false
+        true
       end
 
       def file_only?
@@ -17,12 +17,12 @@ class FastIgnore
 
       # :nocov:
       def inspect
-        '#<UnmatchableRule>'
+        '#<AllowAnyDirRule>'
       end
       # :nocov:
 
       def match?(_)
-        false
+        :allow
       end
     end
   end

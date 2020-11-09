@@ -18,6 +18,7 @@ require_relative 'fast_ignore/unmatchable_rule'
 require_relative 'fast_ignore/shebang_rule'
 require_relative 'fast_ignore/root_candidate'
 require_relative 'fast_ignore/relative_candidate'
+require_relative 'fast_ignore/allow_any_dir_rule'
 
 class FastIgnore
   class Error < StandardError; end
