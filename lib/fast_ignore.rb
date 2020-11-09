@@ -22,6 +22,7 @@ class FastIgnore
   require_relative 'fast_ignore/path_expander'
   require_relative 'fast_ignore/root_candidate'
   require_relative 'fast_ignore/relative_candidate'
+  require_relative 'fast_ignore/allow_any_dir_rule'
 
   include ::Enumerable
 

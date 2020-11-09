@@ -48,7 +48,7 @@ class FastIgnore
           ::FastIgnore::GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
         end
       else
-        [::FastIgnore::Rule.new(//, true, @anchored, true, 'any parent')]
+        [::FastIgnore::AllowAnyDirRule]
       end
     end
 
