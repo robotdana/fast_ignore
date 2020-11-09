@@ -3,12 +3,28 @@
 class FastIgnore
   class RuleSet
     def initialize(rules, root)
-      @dir_rules = rules.reject(&:file_only?)
-      @file_rules = rules.reject(&:dir_only?)
+      @dir_rules = squash_rules(rules.reject(&:file_only?))
+      @file_rules = squash_rules(rules.reject(&:dir_only?))
       @has_shebang_rules = rules.any?(&:shebang?)
       @root = root
 
       freeze
+    end
+
+    def squash_rules(rules)
+      return rules if rules.empty?
+
+      rules -= [::FastIgnore::UnmatchableRule]
+      return [::FastIgnore::UnmatchableRule] if rules.empty?
+
+      rules.chunk_while { |a, b| a.squash_id == b.squash_id }.map do |chunk|
+        next ::FastIgnore::AllowAnyDirRule if chunk.include?(::FastIgnore::AllowAnyDirRule)
+
+        chunk.uniq!(&:rule)
+        next chunk.first if chunk.length == 1
+
+        chunk.first.squash(chunk)
+      end
     end
 
     def match?(root_candidate)
