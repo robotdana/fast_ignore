@@ -31,7 +31,6 @@ class FastIgnore
       (@directory = directory) unless directory.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
       @relative_candidate = {}
-      @relative_to = {}
     end
 
     def parent
@@ -58,9 +57,9 @@ class FastIgnore
     end
 
     def relative_to(dir)
-      @relative_to.fetch(dir) do
-        @relative_to[dir] = build_candidate_relative_to(dir)
-      end
+      return unless @full_path.start_with?(dir)
+
+      ::FastIgnore::RelativeCandidate.new(@full_path.delete_prefix(dir), self)
     end
 
     def directory?
@@ -75,11 +74,8 @@ class FastIgnore
 
     # how long can a shebang be?
     # https://www.in-ulm.de/~mascheck/various/shebang/
-    # apparently cygwin 65536
     def first_line # rubocop:disable Metrics/MethodLength
-      return @first_line if defined?(@first_line)
-
-      @first_line = begin
+      @first_line ||= begin
         file = ::File.new(@full_path)
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
@@ -88,23 +84,14 @@ class FastIgnore
           first_line
         else
           file.close
-          nil
+          ''
         end
       rescue ::EOFError, ::SystemCallError
         # :nocov:
         file&.close
         # :nocov:
-        nil
+        ''
       end
-    end
-
-    private
-
-    def build_candidate_relative_to(dir)
-      relative_path = @full_path.dup.delete_prefix!(dir)
-      return unless relative_path
-
-      ::FastIgnore::RelativeCandidate.new(relative_path, self)
     end
   end
 end

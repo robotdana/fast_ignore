@@ -23,6 +23,8 @@ class FastIgnore
   require_relative 'fast_ignore/root_candidate'
   require_relative 'fast_ignore/relative_candidate'
   require_relative 'fast_ignore/allow_any_dir_rule'
+  require_relative 'fast_ignore/allow_rule'
+  require_relative 'fast_ignore/ignore_rule'
 
   include ::Enumerable
 
