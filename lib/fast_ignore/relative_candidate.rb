@@ -9,10 +9,6 @@ class FastIgnore
       @root_candidate = root_candidate
     end
 
-    def directory?
-      @root_candidate.directory?
-    end
-
     def filename
       @root_candidate.filename
     end

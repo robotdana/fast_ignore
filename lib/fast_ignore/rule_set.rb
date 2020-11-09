@@ -22,7 +22,6 @@ class FastIgnore
 
         chunk.uniq!(&:rule)
         next chunk.first if chunk.length == 1
-
         chunk.first.squash(chunk)
       end
     end
@@ -31,7 +30,7 @@ class FastIgnore
       relative_candidate = root_candidate.relative_to(@root)
       return false unless relative_candidate
 
-      (relative_candidate.directory? ? @dir_rules : @file_rules).reverse_each do |rule|
+      (root_candidate.directory? ? @dir_rules : @file_rules).reverse_each do |rule|
         val = rule.match?(relative_candidate)
         return val if val
       end

@@ -65,7 +65,7 @@ class FastIgnore
       @child_re.prepend(prefix)
 
       # Regexp::IGNORECASE = 1
-      ::FastIgnore::Rule.new(@child_re.to_regexp, @negation, false)
+      ::FastIgnore::Rule.new(@child_re.to_regexp, @negation, @anchored, false)
     end
 
     def build_as_parent
