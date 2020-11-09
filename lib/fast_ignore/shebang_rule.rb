@@ -2,12 +2,19 @@
 
 class FastIgnore
   class ShebangRule
+    attr_reader :squash_id
+    attr_reader :rule
+
     def initialize(rule, negation)
       @rule = rule
-      @negation = negation
       @return_value = negation ? :allow : :ignore
+      @squash_id = negation ? :allow_shebang : :ignore_shebang
 
       freeze
+    end
+
+    def squash(list)
+      self.class.new(::Regexp.union(list.map(&:rule)), @return_value == :allow)
     end
 
     def file_only?

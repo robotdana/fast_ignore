@@ -3,6 +3,10 @@
 class FastIgnore
   module AllowAnyDirRule
     class << self
+      def squash_id
+        :allow
+      end
+
       def dir_only?
         true
       end

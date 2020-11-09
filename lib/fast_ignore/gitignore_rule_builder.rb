@@ -170,7 +170,7 @@ class FastIgnore
 
     def build_rule
       @re.prepend(prefix)
-      ::FastIgnore::Rule.new(@re.to_regexp, @negation, @anchored, @dir_only)
+      ::FastIgnore::Rule.new(@re.to_regexp, @negation, @dir_only)
     end
 
     def build

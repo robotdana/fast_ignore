@@ -6,15 +6,19 @@ class FastIgnore
     alias_method :dir_only?, :dir_only
     undef :dir_only
 
-    def initialize(rule, negation, anchored, dir_only, label = nil)
+    attr_reader :squash_id
+    attr_reader :rule
+
+    def initialize(rule, negation, dir_only)
       @rule = rule
-      @anchored = anchored
       @dir_only = dir_only
-      @negation = negation
-      @return_value = negation ? :allow : :ignore
-      @label = label
+      @squash_id = negation ? :allow : :ignore
 
       freeze
+    end
+
+    def squash(list)
+      self.class.new(::Regexp.union(list.map(&:rule)), @squash_id == :allow, @dir_only)
     end
 
     def file_only?
@@ -27,12 +31,12 @@ class FastIgnore
 
     # :nocov:
     def inspect
-      "#<Rule #{@return_value} #{'dir_only ' if @dir_only}#{@rule.inspect} #{@label}>"
+      "#<Rule #{@return_value} #{'dir_only ' if @dir_only}#{@rule.inspect}>"
     end
     # :nocov:
 
     def match?(candidate)
-      @return_value if @rule.match?(candidate.relative_path)
+      @squash_id if @rule.match?(candidate.relative_path)
     end
   end
 end
