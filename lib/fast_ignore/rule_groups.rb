@@ -66,9 +66,7 @@ class FastIgnore
     end
 
     def build_file_to_root_rule_set(file_root)
-      path_parts = file_root.delete_prefix('/').split('/')
-      re = Regexp.new("\\A(?:#{path_parts.map { |x| Regexp.escape(x) }.join('(?:/')}#{')?' * path_parts.length}\\z", 1)
-      ::FastIgnore::RuleSet.new([::FastIgnore::Rule.new(re, true, true, true)], '/')
+      ::FastIgnore::RuleSet.new(::FastIgnore::GitignoreIncludeRuleBuilder.new(file_root).build_as_parent, '/')
     end
 
     def build_rule_set(rules, allow, expand_path_with: nil, file_root: nil)
