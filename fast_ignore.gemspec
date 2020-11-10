@@ -33,5 +33,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop', '>= 0.93.1'
   spec.add_development_dependency 'rubocop-rspec', '>= 1.44.1'
   spec.add_development_dependency 'simplecov', '~> 0.18.5'
-  spec.add_development_dependency 'spellr', '>= 0.8.3'
+  # spec.add_development_dependency 'spellr', '>= 0.8.3'
 end

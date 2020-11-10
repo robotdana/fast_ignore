@@ -1,5 +1,6 @@
 # v0.16.0
-- Remove relative: true/false, always return relative paths like git does.
+- Remove relative: true/false, always return relative paths like git does, its the only way i've ever used this gem
+- Remove follow_symlinks: true/false. it's inaccuurately named and unnecessary
 
 # v0.15.1
 - Updated dependencies to allow running on ruby 3.0.0.preview1

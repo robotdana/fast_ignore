@@ -31,8 +31,7 @@ class FastIgnore
   using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
   # :nocov:
 
-  def initialize(root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
-    @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
+  def initialize(root: nil, gitignore: :auto, **rule_group_builder_args)
     @gitignore_enabled = gitignore
     @loaded_gitignore_files = ::Set[''] if gitignore
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
@@ -53,7 +52,7 @@ class FastIgnore
   def allowed?(path, directory: nil, content: nil)
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
-    return false if directory.nil? ? @follow_symlinks_method.call(full_path).directory? : directory
+    return false if directory.nil? ? ::File.lstat(full_path).directory? : directory
 
     relative_path = full_path.delete_prefix(@root)
     load_gitignore_recursive(relative_path) if @gitignore_enabled
@@ -97,7 +96,7 @@ class FastIgnore
       begin
         full_path = parent_full_path + filename
         relative_path = parent_relative_path + filename
-        dir = @follow_symlinks_method.call(full_path).directory?
+        dir = ::File.lstat(full_path).directory?
         candidate = ::FastIgnore::RootCandidate.new(full_path, filename, dir, nil)
 
         next unless @rule_groups.allowed_unrecursive?(candidate)
