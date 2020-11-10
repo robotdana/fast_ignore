@@ -16,11 +16,11 @@ class FastIgnore
       def shebang_rules(shebang, allow)
         shebang.strip!
         pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
-        rule = ::FastIgnore::ShebangRule.new(pattern, allow)
+        rule = ::FastIgnore::Matchers::ShebangRegexp.new(pattern, allow)
         return rule unless allow
 
         # also allow all directories in case they include a file with the matching shebang file
-        [::FastIgnore::AllowAnyDirRule, rule]
+        [::FastIgnore::Matchers::AllowAnyDir, rule]
       end
 
       def gitignore_rules(rule, allow, expand_path_with = nil)
