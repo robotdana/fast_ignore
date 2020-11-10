@@ -10,7 +10,7 @@ RubyProf.measure_mode = RubyProf::WALL_TIME
 RubyProf.start
 
 require_relative '../../lib/fast_ignore'
-FastIgnore.new(relative: true, argv_rules: ARGV).to_a
+FastIgnore.new(argv_rules: ARGV).to_a
 
 profile = RubyProf.stop
 

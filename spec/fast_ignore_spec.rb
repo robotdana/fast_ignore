@@ -8,7 +8,7 @@ RSpec.describe FastIgnore do
   end
 
   describe '.new' do
-    subject { described_class.new(relative: true, **args) }
+    subject { described_class.new(**args) }
 
     let(:args) { {} }
 
@@ -542,16 +542,6 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given root as a child dir' do
-      let(:args) { { root: Dir.pwd + '/bar' } }
-
-      it 'returns relative to the root' do
-        create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
-
-        expect(subject).to allow_exactly('foo', 'baz')
-      end
-    end
-
     context 'when given root as a parent dir' do
       let(:args) { { root: '../' } }
 
@@ -575,13 +565,13 @@ RSpec.describe FastIgnore do
       end
     end
 
-    context 'when given root as a child dir and relative false' do
-      let(:args) { { root: Dir.pwd + '/bar', relative: false } }
+    context 'when given root as a child dir' do
+      let(:args) { { root: Dir.pwd + '/bar' } }
 
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
 
-        expect(subject).to allow_exactly(Dir.pwd + '/bar/foo', Dir.pwd + '/bar/baz')
+        expect(subject).to allow_exactly('foo', 'baz')
       end
     end
 
@@ -598,18 +588,6 @@ RSpec.describe FastIgnore do
       it 'returns an enumerator' do
         expect(subject.each).to be_a Enumerator
         expect(subject).to respond_to :first
-      end
-    end
-
-    context 'when given relative: false' do
-      let(:args) { { relative: false } }
-
-      it 'returns full paths' do
-        create_file_list 'foo', 'bar', 'baz'
-
-        expect(subject).to allow_files(
-          ::File.join(Dir.pwd, 'foo'), ::File.join(Dir.pwd, 'bar'), ::File.join(Dir.pwd, 'baz')
-        )
       end
     end
 

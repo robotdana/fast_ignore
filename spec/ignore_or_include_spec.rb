@@ -889,7 +889,7 @@ RSpec.describe FastIgnore do
   end
 
   describe '.new' do
-    subject { described_class.new(relative: true, **args) }
+    subject { described_class.new(**args) }
 
     let(:args) { {} }
     let(:gitignore_path) { File.join(root, '.gitignore') }
@@ -901,7 +901,6 @@ RSpec.describe FastIgnore do
     describe 'ignore_files:' do
       subject do
         described_class.new(
-          relative: true,
           gitignore: false,
           ignore_files: ignore_files,
           **args
@@ -924,7 +923,7 @@ RSpec.describe FastIgnore do
     describe "root: '..'" do
       subject do
         Dir.chdir File.join(root, '..') do
-          described_class.new(relative: true, root: root, **args)
+          described_class.new(root: root, **args)
         end
       end
 
@@ -943,7 +942,6 @@ RSpec.describe FastIgnore do
     describe 'ignore_rules:' do
       subject do
         described_class.new(
-          relative: true,
           gitignore: false,
           ignore_rules: ignore_rules,
           **args
@@ -968,7 +966,6 @@ RSpec.describe FastIgnore do
     describe 'include_files:' do
       subject do
         described_class.new(
-          relative: true,
           gitignore: false,
           include_files: include_files,
           **args
@@ -998,7 +995,6 @@ RSpec.describe FastIgnore do
         subject do
           Dir.chdir File.join(root, '..') do
             described_class.new(
-              relative: true,
               root: root,
               gitignore: false,
               include_files: include_path,
@@ -1023,7 +1019,6 @@ RSpec.describe FastIgnore do
     describe 'include_rules:' do
       subject do
         described_class.new(
-          relative: true,
           gitignore: false,
           include_rules: include_rules,
           **args

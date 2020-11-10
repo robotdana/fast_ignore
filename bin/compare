@@ -10,7 +10,7 @@ puts (finish - start).to_s
 print 'parse FastIgnore.new only:  '
 gitignore_parents = Dir.glob('**/.gitignore').map { |f| ::File.dirname(f) + '/' } - ['./']
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-fi = FastIgnore.new(relative: true)
+fi = FastIgnore.new
 gitignore_parents.each do |gitignore_parent|
   fi.send(:load_gitignore, gitignore_parent, check_exists: false)
 end
@@ -19,7 +19,7 @@ puts (finish - start).to_s
 
 print 'fresh FastIgnore.new.to_a:  '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-fast_ignore = FastIgnore.new(relative: true)
+fast_ignore = FastIgnore.new
 new_a = fast_ignore.to_a
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s

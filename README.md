@@ -9,7 +9,7 @@ It's now gained an equivalent includes file functionality, ARGV awareness, and s
 Filter a directory tree using a .gitignore file. Recognises all of the [gitignore rules](https://www.git-scm.com/docs/gitignore#_pattern_format)
 
 ```ruby
-FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
+FastIgnore.new.sort == `git ls-files`.split("\n").sort
 ```
 
 ## Features
@@ -95,18 +95,6 @@ See [Optimising allowed](#optimising_allowed) for ways to make this even faster
 Essentially it can be thought of as `` `git ls-files`.include?(path) `` but much faster.
 This excludes all directories and all possible path names that don't exist.
 
-
-### `relative: true`
-
-**Default: false**
-
-When `relative: false`: FastIgnore#each will yield full paths.
-When `relative: true`: FastIgnore#each will yield paths relative to the [`root:`](#root) directory
-
-```ruby
-FastIgnore.new(relative: true).to_a
-```
-
 ### `follow_symlinks: true`
 
 **Default: false**
@@ -128,7 +116,7 @@ This directory is used for:
 - the location of `.git/core/exclude`
 - the ancestor of all non-global [automatically loaded `.gitignore` files](#gitignore_false)
 - the root directory for array rules ([`ignore_rules:`](#ignore_rules), [`include_rules:`](#include_rules), [`argv_rules:`](#argv_rules)) containing `/`
-- the path that [`relative:`](#relative_true) is relative to
+- the path that yielded paths are relative to
 - the ancestor of all paths yielded by [`#each`](#each_map_etc)
 - the path that [`#allowed?`](#allowed) considers relative paths relative to
 - the ancestor of all [`include_files:`](#include_files) and [`ignore_files:`](#ignore_files)

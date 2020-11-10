@@ -3,4 +3,4 @@
 
 require_relative '../lib/fast_ignore'
 
-puts FastIgnore.new(relative: true, argv_rules: ARGV).to_a
+puts FastIgnore.new(argv_rules: ARGV).to_a

@@ -1,3 +1,6 @@
+# v0.16.0
+- Remove relative: true/false, always return relative paths like git does.
+
 # v0.15.1
 - Updated dependencies to allow running on ruby 3.0.0.preview1
 

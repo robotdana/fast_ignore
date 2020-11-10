@@ -31,8 +31,7 @@ class FastIgnore
   using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
   # :nocov:
 
-  def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
-    @relative = relative
+  def initialize(root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
     @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
     @gitignore_enabled = gitignore
     @loaded_gitignore_files = ::Set[''] if gitignore
@@ -90,7 +89,7 @@ class FastIgnore
     @loaded_gitignore_files << parent_path
   end
 
-  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
     children = ::Dir.children(parent_full_path)
     load_gitignore(parent_relative_path, check_exists: false) if @gitignore_enabled && children.include?('.gitignore')
 
@@ -106,7 +105,7 @@ class FastIgnore
         if dir
           each_recursive(full_path + '/', relative_path + '/', &block)
         else
-          yield(@relative ? relative_path : @root + relative_path)
+          yield relative_path
         end
       rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
         nil

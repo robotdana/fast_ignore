@@ -63,7 +63,7 @@ RSpec.describe FastIgnore do
   end
 
   describe '.new' do
-    subject { described_class.new(relative: true, **args) }
+    subject { described_class.new(**args) }
 
     let(:args) { {} }
     let(:gitignore_path) { File.join(root, '.gitignore') }
