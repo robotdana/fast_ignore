@@ -20,6 +20,7 @@ require_relative 'fast_ignore/matchers/within_dir'
 require_relative 'fast_ignore/matchers/allow_any_dir'
 require_relative 'fast_ignore/matchers/allow_path_regexp'
 require_relative 'fast_ignore/matchers/ignore_path_regexp'
+require_relative 'fast_ignore/patterns'
 
 class FastIgnore
   class Error < StandardError; end
