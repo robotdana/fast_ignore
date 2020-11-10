@@ -28,7 +28,7 @@ class FastIgnore
     end
 
     def unmatchable_rule!
-      throw :abort_build, ::FastIgnore::UnmatchableRule
+      throw :abort_build, ::FastIgnore::Matchers::Unmatchable
     end
 
     def emit_end
@@ -51,11 +51,11 @@ class FastIgnore
           ::FastIgnore::GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
         end
       else
-        [::FastIgnore::AllowAnyDirRule]
+        [::FastIgnore::Matchers::AllowAnyDir]
       end
     end
 
-    def build_child_file_rule
+    def build_child_file_rule # rubocop:disable Metrics/MethodLength
       if @child_re.end_with?('/')
         @child_re.append_many_non_dir.append_dir if @dir_only
       else
@@ -64,8 +64,11 @@ class FastIgnore
 
       @child_re.prepend(prefix)
 
-      # Regexp::IGNORECASE = 1
-      ::FastIgnore::Rule.new(@child_re.to_regexp, @negation, @anchored, false)
+      if @negation
+        ::FastIgnore::Matchers::AllowPathRegexp.new(@child_re.to_regexp, @anchored, false)
+      else
+        ::FastIgnore::Matchers::IgnorePathRegexp.new(@child_re.to_regexp, @anchored, false)
+      end
     end
 
     def build_as_parent

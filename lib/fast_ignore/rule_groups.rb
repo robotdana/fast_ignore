@@ -56,7 +56,7 @@ class FastIgnore
       return @gitignore_rule_group = nil unless gitignore
 
       gi = ::FastIgnore::RuleGroup.new([], false)
-      gi << build_rule_set([+'.git'], false, file_root: '/')
+      gi << build_within_dir_matcher([+'.git'], false, file_root: '/')
       gi << build_from_root_gitignore_file(::FastIgnore::GlobalGitignore.path(root: @project_root))
       gi << build_from_root_gitignore_file("#{@project_root}.git/info/exclude")
       gi << build_from_root_gitignore_file("#{@project_root}.gitignore")
@@ -66,31 +66,33 @@ class FastIgnore
     def build_from_root_gitignore_file(path)
       return unless ::File.exist?(path)
 
-      build_rule_set(::File.readlines(path), false)
+      build_within_dir_matcher(::File.readlines(path), false)
     end
 
-    def build_file_to_root_rule_set(file_root)
-      ::FastIgnore::RuleSet.new(::FastIgnore::GitignoreIncludeRuleBuilder.new(file_root).build_as_parent, '/')
+    def build_file_to_root_matcher(file_root)
+      ::FastIgnore::Matchers::WithinDir.new(
+        ::FastIgnore::GitignoreIncludeRuleBuilder.new(file_root).build_as_parent, '/'
+      )
     end
 
-    def build_rule_set(rules, allow, expand_path_with: nil, file_root: nil)
+    def build_within_dir_matcher(rules, allow, expand_path_with: nil, file_root: nil)
       rules = rules.flat_map do |rule|
         ::FastIgnore::RuleBuilder.build(rule, allow, expand_path_with)
       end
 
       return if rules.empty?
 
-      set = [::FastIgnore::RuleSet.new(rules, file_root || @project_root)]
+      set = [::FastIgnore::Matchers::WithinDir.new(rules, file_root || @project_root)]
 
-      (set << build_file_to_root_rule_set(file_root || @project_root)) if allow
+      (set << build_file_to_root_matcher(file_root || @project_root)) if allow
 
       set
     end
 
-    def build_rule_group(rule_sets, allow)
-      return if !rule_sets || rule_sets.empty?
+    def build_rule_group(matchers, allow)
+      return if !matchers || matchers.empty?
 
-      ::FastIgnore::RuleGroup.new(rule_sets, allow).freeze
+      ::FastIgnore::RuleGroup.new(matchers, allow).freeze
     end
 
     def build_set_from_file(filename, allow: false, check_exists: false)
@@ -99,7 +101,7 @@ class FastIgnore
       raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}" unless filename.start_with?(@project_root)
 
       file_root = "#{::File.dirname(filename)}/"
-      build_rule_set(::File.readlines(filename), allow, file_root: file_root)
+      build_within_dir_matcher(::File.readlines(filename), allow, file_root: file_root)
     end
 
     def append_sets_from_files(files, allow: false)
@@ -115,7 +117,7 @@ class FastIgnore
       return if rules.empty?
 
       append_and_return_if_present(build_rule_group(
-        build_rule_set(rules, allow, expand_path_with: expand_path_with), allow
+        build_within_dir_matcher(rules, allow, expand_path_with: expand_path_with), allow
       ))
     end
   end

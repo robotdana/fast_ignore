@@ -2,28 +2,28 @@
 
 class FastIgnore
   class RuleGroup
-    def initialize(rule_sets, allow)
-      @rule_sets = Array(rule_sets).compact
+    def initialize(matchers, allow)
+      @matchers = Array(matchers).compact
       @allow = allow
       @allowed_recursive = { '/' => true }
     end
 
     def empty?
-      @rule_sets.empty? || @rule_sets.all?(&:empty?)
+      @matchers.empty? || @matchers.all?(&:empty?)
     end
 
     def weight
-      @rule_sets.sum(&:weight)
+      @matchers.sum(&:weight)
     end
 
     def freeze
-      @rule_sets.freeze
+      @matchers.freeze
 
       super
     end
 
-    def <<(rule_set)
-      (@rule_sets += rule_set) unless !rule_set || rule_set.empty?
+    def <<(matcher)
+      (@matchers += matcher) unless !matcher || matcher.empty?
     end
 
     def allowed_recursive?(root_candidate)
@@ -35,8 +35,8 @@ class FastIgnore
     end
 
     def allowed_unrecursive?(root_candidate)
-      @rule_sets.reverse_each do |rule_set|
-        val = rule_set.match?(root_candidate)
+      @matchers.reverse_each do |matcher|
+        val = matcher.match?(root_candidate)
         return val == :allow if val
       end
 
