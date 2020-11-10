@@ -112,7 +112,7 @@ class FastIgnore
     end
 
     def append_character_class_open
-      append('(?!/)[') # why?
+      append('(?!/)[')
     end
 
     def append_character_class_negation

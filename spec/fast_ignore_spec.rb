@@ -104,10 +104,13 @@ RSpec.describe FastIgnore do
     end
 
     context 'when ignore_files is outside root' do
-      let(:args) { { ignore_files: '~/.gitignore' } }
+      let(:args) { { root: 'a', ignore_files: '../.gitignore' } }
 
-      it 'raises an error' do
-        expect { subject.to_a }.to raise_error(FastIgnore::Error)
+      it 'copes fine' do
+        gitignore 'a/b'
+        create_file_list 'a/b', 'b/c', 'a/d'
+        expect(subject).not_to match_files('d')
+        expect(subject).to match_files('b')
       end
     end
 
