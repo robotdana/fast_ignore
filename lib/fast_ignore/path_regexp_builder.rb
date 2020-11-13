@@ -103,11 +103,11 @@ class FastIgnore
       append('\\A')
     end
 
-    def append_start_dir_or_anchor
+    def append_dir_or_start_anchor
       append('(?:\\A|/)')
     end
 
-    def append_end_dir_or_anchor
+    def append_dir_or_end_anchor
       append('(?:/|\\z)')
     end
 

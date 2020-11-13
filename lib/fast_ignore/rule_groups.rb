@@ -14,23 +14,23 @@ class FastIgnore
       @array = []
       @project_root = root
 
-      append_root_gitignore(gitignore)
-      build_and_append_rule_group(::FastIgnore::Patterns(ignore_rules, root: @project_root), include: false)
-      build_and_append_rule_group(::FastIgnore::Patterns(include_rules, root: @project_root), include: true)
+      append_root_gitignore(gitignore, @project_root)
+      build_and_append_rule_group(::FastIgnore::Patterns.new(ignore_rules, root: @project_root), include: false)
+      build_and_append_rule_group(::FastIgnore::Patterns.new(include_rules, root: @project_root), include: true)
       build_and_append_rule_group(
-        ::FastIgnore::Patterns(argv_rules, root: @project_root, format: :expand_path),
+        ::FastIgnore::Patterns.new(argv_rules, root: @project_root, format: :expand_path),
         include: true
       )
 
       Array(ignore_files).each do |f|
         path = PathExpander.expand_path(f, @project_root)
-        build_and_append_rule_group(::FastIgnore::Patterns(from_file: path), include: false)
+        build_and_append_rule_group(::FastIgnore::Patterns.new(from_file: path), include: false)
       end
       Array(include_files).each do |f|
         path = PathExpander.expand_path(f, @project_root)
-        build_and_append_rule_group(::FastIgnore::Patterns(from_file: path), include: true)
+        build_and_append_rule_group(::FastIgnore::Patterns.new(from_file: path), include: true)
       end
-
+      @array.reject!(&:empty?)
       @array.sort_by!(&:weight)
       @array.freeze
     end
@@ -43,37 +43,25 @@ class FastIgnore
       @array.all? { |r| r.allowed_unrecursive?(candidate) }
     end
 
-    def append_subdir_gitignore(relative_path:, check_exists: true)
-      path = PathExpander.expand_path(relative_path, @project_root)
-      return if check_exists && !::File.exist?(path)
-
-      new_gitignore = ::FastIgnore::Patterns(from_file: path).build_matchers
-      return unless new_gitignore
-
-      @gitignore_rule_group << new_gitignore
-      @gitignore_rule_group
+    def append_subdir_gitignore(full_path)
+      @gitignore_rule_group << ::FastIgnore::Patterns.new(from_file: full_path)
     end
 
     private
 
-    def append_root_gitignore(gitignore)
+    def append_root_gitignore(gitignore, root)
       return @gitignore_rule_group = nil unless gitignore
 
       gi = ::FastIgnore::RuleGroup.new([], false)
-      gi << ::FastIgnore::Patterns('.git', root: '/').build_matchers
-      gi << ::FastIgnore::Patterns(
-        from_file: ::FastIgnore::GlobalGitignore.path(root: @project_root), root: @project_root
-      ).build_matchers
-      gi << ::FastIgnore::Patterns(from_file: "#{@project_root}.git/info/exclude", root: @project_root).build_matchers
-      gi << ::FastIgnore::Patterns(from_file: "#{@project_root}.gitignore", root: @project_root).build_matchers
+      gi << ::FastIgnore::Patterns.new('.git', root: '/')
+      gi << ::FastIgnore::Patterns.new(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root)
+      gi << ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root)
+      gi << ::FastIgnore::Patterns.new(from_file: "#{root}.gitignore", root: root)
       @array << @gitignore_rule_group = gi
     end
 
     def build_and_append_rule_group(pattern, include: false)
-      matchers = pattern.build_matchers(include: include)
-      return unless matchers
-
-      @array << ::FastIgnore::RuleGroup.new(matchers, include).freeze
+      @array << ::FastIgnore::RuleGroup.new(pattern, include).freeze
     end
   end
 end
