@@ -1,10 +1,6 @@
 # frozen-string-literal: true
 
 class FastIgnore
-  def self.Patterns(*patterns, from_file: nil, format: :gitignore, root: nil)
-    ::FastIgnore::Patterns.new(*patterns, from_file: from_file, format: format, root: root)
-  end
-
   class Patterns
     def initialize(*patterns, from_file: nil, format: :gitignore, root: nil)
       raise ArgumentError, "from_file: can't be used with patterns arguments" unless patterns.empty? || !from_file

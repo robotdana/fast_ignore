@@ -43,11 +43,11 @@ class FastIgnore
       append_unescaped('\\A')
     end
 
-    def append_start_dir_or_anchor
+    def append_dir_or_start_anchor
       append_unescaped('(?:\\A|/)')
     end
 
-    def append_end_dir_or_anchor
+    def append_dir_or_end_anchor
       append_unescaped('(?:/|\\z)')
     end
 

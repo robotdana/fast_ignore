@@ -36,6 +36,7 @@ class FastIgnore
     @gitignore_enabled = gitignore
     @loaded_gitignore_files = ::Set[''] if gitignore
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
+    @gitignore_root = @root.delete_suffix('/')
     @rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
 
     freeze
@@ -55,8 +56,7 @@ class FastIgnore
     return false unless full_path.start_with?(@root)
     return false if directory.nil? ? ::File.lstat(full_path).directory? : directory
 
-    relative_path = full_path.delete_prefix(@root)
-    load_gitignore_recursive(relative_path) if @gitignore_enabled
+    load_gitignore_recursive(full_path) if @gitignore_enabled
 
     candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)
 
@@ -73,25 +73,20 @@ class FastIgnore
   private
 
   def load_gitignore_recursive(path)
-    paths = []
-    while (path = ::File.dirname(path)) != '.'
-      paths << path
-    end
-
-    paths.reverse_each(&method(:load_gitignore))
+    load_gitignore(path) until (path = ::File.dirname(path)) == @gitignore_root
   end
 
-  def load_gitignore(parent_path, check_exists: true)
+  def load_gitignore(parent_path)
     return if @loaded_gitignore_files.include?(parent_path)
 
-    @rule_groups.append_subdir_gitignore(relative_path: parent_path + '.gitignore', check_exists: check_exists)
+    @rule_groups.append_subdir_gitignore(parent_path + '.gitignore')
 
     @loaded_gitignore_files << parent_path
   end
 
   def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
     children = ::Dir.children(parent_full_path)
-    load_gitignore(parent_relative_path, check_exists: false) if @gitignore_enabled && children.include?('.gitignore')
+    load_gitignore(parent_full_path) if @gitignore_enabled && children.include?('.gitignore')
 
     children.each do |filename|
       begin

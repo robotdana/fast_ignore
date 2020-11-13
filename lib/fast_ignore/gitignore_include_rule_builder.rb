@@ -36,7 +36,7 @@ class FastIgnore
         @child_re = @re.dup
         @re.append_end_anchor
       else
-        @re.append_end_dir_or_anchor
+        @re.append_dir_or_end_anchor
       end
 
       break!

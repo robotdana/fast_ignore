@@ -163,7 +163,7 @@ class FastIgnore
       if @anchored
         out.append_start_anchor
       else
-        out.append_start_dir_or_anchor
+        out.append_dir_or_start_anchor
       end
       out
     end

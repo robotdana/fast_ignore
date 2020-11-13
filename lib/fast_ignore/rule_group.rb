@@ -2,8 +2,8 @@
 
 class FastIgnore
   class RuleGroup
-    def initialize(matchers, allow)
-      @matchers = Array(matchers).compact
+    def initialize(patterns, allow)
+      @matchers = Array(patterns).flat_map { |x| x.build_matchers(include: allow) }.compact
       @allow = allow
       @allowed_recursive = { '/' => true }
     end
@@ -22,8 +22,10 @@ class FastIgnore
       super
     end
 
-    def <<(matcher)
-      (@matchers += matcher) unless !matcher || matcher.empty?
+    def <<(patterns)
+      matcher = patterns.build_matchers(include: @allow)
+
+      @matchers += matcher unless !matcher || matcher.empty?
     end
 
     def allowed_recursive?(root_candidate)
