@@ -22,12 +22,6 @@ class FastIgnore
       super
     end
 
-    def <<(patterns)
-      matcher = patterns.build_matchers(include: @allow)
-
-      @matchers += matcher unless !matcher || matcher.empty?
-    end
-
     def allowed_recursive?(root_candidate)
       @allowed_recursive.fetch(root_candidate.full_path) do
         @allowed_recursive[root_candidate.full_path] =
