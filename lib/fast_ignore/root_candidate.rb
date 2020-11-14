@@ -25,10 +25,11 @@ class FastIgnore
 
     attr_reader :full_path
 
-    def initialize(full_path, filename, directory, content)
+    def initialize(full_path, filename, directory, exists, content)
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
+      (@exists = exists) unless exists.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
       @relative_candidate = {}
     end
@@ -37,6 +38,7 @@ class FastIgnore
       @parent ||= ::FastIgnore::RootCandidate.new(
         ::File.dirname(@full_path),
         nil,
+        true,
         true,
         nil
       )
@@ -65,7 +67,18 @@ class FastIgnore
     def directory?
       return @directory if defined?(@directory)
 
-      @directory ||= ::File.directory?(@full_path)
+      @directory = ::File.lstat(@full_path).directory?
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      @exists ||= false
+      @directory = false
+    end
+
+    def exists?
+      return @exists if defined?(@exists)
+
+      @exists = ::File.exist?(@full_path)
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      @exists = false
     end
 
     def filename

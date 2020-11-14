@@ -25,52 +25,26 @@ class FastIgnore
   require_relative 'fast_ignore/matchers/allow_path_regexp'
   require_relative 'fast_ignore/matchers/ignore_path_regexp'
   require_relative 'fast_ignore/patterns'
+  require_relative 'fast_ignore/walkers/base'
+  require_relative 'fast_ignore/walkers/file_system'
+  require_relative 'fast_ignore/walkers/gitignore_collecting_file_system'
+  require_relative 'fast_ignore/gitignore_rule_group'
 
   include ::Enumerable
 
   def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
-    @relative = relative
-    @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
-    @gitignore_enabled = gitignore
-    @loaded_gitignore_files = ::Set[''] if gitignore
-    @root = "#{PathExpander.expand_path(root.to_s, Dir.pwd)}/"
-    @gitignore_root = @root.delete_suffix('/')
-    @rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
+    @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
+    rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
 
+    walker_class = gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
+    @walker = walker_class.new(rule_groups, root: @root, follow_symlinks: follow_symlinks, relative: relative)
     freeze
   end
 
-  def each(&block)
-    return enum_for(:each) unless block
-
-    # dir_pwd = ::Dir.pwd
-    # root_from_pwd = @root.start_with?(dir_pwd) ? ".#{@root.delete_prefix(dir_pwd)}" : @root
-
-    each_recursive(@root, '', &block)
-  end
-
-  def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/MethodLength
-    full_path = PathExpander.expand_path(path, @root)
-    return false unless full_path.start_with?(@root)
-
-    begin
-      directory = directory.nil? ? @follow_symlinks_method.call(full_path).directory? : directory
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-      exists = false if exists.nil?
-      directory = false
-    end
-
-    return false if !include_directories && directory
-
-    exists = exists.nil? ? ::File.exist?(full_path) : exists
-
-    return false unless exists
-
-    load_gitignore_recursive(full_path) if @gitignore_enabled
-
-    candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)
-
-    @rule_groups.allowed_recursive?(candidate)
+  def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
+    @walker.allowed?(
+      path, directory: directory, content: content, exists: exists, include_directories: include_directories
+    )
   end
   alias_method :===, :allowed?
 
@@ -78,39 +52,9 @@ class FastIgnore
     method(:allowed?).to_proc
   end
 
-  private
+  def each(&block)
+    return enum_for(:each) unless block
 
-  def load_gitignore_recursive(path)
-    load_gitignore(path) until (path = ::File.dirname(path)) == @gitignore_root
-  end
-
-  def load_gitignore(parent_path)
-    return if @loaded_gitignore_files.include?(parent_path)
-
-    @rule_groups.append_subdir_gitignore(parent_path + '.gitignore')
-
-    @loaded_gitignore_files << parent_path
-  end
-
-  def each_recursive(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-    children = ::Dir.children(parent_full_path)
-    load_gitignore(parent_full_path) if @gitignore_enabled && children.include?('.gitignore')
-
-    children.each do |filename|
-      full_path = parent_full_path + filename
-      relative_path = parent_relative_path + filename
-      dir = @follow_symlinks_method.call(full_path).directory?
-      candidate = ::FastIgnore::RootCandidate.new(full_path, filename, dir, nil)
-
-      next unless @rule_groups.allowed_unrecursive?(candidate)
-
-      if dir
-        each_recursive(full_path + '/', relative_path + '/', &block)
-      else
-        yield(@relative ? relative_path : @root + relative_path)
-      end
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-      nil
-    end
+    @walker.each(@root, '', &block)
   end
 end

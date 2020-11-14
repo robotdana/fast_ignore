@@ -3,7 +3,7 @@
 if RUBY_PLATFORM != 'java'
   module Warning # leftovers:allow
     def warn(msg) # leftovers:allow
-      raise msg
+      raise msg unless msg.include?('FastIgnore deprecation:')
     end
   end
 end

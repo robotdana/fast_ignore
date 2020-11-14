@@ -146,6 +146,7 @@ RSpec.describe FastIgnore do
 
     it "#allowed? won't be confused by caching dirs as non dirs" do
       gitignore 'a/'
+
       expect(subject.allowed?('a', exists: true)).to be true
       expect(subject.allowed?('a/b', exists: true)).to be false
     end
