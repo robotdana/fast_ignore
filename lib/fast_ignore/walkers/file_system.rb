@@ -7,10 +7,9 @@ class FastIgnore
         @rule_groups = rule_groups
       end
 
-      def allowed?(path, root: nil, directory: nil, content: nil)
-        full_path = ::File.expand_path(path, root)
+      def allowed?(path, directory: nil, content: nil)
+        full_path = ::File.expand_path(path)
 
-        return false unless full_path.start_with?(root)
         return false if directory.nil? ? ::File.lstat(full_path).directory? : directory
 
         candidate = ::FastIgnore::RootCandidate.new(full_path, nil, directory, content)

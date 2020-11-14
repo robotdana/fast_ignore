@@ -44,8 +44,8 @@ class FastIgnore
     freeze
   end
 
-  def allowed?(path, root: @root, directory: nil, content: nil)
-    @walker.allowed?(path, root: root, directory: directory, content: content)
+  def allowed?(path, directory: nil, content: nil)
+    @walker.allowed?(path, directory: directory, content: content)
   end
   alias_method :===, :allowed?
 
@@ -53,9 +53,10 @@ class FastIgnore
     method(:allowed?).to_proc
   end
 
-  def each(root = @root, &block)
+  def each(root = ::Dir.pwd, &block)
     return enum_for(:each, root) unless block_given?
 
+    root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
     @walker.each(root, '', &block)
   end
 end

@@ -7,10 +7,8 @@ class FastIgnore
         @rule_groups = rule_groups
       end
 
-      def allowed?(path, root: nil, directory: nil, content: nil)
-        full_path = ::File.expand_path(path, root)
-
-        return false unless full_path.start_with?(root)
+      def allowed?(path, directory: nil, content: nil)
+        full_path = ::File.expand_path(path)
         return false if directory.nil? ? ::File.lstat(full_path).directory? : directory
 
         @rule_groups.add_gitignore_to_root(full_path)

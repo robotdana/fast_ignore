@@ -1,6 +1,8 @@
 # v0.16.0
 - Remove relative: true/false, always return relative paths like git does, its the only way i've ever used this gem
 - Remove follow_symlinks: true/false. it's inaccuurately named and unnecessary
+- relative paths to allowed? are expanded relative to the current dir not the FastIgnore.root dir.
+- each starts at the current directory, or optionally a given directory
 
 # v0.15.1
 - Updated dependencies to allow running on ruby 3.0.0.preview1

@@ -272,8 +272,9 @@ RSpec.describe FastIgnore do
       it 'copes fine' do
         gitignore 'a/b'
         create_file_list 'a/b', 'b/c', 'a/d'
-        expect(subject).not_to match_files('d')
-        expect(subject).to match_files('b')
+
+        expect(subject.each('a').to_a).to include('d')
+        expect(subject.each('a').to_a).not_to include('b')
       end
     end
 
@@ -525,7 +526,7 @@ RSpec.describe FastIgnore do
         gitignore 'baz'
 
         Dir.chdir('bar') do
-          expect(subject).to allow_exactly('bar/foo', 'fez', '.gitignore')
+          expect(subject.each('../').to_a).to match_array(['bar/foo', 'fez', '.gitignore'])
         end
       end
     end
@@ -536,7 +537,7 @@ RSpec.describe FastIgnore do
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
 
-        expect(subject).to allow_exactly('foo', 'baz')
+        expect(subject.each(Dir.pwd + '/bar/').to_a).to match_array(['foo', 'baz'])
       end
     end
 
@@ -546,7 +547,7 @@ RSpec.describe FastIgnore do
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
 
-        expect(subject).to allow_exactly('foo', 'baz')
+        expect(subject.each(Dir.pwd + '/bar').to_a).to match_array(['foo', 'baz'])
       end
     end
 
@@ -824,8 +825,8 @@ RSpec.describe FastIgnore do
 
         gitignore 'ignored_foo', path: 'sub/.gitignore'
 
-        expect(subject).to allow_files('foo')
-        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb')
+        expect(subject.each('sub').to_a).to include('foo')
+        expect(subject.each('sub').to_a).not_to include('ignored_foo', 'bar', 'baz', 'baz.rb')
       end
     end
 
@@ -858,8 +859,8 @@ RSpec.describe FastIgnore do
         Dir.mkdir 'level'
         Dir.chdir 'level'
 
-        expect(subject).to allow_files('foo')
-        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb')
+        expect(subject.each('../').to_a).to include('foo')
+        expect(subject.each('../').to_a).not_to include('ignored_foo', 'bar', 'baz', 'baz.rb')
       end
     end
 
