@@ -1,3 +1,6 @@
+# v0.15.2
+- Updated methods with multiple `_` arguments to have different names to make sorbet happy
+
 # v0.15.1
 - Updated dependencies to allow running on ruby 3.0.0.preview1
 

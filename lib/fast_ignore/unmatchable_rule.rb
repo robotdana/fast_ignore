@@ -33,7 +33,7 @@ class FastIgnore
       end
       # :nocov:
 
-      def match?(_, _, _, _)
+      def match?(_relative_path, _full_path, _filename, _content)
         false
       end
     end

@@ -46,9 +46,9 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(path, full_path, filename, content)
+    def match?(relative_path, full_path, filename, content)
       return false if filename.include?('.')
-      return false unless (not @file_path_pattern) || @file_path_pattern.match?(path)
+      return false unless (not @file_path_pattern) || @file_path_pattern.match?(relative_path)
 
       (content || first_line(full_path))&.match?(@rule)
     end
