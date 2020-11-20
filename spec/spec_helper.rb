@@ -15,7 +15,7 @@ FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
 
 require 'bundler/setup'
 
-require 'simplecov' if RUBY_PLATFORM != 'java'
+require 'simplecov' if ENV['COVERAGE']
 require 'fast_ignore'
 
 require_relative 'support/temp_dir_helper'
