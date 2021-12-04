@@ -1,3 +1,7 @@
+# v0.16.0
+- Entirely rewrite the way that git config files are read. previously it was just a regexp. now we actually parse git config files according to the same rules as git.
+- Add ruby 3 to the test matrix
+
 # v0.15.2
 - Updated methods with multiple `_` arguments to have different names to make sorbet happy
 

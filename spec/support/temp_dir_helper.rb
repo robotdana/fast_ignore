@@ -11,7 +11,7 @@ module TempDirHelper
       if lines.empty?
         path.write('')
       else
-        path.write(lines.join("\n").chomp + "\n")
+        path.write(lines.join("\n"))
       end
       path
     end

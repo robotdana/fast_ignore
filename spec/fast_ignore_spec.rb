@@ -57,167 +57,26 @@ RSpec.describe FastIgnore do
         gitignore 'b/d'
 
         allow(File).to receive(:exist?).at_least(:once).and_call_original
+        allow(File).to receive(:readable?).at_least(:once).and_call_original
+        allow(File).to receive(:read).at_least(:once).and_call_original
         allow(File).to receive(:readlines).at_least(:once).and_call_original
         allow(ENV).to receive(:[]).at_least(:once).and_call_original
       end
 
       it 'recognises ~/.gitconfig gitignore files' do # rubocop:disable RSpec/ExampleLength
         allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
-          "[core]\n".dup,
-          "\texcludesfile = ~/.global_gitignore\n".dup
-        ])
+        allow(File).to receive(:readable?).with('/etc/gitconfig').at_least(:once).and_return(false)
+        allow(File).to receive(:readable?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
+        allow(File).to receive(:readable?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
+        allow(File).to receive(:read).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(<<~GITCONFIG)
+          [core]
+          \texcludesfile = ~/.global_gitignore
+        GITCONFIG
 
         allow(File).to receive(:exist?).with("#{ENV['HOME']}/.global_gitignore")
           .at_least(:once).and_return(true)
         allow(File).to receive(:readlines).with("#{ENV['HOME']}/.global_gitignore")
           .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises XDG_CONFIG_HOME gitconfig gitignore files' do # rubocop:disable RSpec/ExampleLength
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return("#{ENV['HOME']}/.xconfig")
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.xconfig/git/config").at_least(:once).and_return(true)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.xconfig/git/config").at_least(:once).and_return([
-          "[core]\n".dup,
-          "\texcludesfile = ~/.global_gitignore\n".dup
-        ])
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises XDG_CONFIG_HOME gitconfig gitignore files but home .gitconfig overrides' do # rubocop:disable RSpec/ExampleLength
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return("#{ENV['HOME']}/.xconfig")
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.xconfig/git/config").at_least(:once).and_return(true)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.xconfig/git/config").at_least(:once).and_return([
-          "[core]\n".dup,
-          "\texcludesfile = ~/.x_global_gitignore\n".dup
-        ])
-
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
-          "[core]\n".dup,
-          "\texcludesfile = ~/.global_gitignore\n".dup
-        ])
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.x_global_gitignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.x_global_gitignore")
-          .at_least(:once).and_return(["a/b/d\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises default global gitignore file when XDG_CONFIG_HOME is blank' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return('')
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises default global gitignore file when XDG_CONFIG_HOME is nil' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises default global gitignore file when gitconfig has no excludesfile and XDG_CONFIG_HOME is nil' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
-          "[user]\n".dup,
-          "\tname = Dana \n".dup
-        ])
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'ignores default global gitignore file when gitconfig has blank excludes file' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return([
-          "[core]\n".dup,
-          "\texcludesfile =\n".dup
-        ])
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore")
-          .and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.config/git/ignore")
-          .and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c', 'a/b/c')
-        expect(subject).to match_files('b/d')
-      end
-
-      it 'recognises default global gitignore file when XDG_CONFIG_HOME is set' do # rubocop:disable RSpec/ExampleLength
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return('~/.xconfig')
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.xconfig/git/ignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.xconfig/git/ignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
-
-        expect(subject).not_to match_files('a/b/d', 'b/c')
-        expect(subject).to match_files('a/b/c', 'b/d')
-      end
-
-      it 'recognises project .gitignore file when no global gitignore' do # rubocop:disable RSpec/ExampleLength
-        allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
-
-        gitignore 'b/c', path: 'a/.gitignore'
 
         expect(subject).not_to match_files('a/b/d', 'b/c')
         expect(subject).to match_files('a/b/c', 'b/d')
@@ -225,10 +84,10 @@ RSpec.describe FastIgnore do
 
       context 'when no global gitignore' do
         before do
-          allow(File).to receive(:exist?).with('/etc/gitconfig').at_least(:once).and_return(false)
-          allow(File).to receive(:exist?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
+          allow(File).to receive(:readable?).with('/etc/gitconfig').at_least(:once).and_return(false)
+          allow(File).to receive(:readable?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
 
-          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
+          allow(File).to receive(:readable?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
           allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
           allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
         end
@@ -616,7 +475,7 @@ RSpec.describe FastIgnore do
     context 'when given shebang and include_rules' do
       let(:args) { { include_rules: ['*.rb', 'Rakefile', '#!:ruby'] } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -663,7 +522,7 @@ RSpec.describe FastIgnore do
     context 'when given include shebang rule scoped by a file' do
       let(:args) { { gitignore: false, include_files: 'a/.include' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'a/foo'
           #!/usr/bin/env ruby -w
 
@@ -686,7 +545,7 @@ RSpec.describe FastIgnore do
     context 'when given ignore shebang rule scoped by a file' do
       let(:args) { { gitignore: false, ignore_files: 'a/.ignore' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'a/foo'
           #!/usr/bin/env ruby -w
 
@@ -709,7 +568,7 @@ RSpec.describe FastIgnore do
     context 'when given only shebang ignore rule' do
       let(:args) { { ignore_rules: ['#!:ruby'] } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -730,7 +589,7 @@ RSpec.describe FastIgnore do
     context 'when given UPPERCASE shebang ignore rule' do
       let(:args) { { ignore_rules: ['#!:RUBY'] } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -751,7 +610,7 @@ RSpec.describe FastIgnore do
     context "when given lowercase shebang ignore rule with uppercase shebang (I don't know your life)" do
       let(:args) { { ignore_rules: ['#!:ruby'] } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/USR/BIN/ENV RUBY
 
@@ -772,7 +631,7 @@ RSpec.describe FastIgnore do
     context 'when given only shebang include rule' do
       let(:args) { { include_rules: ['#!:ruby'] } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -815,7 +674,7 @@ RSpec.describe FastIgnore do
     context 'when given only include_shebangs as a single value' do
       let(:args) { { include_rules: '#!:ruby' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -848,7 +707,7 @@ RSpec.describe FastIgnore do
     context 'when given only include_shebangs and a root down a level' do
       let(:args) { { include_rules: '#!:ruby', root: 'sub' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'sub/foo'
           #!/usr/bin/env ruby -w
 
@@ -879,7 +738,7 @@ RSpec.describe FastIgnore do
     context 'when given only include_shebangs and a root up a level' do
       let(:args) { { include_rules: '#!:ruby', root: '../' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -913,7 +772,7 @@ RSpec.describe FastIgnore do
     context 'when given only include_shebangs as a string list' do
       let(:args) { { include_rules: "#!:ruby\n#!:bash" } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
 
@@ -960,7 +819,7 @@ RSpec.describe FastIgnore do
     context 'when given only include_shebangs as a string list, allowed? can be lied to with content' do
       let(:args) { { include_rules: '#!:bash' } }
 
-      it 'returns matching files' do # rubocop:disable RSpec/ExampleLength
+      it 'returns matching files' do
         real_content = <<~RUBY
           #!/usr/bin/env ruby -w
 

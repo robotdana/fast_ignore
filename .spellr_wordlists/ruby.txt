@@ -1,1 +1,8 @@
+dotfiles
+endwith
+gitdir
+globbing
+goddamit
+mergeoptions
+onbranch
 rspec

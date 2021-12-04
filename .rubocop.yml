@@ -113,7 +113,7 @@ Metrics:
   CountComments: false
 
 Metrics/BlockLength:
-  ExcludedMethods:
+  IgnoredMethods:
     - configure
     - describe
     - context
@@ -136,6 +136,9 @@ RSpec/DescribeClass:
 # I misuse matchers often
 RSpec/ExpectActual:
   Enabled: false
+
+RSpec/ExampleLength:
+  CountAsOne: [array, hash, heredoc]
 
 RSpec/FilePath:
   Enabled: false

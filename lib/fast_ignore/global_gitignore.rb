@@ -15,13 +15,13 @@ class FastIgnore
 
       def gitconfig_gitignore_path(config_path)
         return unless config_path
-        return unless ::File.exist?(config_path)
+        return unless ::File.readable?(config_path)
 
-        ignore_path = ::File.readlines(config_path).find { |l| l.sub!(/\A\s*excludesfile\s*=/, '') }
+        ignore_path = ::FastIgnore::GitconfigParser.parse(config_path)
         return unless ignore_path
 
         ignore_path.strip!
-        return ignore_path if ignore_path.empty? # don't expand path in this case
+        return '' if ignore_path.empty? # don't expand path in this case
 
         ::File.expand_path(ignore_path)
       end
