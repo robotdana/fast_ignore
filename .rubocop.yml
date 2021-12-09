@@ -1,4 +1,6 @@
-require: rubocop-rspec
+require:
+  - rubocop-rspec
+  - rubocop-rake
 
 # Reference:
 # https://rubocop.readthedocs.io/en/latest/
