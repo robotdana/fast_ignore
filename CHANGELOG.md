@@ -1,4 +1,5 @@
 # v0.16.1
+- respect GIT_CONFIG_SYSTEM, GIT_CONFIG_NOSYSTEM and GIT_CONFIG_GLOBAL env vars the same way git does
 - make the tests more resilient to whatever global config is going on.
 
 # v0.16.0
