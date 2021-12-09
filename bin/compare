@@ -37,7 +37,7 @@ finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts (finish - start).to_s
 
 # take into account indexed ignored things
-files_in_the_index_that_would_be_ignored = `git ls-files -i --exclude-standard`.split("\n")
+files_in_the_index_that_would_be_ignored = `git ls-files -ic --exclude-standard`.split("\n")
 files_in_the_index_that_are_deleted = `git diff --no-renames --diff-filter=D --name-only`.split("\n")
 untracked_files = `git ls-files --others --exclude-standard`.split("\n")
 
