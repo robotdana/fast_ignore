@@ -73,8 +73,8 @@ RSpec.describe FastIgnore do
 
   describe 'git ls-files' do
     subject do
-      `git init && git add -N .`
-      `git ls-files`.split("\n")
+      `git init && git -c core.excludesfile='' add -N .`
+      `git -c core.excludesfile='' ls-files`.split("\n")
     end
 
     it_behaves_like 'gitignore: true'

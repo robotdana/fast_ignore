@@ -1,3 +1,6 @@
+# v0.16.1
+- make the tests more resilient to whatever global config is going on.
+
 # v0.16.0
 - Entirely rewrite the way that git config files are read. previously it was just a regexp. now we actually parse git config files according to the same rules as git.
 - Add ruby 3 to the test matrix
