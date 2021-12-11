@@ -1,3 +1,7 @@
+# v0.16.1
+- respect GIT_CONFIG_SYSTEM, GIT_CONFIG_NOSYSTEM and GIT_CONFIG_GLOBAL env vars the same way git does
+- make the tests more resilient to whatever global config is going on.
+
 # v0.16.0
 - Entirely rewrite the way that git config files are read. previously it was just a regexp. now we actually parse git config files according to the same rules as git.
 - Add ruby 3 to the test matrix

@@ -73,7 +73,7 @@ class FastIgnore
     end
 
     def build_from_root_gitignore_file(path)
-      return unless ::File.exist?(path)
+      return unless path && ::File.exist?(path)
 
       build_rule_set(::File.readlines(path), false, gitignore: true)
     end

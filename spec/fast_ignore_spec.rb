@@ -55,43 +55,21 @@ RSpec.describe FastIgnore do
         create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
 
         gitignore 'b/d'
-
-        allow(File).to receive(:exist?).at_least(:once).and_call_original
-        allow(File).to receive(:readable?).at_least(:once).and_call_original
-        allow(File).to receive(:read).at_least(:once).and_call_original
-        allow(File).to receive(:readlines).at_least(:once).and_call_original
-        allow(ENV).to receive(:[]).at_least(:once).and_call_original
       end
 
-      it 'recognises ~/.gitconfig gitignore files' do # rubocop:disable RSpec/ExampleLength
-        allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-        allow(File).to receive(:readable?).with('/etc/gitconfig').at_least(:once).and_return(false)
-        allow(File).to receive(:readable?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-        allow(File).to receive(:readable?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(true)
-        allow(File).to receive(:read).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(<<~GITCONFIG)
+      it 'recognises ~/.gitconfig gitignore files' do
+        stub_file(<<~GITCONFIG, path: "#{ENV['HOME']}/.gitconfig")
           [core]
           \texcludesfile = ~/.global_gitignore
         GITCONFIG
 
-        allow(File).to receive(:exist?).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(true)
-        allow(File).to receive(:readlines).with("#{ENV['HOME']}/.global_gitignore")
-          .at_least(:once).and_return(["a/b/c\n".dup])
+        stub_file("a/b/c\n", path: "#{ENV['HOME']}/.global_gitignore")
 
         expect(subject).not_to match_files('a/b/d', 'b/c')
         expect(subject).to match_files('a/b/c', 'b/d')
       end
 
       context 'when no global gitignore' do
-        before do
-          allow(File).to receive(:readable?).with('/etc/gitconfig').at_least(:once).and_return(false)
-          allow(File).to receive(:readable?).with("#{Dir.pwd}/.git/gitconfig").at_least(:once).and_return(false)
-
-          allow(File).to receive(:readable?).with("#{ENV['HOME']}/.gitconfig").at_least(:once).and_return(false)
-          allow(ENV).to receive(:[]).with('XDG_CONFIG_HOME').at_least(:once).and_return(nil)
-          allow(File).to receive(:exist?).with("#{ENV['HOME']}/.config/git/ignore").at_least(:once).and_return(false)
-        end
-
         it 'recognises project subdir .gitignore file and no project dir gitignore' do
           gitignore ''
           gitignore '/b/c', path: 'a/.gitignore'

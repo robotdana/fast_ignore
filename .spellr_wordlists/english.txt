@@ -24,6 +24,7 @@ frotz
 gemfile
 gitattributes
 gitconfig
+gitconfigs
 gith
 github
 gitignore
@@ -42,6 +43,7 @@ memoized
 nestedly
 nocov
 noninfringement
+nosystem
 params
 pathspec
 performant

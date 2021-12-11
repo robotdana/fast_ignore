@@ -309,6 +309,7 @@ This is not required, and if FastIgnore does have to go to the filesystem for th
   (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls)
 - FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
 - FastIgnore always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
+- git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. FastIgnore assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined, use git's built-in way to override this by adding `export GIT_CONFIG_SYSTEM='/the/actual/location'` to your shell profile.
 - Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead
   - Tracked files that were committed before the matching ignore rule was committed will be returned by `git ls-files`, but not by FastIgnore.
   - Untracked files will be returned by FastIgnore, but not by `git ls-files`
