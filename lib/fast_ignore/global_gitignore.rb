@@ -13,7 +13,8 @@ class FastIgnore
       private
 
       def gitconfigs_gitignore_path(root)
-        gitconfig_gitignore_path(repo_config_path(root)) ||
+        env_var_config_gitignore_path ||
+          gitconfig_gitignore_path(repo_config_path(root)) ||
           gitconfig_gitignore_path(global_config_path) ||
           gitconfig_gitignore_path(default_user_config_path) ||
           gitconfig_gitignore_path(system_config_path)
@@ -60,6 +61,21 @@ class FastIgnore
 
       def default_config_home
         env('XDG_CONFIG_HOME', '~/.config')
+      end
+
+      def env_var_config_gitignore_path
+        gitignore_value = nil
+        env('GIT_CONFIG_COUNT').to_i.times do |i|
+          key = env("GIT_CONFIG_KEY_#{i}")
+          value = ::ENV["GIT_CONFIG_VALUE_#{i}"]
+          raise ::FastIgnore::GitconfigParseError unless key && value
+
+          if key.casecmp?('core.excludesfile')
+            gitignore_value = value
+          end
+        end
+
+        gitignore_value
       end
 
       def env(env_var, default = nil)

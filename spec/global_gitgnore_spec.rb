@@ -35,6 +35,140 @@ RSpec.describe FastIgnore::GlobalGitignore do
         expect(subject).to eq "#{home}/.xconfig/git/ignore"
       end
     end
+
+    context 'when GIT_CONFIG_COUNT is set to zero' do
+      before do
+        stub_env(GIT_CONFIG_COUNT: "0")
+      end
+
+      it 'returns the default path' do
+        expect(subject).to eq default_ignore_path
+      end
+    end
+
+    context 'when GIT_CONFIG_COUNT is set to one only' do
+      before do
+        stub_env(GIT_CONFIG_COUNT: "1")
+      end
+
+      it 'returns nil because config is invalid' do
+        expect(subject).to be_nil
+      end
+    end
+
+    context 'when GIT_CONFIG_KEY_0 is set to core.excludesfile = a value' do
+      before do
+        stub_env(
+          GIT_CONFIG_COUNT: '1',
+          GIT_CONFIG_KEY_0: "core.excludesfile",
+          GIT_CONFIG_VALUE_0: "a value"
+        )
+      end
+
+      it 'returns a value' do
+        expect(subject).to eq "a value"
+      end
+    end
+
+    context 'when GIT_CONFIG_KEY_0 is set to CorE.ExcludesFile = A Value' do
+      before do
+        stub_env(
+          GIT_CONFIG_COUNT: '1',
+          GIT_CONFIG_KEY_0: "CorE.ExcludesFile",
+          GIT_CONFIG_VALUE_0: "A Value"
+        )
+      end
+
+      it 'returns a value' do
+        expect(subject).to eq "A Value"
+      end
+    end
+
+    context 'when GIT_CONFIG_KEY_1 is set to core.excludesfile = another value' do
+      before do
+        stub_env(
+          GIT_CONFIG_COUNT: '2',
+          GIT_CONFIG_KEY_0: "core.excludesfile",
+          GIT_CONFIG_VALUE_0: "first/value",
+          GIT_CONFIG_KEY_1: "core.excludesfile",
+          GIT_CONFIG_VALUE_1: "second/value"
+        )
+      end
+
+      it 'returns the last value' do
+        expect(subject).to eq "second/value"
+      end
+
+      context 'when count is too low' do
+        before do
+          stub_env(GIT_CONFIG_COUNT: '1')
+        end
+
+        it 'returns the last value within the count' do
+          expect(subject).to eq "first/value"
+        end
+      end
+
+      context 'when an earlier key is missing' do
+        before do
+          stub_env(GIT_CONFIG_KEY_0: nil)
+        end
+
+        it 'returns nil because the config is invalid' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when an earlier value is missing' do
+        before do
+          stub_env(GIT_CONFIG_VALUE_0: nil)
+        end
+
+        it 'returns nil because the config is invalid' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when an earlier key is blank' do
+        before do
+          stub_env(GIT_CONFIG_KEY_0: '')
+        end
+
+        it 'returns nil because the config is invalid' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when an earlier value is blank' do
+        before do
+          stub_env(GIT_CONFIG_VALUE_0: '')
+        end
+
+        it 'returns another value becuse blank is a valid value' do
+          expect(subject).to eq "second/value"
+        end
+      end
+
+      context 'when a later value is blank' do
+        before do
+          stub_env(GIT_CONFIG_VALUE_1: '')
+        end
+
+        it 'returns nil value becuse blank is a valid blanking value' do
+          expect(subject).to be_nil
+        end
+      end
+
+      context 'when a later key is for another property' do
+        before do
+          stub_env(GIT_CONFIG_KEY_1: 'core.attributesfile')
+        end
+
+        it 'returns first value' do
+          expect(subject).to eq 'first/value'
+        end
+      end
+    end
   end
 
   context 'with excludesfile defined in repo config' do
@@ -80,6 +214,20 @@ RSpec.describe FastIgnore::GlobalGitignore do
         it 'still returns nil because any config is invalid' do
           expect(subject).to be_nil
         end
+      end
+    end
+
+    context 'when GIT_CONFIG_KEY_0 is set to core.excludesfile = a value' do
+      before do
+        stub_env(
+          GIT_CONFIG_COUNT: '1',
+          GIT_CONFIG_KEY_0: "core.excludesfile",
+          GIT_CONFIG_VALUE_0: "a value"
+        )
+      end
+
+      it 'returns a value' do
+        expect(subject).to eq "a value"
       end
     end
   end
