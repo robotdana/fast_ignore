@@ -1,3 +1,11 @@
+# v0.17.0
+- allow overriding `exists:` in `allowed?`
+- allow setting `include_directories: true` in `allowed?`
+- subsequent calls to `allowed?` with the same path but different `directory:` or `content:` arguments won't potentially mess up the cache
+- slight performance improvements of the shebang rule matcher loading the first line
+- drop support for ruby 2.4
+- add ruby 3.1 to the test matrix
+
 # v0.16.1
 - respect GIT_CONFIG_SYSTEM, GIT_CONFIG_NOSYSTEM and GIT_CONFIG_GLOBAL env vars the same way git does
 - make the tests more resilient to whatever global config is going on.

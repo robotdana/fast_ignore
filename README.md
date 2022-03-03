@@ -15,7 +15,7 @@ FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
 ## Features
 
 - Fast (faster than using `` `git ls-files`.split("\n") `` for small repos (because it avoids the overhead of ``` `` ```))
-- Supports ruby 2.4-3.0.x & jruby
+- Supports ruby 2.5-3.1.x & jruby
 - supports all [gitignore rule patterns](https://git-scm.com/docs/gitignore#_pattern_format)
 - doesn't require git to be installed
 - supports a gitignore-esque "include" patterns. ([`include_rules:`](#include_rules)/[`include_files:`](#include_files))
@@ -81,20 +81,79 @@ Relative paths will be considered relative to the [`root:`](#root) directory, no
 
 This is aliased as `===` so you can use a FastIgnore instance in case statements.
 ```ruby
+@path_matcher ||= FastIgnore.new
+
 case my_path
-when FastIgnore.new
+when @path_matcher
   puts(my_path)
 end
 ```
 
 It's recommended to save the FastIgnore instance to a variable to avoid having to read and parse the gitignore file and gitconfig files repeatedly.
 
-See [Optimising allowed](#optimising_allowed) for ways to make this even faster
+#### directory: true/false/nil
 
-**Note: A file must exist at that path and not be a directory for it to be considered allowed.**
-Essentially it can be thought of as `` `git ls-files`.include?(path) `` but much faster.
-This excludes all directories and all possible path names that don't exist.
+If your code already knows the path to test is/not a directory or wants to lie about whether it is/is not a directory, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
 
+```
+FastIgnore.new.allowed?('relative/path', directory: false) # matches `path` as a file
+FastIgnore.new.allowed?('relative/path', directory: true) # matches `path` as a directory
+FastIgnore.new.allowed?('relative/path', directory: nil) # matches path as whatever it is on the filesystem
+FastIgnore.new.allowed?('relative/path)                  # or as a file if it doesn't exist on the file system
+```
+
+#### content: true/false/nil
+
+default: `nil`
+
+If your code already knows the path to test is has a particular text content or wants to lie about the content, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
+
+```
+FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
+FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
+FastIgnore.new.allowed?('relative/path', content: nil) # matches path as whatever content is on the filesystem
+FastIgnore.new.allowed?('relative/path)                # or as an empty file if it doesn't actually exist
+```
+
+#### content: true/false/nil
+
+default: `nil`
+
+If your code already knows the path to test is has a particular text content or wants to lie about the content, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
+
+```
+FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
+FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
+FastIgnore.new.allowed?('relative/path', content: nil) # matches path as whatever content is on the filesystem
+FastIgnore.new.allowed?('relative/path)                # or as an empty file if it doesn't actually exist
+```
+
+#### exist: true/false/nil
+
+default: `nil`
+
+If your code already knows the path to test exists or wants to lie about its existence, you can pass `exists: true` or `exists: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `exists: nil` or nothing)
+
+```
+FastIgnore.new.allowed?('relative/path', exists: true) # will check the path regardless of whether it actually truly exists
+FastIgnore.new.allowed?('relative/path', exists: false) # will always return false
+FastIgnore.new.allowed?('relative/path', exists: nil) # asks the filesystem
+FastIgnore.new.allowed?('relative/path)               # asks the filesystem
+```
+
+#### include_directories: true/false
+
+default: `false`
+
+By default a file must not be a directory for it to be considered allowed. This is intended to match the behaviour of `git ls-files` which only lists files.
+
+To match directories you can pass `include_directories: true` to `allowed?`
+
+```
+FastIgnore.new.allowed?('relative/path', include_directories: true) # will test the path even if it's a directory
+FastIgnore.new.allowed?('relative/path', include_directories: false) # will always return false if the path is a directory
+FastIgnore.new.allowed?('relative/path)                        # will always return false if the path is a directory
+```
 
 ### `relative: true`
 
@@ -293,15 +352,6 @@ FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
 ```
 
 This does unfortunately lose the file path as the root `/` and there is no workaround except setting the [`root:`](#root) for the whole FastIgnore instance.
-
-### optimising #allowed?
-
-To avoid unnecessary calls to the filesystem, if your code already knows whether or not it's a directory, or if you're checking shebangs and you have already read the content of the file: use
-```ruby
-FastIgnore.new.allowed?('relative/path', directory: false, content: "#!/usr/bin/ruby\n\nputs 'ok'\n")
-```
-This is not required, and if FastIgnore does have to go to the filesystem for this information it's well optimised to only read what is necessary.
-
 ## Limitations
 - Doesn't know what to do if you change the current working directory inside the [`FastIgnore#each`](#each_map_etc) block.
   So don't do that.

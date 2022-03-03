@@ -49,19 +49,30 @@ class FastIgnore
     each_recursive(root_from_pwd, '', &block)
   end
 
-  def allowed?(path, directory: nil, content: nil)
+  def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     full_path = ::File.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
-    return false if directory.nil? ? @follow_symlinks_method.call(full_path).directory? : directory
+
+    begin
+      directory = directory.nil? ? @follow_symlinks_method.call(full_path).directory? : directory
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      exists = false if exists.nil?
+      directory = false
+    end
+
+    return false if !include_directories && directory
+
+    exists = exists.nil? ? ::File.exist?(full_path) : exists
+
+    return false unless exists
 
     relative_path = full_path.delete_prefix(@root)
     load_gitignore_recursive(relative_path) if @gitignore_enabled
 
     filename = ::File.basename(relative_path)
+    content = content.slice(/.*/) if content # we only care about the first line
 
-    @rule_sets.allowed_recursive?(relative_path, full_path, filename, content)
-  rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-    false
+    @rule_sets.allowed_recursive?(relative_path, directory, full_path, filename, content)
   end
   alias_method :===, :allowed?
 
@@ -77,7 +88,7 @@ class FastIgnore
       paths << path
     end
 
-    paths.reverse_each(&method(:load_gitignore))
+    paths.reverse_each { |p| load_gitignore(p) }
   end
 
   def load_gitignore(parent_path, check_exists: true)
@@ -93,21 +104,19 @@ class FastIgnore
     load_gitignore(parent_relative_path, check_exists: false) if @gitignore_enabled && children.include?('.gitignore')
 
     children.each do |filename|
-      begin
-        full_path = parent_full_path + filename
-        relative_path = parent_relative_path + filename
-        dir = @follow_symlinks_method.call(full_path).directory?
+      full_path = parent_full_path + filename
+      relative_path = parent_relative_path + filename
+      dir = @follow_symlinks_method.call(full_path).directory?
 
-        next unless @rule_sets.allowed_unrecursive?(relative_path, dir, full_path, filename)
+      next unless @rule_sets.allowed_unrecursive?(relative_path, dir, full_path, filename)
 
-        if dir
-          each_recursive(full_path + '/', relative_path + '/', &block)
-        else
-          yield(@relative ? relative_path : @root + relative_path)
-        end
-      rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-        nil
+      if dir
+        each_recursive(full_path + '/', relative_path + '/', &block)
+      else
+        yield(@relative ? relative_path : @root + relative_path)
       end
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      nil
     end
   end
 end

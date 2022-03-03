@@ -61,12 +61,9 @@ class FastIgnore
 
     def first_line(path) # rubocop:disable Metrics/MethodLength
       file = ::File.new(path)
-      first_line = new_fragment = file.sysread(64)
+      first_line = file.sysread(64)
       if first_line.start_with?('#!')
-        until new_fragment.include?("\n")
-          new_fragment = file.sysread(64)
-          first_line += new_fragment
-        end
+        first_line += file.readline unless first_line.match?(/\n/)
       else
         file.close
         return
