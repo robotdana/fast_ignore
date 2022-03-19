@@ -46,12 +46,20 @@ class FastIgnore
       skip(/\?/)
     end
 
-    def dash?
-      skip(/-/)
+    def character_class_literal
+      matched if scan(/[^\]\\][^\]\\-]*(?!-)/)
     end
 
-    def character_class_literal
-      matched if scan(/[^\]\-\\]+/)
+    def character_class_range_start
+      matched if scan(/(\\.|[^\\\]])(?=-(\\.|[^\\\]]))/)
+    end
+
+    def character_class_range_end
+      # we already confirmed this was going to match
+      # with the lookahead in character_class_range_start
+      skip(/-/)
+      scan(/(\\.|[^\\\]])/)
+      matched
     end
 
     def literal

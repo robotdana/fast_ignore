@@ -436,7 +436,11 @@ RSpec.describe FastIgnore do
 
       describe '"[]" matches one character in a selected range' do
         before do
-          create_file_list 'aa', 'ab', 'ac', 'ad', 'bib', 'b/b', 'bab', 'a[', 'bb', 'a^', 'a[bc', 'a!', 'a+', 'a-', 'a$'
+          create_file_list(
+            'aa', 'ab', 'ac', 'ad', 'bib', 'b/b',
+            'bab', 'a[', 'a]', 'bb', 'a^', 'a[bc',
+            'a!', 'a+', 'a-', 'a$'
+          )
         end
 
         it 'matches a single character in a character class' do
@@ -450,7 +454,105 @@ RSpec.describe FastIgnore do
           gitignore 'a[a-c]'
 
           expect(subject).not_to match_files('ad')
-          expect(subject).to match_files('ab', 'aa', 'ac')
+          expect(subject).to match_files('ab', 'aa', 'ab', 'ac')
+        end
+
+        it 'treats a backward character class range as only the first character of the range' do
+          gitignore 'a[d-a]'
+
+          expect(subject).to match_files('ad')
+          expect(subject).not_to match_files('aa', 'ac', 'ab', 'a-')
+        end
+
+        it 'treats a negated backward character class range as only the first character of the range' do
+          gitignore 'a[^d-a]'
+
+          expect(subject).not_to match_files('ad')
+          expect(subject).to match_files('aa', 'ac', 'ab', 'a-')
+        end
+
+        it 'treats a escaped backward character class range as only the first character of the range' do
+          gitignore 'a[\\]-\\[]'
+
+          expect(subject).to match_files('a]')
+          expect(subject).not_to match_files('a[')
+        end
+
+        it 'treats a negated escaped backward character class range as only the first character of the range' do
+          gitignore 'a[^\\]-\\[]'
+
+          expect(subject).not_to match_files('a]')
+          expect(subject).to match_files('a[')
+        end
+
+        it 'treats a escaped character class range as as a range' do
+          gitignore 'a[\\[-\\]]'
+
+          expect(subject).to match_files('a]', 'a[')
+          expect(subject).not_to match_files('a-')
+        end
+
+        it 'treats a negated escaped character class range as a range' do
+          gitignore 'a[^\\[-\\]]'
+
+          expect(subject).not_to match_files('a]', 'a[')
+          expect(subject).to match_files('a-')
+        end
+
+        it 'treats an unnecessarily escaped character class range as a range' do
+          gitignore 'a[\\a-\\c]'
+
+          expect(subject).to match_files('aa', 'ab', 'ac')
+          expect(subject).not_to match_files('a-')
+        end
+
+        it 'treats a negated unnecessarily escaped character class range as a range' do
+          gitignore 'a[^\\a-\\c]'
+
+          expect(subject).not_to match_files('aa', 'ab', 'ac')
+          expect(subject).to match_files('a-')
+        end
+
+        it 'treats a backward character class range with other options as only the first character of the range' do
+          gitignore 'a[d-ba]'
+
+          expect(subject).to match_files('aa', 'ad')
+          expect(subject).not_to match_files('ac', 'ab', 'a-')
+        end
+
+        it 'treats a negated backward character class range with other options as the first character of the range' do
+          gitignore 'a[^d-ba]'
+
+          expect(subject).not_to match_files('aa', 'ad')
+          expect(subject).to match_files('ac', 'ab', 'a-')
+        end
+
+        it 'treats a backward char class range with other initial options as the first char of the range' do
+          gitignore 'a[ad-b]'
+
+          expect(subject).to match_files('aa', 'ad')
+          expect(subject).not_to match_files('ac', 'ab', 'a-')
+        end
+
+        it 'treats a negated backward char class range with other initial options as the first char of the range' do
+          gitignore 'a[^ad-b]'
+
+          expect(subject).not_to match_files('aa', 'ad')
+          expect(subject).to match_files('ac', 'ab', 'a-')
+        end
+
+        it 'treats a equal character class range as only the first character of the range' do
+          gitignore 'a[d-d]'
+
+          expect(subject).to match_files('ad')
+          expect(subject).not_to match_files('aa', 'ac', 'ab', 'a-')
+        end
+
+        it 'treats a negated equal character class range as only the first character of the range' do
+          gitignore 'a[^d-d]'
+
+          expect(subject).not_to match_files('ad')
+          expect(subject).to match_files('aa', 'ac', 'ab', 'a-')
         end
 
         it 'interprets a / after a character class range as not there' do

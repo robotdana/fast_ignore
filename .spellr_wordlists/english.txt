@@ -38,6 +38,7 @@ janky
 jruby
 klass
 llo
+lookahead
 memoize
 memoized
 nestedly

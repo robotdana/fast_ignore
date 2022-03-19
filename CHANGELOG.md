@@ -1,3 +1,7 @@
+# v0.17.1
+- fix handling of backward character classes `[z-a]`
+  previously this raised a RegexpError, but git just considered it to be identical to `[z]`, now we match the git behaviour (but why would you ever do this?, i only found it because of the fuzz spec in the `leftovers` gem)
+
 # v0.17.0
 - allow overriding `exists:` in `allowed?`
 - allow setting `include_directories: true` in `allowed?`

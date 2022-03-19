@@ -108,14 +108,30 @@ class FastIgnore
       unmatchable_rule! if @s.character_class_end?
 
       until @s.character_class_end?
+        next if process_character_class_range
         next if process_backslash
-        next @re.append_character_class_dash if @s.dash?
         next if @re.append_escaped(@s.character_class_literal)
 
         unmatchable_rule!
       end
 
       @re.append_character_class_close
+    end
+
+    def process_character_class_range
+      start = @s.character_class_range_start
+      return unless start
+
+      start = start.delete_prefix('\\')
+
+      @re.append_escaped(start)
+
+      finish = @s.character_class_range_end.delete_prefix('\\')
+
+      return true unless start < finish
+
+      @re.append_character_class_dash
+      @re.append_escaped(finish)
     end
 
     def process_end
