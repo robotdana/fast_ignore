@@ -1,3 +1,7 @@
+# v0.17.2
+- Remove unnecessary backport code that was leftover when support for 2.4 was dropped
+- Tiny performance improvements from rubocop-performance's suggestions
+
 # v0.17.1
 - fix handling of backward character classes `[z-a]`
   previously this raised a RegexpError, but git just considered it to be identical to `[z]`, now we match the git behaviour (but why would you ever do this?, i only found it because of the fuzz spec in the `leftovers` gem)
