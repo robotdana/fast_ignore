@@ -63,7 +63,7 @@ class FastIgnore
       file = ::File.new(path)
       first_line = file.sysread(64)
       if first_line.start_with?('#!')
-        first_line += file.readline unless first_line.match?(/\n/)
+        first_line += file.readline unless first_line.include?("\n")
       else
         file.close
         return

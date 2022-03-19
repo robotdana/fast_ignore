@@ -100,9 +100,8 @@ class FastIgnore
 
     def on_branch?(branch_pattern)
       branch_pattern += '**' if branch_pattern.end_with?('/')
-      current_branch = ::File.readable?("#{root}/.git/HEAD") && ::File.read("#{root}/.git/HEAD").sub!(
-        %r{\Aref: refs/heads/}, ''
-      )
+      current_branch = ::File.readable?("#{root}/.git/HEAD") &&
+        ::File.read("#{root}/.git/HEAD").delete_prefix('ref: refs/heads/')
       return unless current_branch
 
       # goddamit git what does 'a pattern with standard globbing wildcards' mean

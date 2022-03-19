@@ -34,7 +34,7 @@ class FastIgnore
   end
 
   def each(&block)
-    return enum_for(:each) unless block_given?
+    return enum_for(:each) unless block
 
     dir_pwd = ::Dir.pwd
     root_from_pwd = @root.start_with?(dir_pwd) ? ".#{@root.delete_prefix(dir_pwd)}" : @root

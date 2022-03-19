@@ -11,7 +11,7 @@ class FastIgnore
     end
 
     def expand_rule_path
-      anchored! unless @s.match?(/\*/)
+      anchored! unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
       return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
 
       dir_only! if @s.match?(%r{.*/\s*\z})
