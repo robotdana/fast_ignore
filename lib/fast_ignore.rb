@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative './fast_ignore/backports'
-
 require 'set'
 require 'strscan'
 
@@ -23,11 +21,6 @@ class FastIgnore
   require_relative './fast_ignore/gitconfig_parser'
 
   include ::Enumerable
-
-  # :nocov:
-  using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
-  using ::FastIgnore::Backports::DirEachChild if defined?(::FastIgnore::Backports::DirEachChild)
-  # :nocov:
 
   def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_set_builder_args)
     @relative = relative

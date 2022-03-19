@@ -3,7 +3,6 @@
 require 'simplecov-console'
 
 SimpleCov.start do
-  add_filter '/backports'
   add_filter '/spec/'
 
   enable_coverage(:branch)

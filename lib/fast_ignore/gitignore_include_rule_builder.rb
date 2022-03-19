@@ -2,10 +2,6 @@
 
 class FastIgnore
   class GitignoreIncludeRuleBuilder < GitignoreRuleBuilder
-    # :nocov:
-    using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
-    # :nocov:
-
     def initialize(rule, file_path, expand_path_from = nil)
       super(rule, file_path)
 

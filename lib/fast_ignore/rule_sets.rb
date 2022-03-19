@@ -2,10 +2,6 @@
 
 class FastIgnore
   class RuleSets
-    # :nocov:
-    using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
-    # :nocov:
-
     def initialize( # rubocop:disable Metrics/ParameterLists
       root:,
       ignore_rules: nil,

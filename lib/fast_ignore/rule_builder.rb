@@ -3,10 +3,6 @@
 class FastIgnore
   module RuleBuilder
     class << self
-      # :nocov:
-      using ::FastIgnore::Backports::DeletePrefixSuffix if defined?(::FastIgnore::Backports::DeletePrefixSuffix)
-      # :nocov:
-
       def build(rule, allow, expand_path_with, file_root)
         if rule.delete_prefix!('#!:')
           shebang_rules(rule, allow, file_root)
