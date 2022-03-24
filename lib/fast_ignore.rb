@@ -19,6 +19,7 @@ class FastIgnore
   require_relative './fast_ignore/unmatchable_rule'
   require_relative './fast_ignore/shebang_rule'
   require_relative './fast_ignore/gitconfig_parser'
+  require_relative './fast_ignore/path_expander'
 
   include ::Enumerable
 
@@ -27,7 +28,7 @@ class FastIgnore
     @follow_symlinks_method = ::File.method(follow_symlinks ? :stat : :lstat)
     @gitignore_enabled = gitignore
     @loaded_gitignore_files = ::Set[''] if gitignore
-    @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
+    @root = "#{PathExpander.expand_path(root.to_s, Dir.pwd)}/"
     @rule_sets = ::FastIgnore::RuleSets.new(root: @root, gitignore: gitignore, **rule_set_builder_args)
 
     freeze
@@ -43,7 +44,7 @@ class FastIgnore
   end
 
   def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    full_path = ::File.expand_path(path, @root)
+    full_path = PathExpander.expand_path(path, @root)
     return false unless full_path.start_with?(@root)
 
     begin

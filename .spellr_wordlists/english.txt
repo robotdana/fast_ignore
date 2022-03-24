@@ -6,6 +6,7 @@ baz
 changelog
 chdir
 codebase
+coinflip
 config
 cov
 cyclomatic
@@ -76,6 +77,7 @@ todo
 toplevel
 ttributes
 txt
+unexpandable
 unrecursive
 unstaged
 upcase

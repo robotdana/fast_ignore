@@ -55,7 +55,7 @@ class FastIgnore
           include_path = scan_value(file)
 
           value = ::FastIgnore::GitconfigParser.parse(
-            ::File.expand_path(include_path, ::File.dirname(path)),
+            PathExpander.expand_path(include_path, ::File.dirname(path)),
             root: root,
             nesting: nesting + 1
           )

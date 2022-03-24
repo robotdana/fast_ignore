@@ -349,6 +349,17 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given an argv rule with an unexpandable user path' do
+      let(:args) { { argv_rules: '~not-a-user635728345/foo' } }
+
+      it 'treats it as literal' do
+        create_file_list 'foo', './~not-a-user635728345/foo'
+
+        expect(subject).not_to allow_files('foo')
+        expect(subject).to allow_files('~not-a-user635728345/foo')
+      end
+    end
+
     context 'when given an array of negated argv_rules with absolute paths and gitignore' do
       let(:args) { { argv_rules: ['*', '!./foo', "!#{Dir.pwd}/baz"] } }
 

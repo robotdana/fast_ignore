@@ -15,7 +15,8 @@ class FastIgnore
       return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
 
       dir_only! if @s.match?(%r{.*/\s*\z})
-      @s.string.replace(::File.expand_path(@s.rest))
+
+      @s.string.replace(PathExpander.expand_path(@s.rest, @expand_path_from))
       @s.string.delete_prefix!(@expand_path_from)
       @s.pos = 0
     end
@@ -50,15 +51,15 @@ class FastIgnore
         segment_joins_count += @file_path.escaped_segments_length
 
         if @anchored
-          "\\A#{@file_path.escaped_segments_joined}"
+          +"\\A#{@file_path.escaped_segments_joined}"
         else
-          "\\A#{@file_path.escaped_segments_joined}(?:.*/)?"
+          +"\\A#{@file_path.escaped_segments_joined}(?:.*/)?"
         end
       else
         prefix
       end
 
-      out = parent_prefix.dup
+      out = parent_prefix
       unless @parent_segments.empty?
         out << '(?:'
         out << @parent_segments.join('/(?:')
@@ -74,7 +75,6 @@ class FastIgnore
     end
 
     def build_child_file_rule
-      # Regexp::IGNORECASE = 1
       ::FastIgnore::Rule.new(@re.append_dir.to_regexp, @negation, anchored_or_file_path, false)
     end
 

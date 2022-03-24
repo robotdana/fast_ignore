@@ -1,3 +1,8 @@
+# v0.17.3
+- Add fuzz tests, fix a couple more edge cases it revealed:
+  - `~not_a_user` will be considered literal rather than raising an error, `~a_user` will continue to be expanded to the home directory of `a_user` when used in an `argv_rules:` or `allowed?`
+  - an `include_rule:` with a trailing `/` was raising a FrozenError in some circumstances.
+
 # v0.17.2
 - Remove unnecessary backport code that was leftover when support for 2.4 was dropped
 - Tiny performance improvements from rubocop-performance's suggestions

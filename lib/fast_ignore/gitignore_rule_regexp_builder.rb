@@ -1,17 +1,59 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  class GitignoreRuleRegexpBuilder < String
+  class GitignoreRuleRegexpBuilder
+    def initialize
+      @string = +''
+    end
+
     def to_regexp
       # Regexp::IGNORECASE = 1
-      ::Regexp.new(self, 1)
+      ::Regexp.new(@string, 1)
+    end
+
+    # String methods
+
+    def to_str
+      @string
+    end
+    alias_method :to_s, :to_str
+
+    def empty?
+      @string.empty?
     end
 
     def append(value)
-      self.<<(value)
+      @string.<<(value)
 
       self
+    rescue FrozenError
+      # :nocov:
+      # the string seems to become inadvertently frozen in 2.5 and 2.6 with specific inputs
+      # and i don't understand why
+      # it seems like it's happening during the Regexp.new
+      # for some reason that i don't understand
+      @string = @string.dup
+      append(value)
+      # :nocov:
     end
+    alias_method :<<, :append
+
+    def prepend(value)
+      @string.prepend(value)
+
+      self
+    rescue FrozenError
+      # :nocov:
+      # the string seems to become inadvertently frozen in 2.5 and 2.6 with specific inputs
+      # and i don't understand why
+      # it seems like it's happening during the Regexp.new
+      # for some reason that i don't understand
+      @string = @string.dup
+      prepend(value)
+      # :nocov:
+    end
+
+    # builder methods
 
     def append_escaped(value)
       return unless value

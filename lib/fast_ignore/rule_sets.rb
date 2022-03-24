@@ -83,7 +83,7 @@ class FastIgnore
     end
 
     def build_set_from_file(filename, allow: false, gitignore: false, check_exists: false, squash: true)
-      filename = ::File.expand_path(filename, @project_root)
+      filename = PathExpander.expand_path(filename, @project_root)
       return if check_exists && !::File.exist?(filename)
       raise ::FastIgnore::Error, "#{filename} is not within #{@project_root}" unless filename.start_with?(@project_root)
 

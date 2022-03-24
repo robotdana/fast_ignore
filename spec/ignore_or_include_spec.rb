@@ -161,6 +161,13 @@ RSpec.describe FastIgnore do
           expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz')
           expect(subject).to match_files('foo/bar')
         end
+
+        it 'handles this specific edge case i stumbled across' do
+          gitignore "Ȋ/\nfoo/"
+
+          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz')
+          expect(subject).to match_files('foo/bar')
+        end
       end
     end
 
