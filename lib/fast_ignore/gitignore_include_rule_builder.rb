@@ -2,13 +2,11 @@
 
 class FastIgnore
   class GitignoreIncludeRuleBuilder < GitignoreRuleBuilder
-    def initialize(rule, expand_path_from = nil, allow_children: true)
+    def initialize(rule, expand_path_with: nil)
       super(rule)
 
-      @parent_segments = []
       @negation = true
-      @expand_path_from = expand_path_from
-      @allow_children = allow_children
+      @expand_path_from = expand_path_with
     end
 
     def expand_rule_path
@@ -30,55 +28,57 @@ class FastIgnore
       throw :abort_build, ::FastIgnore::UnmatchableRule
     end
 
-    def nothing_emitted?
-      @re.empty? && @parent_segments.empty?
-    end
-
-    def emit_dir
-      anchored!
-
-      @parent_segments << @re
-      @re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
-    end
-
     def emit_end
-      @dir_only || @re.append_end_dir_or_anchor
+      if @dir_only
+        @child_re = @re.dup
+        @re.append_end_anchor
+      else
+        @re.append_end_dir_or_anchor
+      end
+
       break!
     end
 
-    def parent_dir_re
-      segment_joins_count = @parent_segments.length
-      parent_prefix = prefix
+    def build_parent_dir_rules
+      return unless @negation
 
-      out = parent_prefix
-      unless @parent_segments.empty?
-        out << '(?:'
-        out << @parent_segments.join('/(?:')
-        out << '/'
+      if @anchored
+        parent_pattern = @s.string.dup
+        if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
+        end
+      else
+        [::FastIgnore::Rule.new(//, true, @anchored, true, 'any parent')]
       end
-      out << (')?' * segment_joins_count)
-      out #+ "(/|\\z)"
-    end
-
-    def build_parent_dir_rule
-      # Regexp::IGNORECASE = 1
-      ::FastIgnore::Rule.new(::Regexp.new(parent_dir_re, 1), true, @anchored, true)
     end
 
     def build_child_file_rule
-      ::FastIgnore::Rule.new(@re.append_dir.to_regexp, @negation, @anchored, false)
+      if @child_re.end_with?('/')
+        @child_re.append_many_non_dir.append_dir if @dir_only
+      else
+        @child_re.append_dir
+      end
+
+      @child_re.prepend(prefix)
+
+      # Regexp::IGNORECASE = 1
+      ::FastIgnore::Rule.new(@child_re.to_regexp, @negation, @anchored, false, 'build_child_file_rule')
     end
 
-    def build_rule
-      joined_re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
-      joined_re.append(@parent_segments.join('/'))
-      joined_re.append_dir unless @parent_segments.empty?
-      joined_re.append(@re)
-      @re = joined_re
+    def build_as_parent
+      anchored!
+      dir_only!
 
-      rules = [super, build_parent_dir_rule]
-      (rules << build_child_file_rule) if @dir_only && @allow_children
-      rules
+      catch :abort_build do
+        process_rule
+        build_rule(child_file_rule: false)
+      end
+    end
+
+    def build_rule(child_file_rule: true)
+      @child_re ||= @re.dup # in case emit_end wasn't called
+
+      [super(), *build_parent_dir_rules, (build_child_file_rule if child_file_rule)].compact
     end
 
     def process_rule

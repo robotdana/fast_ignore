@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  class RuleSets
+  class RuleGroups
     def initialize( # rubocop:disable Metrics/ParameterLists
       root:,
       ignore_rules: nil,

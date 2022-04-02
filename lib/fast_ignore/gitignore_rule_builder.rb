@@ -3,7 +3,7 @@
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
     def initialize(rule)
-      @re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
+      @re = ::FastIgnore::PathRegexpBuilder.new
       @s = ::FastIgnore::GitignoreRuleScanner.new(rule)
 
       @negation = false
@@ -48,6 +48,11 @@ class FastIgnore
       @re.append_dir
     end
 
+    def emit_any_dir
+      anchored!
+      @re.append_any_dir
+    end
+
     def emit_end
       @re.append_end_anchor
       break!
@@ -59,11 +64,22 @@ class FastIgnore
       @re.append_escaped(@s.next_character) || unmatchable_rule!
     end
 
-    def process_star_end_after_slash
-      return true unless @s.star_end?
-
-      @re.append_many_non_dir
-      emit_end
+    def process_star_end_after_slash # rubocop:disable Metrics/MethodLength
+      if @s.star_end?
+        @re.append_many_non_dir
+        emit_end
+      elsif @s.two_star_end?
+        break!
+      elsif @s.star_slash_end?
+        @re.append_many_non_dir
+        dir_only!
+        emit_end
+      elsif @s.two_star_slash_end?
+        dir_only!
+        break!
+      else
+        true
+      end
     end
 
     def process_slash
@@ -75,7 +91,7 @@ class FastIgnore
       process_star_end_after_slash
     end
 
-    def process_two_stars # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    def process_two_stars # rubocop:disable Metrics/MethodLength
       return unless @s.two_stars?
       return break! if @s.end?
 
@@ -89,8 +105,7 @@ class FastIgnore
           if nothing_emitted?
             never_anchored!
           else
-            @re.append_any_dir
-            anchored!
+            emit_any_dir
           end
           process_star_end_after_slash
         end
@@ -159,7 +174,7 @@ class FastIgnore
     end
 
     def prefix
-      out = ::FastIgnore::GitignoreRuleRegexpBuilder.new
+      out = ::FastIgnore::PathRegexpBuilder.new
 
       if @anchored
         out.append_start_anchor

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FastIgnore
-  class GitignoreRuleRegexpBuilder
+  class PathRegexpBuilder
     def initialize
       @string = +''
     end
@@ -13,6 +13,14 @@ class FastIgnore
 
     # String methods
 
+    def dup
+      out = super
+
+      @string = @string.dup
+
+      out
+    end
+
     def to_str
       @string
     end
@@ -20,6 +28,10 @@ class FastIgnore
 
     def empty?
       @string.empty?
+    end
+
+    def end_with?(str)
+      @string.end_with?(str)
     end
 
     def append(value)
@@ -100,7 +112,7 @@ class FastIgnore
     end
 
     def append_character_class_open
-      append('(?!/)[')
+      append('(?!/)[') # why?
     end
 
     def append_character_class_negation

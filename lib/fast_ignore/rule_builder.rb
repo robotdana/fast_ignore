@@ -25,7 +25,7 @@ class FastIgnore
 
       def gitignore_rules(rule, allow, expand_path_with = nil)
         if allow
-          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, expand_path_with).build
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, expand_path_with: expand_path_with).build
         else
           ::FastIgnore::GitignoreRuleBuilder.new(rule).build
         end
