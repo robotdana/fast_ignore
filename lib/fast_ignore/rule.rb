@@ -58,8 +58,8 @@ class FastIgnore
     end
     # :nocov:
 
-    def match?(relative_path, _full_path, _filename, _content)
-      @rule.match?(relative_path)
+    def match?(candidate)
+      @rule.match?(candidate.relative_path_to_root)
     end
   end
 end

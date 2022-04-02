@@ -10,6 +10,7 @@ coinflip
 config
 cov
 cyclomatic
+cygwin
 denylist
 enoent
 enumerables
@@ -40,6 +41,7 @@ jruby
 klass
 llo
 lookahead
+mascheck
 memoize
 memoized
 nestedly

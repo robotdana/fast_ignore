@@ -11,7 +11,7 @@ class FastIgnore
       @file_rules = (squash ? squash_rules(rules.reject(&:dir_only?)) : rules.reject(&:dir_only?)).freeze
       @has_shebang_rules = rules.any?(&:shebang?)
 
-      @allowed_recursive = { ['.', true, nil] => true }
+      @allowed_recursive = { ::FastIgnore::Candidate.root => true }
       @allow = allow
       @gitignore = gitignore
 
@@ -26,17 +26,17 @@ class FastIgnore
       @file_rules = squash_rules(@file_rules + other.file_rules)
     end
 
-    def allowed_recursive?(relative_path, dir, full_path, filename, content = nil)
-      @allowed_recursive.fetch([relative_path, dir, content]) do |key|
-        @allowed_recursive[key] =
-          allowed_recursive?(::File.dirname(relative_path), true, nil, nil, nil) &&
-          allowed_unrecursive?(relative_path, dir, full_path, filename, content)
+    def allowed_recursive?(candidate)
+      @allowed_recursive.fetch(candidate) do
+        @allowed_recursive[candidate] =
+          allowed_recursive?(candidate.parent) &&
+          allowed_unrecursive?(candidate)
       end
     end
 
-    def allowed_unrecursive?(relative_path, dir, full_path, filename, content)
-      (dir ? @dir_rules : @file_rules).reverse_each do |rule|
-        return rule.negation? if rule.match?(relative_path, full_path, filename, content)
+    def allowed_unrecursive?(candidate)
+      (candidate.directory? ? @dir_rules : @file_rules).reverse_each do |rule|
+        return rule.negation? if rule.match?(candidate)
       end
 
       not @allow
