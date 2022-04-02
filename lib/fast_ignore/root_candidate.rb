@@ -43,7 +43,8 @@ class FastIgnore
 
     # use \0 because it can't be in paths
     def for_comparison
-      @for_comparison ||= "#{"\0" if @directory}#{@full_path}\0#{@first_line}"
+      @for_comparison ||= "#{"\0" if defined?(@directory) && @directory}" \
+        "#{@full_path}\0#{defined?(@first_line) && @first_line}"
     end
 
     def eql?(other)
