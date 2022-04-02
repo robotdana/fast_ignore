@@ -12,7 +12,7 @@ require_relative 'support/fuzz'
     $VERBOSE = original_verbose
   end
 
-  ENV.fetch('FUZZ_ITERATIONS', '1').to_i.times do |i|
+  ENV.fetch('FUZZ_ITERATIONS', '100').to_i.times do |i|
     it "ignore iteration #{i}" do
       gitignore = described_class.gitignore(i)
       puts gitignore
@@ -23,7 +23,7 @@ require_relative 'support/fuzz'
     end
   end
 
-  ENV.fetch('FUZZ_ITERATIONS', '1').to_i.times do |i|
+  ENV.fetch('FUZZ_ITERATIONS', '100').to_i.times do |i|
     it "include iteration #{i}" do
       gitignore = described_class.gitignore(i)
       puts gitignore
@@ -34,7 +34,7 @@ require_relative 'support/fuzz'
     end
   end
 
-  ENV.fetch('FUZZ_ITERATIONS', '1').to_i.times do |i|
+  ENV.fetch('FUZZ_ITERATIONS', '100').to_i.times do |i|
     it "argv iteration #{i}" do
       gitignore = described_class.gitignore(i)
       puts gitignore
