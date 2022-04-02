@@ -23,15 +23,12 @@ class FastIgnore
       end
     end
 
-    attr_reader :full_path
-
     def initialize(full_path, filename, directory, exists, content)
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
-      @relative_candidate = {}
     end
 
     def parent
