@@ -1,3 +1,11 @@
+# v0.17.4
+- Deprecated not using `relative: true`, it'll be the new default soon
+  prefix the root path in your own code
+- Deprecated `follow_symlinks:`, it's inaccurately named and awkward.
+
+- Plus lots of refactoring that _should_ have no effect on behaviour
+- Some performance regression due to the deprecation logic. we'll improve again after the deprecations are gone entirely.
+
 # v0.17.3
 - Add fuzz tests, fix a couple more edge cases it revealed:
   - `~not_a_user` will be considered literal rather than raising an error, `~a_user` will continue to be expanded to the home directory of `a_user` when used in an `argv_rules:` or `allowed?`
