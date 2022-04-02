@@ -1,27 +1,37 @@
 # frozen-string-literal: true
 
 class FastIgnore
-  class Candidate
-    attr_reader :relative_path_to_root
+  class RootCandidate
+    module RootDir
+      def for_comparison
+        "\0.\0"
+      end
 
-    class << self
-      def root
-        @root ||= new(nil, '.', nil, true, nil)
+      def eql?(other)
+        "\0.\0" == other.for_comparison
+      end
+      alias_method :==, :eql?
+
+      def hash
+        "\0.\0".hash
+      end
+
+      def relative_candidate(_)
+        self
       end
     end
 
-    def initialize(full_path, relative_path_to_root, filename, directory, content)
+    def initialize(full_path, filename, directory, content)
       @full_path = full_path
-      @relative_path_to_root = relative_path_to_root
       @filename = filename
       (@directory = directory) unless directory.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
+      @relative_candidate = {}
     end
 
     def parent
-      @parent ||= ::FastIgnore::Candidate.new(
+      @parent ||= ::FastIgnore::RootCandidate.new(
         ::File.dirname(@full_path),
-        ::File.dirname(@relative_path_to_root),
         nil,
         true,
         nil
@@ -30,7 +40,7 @@ class FastIgnore
 
     # use \0 because it can't be in paths
     def for_comparison
-      @for_comparison ||= "#{"\0" if @directory}#{@relative_path_to_root}\0#{@first_line}"
+      @for_comparison ||= "#{"\0" if @directory}#{@full_path}\0#{@first_line}"
     end
 
     def eql?(other)
@@ -40,6 +50,12 @@ class FastIgnore
 
     def hash
       @hash ||= for_comparison.hash
+    end
+
+    def relative_candidate(relative_to)
+      @relative_candidate.fetch(relative_to) do
+        @relative_candidate[relative_to] = build_candidate_relative_to(relative_to)
+      end
     end
 
     def directory?
@@ -75,6 +91,15 @@ class FastIgnore
         # :nocov:
         nil
       end
+    end
+
+    private
+
+    def build_candidate_relative_to(relative_to)
+      relative_path = @full_path.dup.delete_prefix!(relative_to)
+      return unless relative_path
+
+      ::FastIgnore::RelativeCandidate.new(relative_path, self)
     end
   end
 end
