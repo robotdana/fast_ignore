@@ -1,6 +1,4 @@
 # v0.17.4
-- Deprecated not using `relative: true`, it'll be the new default soon
-  prefix the root path in your own code
 - Deprecated `follow_symlinks:`, it's inaccurately named and awkward.
 
 - Plus lots of refactoring that _should_ have no effect on behaviour

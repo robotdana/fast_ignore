@@ -37,7 +37,7 @@ class FastIgnore
           if dir
             each(full_path + '/', relative_path + '/', &block)
           else
-            yield(prefixed_path(relative_path))
+            yield(relative_path)
           end
         rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
           nil

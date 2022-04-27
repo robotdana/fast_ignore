@@ -37,7 +37,8 @@ class FastIgnore
     rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
 
     walker_class = gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
-    @walker = walker_class.new(rule_groups, root: @root, follow_symlinks: follow_symlinks, relative: relative)
+    @relative = relative
+    @walker = walker_class.new(rule_groups, root: @root, follow_symlinks: follow_symlinks)
     freeze
   end
 
@@ -55,6 +56,8 @@ class FastIgnore
   def each(&block)
     return enum_for(:each) unless block
 
-    @walker.each(@root, '', &block)
+    prefix = @relative ? '' : @root
+
+    @walker.each(@root, prefix, &block)
   end
 end
