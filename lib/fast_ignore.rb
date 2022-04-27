@@ -18,7 +18,7 @@ class FastIgnore
   require_relative 'fast_ignore/matchers/shebang_regexp'
   require_relative 'fast_ignore/gitconfig_parser'
   require_relative 'fast_ignore/path_expander'
-  require_relative 'fast_ignore/root_candidate'
+  require_relative 'fast_ignore/candidate'
   require_relative 'fast_ignore/relative_candidate'
   require_relative 'fast_ignore/matchers/within_dir'
   require_relative 'fast_ignore/matchers/allow_any_dir'

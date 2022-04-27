@@ -10,25 +10,25 @@ class FastIgnore
       attr_reader :squash_id
       attr_reader :rule
 
-      def initialize(rule, anchored, dir_only)
+      def initialize(rule, squashable, dir_only)
         @rule = rule
         @dir_only = dir_only
-        @anchored = anchored
-        @squash_id = anchored ? :allow : object_id
+        @squashable = squashable
+        @squash_id = squashable ? :allow : object_id
 
         freeze
       end
 
       def squash(list)
-        self.class.new(::Regexp.union(list.map(&:rule)), @anchored, @dir_only)
+        self.class.new(::Regexp.union(list.map(&:rule)), @squashable, @dir_only)
       end
 
       def file_only?
         false
       end
 
-      def shebang?
-        false
+      def weight
+        1
       end
 
       # :nocov:

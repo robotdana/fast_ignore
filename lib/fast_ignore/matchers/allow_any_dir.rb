@@ -5,7 +5,7 @@ class FastIgnore
     module AllowAnyDir
       class << self
         def squash_id
-          :allow
+          :allow_any_dir
         end
 
         def dir_only?
@@ -16,8 +16,12 @@ class FastIgnore
           false
         end
 
-        def shebang?
-          false
+        def squash(_)
+          self
+        end
+
+        def weight
+          0
         end
 
         # :nocov:

@@ -1,25 +1,10 @@
 # frozen-string-literal: true
 
 class FastIgnore
-  class RootCandidate
-    module RootDir
-      class << self
-        def for_comparison
-          "\0/\0"
-        end
-
-        def eql?(other)
-          other.for_comparison == "\0/\0"
-        end
-        alias_method :==, :eql?
-
-        def hash
-          "\0/\0".hash
-        end
-
-        def relative_to(_)
-          self
-        end
+  class Candidate
+    class << self
+      def root
+        @root ||= new('/', nil, true, true, nil)
       end
     end
 
@@ -32,28 +17,18 @@ class FastIgnore
     end
 
     def parent
-      @parent ||= ::FastIgnore::RootCandidate.new(
-        ::File.dirname(@full_path),
-        nil,
-        true,
-        true,
-        nil
-      )
+      @parent ||= ::FastIgnore::Candidate.new(::File.dirname(@full_path), nil, true, true, nil)
     end
 
     # use \0 because it can't be in paths
-    def for_comparison
-      @for_comparison ||= "#{"\0" if defined?(@directory) && @directory}" \
-        "#{@full_path}\0#{defined?(@first_line) && @first_line}"
-    end
-
-    def eql?(other)
-      for_comparison == other.for_comparison
-    end
-    alias_method :==, :eql?
-
-    def hash
-      @hash ||= for_comparison.hash
+    def key
+      @key ||= :"#{
+        "\0" if defined?(@directory) && @directory
+      }#{
+        @full_path
+      }\0#{
+        @first_line if defined?(@first_line)
+      }"
     end
 
     def relative_to(dir)
@@ -66,7 +41,7 @@ class FastIgnore
       return @directory if defined?(@directory)
 
       @directory = ::File.lstat(@full_path).directory?
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG
       @exists ||= false
       @directory = false
     end
@@ -75,8 +50,10 @@ class FastIgnore
       return @exists if defined?(@exists)
 
       @exists = ::File.exist?(@full_path)
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      # :nocov: can't quite get this set up in a test
       @exists = false
+      # :nocov:
     end
 
     def filename

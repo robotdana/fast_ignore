@@ -7,6 +7,7 @@ class FastIgnore
         unless relative
           warn 'FastIgnore deprecation: yielding absolute paths (with relative: false or the default) is deprecated'
         end
+
         warn 'FastIgnore deprecation: follow_symlinks argument is deprecated' if follow_symlinks
 
         @root = root

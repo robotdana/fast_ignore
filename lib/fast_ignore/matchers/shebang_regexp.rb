@@ -35,11 +35,11 @@ class FastIgnore
       def match?(candidate)
         return false if candidate.filename.include?('.')
 
-        @return_value if candidate.first_line&.match?(@rule)
+        @return_value if candidate.first_line.match?(@rule)
       end
 
-      def shebang?
-        true
+      def weight
+        2
       end
     end
   end

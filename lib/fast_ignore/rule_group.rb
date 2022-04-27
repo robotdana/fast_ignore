@@ -5,7 +5,7 @@ class FastIgnore
     def initialize(patterns, allow)
       @matchers = Array(patterns).flat_map { |x| x.build_matchers(include: allow) }.compact
       @allow = allow
-      @allowed_recursive = { ::FastIgnore::RootCandidate::RootDir => true }
+      @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
     end
 
     def empty?
@@ -22,17 +22,17 @@ class FastIgnore
       super
     end
 
-    def allowed_recursive?(root_candidate)
-      @allowed_recursive.fetch(root_candidate) do
-        @allowed_recursive[root_candidate] =
-          allowed_recursive?(root_candidate.parent) &&
-          allowed_unrecursive?(root_candidate)
+    def allowed_recursive?(candidate)
+      @allowed_recursive.fetch(candidate.key) do
+        @allowed_recursive[candidate.key] =
+          allowed_recursive?(candidate.parent) &&
+          allowed_unrecursive?(candidate)
       end
     end
 
-    def allowed_unrecursive?(root_candidate)
+    def allowed_unrecursive?(candidate)
       @matchers.reverse_each do |matcher|
-        val = matcher.match?(root_candidate)
+        val = matcher.match?(candidate)
         return val == :allow if val
       end
 

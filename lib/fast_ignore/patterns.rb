@@ -2,16 +2,13 @@
 
 class FastIgnore
   class Patterns
-    def initialize(*patterns, from_file: nil, format: :gitignore, root: nil) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-      raise ArgumentError, "from_file: can't be used with patterns arguments" unless patterns.empty? || !from_file
-
+    def initialize(*patterns, from_file: nil, format: :gitignore, root: nil)
       @format = format
       if from_file
-        from_file = PathExpander.expand_path(from_file, nil)
-        @root = PathExpander.expand_path(root || ::File.dirname(from_file), nil)
+        @root = root || ::File.dirname(from_file)
         @patterns = ::File.exist?(from_file) ? ::File.readlines(from_file) : []
       else
-        @root = PathExpander.expand_path(root || ::Dir.pwd, nil)
+        @root = root || ::Dir.pwd
         @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
       end
       @root += '/' unless @root.end_with?('/')

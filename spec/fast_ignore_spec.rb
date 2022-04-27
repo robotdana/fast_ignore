@@ -129,6 +129,11 @@ RSpec.describe FastIgnore do
       expect(subject.allowed?('a', directory: false)).to be true
     end
 
+    it '#allowed? returns false for a directory by default' do
+      create_file_list 'a'
+      expect(subject.allowed?('a', directory: true)).to be false
+    end
+
     it '#allowed? can be lied to with directory:' do
       create_file_list 'a/b'
       expect(subject.allowed?('a', directory: false)).to be true
@@ -151,12 +156,77 @@ RSpec.describe FastIgnore do
       expect(subject.allowed?('a/b', exists: true)).to be false
     end
 
+    context 'with gitignore: false' do
+      let(:args) { { gitignore: false } }
+
+      it 'returns hidden files' do
+        create_file_list '.gitignore', '.a', '.b/.c'
+
+        expect(subject).to allow_exactly('.gitignore', '.a', '.b/.c')
+      end
+
+      it '#allowed? returns false nonexistent files' do
+        expect(subject.allowed?('utter/nonsense')).to be false
+      end
+
+      it '#allowed? can be shortcut with directory:' do
+        create_file_list 'a'
+        expect(subject.allowed?('a', directory: false)).to be true
+      end
+
+      it '#allowed? can be lied to with directory: false' do
+        create_file_list 'a/b'
+        expect(subject.allowed?('a', directory: false)).to be true
+      end
+
+      it '#allowed? can be lied to with directory: true' do
+        create_file_list 'a/b'
+        expect(subject.allowed?('a/b', directory: true)).to be false
+      end
+
+      it '#allowed? can be allowed with include_directories: true' do
+        create_file_list 'a/b'
+        expect(subject.allowed?('a', include_directories: true)).to be true
+      end
+
+      it '#allowed? can be allowed with include_directories: true with trailing slash' do
+        create_file_list 'a/b'
+        expect(subject.allowed?('a/', include_directories: true)).to be true
+      end
+
+      it '#allowed? can be allowed with include_directories: true with a non-dir' do
+        create_file_list 'a'
+        expect(subject.allowed?('a', exists: true, directory: false, include_directories: true)).to be true
+      end
+
+      context 'with denied a directory' do
+        let(:args) { { gitignore: false, ignore_rules: 'a/' } }
+
+        it "#allowed? won't be confused by caching dirs as non dirs" do
+          expect(subject.allowed?('a', exists: true)).to be true
+          expect(subject.allowed?('a/b', exists: true)).to be false
+        end
+      end
+    end
+
     it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
       create_symlink('foo' => 'foo_target')
       FileUtils.rm('foo_target')
 
       expect(subject).not_to be_allowed('foo')
+      expect(subject).not_to be_allowed('foo', directory: true)
+      expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
+    end
+
+    it 'rescues soft link loops' do
+      create_file_list 'foo_target', '.gitignore'
+      create_symlink('foo' => 'foo_target')
+      FileUtils.rm('foo_target')
+      create_symlink('foo_target' => 'foo')
+
+      expect(subject).not_to be_allowed('foo')
+      expect(subject).not_to be_allowed('foo', directory: true)
       expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
     end
 
@@ -185,6 +255,19 @@ RSpec.describe FastIgnore do
 
         expect(subject).not_to allow_files('foo', 'foo_target')
         expect(subject).to allow_files('.gitignore')
+      end
+
+      context 'with gitignore: false' do
+        let(:args) { { follow_symlinks: true, gitignore: false } }
+
+        it 'ignores soft links to nowhere' do
+          create_file_list 'foo_target', '.gitignore'
+          create_symlink('foo' => 'foo_target')
+          FileUtils.rm('foo_target')
+
+          expect(subject).not_to allow_files('foo', 'foo_target')
+          expect(subject).to allow_files('.gitignore')
+        end
       end
 
       it 'allows soft links to directories' do

@@ -15,6 +15,7 @@ else
   require 'leftovers/rake_task'
   Leftovers::RakeTask.generate_task
 
+  ENV['COVERAGE'] = '1'
   [:spec, :rubocop, :spellr, :leftovers, :build]
 end
 

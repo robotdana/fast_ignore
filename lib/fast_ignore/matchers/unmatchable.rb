@@ -12,8 +12,8 @@ class FastIgnore
           false
         end
 
-        def shebang?
-          false
+        def weight
+          0
         end
 
         # :nocov:
