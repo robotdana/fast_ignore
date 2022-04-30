@@ -24,7 +24,6 @@ class FastIgnore
   require_relative 'fast_ignore/matchers/allow_path_regexp'
   require_relative 'fast_ignore/matchers/ignore_path_regexp'
   require_relative 'fast_ignore/patterns'
-  require_relative 'fast_ignore/walkers/base'
   require_relative 'fast_ignore/walkers/file_system'
   require_relative 'fast_ignore/walkers/gitignore_collecting_file_system'
   require_relative 'fast_ignore/gitignore_rule_group'
@@ -34,11 +33,10 @@ class FastIgnore
 
   include ::Enumerable
 
-  def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
+  def initialize(relative: false, root: nil, gitignore: :auto, **rule_group_builder_args)
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
     @gitignore = gitignore
     @rule_group_builder_args = rule_group_builder_args
-    @follow_symlinks = follow_symlinks
     @relative = relative
   end
 
@@ -70,7 +68,7 @@ class FastIgnore
     rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: @gitignore, **@rule_group_builder_args)
 
     walker_class = @gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
-    @walker = walker_class.new(rule_groups, follow_symlinks: @follow_symlinks)
+    @walker = walker_class.new(rule_groups)
 
     freeze
   end
