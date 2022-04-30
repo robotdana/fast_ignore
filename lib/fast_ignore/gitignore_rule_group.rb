@@ -20,7 +20,7 @@ class FastIgnore
       return if @loaded_paths.include?(dir)
 
       @loaded_paths << dir
-      matcher = ::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore").build_matchers(include: false)
+      matcher = ::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore").build_matchers(allow: false)
       @matchers += matcher unless !matcher || matcher.empty?
     end
 

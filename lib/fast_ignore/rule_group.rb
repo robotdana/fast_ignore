@@ -3,7 +3,7 @@
 class FastIgnore
   class RuleGroup
     def initialize(patterns, allow)
-      @matchers = Array(patterns).flat_map { |x| x.build_matchers(include: allow) }.compact
+      @matchers = Array(patterns).flat_map { |x| x.build_matchers(allow: allow) }.compact
       @allow = allow
       @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
     end

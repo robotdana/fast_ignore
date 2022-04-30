@@ -3,7 +3,6 @@
 class FastIgnore
   class Patterns
     def initialize(*patterns, from_file: nil, format: :gitignore, root: nil)
-      @format = format
       if from_file
         @root = root || ::File.dirname(from_file)
         @patterns = ::File.exist?(from_file) ? ::File.readlines(from_file) : []
@@ -12,13 +11,16 @@ class FastIgnore
         @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
       end
       @root += '/' unless @root.end_with?('/')
+      @expand_path_with = (@root if format == :expand_path)
     end
 
-    def build_matchers(include: false)
-      matchers = @patterns.flat_map { |p| ::FastIgnore::RuleBuilder.build(p, include, @format, @root) }
+    def build_matchers(allow: false) # rubocop:disable Metrics/MethodLength
+      matchers = @patterns.flat_map do |p|
+        ::FastIgnore::Builders::ShebangOrGitignore.build(p, allow, expand_path_with: @expand_path_with)
+      end
 
       return if matchers.empty?
-      return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless include
+      return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless allow
 
       [
         ::FastIgnore::Matchers::WithinDir.new(matchers, @root),

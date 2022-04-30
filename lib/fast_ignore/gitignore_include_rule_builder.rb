@@ -3,21 +3,9 @@
 class FastIgnore
   class GitignoreIncludeRuleBuilder < GitignoreRuleBuilder
     def initialize(rule, expand_path_with: nil)
-      super(rule)
+      super
 
       @negation = true
-      @expand_path_from = expand_path_with
-    end
-
-    def expand_rule_path
-      anchored! unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
-      return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
-
-      dir_only! if @s.match?(%r{.*/\s*\z})
-
-      @s.string.replace(PathExpander.expand_path(@s.rest, @expand_path_from))
-      @s.string.delete_prefix!(@expand_path_from)
-      @s.pos = 0
     end
 
     def negated!
@@ -82,11 +70,6 @@ class FastIgnore
       @child_re ||= @re.dup # in case emit_end wasn't called
 
       [super(), *build_parent_dir_rules, (build_child_file_rule if child_file_rule)].compact
-    end
-
-    def process_rule
-      expand_rule_path if @expand_path_from
-      super
     end
   end
 end

@@ -2,10 +2,11 @@
 
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule)
+    def initialize(rule, expand_path_with: nil)
       @re = ::FastIgnore::PathRegexpBuilder.new
       @s = ::FastIgnore::GitignoreRuleScanner.new(rule)
 
+      @expand_path_with = expand_path_with
       @negation = false
       @anchored = false
       @dir_only = false
@@ -155,6 +156,7 @@ class FastIgnore
     end
 
     def process_rule # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      expand_rule_path! if @expand_path_with
       anchored! if @s.slash?
 
       catch :break do
@@ -203,6 +205,17 @@ class FastIgnore
 
         build_rule
       end
+    end
+
+    def expand_rule_path!
+      anchored! unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
+      return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
+
+      dir_only! if @s.match?(%r{.*/\s*\z})
+
+      @s.string.replace(PathExpander.expand_path(@s.rest, @expand_path_with))
+      @s.string.delete_prefix!(@expand_path_with)
+      @s.pos = 0
     end
   end
 end

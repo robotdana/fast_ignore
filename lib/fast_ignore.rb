@@ -8,7 +8,6 @@ class FastIgnore
 
   require_relative 'fast_ignore/rule_groups'
   require_relative 'fast_ignore/global_gitignore'
-  require_relative 'fast_ignore/rule_builder'
   require_relative 'fast_ignore/gitignore_rule_builder'
   require_relative 'fast_ignore/gitignore_include_rule_builder'
   require_relative 'fast_ignore/path_regexp_builder'
@@ -29,6 +28,9 @@ class FastIgnore
   require_relative 'fast_ignore/walkers/file_system'
   require_relative 'fast_ignore/walkers/gitignore_collecting_file_system'
   require_relative 'fast_ignore/gitignore_rule_group'
+  require_relative 'fast_ignore/builders/shebang'
+  require_relative 'fast_ignore/builders/gitignore'
+  require_relative 'fast_ignore/builders/shebang_or_gitignore'
 
   include ::Enumerable
 
