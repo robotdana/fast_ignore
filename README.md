@@ -166,19 +166,6 @@ When `relative: true`: FastIgnore#each will yield paths relative to the [`root:`
 FastIgnore.new(relative: true).to_a
 ```
 
-### `follow_symlinks: true`
-
-**Default: false**
-
-When `follow_symlinks: false`: FastIgnore#each will match git's behaviour and not follow symbolic links.
-When `follow_symlinks: true`: FastIgnore#each will check if a symlink points to a directory, and files in linked directories must also match rules using the symlink path as the directory location, not the real directory location.
-
-**This doesn't use the real path for matching or yield or return it.**
-
-```ruby
-FastIgnore.new(follow_symlinks: true).to_a
-```
-
 ### `root:`
 
 **Default: Dir.pwd ($PWD, the current working directory)**
