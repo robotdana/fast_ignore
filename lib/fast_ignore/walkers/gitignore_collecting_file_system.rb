@@ -3,9 +3,9 @@
 class FastIgnore
   module Walkers
     class GitignoreCollectingFileSystem < Base
-      def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
-        full_path = PathExpander.expand_path(path, @root)
-        return false unless full_path.start_with?(@root)
+      def allowed?(path, root:, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/ParameterLists
+        full_path = PathExpander.expand_path(path, root)
+        return false unless full_path.start_with?(root)
 
         candidate = ::FastIgnore::Candidate.new(full_path, nil, directory, exists, content)
 

@@ -34,17 +34,20 @@ class FastIgnore
 
   def initialize(relative: false, root: nil, gitignore: :auto, follow_symlinks: false, **rule_group_builder_args)
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
-    rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
-
-    walker_class = gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
+    @gitignore = gitignore
+    @rule_group_builder_args = rule_group_builder_args
+    @follow_symlinks = follow_symlinks
     @relative = relative
-    @walker = walker_class.new(rule_groups, root: @root, follow_symlinks: follow_symlinks)
-    freeze
   end
 
   def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
-    @walker.allowed?(
-      path, directory: directory, content: content, exists: exists, include_directories: include_directories
+    walker.allowed?(
+      path,
+      root: @root,
+      directory: directory,
+      content: content,
+      exists: exists,
+      include_directories: include_directories
     )
   end
   alias_method :===, :allowed?
@@ -58,6 +61,23 @@ class FastIgnore
 
     prefix = @relative ? '' : @root
 
-    @walker.each(@root, prefix, &block)
+    walker.each(@root, prefix, &block)
+  end
+
+  def build
+    rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: @gitignore, **@rule_group_builder_args)
+
+    walker_class = @gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
+    @walker = walker_class.new(rule_groups, follow_symlinks: @follow_symlinks)
+
+    freeze
+  end
+
+  private
+
+  def walker
+    build unless defined?(@walker)
+
+    @walker
   end
 end

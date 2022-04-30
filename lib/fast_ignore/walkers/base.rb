@@ -3,10 +3,9 @@
 class FastIgnore
   module Walkers
     class Base
-      def initialize(rule_groups, root:, follow_symlinks:)
+      def initialize(rule_groups, follow_symlinks:)
         warn 'FastIgnore deprecation: follow_symlinks argument is deprecated' if follow_symlinks
 
-        @root = root
         @follow_symlinks = follow_symlinks
         @rule_groups = rule_groups
       end

@@ -3,9 +3,9 @@
 class FastIgnore
   module Walkers
     class FileSystem < Base
-      def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/MethodLength
-        full_path = PathExpander.expand_path(path, @root)
-        return false unless full_path.start_with?(@root)
+      def allowed?(path, root:, directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+        full_path = PathExpander.expand_path(path, root)
+        return false unless full_path.start_with?(root)
 
         begin
           dir = directory?(full_path, directory)
