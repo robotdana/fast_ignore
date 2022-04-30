@@ -2,11 +2,11 @@
 
 class FastIgnore
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, file_path)
-      @re = ::FastIgnore::GitignoreRuleRegexpBuilder.new
+    def initialize(rule, expand_path_with: nil)
+      @re = ::FastIgnore::PathRegexpBuilder.new
       @s = ::FastIgnore::GitignoreRuleScanner.new(rule)
 
-      @file_path = file_path
+      @expand_path_with = expand_path_with
       @negation = false
       @anchored = false
       @dir_only = false
@@ -49,6 +49,11 @@ class FastIgnore
       @re.append_dir
     end
 
+    def emit_any_dir
+      anchored!
+      @re.append_any_dir
+    end
+
     def emit_end
       @re.append_end_anchor
       break!
@@ -60,11 +65,22 @@ class FastIgnore
       @re.append_escaped(@s.next_character) || unmatchable_rule!
     end
 
-    def process_star_end_after_slash
-      return true unless @s.star_end?
-
-      @re.append_many_non_dir
-      emit_end
+    def process_star_end_after_slash # rubocop:disable Metrics/MethodLength
+      if @s.star_end?
+        @re.append_many_non_dir
+        emit_end
+      elsif @s.two_star_end?
+        break!
+      elsif @s.star_slash_end?
+        @re.append_many_non_dir
+        dir_only!
+        emit_end
+      elsif @s.two_star_slash_end?
+        dir_only!
+        break!
+      else
+        true
+      end
     end
 
     def process_slash
@@ -76,7 +92,7 @@ class FastIgnore
       process_star_end_after_slash
     end
 
-    def process_two_stars # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    def process_two_stars # rubocop:disable Metrics/MethodLength
       return unless @s.two_stars?
       return break! if @s.end?
 
@@ -90,8 +106,7 @@ class FastIgnore
           if nothing_emitted?
             never_anchored!
           else
-            @re.append_any_dir
-            anchored!
+            emit_any_dir
           end
           process_star_end_after_slash
         end
@@ -141,6 +156,7 @@ class FastIgnore
     end
 
     def process_rule # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      expand_rule_path! if @expand_path_with
       anchored! if @s.slash?
 
       catch :break do
@@ -159,28 +175,24 @@ class FastIgnore
       end
     end
 
-    def prefix # rubocop:disable Metrics/MethodLength
-      out = ::FastIgnore::GitignoreRuleRegexpBuilder.new
-      if @file_path
-        out.append_start_anchor.append(@file_path.escaped)
-        out.append_any_dir unless @anchored
+    def prefix
+      out = ::FastIgnore::PathRegexpBuilder.new
+
+      if @anchored
+        out.append_start_anchor
       else
-        if @anchored
-          out.append_start_anchor
-        else
-          out.append_start_dir_or_anchor
-        end
+        out.append_dir_or_start_anchor
       end
       out
     end
 
     def build_rule
       @re.prepend(prefix)
-      ::FastIgnore::Rule.new(@re.to_regexp, @negation, anchored_or_file_path, @dir_only)
-    end
-
-    def anchored_or_file_path
-      @anchored || @file_path
+      if @negation
+        ::FastIgnore::Matchers::AllowPathRegexp.new(@re.to_regexp, @anchored, @dir_only)
+      else
+        ::FastIgnore::Matchers::IgnorePathRegexp.new(@re.to_regexp, @anchored, @dir_only)
+      end
     end
 
     def build
@@ -193,6 +205,17 @@ class FastIgnore
 
         build_rule
       end
+    end
+
+    def expand_rule_path!
+      anchored! unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
+      return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
+
+      dir_only! if @s.match?(%r{.*/\s*\z})
+
+      @s.string.replace(PathExpander.expand_path(@s.rest, @expand_path_with))
+      @s.string.delete_prefix!(@expand_path_with)
+      @s.pos = 0
     end
   end
 end
