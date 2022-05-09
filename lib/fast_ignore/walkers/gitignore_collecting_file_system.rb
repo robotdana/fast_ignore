@@ -18,7 +18,7 @@ class FastIgnore
         return false if !include_directories && candidate.directory?
         return false unless candidate.exists?
 
-        @rule_groups.add_gitignore_to_root(full_path, root)
+        add_gitignore_to_root(full_path, root)
         @rule_groups.allowed_recursive?(candidate)
       end
 
@@ -42,6 +42,15 @@ class FastIgnore
         rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
           nil
         end
+      end
+
+      private
+
+      def add_gitignore_to_root(path, root)
+        @rule_groups.add_gitignore(path)
+        return if path == root
+
+        add_gitignore_to_root("#{::File.dirname(path)}/", root)
       end
     end
   end

@@ -5,15 +5,14 @@ require 'set'
 class FastIgnore
   class GitignoreRuleGroup < ::FastIgnore::RuleGroup
     def initialize(root)
-      @root = root
-      @loaded_paths = Set[root]
+      @loaded_paths = Set[]
 
       super([
         ::FastIgnore::Patterns.new('.git', root: '/'),
         ::FastIgnore::Patterns.new(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root),
-        ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root),
-        ::FastIgnore::Patterns.new(from_file: "#{root}.gitignore", root: root)
+        ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root)
       ], false)
+      add_gitignore(root)
     end
 
     def build
@@ -24,6 +23,8 @@ class FastIgnore
 
     def append(new_pattern)
       @patterns << new_pattern
+
+      return unless defined?(@matchers)
 
       new_matchers = new_pattern.build_matchers(allow: @allow)
       return if !new_matchers || new_matchers.empty?
@@ -39,14 +40,7 @@ class FastIgnore
       return if @loaded_paths.include?(dir)
 
       @loaded_paths << dir
-      append(::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore"))
-    end
-
-    def add_gitignore_to_root(path, root)
-      until path == root || @loaded_paths.include?(path = "#{::File.dirname(path)}/")
-        add_gitignore(path)
-      end
-      add_gitignore(root)
+      append(::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore", root: dir))
     end
   end
 end
