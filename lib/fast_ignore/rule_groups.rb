@@ -16,24 +16,30 @@ class FastIgnore
         @gitignore_rule_group = ::FastIgnore::GitignoreRuleGroup.new(root)
         @array << @gitignore_rule_group
       end
-      @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(ignore_rules, root: root), false).freeze
-      @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(include_rules, root: root), true).freeze
+      @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(ignore_rules, root: root), false)
+      @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(include_rules, root: root), true)
       @array << ::FastIgnore::RuleGroup.new(
         ::FastIgnore::Patterns.new(argv_rules, root: root, format: :expand_path),
         true
-      ).freeze
+      )
 
       Array(ignore_files).each do |f|
         path = PathExpander.expand_path(f, root)
-        @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), false).freeze
+        @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), false)
       end
       Array(include_files).each do |f|
         path = PathExpander.expand_path(f, root)
-        @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), true).freeze
+        @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), true)
       end
+    end
+
+    def build
+      @array.each(&:build)
       @array.reject!(&:empty?)
       @array.sort_by!(&:weight)
       @array.freeze
+
+      freeze
     end
 
     def allowed_recursive?(candidate)

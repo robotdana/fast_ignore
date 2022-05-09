@@ -1,5 +1,6 @@
 # v0.18.0
 - Remove deprecated `follow_symlinks:` code.
+- Refactoring that should have no effect on behaviour
 
 # v0.17.4
 - Deprecated `follow_symlinks:`, it's inaccurately named and awkward.

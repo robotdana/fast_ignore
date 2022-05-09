@@ -36,7 +36,7 @@ class FastIgnore
   def initialize(relative: false, root: nil, gitignore: :auto, **rule_group_builder_args)
     @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
     @gitignore = gitignore
-    @rule_group_builder_args = rule_group_builder_args
+    @rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
     @relative = relative
   end
 
@@ -65,10 +65,9 @@ class FastIgnore
   end
 
   def build
-    rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: @gitignore, **@rule_group_builder_args)
-
     walker_class = @gitignore ? ::FastIgnore::Walkers::GitignoreCollectingFileSystem : ::FastIgnore::Walkers::FileSystem
-    @walker = walker_class.new(rule_groups)
+    @rule_groups.build
+    @walker = walker_class.new(@rule_groups)
 
     freeze
   end

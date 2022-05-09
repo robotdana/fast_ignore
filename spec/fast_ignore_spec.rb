@@ -245,6 +245,46 @@ RSpec.describe FastIgnore do
       expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
     end
 
+    context 'when gitignore: false' do
+      let(:args) { { gitignore: false, ignore_files: '.gitignore' } }
+
+      it 'rescues soft links to nowhere' do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+        FileUtils.rm('foo_target')
+
+        expect(subject).not_to be_allowed('foo')
+        expect(subject).not_to be_allowed('foo', directory: true)
+        expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
+      end
+
+      it 'rescues soft link loops' do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+        FileUtils.rm('foo_target')
+        create_symlink('foo_target' => 'foo')
+
+        expect(subject).not_to be_allowed('foo')
+        expect(subject).not_to be_allowed('foo', directory: true)
+        expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
+      end
+
+      it 'allows soft links to directories' do
+        create_file_list 'foo_target/foo_child', '.gitignore'
+        gitignore 'foo_target'
+
+        create_symlink('foo' => 'foo_target')
+        expect(subject).to allow_exactly('foo', '.gitignore')
+      end
+
+      it 'allows soft links' do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+
+        expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
+      end
+    end
+
     context 'when given a file other than gitignore' do
       let(:args) { { gitignore: false, ignore_files: File.join(Dir.pwd, 'fancyignore') } }
 

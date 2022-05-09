@@ -16,12 +16,15 @@ class FastIgnore
       ], false)
     end
 
+    def empty?
+      false # if this gets removed then even if it's blank we can't add with GitignoreCollectingFileSystem
+    end
+
     def add_gitignore(dir)
       return if @loaded_paths.include?(dir)
 
       @loaded_paths << dir
-      matcher = ::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore").build_matchers(allow: false)
-      @matchers += matcher unless !matcher || matcher.empty?
+      append(::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore"))
     end
 
     def add_gitignore_to_root(path)
