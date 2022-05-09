@@ -54,8 +54,8 @@ class FastIgnore
       @gitignore_rule_group.add_gitignore(dir)
     end
 
-    def add_gitignore_to_root(path)
-      @gitignore_rule_group.add_gitignore_to_root(path)
+    def add_gitignore_to_root(path, root)
+      @gitignore_rule_group.add_gitignore_to_root(path, root)
     end
   end
 end

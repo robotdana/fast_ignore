@@ -33,8 +33,8 @@ class FastIgnore
 
   include ::Enumerable
 
-  def initialize(relative: false, root: nil, gitignore: :auto, **rule_group_builder_args)
-    @root = "#{::File.expand_path(root.to_s, Dir.pwd)}/"
+  def initialize(relative: false, root: '.', gitignore: :auto, **rule_group_builder_args)
+    @root = ::FastIgnore::PathExpander.expand_dir(root)
     @gitignore = gitignore
     @rule_groups = ::FastIgnore::RuleGroups.new(root: @root, gitignore: gitignore, **rule_group_builder_args)
     @relative = relative

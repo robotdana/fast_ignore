@@ -3,29 +3,19 @@
 class FastIgnore
   class RuleGroup
     def initialize(patterns, allow)
-      @patterns = Array(patterns)
+      @patterns = patterns
       @allow = allow
       @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
     end
 
-    def append(new_patterns)
-      new_patterns = Array(new_patterns)
-      @patterns.concat(new_patterns)
-
-      new_matchers = new_patterns.flat_map { |x| x.build_matchers(allow: @allow) }.compact
-      return if new_matchers.empty?
-
-      @matchers.concat(new_matchers)
-    end
-
     def build
-      @matchers = @patterns.flat_map { |x| x.build_matchers(allow: @allow) }.compact
+      @matchers = Array(@patterns.build_matchers(allow: @allow)).compact
 
       freeze
     end
 
     def empty?
-      @matchers.empty? || @matchers.all?(&:empty?)
+      !@matchers || @matchers.empty? || @matchers.all?(&:empty?)
     end
 
     def weight

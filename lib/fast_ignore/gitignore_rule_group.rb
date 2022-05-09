@@ -16,6 +16,21 @@ class FastIgnore
       ], false)
     end
 
+    def build
+      @matchers = @patterns.flat_map { |x| x.build_matchers(allow: @allow) }.compact
+
+      freeze
+    end
+
+    def append(new_pattern)
+      @patterns << new_pattern
+
+      new_matchers = new_pattern.build_matchers(allow: @allow)
+      return if !new_matchers || new_matchers.empty?
+
+      @matchers.concat(new_matchers)
+    end
+
     def empty?
       false # if this gets removed then even if it's blank we can't add with GitignoreCollectingFileSystem
     end
@@ -27,8 +42,11 @@ class FastIgnore
       append(::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore"))
     end
 
-    def add_gitignore_to_root(path)
-      add_gitignore(path) until @loaded_paths.include?(path = "#{::File.dirname(path)}/")
+    def add_gitignore_to_root(path, root)
+      until path == root || @loaded_paths.include?(path = "#{::File.dirname(path)}/")
+        add_gitignore(path)
+      end
+      add_gitignore(root)
     end
   end
 end

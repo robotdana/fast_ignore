@@ -6,6 +6,10 @@ class FastIgnore
       def root
         @root ||= new('/', nil, true, true, nil)
       end
+
+      def dir(dir)
+        new(dir, nil, true, true, nil)
+      end
     end
 
     def initialize(full_path, filename, directory, exists, content)
@@ -17,7 +21,7 @@ class FastIgnore
     end
 
     def parent
-      @parent ||= ::FastIgnore::Candidate.new(::File.dirname(@full_path), nil, true, true, nil)
+      @parent ||= ::FastIgnore::Candidate.dir(::File.dirname(@full_path))
     end
 
     # use \0 because it can't be in paths
