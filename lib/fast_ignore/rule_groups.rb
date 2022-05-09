@@ -12,9 +12,22 @@ class FastIgnore
       argv_rules: nil
     )
       @array = []
+      @appendable_groups = {}
       if gitignore
-        @gitignore_rule_group = ::FastIgnore::GitignoreRuleGroup.new(root)
-        @array << @gitignore_rule_group
+        @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new('.git', root: '/'), false)
+
+        gitignore_rule_group = ::FastIgnore::AppendableRuleGroup.new(false)
+        gitignore_rule_group.append(
+          ::FastIgnore::Patterns.new(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root)
+        )
+        gitignore_rule_group.append(
+          ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root)
+        )
+        gitignore_rule_group.append(
+          ::FastIgnore::Patterns.new(from_file: "#{root}.gitignore", root: root)
+        )
+        @array << gitignore_rule_group
+        @appendable_groups[:gitignore] = gitignore_rule_group
       end
       @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(ignore_rules, root: root), false)
       @array << ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(include_rules, root: root), true)
@@ -50,8 +63,8 @@ class FastIgnore
       @array.all? { |r| r.allowed_unrecursive?(candidate) }
     end
 
-    def add_gitignore(dir)
-      @gitignore_rule_group.add_gitignore(dir)
+    def append(label, pattern)
+      @appendable_groups[label].append(pattern)
     end
   end
 end

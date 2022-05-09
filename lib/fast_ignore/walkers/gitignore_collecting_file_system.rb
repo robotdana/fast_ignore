@@ -18,13 +18,13 @@ class FastIgnore
         return false if !include_directories && candidate.directory?
         return false unless candidate.exists?
 
-        add_gitignore_to_root(full_path, root)
+        add_gitignore_to_root("#{::File.dirname(full_path)}/", root)
         @rule_groups.allowed_recursive?(candidate)
       end
 
       def each(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
         children = ::Dir.children(parent_full_path)
-        @rule_groups.add_gitignore(parent_full_path) if children.include?('.gitignore')
+        add_gitignore(parent_full_path) if children.include?('.gitignore')
 
         children.each do |filename|
           full_path = parent_full_path + filename
@@ -47,10 +47,15 @@ class FastIgnore
       private
 
       def add_gitignore_to_root(path, root)
-        @rule_groups.add_gitignore(path)
+        add_gitignore(path)
+
         return if path == root
 
         add_gitignore_to_root("#{::File.dirname(path)}/", root)
+      end
+
+      def add_gitignore(dir)
+        @rule_groups.append(:gitignore, ::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore", root: dir))
       end
     end
   end

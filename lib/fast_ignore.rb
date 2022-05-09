@@ -26,7 +26,7 @@ class FastIgnore
   require_relative 'fast_ignore/patterns'
   require_relative 'fast_ignore/walkers/file_system'
   require_relative 'fast_ignore/walkers/gitignore_collecting_file_system'
-  require_relative 'fast_ignore/gitignore_rule_group'
+  require_relative 'fast_ignore/appendable_rule_group'
   require_relative 'fast_ignore/builders/shebang'
   require_relative 'fast_ignore/builders/gitignore'
   require_relative 'fast_ignore/builders/shebang_or_gitignore'
