@@ -30,6 +30,29 @@ RSpec.describe FastIgnore do
           expect(subject).to match_files('a/b/c', 'b/d')
         end
 
+        it 'overrides parent rules in lower level files with 3 levels' do
+          gitignore '**/b/d', '**/b/c'
+          gitignore '!b/d', 'b/c', path: 'a/.gitignore'
+          gitignore 'd', '!c', path: 'a/b/.gitignore'
+
+          expect(subject).not_to match_files('a/b/c', 'a/.gitignore', 'a/b/.gitignore', '.gitignore')
+          expect(subject).to match_files('b/c', 'b/d', 'a/b/d')
+        end
+
+        it 'overrides parent rules in lower level files with 3 levels with allowed?' do
+          gitignore '**/b/d', '**/b/c'
+          gitignore '!b/d', 'b/c', path: 'a/.gitignore'
+          gitignore 'd', '!c', path: 'a/b/.gitignore'
+
+          # rubocop:disable RSpec/DescribedClass
+          # i want a new one each time
+          expect(FastIgnore.new).to be_allowed('a/b/c')
+          expect(FastIgnore.new).not_to be_allowed('a/b/d')
+          expect(FastIgnore.new).not_to be_allowed('b/d')
+          expect(FastIgnore.new).not_to be_allowed('b/c')
+          # rubocop:enable RSpec/DescribedClass
+        end
+
         it 'overrides parent negations in lower level files' do
           gitignore '**/b/*', '!**/b/d'
           gitignore 'b/d', '!b/c', path: 'a/.gitignore'

@@ -11,7 +11,6 @@ class FastIgnore
       if from_file
         @from_file = PathExpander.expand_path(from_file, root)
         @root = root || ::File.dirname(from_file)
-        @from_file = from_file
       else
         @root = root || ::Dir.pwd
         @pre_patterns = patterns.flatten.flat_map { |string| string.to_s.lines }

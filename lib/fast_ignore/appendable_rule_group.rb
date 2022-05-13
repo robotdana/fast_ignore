@@ -2,7 +2,8 @@
 
 class FastIgnore
   class AppendableRuleGroup < ::FastIgnore::RuleGroup
-    def initialize(allow)
+    def initialize(root, allow)
+      @root = root
       super([], allow)
     end
 
@@ -23,6 +24,19 @@ class FastIgnore
       return if !new_matchers || new_matchers.empty?
 
       @matchers.concat(new_matchers)
+    end
+
+    def append_until_root(*patterns, dir:, from_file: nil, format: :gitignore)
+      dirs = [dir]
+
+      while dir != @root
+        dir = "#{::File.dirname(dir)}/"
+        dirs << dir
+      end
+
+      dirs.reverse_each do |root|
+        append(::FastIgnore::Patterns.new(*patterns, from_file: from_file, format: format, root: root))
+      end
     end
 
     def empty?

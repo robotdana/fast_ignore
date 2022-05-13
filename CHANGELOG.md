@@ -1,6 +1,8 @@
 # v0.18.0
 - Remove deprecated `follow_symlinks:` code.
 - Refactoring that should have no effect on behaviour
+- Fix the order of reading .gitignore files in sub directories that override rules in outer directories
+  now it matches git behaviour of appending the files from the outside in
 
 # v0.17.4
 - Deprecated `follow_symlinks:`, it's inaccurately named and awkward.

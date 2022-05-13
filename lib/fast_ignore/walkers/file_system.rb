@@ -2,12 +2,16 @@
 
 class FastIgnore
   module Walkers
-    class FileSystem
-      def initialize(rule_groups)
-        @rule_groups = rule_groups
-      end
-
-      def allowed?(path, root: '.', directory: nil, content: nil, exists: nil, include_directories: false) # rubocop:disable Metrics/ParameterLists
+    module FileSystem
+      def self.allowed?( # rubocop:disable Metrics/ParameterLists
+        path,
+        rule_set:,
+        root: '.',
+        directory: nil,
+        content: nil,
+        exists: nil,
+        include_directories: false
+      )
         root = PathExpander.expand_dir(root)
         full_path = PathExpander.expand_path(path, root)
         return false unless full_path.start_with?(root)
@@ -16,20 +20,20 @@ class FastIgnore
         return false if !include_directories && candidate.directory?
         return false unless candidate.exists?
 
-        @rule_groups.allowed_recursive?(candidate)
+        rule_set.allowed_recursive?(candidate)
       end
 
-      def each(parent_full_path, parent_relative_path, &block) # rubocop:disable Metrics/MethodLength
+      def self.each(parent_full_path, parent_relative_path, rule_set, &block) # rubocop:disable Metrics/MethodLength
         ::Dir.children(parent_full_path).each do |filename|
           full_path = parent_full_path + filename
           candidate = ::FastIgnore::Candidate.new(full_path, filename, nil, true, nil)
 
-          next unless @rule_groups.allowed_unrecursive?(candidate)
+          next unless rule_set.allowed_unrecursive?(candidate)
 
           relative_path = parent_relative_path + filename
 
           if candidate.directory?
-            each(full_path + '/', relative_path + '/', &block)
+            each(full_path + '/', relative_path + '/', rule_set, &block)
           else
             yield(relative_path)
           end
