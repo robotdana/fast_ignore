@@ -2,8 +2,8 @@
 
 class FastIgnore
   class RuleSet
-    def initialize(new_item, label: nil, walker: nil, from: nil) # rubocop:disable Metrics/MethodLength
-      @array = [*from&.array, new_item]
+    def initialize(new_item = nil, label: nil, walker: nil, from: nil) # rubocop:disable Metrics/MethodLength
+      @array = [*from&.array, *new_item]
 
       @appendable_groups = if label && from
         { **from.appendable_groups, label => new_item }
@@ -19,8 +19,16 @@ class FastIgnore
       freeze
     end
 
-    def new(new_item, label: nil, walker: nil)
+    def self.appendable?(_label)
+      false
+    end
+
+    def new(new_item = nil, label: nil, walker: nil)
       self.class.new(new_item, label: label, walker: walker, from: self)
+    end
+
+    def appendable?(label)
+      @appendable_groups.key?(label)
     end
 
     def allowed_recursive?(candidate)
@@ -34,11 +42,13 @@ class FastIgnore
     def append(label, *patterns, from_file: nil, format: nil, root: nil)
       @appendable_groups.fetch(label)
         .append(*patterns, from_file: from_file, format: format, root: root)
+      self
     end
 
     def append_until_root(label, *patterns, dir:, from_file: nil, format: nil)
       @appendable_groups.fetch(label)
         .append_until_root(*patterns, from_file: from_file, format: format, dir: dir)
+      self
     end
 
     def query

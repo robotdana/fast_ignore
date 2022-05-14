@@ -31,6 +31,8 @@ class FastIgnore
   require_relative 'fast_ignore/builders/shebang'
   require_relative 'fast_ignore/builders/gitignore'
   require_relative 'fast_ignore/builders/shebang_or_gitignore'
+  require_relative 'fast_ignore/path_list_methods'
+  require_relative 'fast_ignore/path_list'
 
   include ::Enumerable
   # extend ::FastIgnore::Builder
