@@ -49,7 +49,7 @@ class FastIgnore
         end
 
         def add_gitignore(rule_set, dir)
-          rule_set.append(:gitignore, ::FastIgnore::Patterns.new(from_file: "#{dir}.gitignore", root: dir))
+          rule_set.append(:gitignore, from_file: "#{dir}.gitignore", root: dir)
         end
       end
     end

@@ -1,22 +1,31 @@
-# frozen-string-literal: true
+# frozen_string_literal: true
 
 class FastIgnore
-  class AppendableRuleGroup < ::FastIgnore::RuleGroup
-    def initialize(root, allow)
+  class AppendablePatterns
+    def initialize(*patterns, from_file: nil, format: :gitignore, root: '.', allow: false)
+      @patterns = [
+        ::FastIgnore::Patterns.new(patterns, from_file: from_file, format: format, root: root, allow: allow)
+      ]
+
       @root = root
-      super([], allow)
+      @allow = allow
     end
 
     def build
       @matchers = @patterns.flat_map { |x| x.build_matchers(allow: @allow) }.compact
-
       freeze
+
+      FastIgnore::RuleGroup.new(@matchers, @allow, appendable: true)
     end
 
-    def append(new_pattern)
+    def append(*patterns, from_file: nil, format: :gitignore, root: @root)
+      new_pattern = ::FastIgnore::Patterns.new(
+        *patterns, from_file: from_file, format: format, root: root, allow: @allow
+      )
+
       return self if @patterns.include?(new_pattern)
 
-      @patterns << new_pattern
+      @patterns << new_pattern # for comparison
 
       return self unless defined?(@matchers)
 
@@ -37,14 +46,10 @@ class FastIgnore
       end
 
       dirs.reverse_each do |root|
-        append(::FastIgnore::Patterns.new(*patterns, from_file: from_file, format: format, root: root))
+        append(*patterns, from_file: from_file, format: format, root: root)
       end
 
       self
-    end
-
-    def empty?
-      false # if this gets removed then even if it's blank we can't add with GitignoreCollectingFileSystem
     end
   end
 end

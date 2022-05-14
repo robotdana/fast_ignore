@@ -7,7 +7,8 @@ class FastIgnore
     attr_reader :pre_patterns
     attr_reader :expand_path_with
 
-    def initialize(*patterns, from_file: nil, format: :gitignore, root: nil)
+    def initialize(*patterns, from_file: nil, format: :gitignore, root: nil, allow: false)
+      @allow = allow
       if from_file
         @from_file = PathExpander.expand_path(from_file, root)
         @root = root || ::File.dirname(from_file)
@@ -26,6 +27,12 @@ class FastIgnore
         @expand_path_with == other.expand_path_with
     end
     alias_method :eql?, :==
+
+    def build
+      matchers = Array(build_matchers(allow: @allow)).compact
+
+      ::FastIgnore::RuleGroup.new(matchers, @allow)
+    end
 
     def patterns
       @patterns ||= if from_file

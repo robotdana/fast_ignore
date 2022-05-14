@@ -31,8 +31,9 @@ class FastIgnore
       @array.all? { |r| r.allowed_unrecursive?(candidate) }
     end
 
-    def append(label, pattern)
-      @appendable_groups.fetch(label).append(pattern)
+    def append(label, *patterns, from_file: nil, format: :gitignore, root: nil)
+      @appendable_groups.fetch(label)
+        .append(*patterns, from_file: from_file, format: format, root: root)
     end
 
     def append_until_root(label, *patterns, dir:, from_file: nil, format: :gitignore)
@@ -55,7 +56,7 @@ class FastIgnore
     private
 
     def build
-      @array.each(&:build)
+      @array.map!(&:build)
       @array.reject!(&:empty?)
       @array.sort_by!(&:weight)
       @array.freeze

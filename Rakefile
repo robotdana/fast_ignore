@@ -9,14 +9,15 @@ RuboCop::RakeTask.new
 RSpec::Core::RakeTask.new(:spec)
 Spellr::RakeTask.generate_task
 
-default_tasks = if RUBY_PLATFORM == 'java'
-  [:spec, :build]
+if RUBY_PLATFORM == 'java'
+  task :leftovers do
+    puts 'Skip leftovers on java'
+  end
 else
   require 'leftovers/rake_task'
   Leftovers::RakeTask.generate_task
-
-  ENV['COVERAGE'] = '1'
-  [:spec, :rubocop, :spellr, :leftovers, :build]
 end
 
-task default: default_tasks
+ENV['COVERAGE'] = '1'
+task lint: [:rubocop, :spellr, :leftovers, :build]
+task default: [:spec, :lint]

@@ -2,19 +2,19 @@
 
 class FastIgnore
   class RuleGroup
-    def initialize(patterns, allow)
-      @patterns = patterns
+    def initialize(matchers, allow, appendable: false)
+      @matchers = matchers
       @allow = allow
       @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
-    end
 
-    def build
-      @matchers = Array(@patterns.build_matchers(allow: @allow)).compact
+      @matchers.freeze unless appendable
 
       freeze
     end
 
     def empty?
+      return false unless @matchers.frozen?
+
       !@matchers || @matchers.empty? || @matchers.all?(&:empty?)
     end
 
