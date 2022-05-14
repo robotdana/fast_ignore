@@ -2,17 +2,25 @@
 
 class FastIgnore
   class RuleSet
-    def initialize(new_item, label: nil, walker: nil, from: nil)
+    def initialize(new_item, label: nil, walker: nil, from: nil) # rubocop:disable Metrics/MethodLength
       @array = [*from&.array, new_item]
 
-      @appendable_groups = if label
-        { **from&.appendable_groups, label => new_item }
+      @appendable_groups = if label && from
+        { **from.appendable_groups, label => new_item }
+      elsif label
+        { label => new_item }
+      elsif from
+        from.appendable_groups
       else
-        from&.appendable_groups || {}
+        {}
       end
       @walker = walker || from&.walker
 
       freeze
+    end
+
+    def new(new_item, label: nil, walker: nil)
+      self.class.new(new_item, label: label, walker: walker, from: self)
     end
 
     def allowed_recursive?(candidate)

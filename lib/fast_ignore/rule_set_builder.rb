@@ -11,61 +11,48 @@ class FastIgnore
       include_files: nil,
       argv_rules: nil
     )
-      rule_set = nil
+      rule_set = ::FastIgnore::RuleSet
 
-      if gitignore
-        rule_set = ::FastIgnore::RuleSet.new(
-          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new('.git', root: '/'), false),
-          walker: ::FastIgnore::Walkers::GitignoreCollectingFileSystem
-        )
-
-        gitignore_rule_group = ::FastIgnore::AppendableRuleGroup.new(root, false)
-        rule_set = ::FastIgnore::RuleSet.new(
-          gitignore_rule_group,
-          label: :gitignore,
-          from: rule_set
-        )
-        gitignore_rule_group.append(
-          ::FastIgnore::Patterns.new(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root)
-        )
-        gitignore_rule_group.append(
-          ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root)
-        )
-        gitignore_rule_group.append(
-          ::FastIgnore::Patterns.new(from_file: "#{root}.gitignore", root: root)
-        )
-      end
-      rule_set = ::FastIgnore::RuleSet.new(
-        ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(ignore_rules, root: root), false),
-        from: rule_set
-      )
-      rule_set = ::FastIgnore::RuleSet.new(
-        ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(include_rules, root: root), true),
-        from: rule_set
-      )
-      rule_set = ::FastIgnore::RuleSet.new(
-        ::FastIgnore::RuleGroup.new(
-          ::FastIgnore::Patterns.new(argv_rules, root: root, format: :expand_path),
-          true
-        ),
-        from: rule_set
-      )
       Array(ignore_files).each do |f|
         path = PathExpander.expand_path(f, root)
-        rule_set = ::FastIgnore::RuleSet.new(
-          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), false),
-          from: rule_set
+        rule_set = rule_set.new(
+          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), false)
         )
       end
       Array(include_files).each do |f|
         path = PathExpander.expand_path(f, root)
-        rule_set = ::FastIgnore::RuleSet.new(
-          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), true),
-          from: rule_set
+        rule_set = rule_set.new(
+          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(from_file: path), true)
         )
       end
 
-      rule_set
+      if gitignore
+        rule_set = rule_set.new(
+          ::FastIgnore::AppendableRuleGroup.new(root, false)
+          .append(
+            ::FastIgnore::Patterns.new(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root)
+          ).append(
+            ::FastIgnore::Patterns.new(from_file: "#{root}.git/info/exclude", root: root)
+          ).append(
+            ::FastIgnore::Patterns.new(from_file: "#{root}.gitignore", root: root)
+          ),
+          label: :gitignore
+        ).new(
+          ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new('.git', root: '/'), false),
+          walker: ::FastIgnore::Walkers::GitignoreCollectingFileSystem
+        )
+      end
+
+      rule_set.new(
+        ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(ignore_rules, root: root), false)
+      ).new(
+        ::FastIgnore::RuleGroup.new(::FastIgnore::Patterns.new(include_rules, root: root), true)
+      ).new(
+        ::FastIgnore::RuleGroup.new(
+          ::FastIgnore::Patterns.new(argv_rules, root: root, format: :expand_path),
+          true
+        )
+      )
     end
   end
 end

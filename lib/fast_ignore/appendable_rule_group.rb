@@ -14,16 +14,18 @@ class FastIgnore
     end
 
     def append(new_pattern)
-      return if @patterns.include?(new_pattern)
+      return self if @patterns.include?(new_pattern)
 
       @patterns << new_pattern
 
-      return unless defined?(@matchers)
+      return self unless defined?(@matchers)
 
       new_matchers = new_pattern.build_matchers(allow: @allow)
-      return if !new_matchers || new_matchers.empty?
+      return self if !new_matchers || new_matchers.empty?
 
       @matchers.concat(new_matchers)
+
+      self
     end
 
     def append_until_root(*patterns, dir:, from_file: nil, format: :gitignore)
@@ -37,6 +39,8 @@ class FastIgnore
       dirs.reverse_each do |root|
         append(::FastIgnore::Patterns.new(*patterns, from_file: from_file, format: format, root: root))
       end
+
+      self
     end
 
     def empty?
