@@ -2,12 +2,11 @@
 
 class FastIgnore
   class AppendablePatterns
-    def initialize(*patterns, from_file: nil, format: :gitignore, root: '.', allow: false)
-      @patterns = [
-        ::FastIgnore::Patterns.new(patterns, from_file: from_file, format: format, root: root, allow: allow)
-      ]
+    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false)
+      pattern = ::FastIgnore::Patterns.new(patterns, from_file: from_file, format: format, root: root, allow: allow)
 
-      @root = root
+      @patterns = [pattern]
+      @root = pattern.root
       @allow = allow
     end
 
@@ -18,7 +17,7 @@ class FastIgnore
       FastIgnore::RuleGroup.new(@matchers, @allow, appendable: true)
     end
 
-    def append(*patterns, from_file: nil, format: :gitignore, root: @root)
+    def append(*patterns, from_file: nil, format: nil, root: @root)
       new_pattern = ::FastIgnore::Patterns.new(
         *patterns, from_file: from_file, format: format, root: root, allow: @allow
       )

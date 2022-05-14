@@ -41,6 +41,8 @@ class FastIgnore
         ::FastIgnore::Patterns.new(include_rules, root: root, allow: true)
       ).new(
         ::FastIgnore::Patterns.new(argv_rules, root: root, format: :expand_path, allow: true)
+      ).new(
+        ::FastIgnore::Patterns.new(root, root: '/', allow: true)
       )
     end
   end

@@ -43,8 +43,7 @@ class FastIgnore
 
   def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
     @rule_set.query.allowed?(
-      path,
-      root: @root,
+      ::FastIgnore::PathExpander.expand_path(path, @root),
       rule_set: @rule_set,
       directory: directory,
       content: content,

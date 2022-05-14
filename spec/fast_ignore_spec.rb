@@ -16,6 +16,7 @@ RSpec.describe FastIgnore do
 
     it 'returns all files when there is no gitignore' do
       create_file_list 'foo', 'bar'
+
       expect(subject).to allow_exactly('foo', 'bar')
     end
 
