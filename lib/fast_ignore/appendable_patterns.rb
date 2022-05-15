@@ -14,7 +14,7 @@ class FastIgnore
       @matchers = @patterns.flat_map { |x| x.build_matchers(allow: @allow) }.compact
       freeze
 
-      FastIgnore::RuleGroup.new(@matchers, @allow, appendable: true)
+      FastIgnore::Matchers::RuleGroup.new(@matchers, @allow, appendable: true)
     end
 
     def append(*patterns, from_file: nil, format: nil, root: @root)

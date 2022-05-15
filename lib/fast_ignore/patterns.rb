@@ -33,7 +33,7 @@ class FastIgnore
     def build
       matchers = Array(build_matchers(allow: @allow)).compact
 
-      ::FastIgnore::RuleGroup.new(matchers, @allow)
+      ::FastIgnore::Matchers::RuleGroup.new(matchers, @allow)
     end
 
     def read_patterns

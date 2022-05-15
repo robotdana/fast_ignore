@@ -13,7 +13,7 @@ class FastIgnore
   require_relative 'fast_ignore/gitignore_include_rule_builder'
   require_relative 'fast_ignore/path_regexp_builder'
   require_relative 'fast_ignore/gitignore_rule_scanner'
-  require_relative 'fast_ignore/rule_group'
+  require_relative 'fast_ignore/matchers/rule_group'
   require_relative 'fast_ignore/matchers/unmatchable'
   require_relative 'fast_ignore/matchers/shebang_regexp'
   require_relative 'fast_ignore/gitconfig_parser'

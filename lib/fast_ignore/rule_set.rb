@@ -3,6 +3,7 @@
 class FastIgnore
   class RuleSet
     def initialize(new_item = nil, label: nil, walker: nil, from: nil) # rubocop:disable Metrics/MethodLength
+      @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
       @array = [*from&.array, *new_item]
 
       @appendable_groups = if label && from
@@ -32,11 +33,15 @@ class FastIgnore
     end
 
     def allowed_recursive?(candidate)
-      @array.all? { |r| r.allowed_recursive?(candidate) }
+      @allowed_recursive.fetch(candidate.key) do
+        @allowed_recursive[candidate.key] =
+          allowed_recursive?(candidate.parent) &&
+          allowed_unrecursive?(candidate)
+      end
     end
 
     def allowed_unrecursive?(candidate)
-      @array.all? { |r| r.allowed_unrecursive?(candidate) }
+      @array.all? { |r| r.match?(candidate) }
     end
 
     def append(label, *patterns, from_file: nil, format: nil, root: nil)
