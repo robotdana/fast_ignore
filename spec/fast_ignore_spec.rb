@@ -37,6 +37,14 @@ RSpec.describe FastIgnore do
       end
     end
 
+    it 'can match files in with case equality' do
+      create_file_list 'foo', 'bar'
+      gitignore 'foo'
+
+      expect(subject === 'bar').to be true # rubocop:disable Style/CaseEquality
+      expect(subject === 'foo').to be false # rubocop:disable Style/CaseEquality
+    end
+
     it 'matches uppercase paths to lowercase patterns' do
       create_file_list 'FOO'
       gitignore 'foo'

@@ -8,7 +8,6 @@ class FastIgnore
 
   require_relative 'fast_ignore/rule_set'
   require_relative 'fast_ignore/appendable_patterns'
-  require_relative 'fast_ignore/rule_set_builder'
   require_relative 'fast_ignore/global_gitignore'
   require_relative 'fast_ignore/gitignore_rule_builder'
   require_relative 'fast_ignore/gitignore_include_rule_builder'
@@ -35,35 +34,57 @@ class FastIgnore
   require_relative 'fast_ignore/path_list'
 
   include ::Enumerable
-  # extend ::FastIgnore::Builder
 
-  def initialize(relative: false, root: '.', **rule_group_builder_args)
+  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
+    relative: false,
+    root: '.',
+    ignore_rules: nil,
+    ignore_files: nil,
+    gitignore: true,
+    include_rules: nil,
+    include_files: nil,
+    argv_rules: nil
+  )
     @root = ::FastIgnore::PathExpander.expand_dir(root)
-    @rule_set = ::FastIgnore::RuleSetBuilder.build(root: @root, **rule_group_builder_args)
+    @path_list = ::FastIgnore::PathList
     @relative = relative
+
+    Array(ignore_files).each do |f|
+      path = ::FastIgnore::PathExpander.expand_path(f, @root)
+      @path_list = @path_list.ignore(from_file: path)
+    end
+    Array(include_files).each do |f|
+      path = ::FastIgnore::PathExpander.expand_path(f, @root)
+      @path_list = @path_list.only(from_file: path)
+    end
+
+    @path_list = @path_list.gitignore(root: @root) if gitignore
+
+    @path_list = @path_list.ignore(ignore_rules, root: @root)
+      .only(include_rules, root: @root)
+      .only(argv_rules, root: @root, format: :expand_path)
+      .only(@root, root: '/')
   end
 
   def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
-    @rule_set.query.allowed?(
+    @path_list.allowed?(
       ::FastIgnore::PathExpander.expand_path(path, @root),
-      rule_set: @rule_set,
       directory: directory,
       content: content,
       exists: exists,
       include_directories: include_directories
     )
   end
-  alias_method :===, :allowed?
+
+  def ===(path)
+    @path_list === ::FastIgnore::PathExpander.expand_path(path, @root) # rubocop:disable Style/CaseEquality
+  end
 
   def to_proc
-    method(:allowed?).to_proc
+    @path_list.to_proc
   end
 
   def each(&block)
-    return enum_for(:each) unless block
-
-    prefix = @relative ? '' : @root
-
-    @rule_set.query.each(@root, prefix, @rule_set, &block)
+    @path_list.each(root: @root, prefix: @relative ? '' : @root, &block)
   end
 end

@@ -2,26 +2,30 @@
 
 class FastIgnore
   module PathListMethods
-    # def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
-    #   rule_set.query.allowed?(
-    #     path,
-    #     directory: directory,
-    #     content: content,
-    #     exists: exists,
-    #     include_directories: include_directories
-    #   )
-    # end
-    # alias_method :===, :allowed?
+    def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
+      rule_set.query.allowed?(
+        path,
+        rule_set: rule_set,
+        directory: directory,
+        content: content,
+        exists: exists,
+        include_directories: include_directories
+      )
+    end
 
-    # def to_proc
-    #   method(:allowed?).to_proc
-    # end
+    def ===(path)
+      rule_set.query.allowed?(path, rule_set: rule_set)
+    end
 
-    # def each(root: '.', &block)
-    #   return enum_for(:each, root: root) unless block
+    def to_proc
+      method(:allowed?).to_proc
+    end
 
-    #   rule_set.query.each(PathExpander.expand_dir(root), '', rule_set, &block)
-    # end
+    def each(root: '.', prefix: '', &block)
+      return enum_for(:each, root: root, prefix: prefix) unless block
+
+      rule_set.query.each(PathExpander.expand_dir(root), prefix, rule_set, &block)
+    end
 
     def gitignore(root: nil)
       ignore(root: root, append: :gitignore)
