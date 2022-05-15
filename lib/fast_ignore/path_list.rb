@@ -98,7 +98,7 @@ class FastIgnore
     end
 
     def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: false)
-      @rule_set = @rule_set.new(
+      @rule_set = @rule_set.new_with_pattern(
         ::FastIgnore::Patterns.new(
           *patterns, from_file: from_file, format: format, root: root, append: append
         )
@@ -107,7 +107,7 @@ class FastIgnore
     end
 
     def only!(*patterns, from_file: nil, format: nil, root: nil, append: false)
-      @rule_set = @rule_set.new(
+      @rule_set = @rule_set.new_with_pattern(
         ::FastIgnore::Patterns.new(
           *patterns, from_file: from_file, format: format, root: root, allow: true, append: append
         )
