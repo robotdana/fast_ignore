@@ -2,79 +2,46 @@
 
 class FastIgnore
   class RuleSet
-    def initialize(new_item = nil, label: nil, walker: nil, from: nil) # rubocop:disable Metrics/MethodLength
-      @allowed_recursive = { ::FastIgnore::Candidate.root.key => true }.compare_by_identity
-      @array = [*from&.array, *new_item]
+    def initialize(new_item = nil, from: nil)
+      @patterns = [*from&.patterns, *new_item].freeze
+    end
 
-      @appendable_groups = if label && from
-        { **from.appendable_groups, label => new_item }
-      elsif label
-        { label => new_item }
-      elsif from
-        from.appendable_groups
-      else
-        {}
+    def new(new_item = nil)
+      self.class.new(new_item, from: self)
+    end
+
+    def build # rubocop:disable Metrics/MethodLength
+      @matchers = begin
+        matchers = @patterns.uniq.group_by(&:label_or_self).map do |_k, patterns|
+          if patterns.length == 1
+            patterns.first.build
+          else
+            ::FastIgnore::Matchers::RuleGroup.new(
+              patterns.flat_map(&:matchers),
+              patterns.first.allow
+            )
+          end
+        end
+
+        matchers.reject!(&:empty?)
+        matchers.sort_by!(&:weight)
+        matchers.freeze
       end
-      @walker = walker || from&.walker
-
-      freeze
-    end
-
-    def self.appendable?(_label)
-      false
-    end
-
-    def new(new_item = nil, label: nil, walker: nil)
-      self.class.new(new_item, label: label, walker: walker, from: self)
-    end
-
-    def appendable?(label)
-      @appendable_groups.key?(label)
     end
 
     def allowed_recursive?(candidate)
-      @allowed_recursive.fetch(candidate.key) do
-        @allowed_recursive[candidate.key] =
-          allowed_recursive?(candidate.parent) &&
-          allowed_unrecursive?(candidate)
-      end
+      return true unless candidate.parent
+
+      allowed_recursive?(candidate.parent) &&
+        allowed_unrecursive?(candidate)
     end
 
     def allowed_unrecursive?(candidate)
-      @array.all? { |r| r.match?(candidate) }
-    end
-
-    def append(label, *patterns, from_file: nil, format: nil, root: nil)
-      @appendable_groups.fetch(label)
-        .append(*patterns, from_file: from_file, format: format, root: root)
-      self
-    end
-
-    def append_until_root(label, *patterns, dir:, from_file: nil, format: nil)
-      @appendable_groups.fetch(label)
-        .append_until_root(*patterns, from_file: from_file, format: format, dir: dir)
-      self
-    end
-
-    def query
-      build unless @array.frozen?
-
-      @walker || ::FastIgnore::Walkers::FileSystem
+      @matchers.all? { |r| r.match?(candidate) }
     end
 
     protected
 
-    attr_reader :appendable_groups
-    attr_reader :array
-    attr_reader :walker
-
-    private
-
-    def build
-      @array.map!(&:build)
-      @array.reject!(&:empty?)
-      @array.sort_by!(&:weight)
-      @array.freeze
-    end
+    attr_reader :patterns
   end
 end

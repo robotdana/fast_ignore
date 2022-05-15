@@ -8,8 +8,7 @@ class FastIgnore
       def initialize(matchers, root)
         @dir_matchers = squash_matchers(matchers.reject(&:file_only?))
         @file_matchers = squash_matchers(matchers.reject(&:dir_only?))
-
-        @weight = @dir_matchers.sum(&:weight) + @file_matchers.sum(&:weight)
+        @weight = matchers.sum(&:weight)
         @root = root
 
         freeze
@@ -25,10 +24,6 @@ class FastIgnore
         end
 
         false
-      end
-
-      def empty?
-        @dir_matchers.empty? && @file_matchers.empty?
       end
 
       private

@@ -7,7 +7,6 @@ class FastIgnore
   class Error < StandardError; end
 
   require_relative 'fast_ignore/rule_set'
-  require_relative 'fast_ignore/appendable_patterns'
   require_relative 'fast_ignore/global_gitignore'
   require_relative 'fast_ignore/gitignore_rule_builder'
   require_relative 'fast_ignore/gitignore_include_rule_builder'
@@ -34,7 +33,7 @@ class FastIgnore
 
   include ::Enumerable
 
-  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
+  def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength
     relative: false,
     root: '.',
     ignore_rules: nil,
@@ -50,19 +49,19 @@ class FastIgnore
 
     Array(ignore_files).each do |f|
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
-      @path_list = @path_list.ignore(from_file: path)
+      @path_list.ignore!(from_file: path)
     end
     Array(include_files).each do |f|
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
-      @path_list = @path_list.only(from_file: path)
+      @path_list.only!(from_file: path)
     end
 
-    @path_list = @path_list.gitignore(root: @root) if gitignore
+    @path_list.gitignore!(root: @root) if gitignore
 
-    @path_list = @path_list.ignore(ignore_rules, root: @root)
-      .only(include_rules, root: @root)
-      .only(argv_rules, root: @root, format: :expand_path)
-      .only(@root, root: '/')
+    @path_list.ignore!(ignore_rules, root: @root)
+      .only!(include_rules, root: @root)
+      .only!(argv_rules, root: @root, format: :expand_path)
+      .only!(@root, root: '/')
   end
 
   def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)

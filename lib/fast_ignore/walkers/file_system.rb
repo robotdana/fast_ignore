@@ -5,7 +5,7 @@ class FastIgnore
     module FileSystem
       def self.allowed?( # rubocop:disable Metrics/ParameterLists
         path,
-        rule_set:,
+        path_list:,
         directory: nil,
         content: nil,
         exists: nil,
@@ -16,20 +16,20 @@ class FastIgnore
         return false if !include_directories && candidate.directory?
         return false unless candidate.exists?
 
-        rule_set.allowed_recursive?(candidate)
+        path_list.rule_set.allowed_recursive?(candidate)
       end
 
-      def self.each(parent_full_path, parent_relative_path, rule_set, &block) # rubocop:disable Metrics/MethodLength
+      def self.each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
         ::Dir.children(parent_full_path).each do |filename|
           full_path = parent_full_path + filename
           candidate = ::FastIgnore::Candidate.new(full_path, filename, nil, true, nil)
 
-          next unless rule_set.allowed_unrecursive?(candidate)
+          next unless path_list.rule_set.allowed_unrecursive?(candidate)
 
           relative_path = parent_relative_path + filename
 
           if candidate.directory?
-            each(full_path + '/', relative_path + '/', rule_set, &block)
+            each(full_path + '/', relative_path + '/', path_list, &block)
           else
             yield(relative_path)
           end

@@ -3,23 +3,18 @@
 class FastIgnore
   module Matchers
     class RuleGroup
-      def initialize(matchers, allow, appendable: false)
+      attr_reader :weight
+
+      def initialize(matchers, allow)
         @matchers = matchers
         @allow = allow
-
-        @matchers.freeze unless appendable
+        @weight = @matchers.sum(&:weight)
 
         freeze
       end
 
       def empty?
-        return false unless @matchers.frozen?
-
-        !@matchers || @matchers.empty? || @matchers.all?(&:empty?)
-      end
-
-      def weight
-        @matchers.sum(&:weight)
+        @weight.zero?
       end
 
       def match?(candidate)

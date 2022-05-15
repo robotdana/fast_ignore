@@ -3,10 +3,6 @@
 class FastIgnore
   class Candidate
     class << self
-      def root
-        @root ||= new('/', nil, true, true, nil)
-      end
-
       def dir(dir)
         new(dir, nil, true, true, nil)
       end
@@ -21,18 +17,13 @@ class FastIgnore
     end
 
     def parent
-      @parent ||= ::FastIgnore::Candidate.dir(::File.dirname(@full_path))
-    end
+      return @parent if defined?(@parent)
 
-    # use \0 because it can't be in paths
-    def key
-      @key ||= :"#{
-        "\0" if defined?(@directory) && @directory
-      }#{
-        @full_path
-      }\0#{
-        @first_line if defined?(@first_line)
-      }"
+      @parent = if @full_path == '/'
+        nil
+      else
+        ::FastIgnore::Candidate.dir(::File.dirname(@full_path))
+      end
     end
 
     def relative_to(dir)

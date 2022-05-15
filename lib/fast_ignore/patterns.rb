@@ -6,16 +6,19 @@ class FastIgnore
     attr_reader :root
     attr_reader :patterns
     attr_reader :expand_path_with
+    attr_reader :label
+    attr_reader :allow
 
-    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false) # rubocop:disable Metrics/MethodLength
+    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
       @allow = allow
+      @label = append
       root = PathExpander.expand_dir(root) if root
 
       if from_file
         @from_file = PathExpander.expand_path(from_file, root || '.')
         root ||= ::File.dirname(from_file)
       else
-        @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
+        @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
       end
       @root = PathExpander.expand_dir(root || '.')
       @format ||= :gitignore
@@ -23,18 +26,28 @@ class FastIgnore
     end
 
     def ==(other)
-      from_file == other.from_file &&
+      @label == other.label &&
+        allow == other.allow &&
+        from_file == other.from_file &&
         @root == other.root &&
         patterns == other.patterns &&
         @expand_path_with == other.expand_path_with
     end
     alias_method :eql?, :==
 
-    def build
-      matchers = Array(build_matchers(allow: @allow)).compact
-
-      ::FastIgnore::Matchers::RuleGroup.new(matchers, @allow)
+    def label_or_self
+      @label || object_id
     end
+
+    def matchers
+      @matchers ||= Array(build_matchers(allow: @allow)).compact
+    end
+
+    def build
+      @build ||= ::FastIgnore::Matchers::RuleGroup.new(matchers, @allow)
+    end
+
+    private
 
     def read_patterns
       if from_file
@@ -49,7 +62,7 @@ class FastIgnore
         ::FastIgnore::Builders::ShebangOrGitignore.build(p, allow, expand_path_with: @expand_path_with)
       end
 
-      return if matchers.empty?
+      return matchers if matchers.empty?
       return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless allow
 
       [

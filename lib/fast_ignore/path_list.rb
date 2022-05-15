@@ -2,18 +2,40 @@
 
 class FastIgnore
   class PathList
+    class << self
+      # :nocov:
+      # TODO: new api stuff.
+      def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
+        new.gitignore!(root: root, append: append, format: format)
+      end
+
+      def only(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+        new.only!(*patterns, from_file: from_file, format: format, root: root, append: append)
+      end
+
+      def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+        new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append)
+      end
+
+      def walker(walker) # leftovers:keep
+        new.walker!(walker)
+      end
+      # :nocov:
+    end
+
     include ::Enumerable
 
-    def initialize(rule_set = ::FastIgnore::RuleSet)
-      @rule_set = rule_set
+    attr_reader :rule_set
 
-      freeze
+    def initialize(rule_set: nil, walker: nil)
+      @rule_set = (rule_set || ::FastIgnore::RuleSet)
+      @walker = walker
     end
 
     def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
-      rule_set.query.allowed?(
+      walk.allowed?(
         path,
-        rule_set: rule_set,
+        path_list: self,
         directory: directory,
         content: content,
         exists: exists,
@@ -22,7 +44,7 @@ class FastIgnore
     end
 
     def ===(path)
-      rule_set.query.allowed?(path, rule_set: rule_set)
+      walk.allowed?(path, path_list: self)
     end
 
     def to_proc
@@ -32,70 +54,77 @@ class FastIgnore
     def each(root: '.', prefix: '', &block)
       return enum_for(:each, root: root, prefix: prefix) unless block
 
-      rule_set.query.each(PathExpander.expand_dir(root), prefix, rule_set, &block)
+      walk.each(PathExpander.expand_dir(root), prefix, self, &block)
     end
 
-    def gitignore(root: nil)
-      ignore(root: root, append: :gitignore)
-        .ignore(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root, append: :gitignore)
-        .ignore(from_file: './.git/info/exclude', root: root, append: :gitignore)
-        .ignore(from_file: './.gitignore', root: root, append: :gitignore)
-        .ignore('.git', root: '/')
-        .walker(::FastIgnore::Walkers::GitignoreCollectingFileSystem)
+    # :nocov:
+    # TODO: new api stuff
+    def dup # leftovers:keep
+      self.class.new(rule_set: @rule_set, walker: @walker)
     end
 
-    def walker(walker)
-      self.class.new(rule_set.new(walker: walker))
+    def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
+      dup.gitignore!(root: root, append: append, format: format)
     end
 
-    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false)
-      new_rule_set(
-        *patterns,
-        from_file: from_file,
-        format: format,
-        root: root,
-        append: append
+    def walker(walker) # leftovers:keep
+      dup.walker!(walker)
+    end
+
+    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+      dup.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append)
+    end
+
+    def only(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+      dup.only!(*patterns, from_file: from_file, format: format, root: root, append: append)
+    end
+    # :nocov:
+
+    def gitignore!(root: nil, append: :gitignore, format: :gitignore)
+      ignore!(root: root, append: append, format: format)
+      ignore!(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root, append: append, format: format)
+      ignore!(from_file: './.git/info/exclude', root: root, append: append, format: format)
+      ignore!(from_file: './.gitignore', root: root, append: append, format: format)
+      ignore!('.git', root: '/')
+      walker!(::FastIgnore::Walkers::GitignoreCollectingFileSystem.new(root, format: format, append: append))
+
+      self
+    end
+
+    def walker!(walker)
+      @walker = walker
+
+      self
+    end
+
+    def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+      @rule_set = @rule_set.new(
+        ::FastIgnore::Patterns.new(
+          *patterns, from_file: from_file, format: format, root: root, append: append
+        )
       )
+      self
     end
 
-    def only(*patterns, from_file: nil, format: nil, root: nil, append: false)
-      new_rule_set(
-        *patterns,
-        from_file: from_file,
-        format: format,
-        root: root,
-        append: append,
-        allow: true
+    def only!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+      @rule_set = @rule_set.new(
+        ::FastIgnore::Patterns.new(
+          *patterns, from_file: from_file, format: format, root: root, allow: true, append: append
+        )
       )
+      self
+    end
+
+    def build
+      @rule_set.build
     end
 
     private
 
-    def new_rule_set(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
-      self.class.new(
-        if append
-          if rule_set.appendable?(append)
-            rule_set.append(
-              append, *patterns, from_file: from_file, format: format, root: root
-            )
-          else
-            rule_set.new(
-              ::FastIgnore::AppendablePatterns.new(
-                *patterns, from_file: from_file, format: format, root: root, allow: allow
-              ),
-              label: append
-            )
-          end
-        else
-          rule_set.new(
-            ::FastIgnore::Patterns.new(
-              *patterns, from_file: from_file, format: format, root: root, allow: allow
-            )
-          )
-        end
-      )
-    end
+    def walk
+      build
 
-    attr_reader :rule_set
+      @walker || ::FastIgnore::Walkers::FileSystem
+    end
   end
 end
