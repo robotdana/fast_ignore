@@ -3,7 +3,7 @@
 class FastIgnore
   module Builders
     module Shebang
-      def self.build(shebang, allow)
+      def self.build(shebang, allow, _root)
         shebang.strip!
         pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
         rule = ::FastIgnore::Matchers::ShebangRegexp.new(pattern, allow)

@@ -642,6 +642,27 @@ RSpec.describe FastIgnore do
       end
     end
 
+    context 'when given argv shebang rule' do
+      let(:args) { { gitignore: false, argv_rules: '#!:ruby' } }
+
+      it 'returns matching files' do
+        create_file <<~RUBY, path: 'foo'
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file <<~RUBY, path: 'bar'
+          #!/usr/bin/env bash
+
+          puts('no')
+        RUBY
+
+        expect(subject).to allow_files('foo')
+        expect(subject).not_to allow_files('bar')
+      end
+    end
+
     context 'when given ignore shebang rule scoped by a file' do
       let(:args) { { gitignore: false, ignore_files: 'a/.ignore' } }
 

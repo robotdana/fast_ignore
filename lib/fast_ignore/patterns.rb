@@ -5,9 +5,17 @@ class FastIgnore
     attr_reader :from_file
     attr_reader :root
     attr_reader :patterns
-    attr_reader :expand_path_with
     attr_reader :label
     attr_reader :allow
+    attr_reader :format
+
+    BUILDERS = {
+      expand_path_gitignore: FastIgnore::Builders::ExpandPathGitignore,
+      gitignore: Builders::Gitignore,
+      shebang_or_expand_path_gitignore: FastIgnore::Builders::ShebangOrExpandPathGitignore,
+      shebang_or_gitignore: FastIgnore::Builders::ShebangOrGitignore,
+      shebang: FastIgnore::Builders::Shebang
+    }.freeze
 
     def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
       @allow = allow
@@ -21,8 +29,7 @@ class FastIgnore
         @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
       end
       @root = PathExpander.expand_dir(root || '.')
-      @format ||= :gitignore
-      @expand_path_with = (@root if format == :expand_path)
+      @format ||= BUILDERS.fetch(format || :gitignore, format)
     end
 
     def ==(other)
@@ -31,7 +38,7 @@ class FastIgnore
         from_file == other.from_file &&
         @root == other.root &&
         patterns == other.patterns &&
-        @expand_path_with == other.expand_path_with
+        @format == other.format
     end
     alias_method :eql?, :==
 
@@ -40,7 +47,7 @@ class FastIgnore
     end
 
     def matchers
-      @matchers ||= Array(build_matchers(allow: @allow)).compact
+      @matchers ||= build_matchers
     end
 
     def build
@@ -57,13 +64,10 @@ class FastIgnore
       end
     end
 
-    def build_matchers(allow: false) # rubocop:disable Metrics/MethodLength
-      matchers = read_patterns.flat_map do |p|
-        ::FastIgnore::Builders::ShebangOrGitignore.build(p, allow, expand_path_with: @expand_path_with)
-      end
-
+    def build_matchers
+      matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
-      return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless allow
+      return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless @allow
 
       [
         ::FastIgnore::Matchers::WithinDir.new(matchers, @root),

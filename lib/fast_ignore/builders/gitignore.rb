@@ -3,11 +3,11 @@
 class FastIgnore
   module Builders
     module Gitignore
-      def self.build(rule, allow, expand_path_with: nil)
+      def self.build(rule, allow, _root)
         if allow
-          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule, expand_path_with: expand_path_with).build
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(rule).build
         else
-          ::FastIgnore::GitignoreRuleBuilder.new(rule, expand_path_with: expand_path_with).build
+          ::FastIgnore::GitignoreRuleBuilder.new(rule).build
         end
       end
     end

@@ -23,12 +23,14 @@ class FastIgnore
   require_relative 'fast_ignore/matchers/allow_any_dir'
   require_relative 'fast_ignore/matchers/allow_path_regexp'
   require_relative 'fast_ignore/matchers/ignore_path_regexp'
-  require_relative 'fast_ignore/patterns'
   require_relative 'fast_ignore/walkers/file_system'
   require_relative 'fast_ignore/walkers/gitignore_collecting_file_system'
   require_relative 'fast_ignore/builders/shebang'
   require_relative 'fast_ignore/builders/gitignore'
   require_relative 'fast_ignore/builders/shebang_or_gitignore'
+  require_relative 'fast_ignore/builders/shebang_or_expand_path_gitignore'
+  require_relative 'fast_ignore/builders/expand_path_gitignore'
+  require_relative 'fast_ignore/patterns'
   require_relative 'fast_ignore/path_list'
 
   include ::Enumerable
@@ -49,18 +51,18 @@ class FastIgnore
 
     Array(ignore_files).each do |f|
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
-      @path_list.ignore!(from_file: path)
+      @path_list.ignore!(from_file: path, format: :shebang_or_gitignore)
     end
     Array(include_files).each do |f|
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
-      @path_list.only!(from_file: path)
+      @path_list.only!(from_file: path, format: :shebang_or_gitignore)
     end
 
-    @path_list.gitignore!(root: @root) if gitignore
+    @path_list.gitignore!(root: @root, format: :shebang_or_gitignore) if gitignore
 
-    @path_list.ignore!(ignore_rules, root: @root)
-      .only!(include_rules, root: @root)
-      .only!(argv_rules, root: @root, format: :expand_path)
+    @path_list.ignore!(ignore_rules, root: @root, format: :shebang_or_gitignore)
+      .only!(include_rules, root: @root, format: :shebang_or_gitignore)
+      .only!(argv_rules, root: @root, format: :shebang_or_expand_path_gitignore)
       .only!(@root, root: '/')
   end
 
