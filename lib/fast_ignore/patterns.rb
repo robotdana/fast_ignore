@@ -51,7 +51,16 @@ class FastIgnore
     end
 
     def build
-      @build ||= ::FastIgnore::Matchers::RuleGroup.new(matchers, @allow)
+      @build ||= begin
+        ::FastIgnore::Matchers::MatchOrDefault.new(
+          ::FastIgnore::Matchers::LastMatch.new(matchers),
+          default
+        )
+      end
+    end
+
+    def default
+      @allow ? :ignore : :allow
     end
 
     private

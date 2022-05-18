@@ -19,13 +19,13 @@ class FastIgnore
     def build # rubocop:disable Metrics/MethodLength
       return @matchers if defined?(@matchers)
 
-      @matchers = @patterns.group_by(&:label_or_self).each_value.map do |patterns|
+      @matchers = @patterns.group_by(&:label_or_self).map do |_, patterns|
         if patterns.length == 1
           patterns.first.build
         else
-          ::FastIgnore::Matchers::RuleGroup.new(
-            patterns.flat_map(&:matchers),
-            patterns.first.allow
+          ::FastIgnore::Matchers::MatchOrDefault.new(
+            ::FastIgnore::Matchers::LastMatch.new(patterns.flat_map(&:matchers)),
+            patterns.first.default
           )
         end
       end
@@ -47,7 +47,7 @@ class FastIgnore
     end
 
     def allowed_unrecursive?(candidate)
-      @matchers.all? { |r| r.match?(candidate) }
+      @matchers.all? { |r| r.match?(candidate) == :allow }
     end
 
     protected

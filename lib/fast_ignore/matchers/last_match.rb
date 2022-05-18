@@ -2,12 +2,11 @@
 
 class FastIgnore
   module Matchers
-    class RuleGroup
+    class LastMatch
       attr_reader :weight
 
-      def initialize(matchers, allow)
+      def initialize(matchers)
         @matchers = matchers
-        @allow = allow
         @weight = @matchers.sum(&:weight)
 
         freeze
@@ -20,10 +19,10 @@ class FastIgnore
       def match?(candidate)
         @matchers.reverse_each do |matcher|
           val = matcher.match?(candidate)
-          return val == :allow if val
+          return val if val
         end
 
-        not @allow
+        false
       end
     end
   end
