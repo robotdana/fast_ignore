@@ -14,6 +14,7 @@ class FastIgnore
   require_relative 'fast_ignore/gitignore_rule_scanner'
   require_relative 'fast_ignore/matchers/last_match'
   require_relative 'fast_ignore/matchers/match_or_default'
+  require_relative 'fast_ignore/matchers/match_by_type'
   require_relative 'fast_ignore/matchers/unmatchable'
   require_relative 'fast_ignore/matchers/shebang_regexp'
   require_relative 'fast_ignore/gitconfig_parser'

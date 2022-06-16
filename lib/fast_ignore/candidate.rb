@@ -26,6 +26,10 @@ class FastIgnore
       end
     end
 
+    def path
+      @full_path
+    end
+
     def relative_to(dir)
       return unless @full_path.start_with?(dir)
 

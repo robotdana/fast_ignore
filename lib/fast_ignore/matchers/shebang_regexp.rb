@@ -3,19 +3,25 @@
 class FastIgnore
   module Matchers
     class ShebangRegexp
-      attr_reader :squash_id
-      attr_reader :rule
-
       def initialize(rule, negation)
         @rule = rule
         @return_value = negation ? :allow : :ignore
-        @squash_id = negation ? :allow_shebang : :ignore_shebang
 
         freeze
       end
 
+      def squashable_with?(other)
+        other == Unmatchable || (
+          other.instance_of?(ShebangRegexp) &&
+            @return_value == other.return_value
+        )
+      end
+
       def squash(list)
-        self.class.new(::Regexp.union(list.map(&:rule)), @return_value == :allow)
+        list -= [Unmatchable]
+        return self if list == [self]
+
+        self.class.new(::Regexp.union(list.map { |l| l.rule }), @return_value == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def file_only?
@@ -23,6 +29,10 @@ class FastIgnore
       end
 
       def dir_only?
+        false
+      end
+
+      def removable?
         false
       end
 
@@ -41,6 +51,11 @@ class FastIgnore
       def weight
         2
       end
+
+      protected
+
+      attr_reader :return_value
+      attr_reader :rule
     end
   end
 end

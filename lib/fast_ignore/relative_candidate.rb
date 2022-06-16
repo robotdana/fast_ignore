@@ -2,10 +2,10 @@
 
 class FastIgnore
   class RelativeCandidate
-    attr_reader :relative_path
+    attr_reader :path
 
     def initialize(relative_path, root_candidate)
-      @relative_path = relative_path
+      @path = relative_path
       @root_candidate = root_candidate
     end
 
@@ -15,6 +15,10 @@ class FastIgnore
 
     def first_line
       @root_candidate.first_line
+    end
+
+    def directory?
+      @root_candidate.directory?
     end
   end
 end

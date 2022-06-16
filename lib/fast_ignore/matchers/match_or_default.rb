@@ -10,12 +10,28 @@ class FastIgnore
         freeze
       end
 
+      def squashable_with?(other)
+        other == Unmatchable
+      end
+
+      def squash(_)
+        self
+      end
+
+      def dir_only?
+        @matcher.dir_only?
+      end
+
+      def file_only?
+        @matcher.file_only?
+      end
+
       def weight
         @matcher.weight
       end
 
-      def empty?
-        @matcher.empty?
+      def removable?
+        @matcher.removable?
       end
 
       def match?(candidate)

@@ -150,6 +150,7 @@ RSpec.describe FastIgnore do
 
     it '#allowed? can be allowed with include_directories: true' do
       create_file_list 'a/b'
+
       expect(subject.allowed?('a', include_directories: true)).to be true
     end
 

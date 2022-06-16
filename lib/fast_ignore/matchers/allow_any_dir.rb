@@ -4,10 +4,6 @@ class FastIgnore
   module Matchers
     module AllowAnyDir
       class << self
-        def squash_id
-          :allow_any_dir
-        end
-
         def dir_only?
           true
         end
@@ -20,8 +16,16 @@ class FastIgnore
           self
         end
 
+        def squashable_with?(other)
+          other == self || Unmatchable
+        end
+
         def weight
           0
+        end
+
+        def removable?
+          false
         end
 
         # :nocov:

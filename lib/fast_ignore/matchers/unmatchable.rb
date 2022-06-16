@@ -16,6 +16,26 @@ class FastIgnore
           0
         end
 
+        def squashable_with?(_)
+          true
+        end
+
+        def squash(list)
+          list -= [Unmatchable]
+
+          case list.length
+          when 0 then Unmatchable
+          when 1 then list.first
+          else list.first.squash(list)
+          end
+        end
+
+        # it's not removable
+        # but it is squashable with anything
+        def removable?
+          false
+        end
+
         # :nocov:
         def inspect
           '#<Unmatchable>'

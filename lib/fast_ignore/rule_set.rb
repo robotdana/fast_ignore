@@ -30,7 +30,7 @@ class FastIgnore
         end
       end
 
-      @matchers.reject!(&:empty?)
+      @matchers.reject!(&:removable?)
       @matchers.sort_by!(&:weight)
       @matchers.freeze
 

@@ -7,20 +7,28 @@ class FastIgnore
       alias_method :dir_only?, :dir_only
       undef :dir_only
 
-      attr_reader :squash_id
-      attr_reader :rule
-
-      def initialize(rule, anchored, dir_only)
+      def initialize(rule, squashable, dir_only)
         @rule = rule
         @dir_only = dir_only
-        @anchored = anchored
-        @squash_id = anchored ? :ignore : object_id
+        @squashable = squashable
 
         freeze
       end
 
+      def squashable_with?(other)
+        other == Unmatchable || (
+          @squashable &&
+            other.instance_of?(self.class) &&
+            other.squashable? &&
+            @dir_only == other.dir_only?
+        )
+      end
+
       def squash(list)
-        self.class.new(::Regexp.union(list.map(&:rule)), @anchored, @dir_only)
+        list -= [Unmatchable]
+        return self if list == [self]
+
+        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def file_only?
@@ -31,6 +39,10 @@ class FastIgnore
         1
       end
 
+      def removable?
+        false
+      end
+
       # :nocov:
       def inspect
         "#<IgnorePathRegexp #{'dir_only ' if @dir_only}#{@rule.inspect}>"
@@ -38,7 +50,15 @@ class FastIgnore
       # :nocov:
 
       def match?(candidate)
-        :ignore if @rule.match?(candidate.relative_path)
+        :ignore if @rule.match?(candidate.path)
+      end
+
+      protected
+
+      attr_reader :rule
+
+      def squashable?
+        @squashable
       end
     end
   end
