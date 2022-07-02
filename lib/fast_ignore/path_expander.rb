@@ -10,7 +10,7 @@ class FastIgnore
 
     def self.expand_dir(path, dir = Dir.pwd)
       path = expand_path(path, dir)
-      path += '/' unless path.end_with?('/')
+      path += '/' unless path == '/'
       path
     end
   end

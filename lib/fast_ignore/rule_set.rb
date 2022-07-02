@@ -16,7 +16,17 @@ class FastIgnore
       self.class.new(@patterns.dup.push(pattern))
     end
 
-    def build # rubocop:disable Metrics/MethodLength
+    def match?(candidate)
+      matchers.all? { |r| r.match?(candidate) == :allow } ? :allow : :ignore
+    end
+
+    protected
+
+    attr_reader :patterns
+
+    private
+
+    def matchers # rubocop:disable Metrics/MethodLength
       return @matchers if defined?(@matchers)
 
       @matchers = @patterns.group_by(&:label_or_self).map do |_, patterns|
@@ -38,20 +48,5 @@ class FastIgnore
 
       @matchers
     end
-
-    def allowed_recursive?(candidate)
-      return true unless candidate.parent
-
-      allowed_recursive?(candidate.parent) &&
-        allowed_unrecursive?(candidate)
-    end
-
-    def allowed_unrecursive?(candidate)
-      @matchers.all? { |r| r.match?(candidate) == :allow }
-    end
-
-    protected
-
-    attr_reader :patterns
   end
 end

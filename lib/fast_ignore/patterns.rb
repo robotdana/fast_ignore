@@ -8,6 +8,7 @@ class FastIgnore
     attr_reader :label
     attr_reader :allow
     attr_reader :format
+    attr_reader :custom_matcher
 
     BUILDERS = {
       expand_path_gitignore: FastIgnore::Builders::ExpandPathGitignore,
@@ -17,28 +18,33 @@ class FastIgnore
       shebang: FastIgnore::Builders::Shebang
     }.freeze
 
-    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
+    def initialize(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
       @allow = allow
       @label = append
-      root = PathExpander.expand_dir(root) if root
-
-      if from_file
-        @from_file = PathExpander.expand_path(from_file, root || '.')
-        root ||= ::File.dirname(from_file)
+      if custom_matcher
+        @custom_matcher = custom_matcher
       else
-        @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
+        root = PathExpander.expand_dir(root) if root
+
+        if from_file
+          @from_file = PathExpander.expand_path(from_file, root || '.')
+          root ||= ::File.dirname(from_file)
+        else
+          @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
+        end
+        @root = PathExpander.expand_dir(root || '.')
+        @format = BUILDERS.fetch(format || :gitignore, format)
       end
-      @root = PathExpander.expand_dir(root || '.')
-      @format ||= BUILDERS.fetch(format || :gitignore, format)
     end
 
-    def ==(other)
+    def ==(other) # rubocop:disable Metrics/AbcSize
       @label == other.label &&
+        @custom_matcher == other.custom_matcher &&
         allow == other.allow &&
         from_file == other.from_file &&
-        @root == other.root &&
+        root == other.root &&
         patterns == other.patterns &&
-        @format == other.format
+        format == other.format
     end
     alias_method :eql?, :==
 
@@ -74,6 +80,8 @@ class FastIgnore
     end
 
     def build_matchers
+      return [@custom_matcher] if custom_matcher
+
       matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
       return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless @allow

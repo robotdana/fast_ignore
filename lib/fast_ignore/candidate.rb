@@ -3,17 +3,20 @@
 class FastIgnore
   class Candidate
     class << self
-      def dir(dir)
-        new(dir, nil, true, true, nil)
+      def dir(dir, path_list)
+        new(dir, nil, true, true, nil, path_list)
       end
     end
 
-    def initialize(full_path, filename, directory, exists, content)
+    attr_reader :path_list
+
+    def initialize(full_path, filename, directory, exists, content, path_list) # rubocop:disable Metrics/ParameterLists
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
+      @path_list = path_list
     end
 
     def parent
@@ -22,12 +25,16 @@ class FastIgnore
       @parent = if @full_path == '/'
         nil
       else
-        ::FastIgnore::Candidate.dir(::File.dirname(@full_path))
+        ::FastIgnore::Candidate.dir(::File.dirname(@full_path), path_list)
       end
     end
 
     def path
       @full_path
+    end
+
+    def child_or_self?(dir)
+      @full_path == dir || @full_path.start_with?("#{dir}/")
     end
 
     def relative_to(dir)
