@@ -188,11 +188,7 @@ class FastIgnore
 
     def build_rule
       @re.prepend(prefix)
-      if @negation
-        ::FastIgnore::Matchers::AllowPathRegexp.new(@re.to_regexp, @anchored, @dir_only)
-      else
-        ::FastIgnore::Matchers::IgnorePathRegexp.new(@re.to_regexp, @anchored, @dir_only)
-      end
+      ::FastIgnore::Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation)
     end
 
     def build

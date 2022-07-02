@@ -40,7 +40,7 @@ class FastIgnore
       end
     end
 
-    def build_child_file_rule # rubocop:disable Metrics/MethodLength
+    def build_child_file_rule
       if @child_re.end_with?('/')
         @child_re.append_many_non_dir.append_dir if @dir_only
       else
@@ -49,11 +49,7 @@ class FastIgnore
 
       @child_re.prepend(prefix)
 
-      if @negation
-        ::FastIgnore::Matchers::AllowPathRegexp.new(@child_re.to_regexp, @anchored, false)
-      else
-        ::FastIgnore::Matchers::IgnorePathRegexp.new(@child_re.to_regexp, @anchored, false)
-      end
+      ::FastIgnore::Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, false, @negation)
     end
 
     def build_as_parent

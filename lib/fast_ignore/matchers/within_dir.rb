@@ -38,7 +38,7 @@ class FastIgnore
         list -= [Unmatchable]
         return self if list == [self]
 
-        WithinDir.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def match?(candidate)

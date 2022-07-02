@@ -2,15 +2,17 @@
 
 class FastIgnore
   module Matchers
-    class AllowPathRegexp
+    class PathRegexp
       attr_reader :dir_only
       alias_method :dir_only?, :dir_only
       undef :dir_only
 
-      def initialize(rule, squashable, dir_only)
+      def initialize(rule, squashable, dir_only, allow)
         @rule = rule
         @dir_only = dir_only
         @squashable = squashable
+        @allow = allow
+        @return_value = allow ? :allow : :ignore
 
         freeze
       end
@@ -20,6 +22,7 @@ class FastIgnore
           @squashable &&
             other.instance_of?(self.class) &&
             other.squashable? &&
+            @allow == other.allow? &&
             @dir_only == other.dir_only?
         )
       end
@@ -28,7 +31,7 @@ class FastIgnore
         list -= [Unmatchable]
         return self if list == [self]
 
-        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only, @allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def file_only?
@@ -45,17 +48,21 @@ class FastIgnore
 
       # :nocov:
       def inspect
-        "#<AllowPathRegexp #{'dir_only ' if @dir_only}#{@rule.inspect}>"
+        "#<PathRegexp #{@return_value} #{'dir_only ' if @dir_only}#{@rule.inspect}>"
       end
       # :nocov:
 
       def match?(candidate)
-        :allow if @rule.match?(candidate.path)
+        @return_value if @rule.match?(candidate.path)
       end
 
       protected
 
       attr_reader :rule
+
+      def allow?
+        @allow
+      end
 
       def squashable?
         @squashable
