@@ -54,7 +54,9 @@ class FastIgnore
 
     def each(root: '.', prefix: '', &block)
       return enum_for(:each, root: root, prefix: prefix) unless block
-      return unless allowed?(root, include_directories: true)
+      return unless Walkers::FileSystem.allowed?(
+        root, path_list: self, include_directories: true, parent_if_directory: true
+      )
 
       Walkers::FileSystem.each(PathExpander.expand_dir(root), prefix, self, &block)
     end

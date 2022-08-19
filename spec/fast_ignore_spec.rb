@@ -167,14 +167,14 @@ RSpec.describe FastIgnore do
 
         expect(subject.allowed?('a/', include_directories: true)).to be false
         expect(subject.allowed?('b/', include_directories: true)).to be true
-        # expect(subject.allowed?(Pathname.pwd.dirname, include_directories: true)).to be false
+        expect(subject.allowed?(Pathname.pwd.dirname, include_directories: true)).to be false
       end
     end
 
     context 'with an anchored include' do
       let(:args) { { include_rules: 'a/b' } }
 
-      xit "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
+      it "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
         create_file_list 'a/b', 'b/a'
 
         expect(subject.allowed?('a/', include_directories: true)).to be false

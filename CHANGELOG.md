@@ -3,7 +3,7 @@
 - Refactoring that should have no effect on behaviour
 - Fix the order of reading .gitignore files in sub directories that override rules in outer directories
   now it matches git behaviour of appending the files from the outside in
-- `include_directories: true` now only matches directories that are matched by rules, not just those that could potentially contain files that match
+- fix an issue where `include_directories: true` would match ary directory that could potentially contain files that match (most egregiously repo ancestors). now it only matches directories that are explicitly matched by rules
 - a negated include rule that matches a directory will now be respected, even if other rules in the file could be in any directory
 
 # v0.17.4

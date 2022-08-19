@@ -10,11 +10,12 @@ class FastIgnore
           directory: nil,
           content: nil,
           exists: nil,
-          include_directories: false
+          include_directories: false,
+          parent_if_directory: !include_directories
         )
           full_path = PathExpander.expand_path(path)
           candidate = ::FastIgnore::Candidate.new(
-            full_path, nil, directory, exists, content, path_list, !include_directories
+            full_path, nil, directory, exists, content, path_list, parent_if_directory
           )
           return false if !include_directories && candidate.directory?
           return false unless candidate.exists?

@@ -186,9 +186,14 @@ class FastIgnore
       out
     end
 
-    def build_rule
+    def build_rule(parent: false)
       @re.prepend(prefix)
-      ::FastIgnore::Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation)
+
+      if parent && @anchored && @dir_only && @negation
+        ::FastIgnore::Matchers::AllowParentPathRegexp.new(@re.to_regexp)
+      else
+        ::FastIgnore::Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation)
+      end
     end
 
     def build

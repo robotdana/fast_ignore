@@ -58,14 +58,14 @@ class FastIgnore
 
       catch :abort_build do
         process_rule
-        build_rule(child_file_rule: false)
+        build_rule(child_file_rule: false, parent: true)
       end
     end
 
-    def build_rule(child_file_rule: true)
+    def build_rule(child_file_rule: true, parent: false)
       @child_re ||= @re.dup # in case emit_end wasn't called
 
-      [super(), *build_parent_dir_rules, (build_child_file_rule if child_file_rule)].compact
+      [super(parent: parent), *build_parent_dir_rules, (build_child_file_rule if child_file_rule)].compact
     end
   end
 end
