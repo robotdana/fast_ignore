@@ -88,8 +88,8 @@ class FastIgnore
 
       [
         ::FastIgnore::Matchers::WithinDir.new(matchers, @root),
-        ::FastIgnore::Matchers::WithinDir.new(
-          ::FastIgnore::GitignoreIncludeRuleBuilder.new(@root).build_as_parent, '/'
+        ::FastIgnore::Matchers::LastMatch.new(
+          ::FastIgnore::GitignoreIncludeRuleBuilder.new(@root).build_as_parent
         )
       ]
     end

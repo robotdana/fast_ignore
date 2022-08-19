@@ -31,7 +31,12 @@ class FastIgnore
 
       def match(candidate)
         if candidate.child_or_self?(@root) && candidate.directory?
-          candidate.path_list.ignore!(from_file: './.gitignore', root: candidate.path, append: @append, format: @format)
+          candidate.path_list.ignore!(
+            from_file: './.gitignore',
+            root: candidate.full_path,
+            append: @append,
+            format: @format
+          )
         end
 
         false

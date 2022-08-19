@@ -24,5 +24,9 @@ class FastIgnore
     def parent?
       @root_candidate.parent?
     end
+
+    def full_path
+      @root_candidate.full_path
+    end
   end
 end

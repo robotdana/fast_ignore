@@ -9,6 +9,7 @@ class FastIgnore
     end
 
     attr_reader :path_list
+    attr_reader :full_path
 
     def initialize(full_path, filename, directory, exists, content, path_list, parent_if_directory) # rubocop:disable Metrics/ParameterLists
       @full_path = full_path
@@ -35,7 +36,11 @@ class FastIgnore
     end
 
     def path
-      @full_path
+      @path ||= if @full_path == '/'
+        '/'
+      else
+        @full_path.delete_prefix('/')
+      end
     end
 
     def child_or_self?(dir)
