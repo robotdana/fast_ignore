@@ -17,20 +17,18 @@ class FastIgnore
       end
 
       def squashable_with?(other)
-        other == Unmatchable || (
-          @squashable &&
-            other.instance_of?(self.class) &&
-            other.squashable? &&
-            @return_value == other.return_value &&
-            @dir_only == other.dir_only?
-        )
+        @squashable &&
+          other.instance_of?(self.class) &&
+          other.squashable? &&
+          @return_value == other.return_value &&
+          @dir_only == other.dir_only?
       end
 
       def squash(list)
-        list -= [Unmatchable]
         return self if list == [self]
 
-        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only, @return_value == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        rule = ::Regexp.union(list.map { |l| l.rule }) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(rule, @squashable, @dir_only, @return_value == :allow)
       end
 
       def file_only?
@@ -60,9 +58,9 @@ class FastIgnore
       attr_reader :rule
       attr_reader :return_value
 
-      def squashable?
-        @squashable
-      end
+      attr_reader :squashable
+      alias_method :squashable?, :squashable
+      undef :squashable
     end
   end
 end

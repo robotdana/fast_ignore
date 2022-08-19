@@ -17,17 +17,7 @@ class FastIgnore
         end
 
         def squashable_with?(_)
-          true
-        end
-
-        def squash(list)
-          list -= [Unmatchable]
-
-          case list.length
-          when 0 then Unmatchable
-          when 1 then list.first
-          else list.first.squash(list)
-          end
+          false
         end
 
         # it's not removable

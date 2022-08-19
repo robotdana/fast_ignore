@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    module AllowAnyDir
+    module AllowAnyParent
       class << self
         def dir_only?
           true
@@ -17,7 +17,7 @@ class FastIgnore
         end
 
         def squashable_with?(other)
-          other == self || Unmatchable
+          other == self
         end
 
         def weight
@@ -30,12 +30,12 @@ class FastIgnore
 
         # :nocov:
         def inspect
-          '#<AllowAnyDir>'
+          '#<AllowAnyParent>'
         end
         # :nocov:
 
-        def match(_)
-          :allow
+        def match(candidate)
+          :allow if candidate.parent?
         end
       end
     end

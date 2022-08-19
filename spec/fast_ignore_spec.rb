@@ -159,6 +159,41 @@ RSpec.describe FastIgnore do
       expect(subject.allowed?('a/', include_directories: true)).to be true
     end
 
+    context 'with an unanchored include' do
+      let(:args) { { include_rules: '**/b' } }
+
+      it "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
+        create_file_list 'a/b', 'b/a'
+
+        expect(subject.allowed?('a/', include_directories: true)).to be false
+        expect(subject.allowed?('b/', include_directories: true)).to be true
+        # expect(subject.allowed?(Pathname.pwd.dirname, include_directories: true)).to be false
+      end
+    end
+
+    context 'with an anchored include' do
+      let(:args) { { include_rules: 'a/b' } }
+
+      xit "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
+        create_file_list 'a/b', 'b/a'
+
+        expect(subject.allowed?('a/', include_directories: true)).to be false
+        expect(subject.allowed?('a/b')).to be true
+        expect(subject.allowed?(Pathname.pwd.dirname, include_directories: true)).to be false
+      end
+    end
+
+    context 'with an unanchored include, preceded by an explicit negation' do
+      let(:args) { { include_rules: ['!a/', '**/b'] } }
+
+      it "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
+        create_file_list 'a/b', 'b/a'
+
+        expect(subject).to allow_files('b/a')
+        expect(subject).not_to allow_files('a/b')
+      end
+    end
+
     it "#allowed? won't be confused by caching dirs as non dirs" do
       gitignore 'a/'
 

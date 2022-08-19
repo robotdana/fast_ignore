@@ -25,6 +25,10 @@ class FastIgnore
         false
       end
 
+      def squashable_with?(_)
+        false
+      end
+
       def match(candidate)
         if candidate.child_or_self?(@root) && candidate.directory?
           candidate.path_list.ignore!(from_file: './.gitignore', root: candidate.path, append: @append, format: @format)

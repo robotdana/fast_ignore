@@ -20,5 +20,9 @@ class FastIgnore
     def directory?
       @root_candidate.directory?
     end
+
+    def parent?
+      @root_candidate.parent?
+    end
   end
 end

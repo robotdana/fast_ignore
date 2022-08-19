@@ -29,13 +29,10 @@ class FastIgnore
       end
 
       def squashable_with?(other)
-        other == Unmatchable || (
-          other.instance_of?(WithinDir) && @dir == other.dir
-        )
+        other.instance_of?(WithinDir) && @dir == other.dir
       end
 
       def squash(list)
-        list -= [Unmatchable]
         return self if list == [self]
 
         self.class.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods

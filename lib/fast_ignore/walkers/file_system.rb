@@ -13,7 +13,9 @@ class FastIgnore
           include_directories: false
         )
           full_path = PathExpander.expand_path(path)
-          candidate = ::FastIgnore::Candidate.new(full_path, nil, directory, exists, content, path_list)
+          candidate = ::FastIgnore::Candidate.new(
+            full_path, nil, directory, exists, content, path_list, !include_directories
+          )
           return false if !include_directories && candidate.directory?
           return false unless candidate.exists?
 
@@ -23,7 +25,7 @@ class FastIgnore
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
           ::Dir.children(parent_full_path).each do |filename|
             full_path = parent_full_path + filename
-            candidate = ::FastIgnore::Candidate.new(full_path, filename, nil, true, nil, path_list)
+            candidate = ::FastIgnore::Candidate.new(full_path, filename, nil, true, nil, path_list, true)
 
             next unless path_list.rule_set.match(candidate) == :allow
 

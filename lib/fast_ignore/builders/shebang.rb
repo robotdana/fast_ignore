@@ -10,7 +10,7 @@ class FastIgnore
         return rule unless allow
 
         # also allow all directories in case they include a file with the matching shebang file
-        [::FastIgnore::Matchers::AllowAnyDir, rule]
+        [::FastIgnore::Matchers::AllowAnyParent, rule]
       end
     end
   end

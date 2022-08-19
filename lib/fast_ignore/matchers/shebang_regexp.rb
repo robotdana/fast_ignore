@@ -11,10 +11,8 @@ class FastIgnore
       end
 
       def squashable_with?(other)
-        other == Unmatchable || (
-          other.instance_of?(ShebangRegexp) &&
-            @return_value == other.return_value
-        )
+        other.instance_of?(ShebangRegexp) &&
+          @return_value == other.return_value
       end
 
       def squash(list)

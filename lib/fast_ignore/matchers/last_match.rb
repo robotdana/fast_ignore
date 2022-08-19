@@ -25,11 +25,10 @@ class FastIgnore
       end
 
       def squashable_with?(other)
-        other == Unmatchable || other.instance_of?(LastMatch)
+        other.instance_of?(LastMatch)
       end
 
       def squash(list)
-        list -= [Unmatchable]
         return self if list == [self]
 
         self.class.new(list.map(&:matchers))
@@ -50,7 +49,18 @@ class FastIgnore
 
       private
 
+      # TODO: these i should move maybe
       def squash_matchers(matchers)
+        if matchers.include?(Unmatchable)
+          matchers -= [Unmatchable]
+          return [Unmatchable] if matchers.empty?
+        end
+
+        if matchers.include?(AllowAnyParent)
+          matchers -= [AllowAnyParent]
+          matchers.unshift(AllowAnyParent)
+        end
+
         matchers.chunk_while { |a, b| a.squashable_with?(b) }.map do |chunk|
           next chunk.first if chunk.length == 1
 

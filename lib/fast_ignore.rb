@@ -22,7 +22,7 @@ class FastIgnore
   require_relative 'fast_ignore/candidate'
   require_relative 'fast_ignore/relative_candidate'
   require_relative 'fast_ignore/matchers/within_dir'
-  require_relative 'fast_ignore/matchers/allow_any_dir'
+  require_relative 'fast_ignore/matchers/allow_any_parent'
   require_relative 'fast_ignore/matchers/path_regexp'
   require_relative 'fast_ignore/matchers/collect_gitignore'
   require_relative 'fast_ignore/walkers/file_system'

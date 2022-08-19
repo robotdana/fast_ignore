@@ -88,4 +88,5 @@ utf
 webpack
 xconfig
 xdg
+xit
 zsh

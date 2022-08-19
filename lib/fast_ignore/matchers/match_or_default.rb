@@ -10,8 +10,8 @@ class FastIgnore
         freeze
       end
 
-      def squashable_with?(other)
-        other == Unmatchable
+      def squashable_with?(_)
+        false
       end
 
       def squash(_)

@@ -23,8 +23,8 @@ class FastIgnore
       end
 
       # TODO: squashable with same class
-      def squashable_with?(other)
-        other == Unmatchable
+      def squashable_with?(_)
+        false
       end
 
       def squash(_)

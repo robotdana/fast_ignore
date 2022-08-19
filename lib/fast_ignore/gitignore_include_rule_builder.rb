@@ -36,7 +36,7 @@ class FastIgnore
           ::FastIgnore::GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
         end
       else
-        [::FastIgnore::Matchers::AllowAnyDir]
+        [::FastIgnore::Matchers::AllowAnyParent]
       end
     end
 
