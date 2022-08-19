@@ -27,10 +27,6 @@ class FastIgnore
         false
       end
 
-      def squash(_)
-        self
-      end
-
       def dir_only?
         @file_matcher == Unmatchable
       end

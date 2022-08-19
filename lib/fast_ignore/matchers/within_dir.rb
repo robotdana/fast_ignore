@@ -33,16 +33,13 @@ class FastIgnore
       end
 
       def squash(list)
-        return self if list == [self]
-
         self.class.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def match(candidate)
-        relative_candidate = candidate.relative_to(@dir)
-        return false unless relative_candidate
-
-        @matcher.match(relative_candidate)
+        candidate.with_path_relative_to(@dir) do
+          @matcher.match(candidate)
+        end
       end
 
       protected

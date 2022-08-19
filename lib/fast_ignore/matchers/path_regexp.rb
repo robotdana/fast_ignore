@@ -25,8 +25,6 @@ class FastIgnore
       end
 
       def squash(list)
-        return self if list == [self]
-
         rule = ::Regexp.union(list.map { |l| l.rule }) # rubocop:disable Style/SymbolProc it breaks with protected methods
         self.class.new(rule, @squashable, @dir_only, @return_value == :allow)
       end

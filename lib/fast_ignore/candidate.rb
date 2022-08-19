@@ -17,6 +17,7 @@ class FastIgnore
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
       (@first_line = content.slice(/.*/)) if content # we only care about the first line
+      @path_was = []
       @path_list = path_list
       @parent_if_directory = parent_if_directory
     end
@@ -36,21 +37,24 @@ class FastIgnore
     end
 
     def path
-      @path ||= if @full_path == '/'
-        '/'
-      else
-        @full_path.delete_prefix('/')
-      end
+      @path ||= @full_path.delete_prefix('/')
     end
 
     def child_or_self?(dir)
       @full_path == dir || @full_path.start_with?("#{dir}/")
     end
 
-    def relative_to(dir)
+    def with_path_relative_to(dir)
       return unless @full_path.start_with?(dir)
 
-      ::FastIgnore::RelativeCandidate.new(@full_path.delete_prefix(dir), self)
+      begin
+        @path_was << @path
+        @path = @full_path.delete_prefix(dir)
+
+        yield
+      ensure
+        @path = @path_was.pop
+      end
     end
 
     def directory?

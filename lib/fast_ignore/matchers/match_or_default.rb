@@ -14,10 +14,6 @@ class FastIgnore
         false
       end
 
-      def squash(_)
-        self
-      end
-
       def dir_only?
         @matcher.dir_only?
       end

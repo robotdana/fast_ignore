@@ -54,9 +54,13 @@ class FastIgnore
 
     def each(root: '.', prefix: '', &block)
       return enum_for(:each, root: root, prefix: prefix) unless block
+      # :nocov:
+      # TODO: new api stuff
       return unless Walkers::FileSystem.allowed?(
         root, path_list: self, include_directories: true, parent_if_directory: true
       )
+
+      # :nocov:
 
       Walkers::FileSystem.each(PathExpander.expand_dir(root), prefix, self, &block)
     end
@@ -126,9 +130,12 @@ class FastIgnore
     private
 
     def validate_options(patterns, custom_matcher, from_file)
+      # :nocov:
+      # TODO: new api stuff
       if [(patterns unless patterns.empty?), custom_matcher, from_file].compact.length > 1
         raise FastIgnore::Error, 'Only use one of *patterns, from_file:, or custom_matcher:'
       end
+      # :nocov:
     end
   end
 end

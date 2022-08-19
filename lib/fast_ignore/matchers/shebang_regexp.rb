@@ -16,9 +16,6 @@ class FastIgnore
       end
 
       def squash(list)
-        list -= [Unmatchable]
-        return self if list == [self]
-
         self.class.new(::Regexp.union(list.map { |l| l.rule }), @return_value == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 

@@ -29,8 +29,6 @@ class FastIgnore
       end
 
       def squash(list)
-        return self if list == [self]
-
         self.class.new(list.map(&:matchers))
       end
 
@@ -50,7 +48,7 @@ class FastIgnore
       private
 
       # TODO: these i should move maybe
-      def squash_matchers(matchers)
+      def squash_matchers(matchers) # rubocop:disable Metrics/MethodLength
         if matchers.include?(Unmatchable)
           matchers -= [Unmatchable]
           return [Unmatchable] if matchers.empty?
