@@ -11,7 +11,6 @@ class FastIgnore
         @rule = rule
         @dir_only = dir_only
         @squashable = squashable
-        @allow = allow
         @return_value = allow ? :allow : :ignore
 
         freeze
@@ -22,7 +21,7 @@ class FastIgnore
           @squashable &&
             other.instance_of?(self.class) &&
             other.squashable? &&
-            @allow == other.allow? &&
+            @return_value == other.return_value &&
             @dir_only == other.dir_only?
         )
       end
@@ -31,7 +30,7 @@ class FastIgnore
         list -= [Unmatchable]
         return self if list == [self]
 
-        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only, @allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(::Regexp.union(list.map { |l| l.rule }), @squashable, @dir_only, @return_value == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       def file_only?
@@ -59,10 +58,7 @@ class FastIgnore
       protected
 
       attr_reader :rule
-
-      def allow?
-        @allow
-      end
+      attr_reader :return_value
 
       def squashable?
         @squashable
