@@ -42,7 +42,7 @@ class FastIgnore
       end
       # :nocov:
 
-      def match?(candidate)
+      def match(candidate)
         return false if candidate.filename.include?('.')
 
         @return_value if candidate.first_line.match?(@rule)

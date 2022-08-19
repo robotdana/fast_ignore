@@ -16,8 +16,8 @@ class FastIgnore
       self.class.new(@patterns.dup.push(pattern))
     end
 
-    def match?(candidate)
-      matchers.all? { |r| r.match?(candidate) == :allow } ? :allow : :ignore
+    def match(candidate)
+      matchers.all? { |r| r.match(candidate) == :allow } ? :allow : :ignore
     end
 
     protected

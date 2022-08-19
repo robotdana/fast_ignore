@@ -39,11 +39,11 @@ class FastIgnore
         @dir_matcher == Unmatchable
       end
 
-      def match?(candidate)
+      def match(candidate)
         if candidate.directory?
-          @dir_matcher.match?(candidate)
+          @dir_matcher.match(candidate)
         else
-          @file_matcher.match?(candidate)
+          @file_matcher.match(candidate)
         end
       end
     end

@@ -52,7 +52,7 @@ class FastIgnore
       end
       # :nocov:
 
-      def match?(candidate)
+      def match(candidate)
         @return_value if @rule.match?(candidate.path)
       end
 

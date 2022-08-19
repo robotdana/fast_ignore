@@ -35,9 +35,9 @@ class FastIgnore
         self.class.new(list.map(&:matchers))
       end
 
-      def match?(candidate)
+      def match(candidate)
         @matchers.reverse_each do |matcher|
-          val = matcher.match?(candidate)
+          val = matcher.match(candidate)
           return val if val
         end
 

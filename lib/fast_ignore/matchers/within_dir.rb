@@ -41,11 +41,11 @@ class FastIgnore
         self.class.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
-      def match?(candidate)
+      def match(candidate)
         relative_candidate = candidate.relative_to(@dir)
         return false unless relative_candidate
 
-        @matcher.match?(relative_candidate)
+        @matcher.match(relative_candidate)
       end
 
       protected

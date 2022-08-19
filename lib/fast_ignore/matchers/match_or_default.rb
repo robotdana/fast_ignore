@@ -34,8 +34,8 @@ class FastIgnore
         @matcher.removable?
       end
 
-      def match?(candidate)
-        @matcher.match?(candidate) || @default
+      def match(candidate)
+        @matcher.match(candidate) || @default
       end
     end
   end

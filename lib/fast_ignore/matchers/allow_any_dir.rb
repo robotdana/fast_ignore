@@ -34,7 +34,7 @@ class FastIgnore
         end
         # :nocov:
 
-        def match?(_)
+        def match(_)
           :allow
         end
       end
