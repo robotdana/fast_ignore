@@ -110,7 +110,7 @@ class FastIgnore
 
     def gitdir?(gitdir, path:, case_insensitive: false)
       gitdir += '**' if gitdir.end_with?('/')
-      gitdir.sub!(%r{\A~/}, ENV['HOME'] + '/')
+      gitdir.sub!(%r{\A~/}, Dir.home + '/')
       gitdir.sub!(/\A\./, path + '/')
       gitdir = "**/#{gitdir}" unless gitdir.start_with?('/')
       options = ::File::FNM_PATHNAME | ::File::FNM_DOTMATCH

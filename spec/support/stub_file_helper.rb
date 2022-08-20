@@ -2,10 +2,8 @@
 
 module StubFileHelper
   def stub_file_original
-    @stub_file_original ||= begin
-      stub_file_attributes.each_key do |method|
-        allow(::File).to receive(method).at_least(:once).and_call_original
-      end
+    @stub_file_original ||= stub_file_attributes.each_key do |method|
+      allow(::File).to receive(method).at_least(:once).and_call_original
     end
   end
 

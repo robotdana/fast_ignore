@@ -2,9 +2,7 @@
 
 module StubENVHelper
   def stub_env_original
-    @stub_env_original ||= begin
-      allow(::ENV).to receive(:[]).at_least(:once).and_call_original
-    end
+    @stub_env_original ||= allow(::ENV).to receive(:[]).at_least(:once).and_call_original
   end
 
   def stub_env(**values)

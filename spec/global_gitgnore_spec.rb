@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::GlobalGitignore do
+::RSpec.describe(::FastIgnore::GlobalGitignore) do
   subject { described_class.path(root: root) }
 
   let(:default_ignore_path) { "#{home}/.config/git/ignore" }
 
-  let(:home) { ENV['HOME'] }
+  let(:home) { Dir.home }
   let(:root) { Dir.pwd }
 
   let(:config_content) { "[core]\n\texcludesfile = #{excludesfile_value}\n" }

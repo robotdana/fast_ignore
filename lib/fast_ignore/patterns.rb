@@ -1,4 +1,4 @@
-# frozen-string-literal: true
+# frozen_string_literal: true
 
 class FastIgnore
   class Patterns
@@ -57,12 +57,10 @@ class FastIgnore
     end
 
     def build
-      @build ||= begin
-        ::FastIgnore::Matchers::MatchOrDefault.new(
-          ::FastIgnore::Matchers::LastMatch.build(matchers),
-          default
-        )
-      end
+      @build ||= ::FastIgnore::Matchers::MatchOrDefault.new(
+        ::FastIgnore::Matchers::LastMatch.build(matchers),
+        default
+      )
     end
 
     def default

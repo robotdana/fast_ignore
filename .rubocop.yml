@@ -116,7 +116,7 @@ Metrics:
   CountComments: false
 
 Metrics/BlockLength:
-  IgnoredMethods:
+  AllowedMethods:
     - configure
     - describe
     - context
@@ -141,7 +141,7 @@ RSpec/ExpectActual:
   Enabled: false
 
 RSpec/ExampleLength:
-  CountAsOne: [array, hash, heredoc]
+  Enabled: false
 
 RSpec/FilePath:
   Enabled: false

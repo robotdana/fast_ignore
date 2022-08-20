@@ -4,7 +4,7 @@ require 'pathname'
 
 RSpec.describe FastIgnore do
   it 'has a version number' do
-    expect(FastIgnore::VERSION).not_to be nil
+    expect(FastIgnore::VERSION).not_to be_nil
   end
 
   describe '.new' do
@@ -67,12 +67,12 @@ RSpec.describe FastIgnore do
       end
 
       it 'recognises ~/.gitconfig gitignore files' do
-        stub_file(<<~GITCONFIG, path: "#{ENV['HOME']}/.gitconfig")
+        stub_file(<<~GITCONFIG, path: "#{Dir.home}/.gitconfig")
           [core]
           \texcludesfile = ~/.global_gitignore
         GITCONFIG
 
-        stub_file("a/b/c\n", path: "#{ENV['HOME']}/.global_gitignore")
+        stub_file("a/b/c\n", path: "#{Dir.home}/.global_gitignore")
 
         expect(subject).not_to match_files('a/b/d', 'b/c')
         expect(subject).to match_files('a/b/c', 'b/d')

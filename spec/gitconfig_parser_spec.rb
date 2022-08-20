@@ -6,7 +6,7 @@ RSpec.describe FastIgnore::GitconfigParser do
   it 'returns nil for empty file' do
     create_file('', path: '.gitconfig')
 
-    expect(described_class.parse('.gitconfig')).to eq(nil)
+    expect(described_class.parse('.gitconfig')).to be_nil
   end
 
   it 'raises for invalid file' do
@@ -22,7 +22,7 @@ RSpec.describe FastIgnore::GitconfigParser do
   end
 
   it 'returns nil for nonexistent file' do
-    expect(described_class.parse('.gitconfig')).to eq(nil)
+    expect(described_class.parse('.gitconfig')).to be_nil
   end
 
   it 'returns nil for file with no [core]' do
@@ -32,7 +32,7 @@ RSpec.describe FastIgnore::GitconfigParser do
         fetch = +refs/heads/*:refs/remotes/origin/*
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq(nil)
+    expect(described_class.parse('.gitconfig')).to be_nil
   end
 
   it 'returns nil for file with [core] but no excludesfile' do
@@ -43,7 +43,7 @@ RSpec.describe FastIgnore::GitconfigParser do
         editor = mate --wait
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq(nil)
+    expect(described_class.parse('.gitconfig')).to be_nil
   end
 
   it 'returns value for file with excludesfile' do
@@ -115,7 +115,7 @@ RSpec.describe FastIgnore::GitconfigParser do
       #  excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq(nil)
+    expect(described_class.parse('.gitconfig')).to be_nil
   end
 
   it 'returns value for file with excludesfile in quotes' do

@@ -10,10 +10,10 @@ module StubGlobalGitignoreHelper
     )
 
     stub_file(nil, path: "#{Dir.pwd}/.git/config")
-    stub_file(nil, path: "#{ENV['HOME']}/.gitconfig")
-    stub_file(nil, path: "#{ENV['HOME']}/.config/git/config")
+    stub_file(nil, path: "#{Dir.home}/.gitconfig")
+    stub_file(nil, path: "#{Dir.home}/.config/git/config")
     stub_file(nil, path: '/usr/local/etc/gitconfig')
-    stub_file(nil, path: "#{ENV['HOME']}/.config/git/ignore")
+    stub_file(nil, path: "#{Dir.home}/.config/git/ignore")
   end
 end
 

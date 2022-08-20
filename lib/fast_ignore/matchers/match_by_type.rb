@@ -23,8 +23,8 @@ class FastIgnore
       end
 
       def removable?
-        @dir_matcher.removable? && @file_matcher.removable? ||
-          @dir_matcher == Unmatchable && @file_matcher == Unmatchable
+        (@dir_matcher.removable? && @file_matcher.removable?) ||
+          (@dir_matcher == Unmatchable && @file_matcher == Unmatchable)
       end
 
       def implicit?
