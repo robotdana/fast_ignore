@@ -16,6 +16,10 @@ class FastIgnore
           self
         end
 
+        def implicit?
+          true
+        end
+
         def squashable_with?(other)
           other == self
         end

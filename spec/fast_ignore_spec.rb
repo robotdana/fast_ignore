@@ -184,13 +184,22 @@ RSpec.describe FastIgnore do
     end
 
     context 'with an unanchored include, preceded by an explicit negation' do
-      let(:args) { { include_rules: ['!a/', '**/b'] } }
+      let(:args) { { include_rules: ['!a', '**/b'] } }
 
-      it "#allowed? with include_directories: true doesn't match directories implicitly", :aggregate_failures do
-        create_file_list 'a/b', 'b/a'
+      it '#allowed? defers matching implicitly' do
+        create_file_list 'a/b', 'b/a', 'b/c', 'c/b'
 
-        expect(subject).to allow_files('b/a')
-        expect(subject).not_to allow_files('a/b')
+        expect(subject).to allow_exactly('b/c', 'c/b')
+      end
+    end
+
+    context 'with negation, preceded by an explicit include' do
+      let(:args) { { include_rules: ['**/b', '!a'] } }
+
+      it '#allowed? defers matching implicitly' do
+        create_file_list 'a/b', 'b/a', 'b/c', 'c/b'
+
+        expect(subject).to allow_exactly('b/c', 'c/b')
       end
     end
 

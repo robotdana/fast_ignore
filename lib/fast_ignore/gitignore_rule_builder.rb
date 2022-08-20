@@ -192,7 +192,7 @@ class FastIgnore
       if parent && @anchored && @dir_only && @negation
         ::FastIgnore::Matchers::AllowParentPathRegexp.new(@re.to_regexp)
       else
-        ::FastIgnore::Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation)
+        ::FastIgnore::Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation, false)
       end
     end
 

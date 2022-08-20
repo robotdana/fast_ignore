@@ -29,6 +29,10 @@ class FastIgnore
         false
       end
 
+      def implicit?
+        false
+      end
+
       def match(candidate)
         if candidate.child_or_self?(@root) && candidate.directory?
           candidate.path_list.ignore!(

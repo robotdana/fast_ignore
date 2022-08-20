@@ -17,14 +17,8 @@ class FastIgnore
     end
 
     def emit_end
-      if @dir_only
-        @child_re = @re.dup
-        @re.append_end_anchor
-      else
-        @re.append_dir_or_end_anchor
-      end
-
-      break!
+      @child_re = @re.dup
+      super
     end
 
     def build_parent_dir_rules
@@ -49,7 +43,7 @@ class FastIgnore
 
       @child_re.prepend(prefix)
 
-      ::FastIgnore::Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, false, @negation)
+      ::FastIgnore::Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, false, @negation, true)
     end
 
     def build_as_parent

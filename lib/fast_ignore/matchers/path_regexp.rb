@@ -7,9 +7,14 @@ class FastIgnore
       alias_method :dir_only?, :dir_only
       undef :dir_only
 
-      def initialize(rule, squashable, dir_only, allow)
+      attr_reader :implicit
+      alias_method :implicit?, :implicit
+      undef :implicit
+
+      def initialize(rule, squashable, dir_only, allow, implicit)
         @rule = rule
         @dir_only = dir_only
+        @implicit = implicit
         @squashable = squashable
         @return_value = allow ? :allow : :ignore
 
@@ -21,12 +26,13 @@ class FastIgnore
           other.instance_of?(self.class) &&
           other.squashable? &&
           @return_value == other.return_value &&
+          @implicit == other.implicit? &&
           @dir_only == other.dir_only?
       end
 
       def squash(list)
         rule = ::Regexp.union(list.map { |l| l.rule }) # rubocop:disable Style/SymbolProc it breaks with protected methods
-        self.class.new(rule, @squashable, @dir_only, @return_value == :allow)
+        self.class.new(rule, @squashable, @dir_only, @return_value == :allow, @implicit)
       end
 
       def file_only?

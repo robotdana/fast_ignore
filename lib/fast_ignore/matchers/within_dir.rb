@@ -16,6 +16,10 @@ class FastIgnore
         @matcher.weight
       end
 
+      def implicit?
+        @matcher.implicit?
+      end
+
       def removable?
         @matcher.removable?
       end

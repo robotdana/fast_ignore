@@ -33,7 +33,7 @@ class FastIgnore
       end
 
       def match(candidate)
-        @matchers.reverse_each do |matcher|
+        @matchers.each do |matcher|
           val = matcher.match(candidate)
           return val if val
         end
@@ -48,22 +48,16 @@ class FastIgnore
       private
 
       # TODO: these i should move maybe
-      def squash_matchers(matchers) # rubocop:disable Metrics/MethodLength
-        if matchers.include?(Unmatchable)
-          matchers -= [Unmatchable]
-          return [Unmatchable] if matchers.empty?
-        end
+      def squash_matchers(matchers)
+        implicit, ordered = matchers.partition(&:implicit?)
 
-        if matchers.include?(AllowAnyParent)
-          matchers -= [AllowAnyParent]
-          matchers.unshift(AllowAnyParent)
-        end
+        Enumerator::Chain
+          .new(ordered.reverse, implicit.reverse_each.uniq)
+          .chunk_while { |a, b| a.squashable_with?(b) }.map do |chunk|
+            next chunk.first if chunk.length == 1
 
-        matchers.chunk_while { |a, b| a.squashable_with?(b) }.map do |chunk|
-          next chunk.first if chunk.length == 1
-
-          chunk.first.squash(chunk)
-        end
+            chunk.first.squash(chunk)
+          end
       end
     end
   end

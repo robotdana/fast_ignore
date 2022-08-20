@@ -31,6 +31,10 @@ class FastIgnore
         false
       end
 
+      def implicit?
+        false
+      end
+
       # :nocov:
       def inspect
         "#<ShebangRegexp #{@return_value} /#{@rule.to_s[26..-4]}/>"

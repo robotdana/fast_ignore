@@ -13,6 +13,7 @@ class FastIgnore
         @file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.new(file_matchers)
 
         @removable = matchers.empty? || matchers.all?(&:removable?)
+        @implicit = matchers.all?(&:implicit?)
         @weight = matchers.sum(&:weight)
 
         freeze
@@ -20,6 +21,10 @@ class FastIgnore
 
       def removable?
         @removable
+      end
+
+      def implicit?
+        @implicit
       end
 
       # TODO: squashable with same class

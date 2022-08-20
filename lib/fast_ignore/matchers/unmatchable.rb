@@ -26,6 +26,10 @@ class FastIgnore
           false
         end
 
+        def implicit?
+          true
+        end
+
         # :nocov:
         def inspect
           '#<Unmatchable>'

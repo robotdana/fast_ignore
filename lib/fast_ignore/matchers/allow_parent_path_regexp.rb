@@ -18,6 +18,10 @@ class FastIgnore
         self.class.new(rule)
       end
 
+      def implicit?
+        true
+      end
+
       def dir_only?
         true
       end
