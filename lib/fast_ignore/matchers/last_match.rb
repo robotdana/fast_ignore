@@ -40,11 +40,17 @@ class FastIgnore
       end
 
       def file_only?
+        # :nocov:
+        # TODO: consistent api
         @matchers.all?(&:file_only?)
+        # :nocov:
       end
 
       def dir_only?
+        # :nocov:
+        # TODO: consistent api
         @matchers.all?(&:dir_only?)
+        # :nocov:
       end
 
       def removable?
@@ -56,7 +62,10 @@ class FastIgnore
       end
 
       def squashable_with?(_)
+        # :nocov:
+        # TODO: consistent api
         false
+        # :nocov:
       end
 
       # def squash(list)

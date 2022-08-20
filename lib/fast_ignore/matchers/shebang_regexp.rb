@@ -28,7 +28,9 @@ class FastIgnore
       end
 
       def removable?
+        # :nocov:
         false
+        # :nocov:
       end
 
       def implicit?

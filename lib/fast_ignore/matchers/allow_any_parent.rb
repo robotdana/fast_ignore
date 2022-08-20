@@ -13,7 +13,9 @@ class FastIgnore
         end
 
         def squash(_)
+          # :nocov:
           self
+          # :nocov:
         end
 
         def implicit?

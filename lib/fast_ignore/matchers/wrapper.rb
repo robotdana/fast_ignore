@@ -3,10 +3,6 @@
 class FastIgnore
   module Matchers
     class Wrapper
-      def self.build(matcher)
-        new(matcher)
-      end
-
       def initialize(matcher)
         @matcher = matcher
 
@@ -26,11 +22,17 @@ class FastIgnore
       end
 
       def dir_only?
+        # :nocov:
+        # TODO: consistent api
         @matcher.dir_only?
+        # :nocov:
       end
 
       def file_only?
+        # :nocov:
+        # TODO: consistent api
         @matcher.file_only?
+        # :nocov:
       end
 
       def squashable_with?(other)
@@ -39,17 +41,19 @@ class FastIgnore
       end
 
       def squash(list)
+        # :nocov:
+        # TODO: consistent api
         self.class.build(squashed_matcher(list))
-      end
-
-      def match(_candidate)
-        raise NoMethodError
+        # :nocov:
       end
 
       protected
 
       def squash_matchers(list)
+        # :nocov:
+        # TODO: consistent api
         @matcher.squash(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        # :nocov:
       end
 
       attr_reader :matcher

@@ -16,8 +16,16 @@ class FastIgnore
           0
         end
 
-        def squashable_with?(_)
-          false
+        def squashable_with?(other)
+          # :nocov:
+          other == self
+          # :nocov:
+        end
+
+        def squash(_)
+          # :nocov:
+          self
+          # :nocov:
         end
 
         # it's not removable

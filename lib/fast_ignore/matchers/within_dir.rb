@@ -5,10 +5,6 @@ class FastIgnore
     class WithinDir < Wrapper
       attr_reader :dir
 
-      def self.build(matcher, dir)
-        new(matcher, dir)
-      end
-
       def initialize(matcher, dir)
         @dir = dir
         super(matcher)
@@ -19,7 +15,10 @@ class FastIgnore
       end
 
       def squash(list)
+        # :nocov:
+        # TODO: consistent api
         self.class.new(squash_matchers(list), @dir)
+        # :nocov:
       end
 
       def match(candidate)

@@ -3,10 +3,6 @@
 class FastIgnore
   module Matchers
     class MatchOrDefault < Wrapper
-      def self.build(matcher, default)
-        new(matcher, default)
-      end
-
       def initialize(matcher, default)
         @default = default
 
@@ -14,7 +10,10 @@ class FastIgnore
       end
 
       def squashable_with?(_)
+        # :nocov:
+        # TODO: consistent api
         false
+        # :nocov:
       end
 
       def match(candidate)

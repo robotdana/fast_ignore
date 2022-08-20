@@ -41,11 +41,17 @@ class FastIgnore
       end
 
       def dir_only?
+        # :nocov:
+        # TODO: consistent api
         @file_matcher == Unmatchable
+        # :nocov:
       end
 
       def file_only?
+        # :nocov:
+        # TODO: consistent api
         @dir_matcher == Unmatchable
+        # :nocov:
       end
 
       def match(candidate)

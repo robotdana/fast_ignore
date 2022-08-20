@@ -18,15 +18,24 @@ class FastIgnore
       end
 
       def dir_only?
+        # :nocov:
+        # TODO: consistent api
         true
+        # :nocov:
       end
 
       def file_only?
+        # :nocov:
+        # TODO: consistent api
         false
+        # :nocov:
       end
 
       def squashable_with?(_)
+        # :nocov:
+        # TODO: consistent api
         false
+        # :nocov:
       end
 
       def implicit?
