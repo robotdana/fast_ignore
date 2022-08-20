@@ -1,4 +1,5 @@
 # v0.18.0
+- Drop support for ruby 2.5 as its been eol for a while
 - Remove deprecated `follow_symlinks:` code.
 - Refactoring that should have no effect on behaviour
 - Fix the order of reading .gitignore files in sub directories that override rules in outer directories

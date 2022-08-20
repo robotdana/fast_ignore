@@ -40,7 +40,7 @@ class FastIgnore
       self
     rescue FrozenError
       # :nocov:
-      # the string seems to become inadvertently frozen in 2.5 and 2.6 with specific inputs
+      # the string seems to become inadvertently frozen in 2.6 with specific inputs
       # and i don't understand why
       # it seems like it's happening during the Regexp.new
       # for some reason that i don't understand
@@ -56,7 +56,7 @@ class FastIgnore
       self
     rescue FrozenError
       # :nocov:
-      # the string seems to become inadvertently frozen in 2.5 and 2.6 with specific inputs
+      # the string seems to become inadvertently frozen in 2.6 with specific inputs
       # and i don't understand why
       # it seems like it's happening during the Regexp.new
       # for some reason that i don't understand
