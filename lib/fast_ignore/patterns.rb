@@ -21,20 +21,20 @@ class FastIgnore
     def initialize(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
       @allow = allow
       @label = append
-      if custom_matcher
-        @custom_matcher = custom_matcher
-      else
-        root = PathExpander.expand_dir(root) if root
+      @custom_matcher = custom_matcher
+      return if custom_matcher
 
-        if from_file
-          @from_file = PathExpander.expand_path(from_file, root || '.')
-          root ||= ::File.dirname(from_file)
-        else
-          @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
-        end
-        @root = PathExpander.expand_dir(root || '.')
-        @format = BUILDERS.fetch(format || :gitignore, format)
+      root = PathExpander.expand_dir(root) if root
+
+      if from_file
+        @from_file = PathExpander.expand_path(from_file, root || '.')
+        root ||= ::File.dirname(from_file)
+      else
+        @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
       end
+
+      @root = PathExpander.expand_dir(root || '.')
+      @format = BUILDERS.fetch(format || :gitignore, format)
     end
 
     def ==(other) # rubocop:disable Metrics/AbcSize

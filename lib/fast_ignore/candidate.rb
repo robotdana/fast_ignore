@@ -48,7 +48,7 @@ class FastIgnore
       return unless @full_path.start_with?(dir)
 
       begin
-        @path_was << @path
+        @path_was << (defined?(@path) && @path)
         @path = @full_path.delete_prefix(dir)
 
         yield
