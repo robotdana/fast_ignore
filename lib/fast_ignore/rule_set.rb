@@ -34,7 +34,7 @@ class FastIgnore
           patterns.first.build
         else
           ::FastIgnore::Matchers::MatchOrDefault.new(
-            ::FastIgnore::Matchers::LastMatch.new(patterns.flat_map(&:matchers)),
+            ::FastIgnore::Matchers::LastMatch.build(patterns.flat_map(&:matchers)),
             patterns.first.default
           )
         end

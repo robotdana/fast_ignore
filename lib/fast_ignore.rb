@@ -12,6 +12,7 @@ class FastIgnore
   require_relative 'fast_ignore/gitignore_include_rule_builder'
   require_relative 'fast_ignore/path_regexp_builder'
   require_relative 'fast_ignore/gitignore_rule_scanner'
+  require_relative 'fast_ignore/matchers/wrapper'
   require_relative 'fast_ignore/matchers/last_match'
   require_relative 'fast_ignore/matchers/match_or_default'
   require_relative 'fast_ignore/matchers/match_by_type'

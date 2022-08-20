@@ -2,42 +2,24 @@
 
 class FastIgnore
   module Matchers
-    class WithinDir
+    class WithinDir < Wrapper
       attr_reader :dir
 
-      def initialize(matchers, dir)
-        @matcher = MatchByType.new(matchers)
+      def self.build(matcher, dir)
+        new(matcher, dir)
+      end
+
+      def initialize(matcher, dir)
         @dir = dir
-
-        freeze
-      end
-
-      def weight
-        @matcher.weight
-      end
-
-      def implicit?
-        @matcher.implicit?
-      end
-
-      def removable?
-        @matcher.removable?
-      end
-
-      def dir_only?
-        @matcher.dir_only?
-      end
-
-      def file_only?
-        @matcher.file_only?
+        super(matcher)
       end
 
       def squashable_with?(other)
-        other.instance_of?(WithinDir) && @dir == other.dir
+        super && @dir == other.dir
       end
 
       def squash(list)
-        self.class.new(list.map { |l| l.matcher }, @dir) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(squash_matchers(list), @dir)
       end
 
       def match(candidate)
@@ -45,10 +27,6 @@ class FastIgnore
           @matcher.match(candidate)
         end
       end
-
-      protected
-
-      attr_reader :matcher
     end
   end
 end

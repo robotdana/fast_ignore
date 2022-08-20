@@ -59,7 +59,7 @@ class FastIgnore
     def build
       @build ||= begin
         ::FastIgnore::Matchers::MatchOrDefault.new(
-          ::FastIgnore::Matchers::LastMatch.new(matchers),
+          ::FastIgnore::Matchers::LastMatch.build(matchers),
           default
         )
       end
@@ -84,12 +84,12 @@ class FastIgnore
 
       matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
-      return [::FastIgnore::Matchers::WithinDir.new(matchers, @root)] unless @allow
 
-      [
-        ::FastIgnore::Matchers::WithinDir.new(matchers, @root),
-        *::FastIgnore::GitignoreIncludeRuleBuilder.new(@root).build_as_parent
-      ]
+      matcher = Matchers::MatchByType.build_from_list(matchers)
+      matcher = Matchers::WithinDir.new(matcher, @root)
+      return [matcher] unless @allow
+
+      [matcher, *GitignoreIncludeRuleBuilder.new(@root).build_as_parent]
     end
   end
 end

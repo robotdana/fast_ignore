@@ -2,32 +2,19 @@
 
 class FastIgnore
   module Matchers
-    class MatchOrDefault
+    class MatchOrDefault < Wrapper
+      def self.build(matcher, default)
+        new(matcher, default)
+      end
+
       def initialize(matcher, default)
-        @matcher = matcher
         @default = default
 
-        freeze
+        super(matcher)
       end
 
       def squashable_with?(_)
         false
-      end
-
-      def dir_only?
-        @matcher.dir_only?
-      end
-
-      def file_only?
-        @matcher.file_only?
-      end
-
-      def weight
-        @matcher.weight
-      end
-
-      def removable?
-        @matcher.removable?
       end
 
       def match(candidate)
