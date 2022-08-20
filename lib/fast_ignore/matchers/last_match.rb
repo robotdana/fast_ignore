@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class LastMatch
+    class LastMatch < List
       class << self
         def build(matchers)
           unmatchable = matchers.include?(Unmatchable)
@@ -15,12 +15,12 @@ class FastIgnore
 
         private
 
-        def squash_matchers(matchers)
+        def squash_matchers(matchers) # rubocop:disable Metrics/AbcSize
           matchers -= [Unmatchable]
           implicit, ordered = matchers.partition(&:implicit?)
 
           Enumerator::Chain
-            .new(ordered.reverse, implicit.reverse_each.uniq)
+            .new(ordered.reverse, implicit.sort { |a, b| a.squashable_with?(b) ? 0 : a.class.name <=> b.class.name })
             .chunk_while { |a, b| a.squashable_with?(b) }.map do |chunk|
               next chunk.first if chunk.length == 1
 
@@ -28,49 +28,6 @@ class FastIgnore
             end
         end
       end
-
-      def initialize(matchers)
-        @matchers = matchers
-
-        freeze
-      end
-
-      def weight
-        @matchers.sum(&:weight)
-      end
-
-      def file_only?
-        # :nocov:
-        # TODO: consistent api
-        @matchers.all?(&:file_only?)
-        # :nocov:
-      end
-
-      def dir_only?
-        # :nocov:
-        # TODO: consistent api
-        @matchers.all?(&:dir_only?)
-        # :nocov:
-      end
-
-      def removable?
-        @matchers.empty? || @matchers.all?(&:removable?)
-      end
-
-      def implicit?
-        @matchers.all?(&:implicit?)
-      end
-
-      def squashable_with?(_)
-        # :nocov:
-        # TODO: consistent api
-        false
-        # :nocov:
-      end
-
-      # def squash(list)
-      #   self.class.build(list.flat_map { |l| l.matchers })
-      # end
 
       def match(candidate)
         @matchers.each do |matcher|
@@ -80,10 +37,6 @@ class FastIgnore
 
         false
       end
-
-      protected
-
-      attr_reader :matchers
     end
   end
 end

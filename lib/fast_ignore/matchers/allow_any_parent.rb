@@ -2,47 +2,37 @@
 
 class FastIgnore
   module Matchers
-    module AllowAnyParent
-      class << self
-        def dir_only?
-          true
-        end
+    AllowAnyParent = Base.new
 
-        def file_only?
-          false
-        end
+    class << AllowAnyParent
+      def dir_only?
+        true
+      end
 
-        def squash(_)
-          # :nocov:
-          self
-          # :nocov:
-        end
+      def implicit?
+        true
+      end
 
-        def implicit?
-          true
-        end
-
-        def squashable_with?(other)
-          other == self
-        end
-
-        def weight
-          0
-        end
-
-        def removable?
-          false
-        end
-
+      def squash(_)
         # :nocov:
-        def inspect
-          '#<AllowAnyParent>'
-        end
+        self
         # :nocov:
+      end
 
-        def match(candidate)
-          :allow if candidate.parent?
-        end
+      def squashable_with?(other)
+        # :nocov:
+        self == other
+        # :nocov:
+      end
+
+      # :nocov:
+      def inspect
+        '#<FastIgnore::Matchers::AllowAnyParent>'
+      end
+      # :nocov:
+
+      def match(candidate)
+        :allow if candidate.parent?
       end
     end
   end

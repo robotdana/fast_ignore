@@ -87,7 +87,7 @@ class FastIgnore
       matcher = Matchers::WithinDir.new(matcher, @root)
       return [matcher] unless @allow
 
-      [matcher, *GitignoreIncludeRuleBuilder.new(@root).build_as_parent]
+      [matcher, Matchers::Any.new(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]
     end
   end
 end

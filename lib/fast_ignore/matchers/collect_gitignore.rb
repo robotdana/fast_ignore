@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class CollectGitignore
+    class CollectGitignore < Base
       def initialize(root, format: :gitignore, append: :gitignore)
         @append = append
         @format = format
@@ -13,33 +13,11 @@ class FastIgnore
         -Float::INFINITY
       end
 
-      def removable?
-        false
-      end
-
       def dir_only?
         # :nocov:
         # TODO: consistent api
         true
         # :nocov:
-      end
-
-      def file_only?
-        # :nocov:
-        # TODO: consistent api
-        false
-        # :nocov:
-      end
-
-      def squashable_with?(_)
-        # :nocov:
-        # TODO: consistent api
-        false
-        # :nocov:
-      end
-
-      def implicit?
-        false
       end
 
       def match(candidate)
@@ -52,7 +30,7 @@ class FastIgnore
           )
         end
 
-        false
+        nil
       end
     end
   end

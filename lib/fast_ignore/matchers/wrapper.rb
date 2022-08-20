@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class Wrapper
+    class Wrapper < Base
       def initialize(matcher)
         @matcher = matcher
 

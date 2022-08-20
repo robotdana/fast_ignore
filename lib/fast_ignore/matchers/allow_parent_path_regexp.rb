@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class AllowParentPathRegexp
+    class AllowParentPathRegexp < Base
       def initialize(rule)
         @rule = rule
 
@@ -26,16 +26,8 @@ class FastIgnore
         true
       end
 
-      def file_only?
-        false
-      end
-
       def weight
         1
-      end
-
-      def removable?
-        false
       end
 
       # :nocov:

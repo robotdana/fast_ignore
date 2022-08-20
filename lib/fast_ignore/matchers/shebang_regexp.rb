@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class ShebangRegexp
+    class ShebangRegexp < Base
       def initialize(rule, negation)
         @rule = rule
         @return_value = negation ? :allow : :ignore
@@ -23,28 +23,14 @@ class FastIgnore
         true
       end
 
-      def dir_only?
-        false
-      end
-
-      def removable?
-        # :nocov:
-        false
-        # :nocov:
-      end
-
-      def implicit?
-        false
-      end
-
       # :nocov:
       def inspect
-        "#<ShebangRegexp #{@return_value} /#{@rule.to_s[26..-4]}/>"
+        "#<FastIgnore::Matchers::ShebangRegexp #{@return_value} /#{@rule.to_s[26..-4]}/>"
       end
       # :nocov:
 
       def match(candidate)
-        return false if candidate.filename.include?('.')
+        return if candidate.filename.include?('.')
 
         @return_value if candidate.first_line.match?(@rule)
       end

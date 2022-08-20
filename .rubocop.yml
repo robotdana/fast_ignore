@@ -241,3 +241,7 @@ Style/OptionalBooleanParameter:
 
 RSpec/MultipleMemoizedHelpers:
   Enabled: false
+
+Lint/MissingSuper:
+  Exclude:
+    - 'lib/fast_ignore/matchers/*'

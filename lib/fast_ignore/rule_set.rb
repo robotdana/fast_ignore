@@ -17,7 +17,7 @@ class FastIgnore
     end
 
     def match(candidate)
-      matchers.all? { |r| r.match(candidate) == :allow } ? :allow : :ignore
+      matcher.match(candidate)
     end
 
     protected
@@ -26,10 +26,10 @@ class FastIgnore
 
     private
 
-    def matchers # rubocop:disable Metrics/MethodLength
-      return @matchers if defined?(@matchers)
+    def matcher # rubocop:disable Metrics/MethodLength
+      return @matcher if defined?(@matcher)
 
-      @matchers = @patterns.group_by(&:label_or_self).map do |_, patterns|
+      matchers = @patterns.group_by(&:label_or_self).map do |_, patterns|
         if patterns.length == 1
           patterns.first.build
         else
@@ -40,13 +40,11 @@ class FastIgnore
         end
       end
 
-      @matchers.reject!(&:removable?)
-      @matchers.sort_by!(&:weight)
-      @matchers.freeze
+      @matcher = ::FastIgnore::Matchers::All.new(matchers)
 
       freeze
 
-      @matchers
+      @matcher
     end
   end
 end

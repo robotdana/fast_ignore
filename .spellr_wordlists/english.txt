@@ -15,6 +15,7 @@ denylist
 enoent
 enumerables
 env
+eol
 errno
 esque
 excludesfile

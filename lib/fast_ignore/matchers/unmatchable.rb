@@ -2,51 +2,33 @@
 
 class FastIgnore
   module Matchers
-    module Unmatchable
-      class << self
-        def dir_only?
-          false
-        end
+    Unmatchable = Base.new
 
-        def file_only?
-          false
-        end
-
-        def weight
-          0
-        end
-
-        def squashable_with?(other)
-          # :nocov:
-          other == self
-          # :nocov:
-        end
-
-        def squash(_)
-          # :nocov:
-          self
-          # :nocov:
-        end
-
-        # it's not removable
-        # but it is squashable with anything
-        def removable?
-          false
-        end
-
-        def implicit?
-          true
-        end
-
+    class << Unmatchable
+      def squash(_)
         # :nocov:
-        def inspect
-          '#<Unmatchable>'
-        end
+        self
         # :nocov:
+      end
 
-        def match(_)
-          false
-        end
+      def squashable_with?(other)
+        # :nocov:
+        self == other
+        # :nocov:
+      end
+
+      def implicit?
+        true
+      end
+
+      # :nocov:
+      def inspect
+        '#<Unmatchable>'
+      end
+      # :nocov:
+
+      def match(_)
+        nil
       end
     end
   end

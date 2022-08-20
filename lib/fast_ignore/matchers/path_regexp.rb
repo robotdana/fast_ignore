@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class PathRegexp
+    class PathRegexp < Base
       attr_reader :dir_only
       alias_method :dir_only?, :dir_only
       undef :dir_only
@@ -35,16 +35,8 @@ class FastIgnore
         self.class.new(rule, @squashable, @dir_only, @return_value == :allow, @implicit)
       end
 
-      def file_only?
-        false
-      end
-
       def weight
         1
-      end
-
-      def removable?
-        false
       end
 
       # :nocov:

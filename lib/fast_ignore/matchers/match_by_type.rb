@@ -2,7 +2,7 @@
 
 class FastIgnore
   module Matchers
-    class MatchByType
+    class MatchByType < Base
       def self.build_from_list(matchers)
         dir_matchers = matchers.reject(&:file_only?)
         file_matchers = matchers.reject(&:dir_only?)
@@ -33,11 +33,6 @@ class FastIgnore
 
       def weight
         [@dir_matcher.weight, @file_matcher.weight].max
-      end
-
-      # TODO: squashable with same class
-      def squashable_with?(_)
-        false
       end
 
       def dir_only?

@@ -88,17 +88,16 @@ class FastIgnore
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
           first_line += file.readline unless first_line.include?("\n")
-          file.close
           first_line
         else
-          file.close
           ''
         end
       rescue ::EOFError, ::SystemCallError
+        ''
+      ensure
         # :nocov:
         file&.close
         # :nocov:
-        ''
       end
     end
   end
