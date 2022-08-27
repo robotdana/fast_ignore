@@ -35,6 +35,14 @@ class FastIgnore
         # :nocov:
       end
 
+      def append(pattern)
+        appended = @matcher.append(pattern)
+        return false unless appended
+        return self if appended == @matcher
+
+        self.class.new(appended)
+      end
+
       def squashable_with?(other)
         other.instance_of?(self.class) &&
           @matcher.squashable_with?(other.matcher)
@@ -43,7 +51,7 @@ class FastIgnore
       def squash(list)
         # :nocov:
         # TODO: consistent api
-        self.class.build(squashed_matcher(list))
+        self.class.new(squashed_matcher(list))
         # :nocov:
       end
 

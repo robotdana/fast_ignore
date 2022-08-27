@@ -48,19 +48,15 @@ class FastIgnore
     end
     alias_method :eql?, :==
 
-    def label_or_self
-      @label || object_id
-    end
-
-    def matchers
-      @matchers ||= build_matchers
-    end
-
     def build
-      @build ||= ::FastIgnore::Matchers::MatchOrDefault.new(
-        ::FastIgnore::Matchers::LastMatch.build(matchers),
-        default
-      )
+      matcher = ::FastIgnore::Matchers::LastMatch.new(build_matchers)
+      matcher = Matchers::Appendable.new(@label, [self], matcher) if @label
+
+      ::FastIgnore::Matchers::MatchOrDefault.new(matcher, default)
+    end
+
+    def build_appended
+      build_matchers
     end
 
     def default

@@ -40,10 +40,7 @@ class FastIgnore
       @path ||= @full_path.delete_prefix('/')
     end
 
-    def child_or_self?(dir)
-      @full_path == dir || @full_path.start_with?("#{dir}/")
-    end
-
+    # TODO: some kind of case folding
     def with_path_relative_to(dir)
       return unless @full_path.start_with?(dir)
 
@@ -79,6 +76,14 @@ class FastIgnore
     def filename
       @filename ||= ::File.basename(@full_path)
     end
+
+    # :nocov:
+    alias_method :original_inspect, :inspect
+
+    def inspect
+      "#<FastIgnore::Candidate #{@full_path}>"
+    end
+    # :nocov:
 
     # how long can a shebang be?
     # https://www.in-ulm.de/~mascheck/various/shebang/

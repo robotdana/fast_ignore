@@ -45,6 +45,22 @@ class FastIgnore
         @matchers.all?(&:implicit?)
       end
 
+      def append(pattern)
+        did_append = false
+
+        new_matchers = @matchers.map do |matcher|
+          appended_matcher = matcher.append(pattern)
+          did_append ||= appended_matcher
+
+          appended_matcher || matcher
+        end
+
+        return false unless did_append
+        return self if new_matchers == @matchers
+
+        self.class.new(new_matchers)
+      end
+
       protected
 
       attr_reader :matchers

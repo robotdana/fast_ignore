@@ -28,7 +28,7 @@ class FastIgnore
             full_path = parent_full_path + filename
             candidate = ::FastIgnore::Candidate.new(full_path, filename, nil, true, nil, path_list, true)
 
-            next unless path_list.rule_set.match(candidate) == :allow
+            next unless path_list.matcher.match(candidate) == :allow
 
             relative_path = parent_relative_path + filename
 
@@ -47,7 +47,7 @@ class FastIgnore
         def allowed_recursive?(candidate)
           return true unless candidate.parent
 
-          allowed_recursive?(candidate.parent) && candidate.path_list.rule_set.match(candidate) == :allow
+          allowed_recursive?(candidate.parent) && candidate.path_list.matcher.match(candidate) == :allow
         end
       end
     end

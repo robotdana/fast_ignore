@@ -9,28 +9,22 @@ class FastIgnore
         new.gitignore!(root: root, append: append, format: format)
       end
 
-      def only(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep # rubocop:disable Metrics/ParameterLists
-        new.only!(
-          *patterns, custom_matcher: custom_matcher, from_file: from_file,
-          format: format, root: root, append: append
-        )
+      def only(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+        new.only!(*patterns, from_file: from_file, format: format, root: root, append: append)
       end
 
-      def ignore(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep # rubocop:disable Metrics/ParameterLists
-        new.ignore!(
-          *patterns, custom_matcher: custom_matcher, from_file: from_file,
-          format: format, root: root, append: append
-        )
+      def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+        new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append)
       end
       # :nocov:
     end
 
     include ::Enumerable
 
-    attr_reader :rule_set
+    attr_reader :matcher
 
-    def initialize(rule_set: nil)
-      @rule_set = (rule_set || ::FastIgnore::RuleSet)
+    def initialize(matcher: Matchers::All.new([]))
+      @matcher = matcher
     end
 
     def allowed?(path, directory: nil, content: nil, exists: nil, include_directories: false)
@@ -68,34 +62,28 @@ class FastIgnore
     # :nocov:
     # TODO: new api stuff
     def dup # leftovers:keep
-      self.class.new(rule_set: @rule_set)
+      self.class.new(matcher: @matcher)
     end
 
     def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
       dup.gitignore!(root: root, append: append, format: format)
     end
 
-    def ignore(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep # rubocop:disable Metrics/ParameterLists
-      dup.ignore!(
-        *patterns, custom_matcher: custom_matcher, from_file: from_file,
-        format: format, root: root, append: append
-      )
+    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+      dup.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append)
     end
 
-    def only(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep # rubocop:disable Metrics/ParameterLists
-      dup.only!(
-        *patterns, custom_matcher: custom_matcher, from_file: from_file,
-        format: format, root: root, append: append
-      )
+    def only(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
+      dup.only!(*patterns, from_file: from_file, format: format, root: root, append: append)
     end
     # :nocov:
 
     def gitignore!(root: nil, append: :gitignore, format: :gitignore)
-      collect_gitignore = ::FastIgnore::Matchers::CollectGitignore.new(root, format: format, append: append)
+      collect_gitignore = Matchers::CollectGitignore.new(root, format: format, append: append)
 
-      ignore!(custom_matcher: collect_gitignore)
+      @matcher = Matchers::All.new([@matcher, collect_gitignore])
       ignore!(root: root, append: append, format: format)
-      ignore!(from_file: ::FastIgnore::GlobalGitignore.path(root: root), root: root, append: append, format: format)
+      ignore!(from_file: GlobalGitignore.path(root: root), root: root, append: append, format: format)
       ignore!(from_file: './.git/info/exclude', root: root, append: append, format: format)
       ignore!(from_file: './.gitignore', root: root, append: append, format: format)
       ignore!('.git', root: '/')
@@ -103,37 +91,40 @@ class FastIgnore
       self
     end
 
-    def ignore!(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # rubocop:disable Metrics/ParameterLists
-      validate_options(patterns, custom_matcher, from_file)
+    def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+      validate_options(patterns, from_file)
 
-      @rule_set = @rule_set.new_with_pattern(
-        ::FastIgnore::Patterns.new(
-          *patterns, custom_matcher: custom_matcher, from_file: from_file,
-          format: format, root: root, append: append
-        )
+      append_pattern(
+        Patterns.new(*patterns, from_file: from_file, format: format, root: root, append: append)
       )
       self
     end
 
-    def only!(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, append: false) # rubocop:disable Metrics/ParameterLists
-      validate_options(patterns, custom_matcher, from_file)
+    def only!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+      validate_options(patterns, from_file)
 
-      @rule_set = @rule_set.new_with_pattern(
-        ::FastIgnore::Patterns.new(
-          *patterns, custom_matcher: custom_matcher, from_file: from_file,
-          format: format, root: root, allow: true, append: append
-        )
+      append_pattern(
+        Patterns.new(*patterns, from_file: from_file, format: format, root: root, allow: true, append: append)
       )
+
       self
     end
 
     private
 
-    def validate_options(patterns, custom_matcher, from_file)
+    def append_pattern(pattern)
+      @matcher = if pattern.label
+        @matcher.append(pattern) || Matchers::All.new([@matcher, pattern.build])
+      else
+        Matchers::All.new([@matcher, pattern.build])
+      end
+    end
+
+    def validate_options(patterns, from_file)
       # :nocov:
       # TODO: new api stuff
-      if [(patterns unless patterns.empty?), custom_matcher, from_file].compact.length > 1
-        raise FastIgnore::Error, 'Only use one of *patterns, from_file:, or custom_matcher:'
+      if [(patterns unless patterns.empty?), from_file].compact.length > 1
+        raise FastIgnore::Error, 'Only use one of *patterns, from_file::'
       end
       # :nocov:
     end

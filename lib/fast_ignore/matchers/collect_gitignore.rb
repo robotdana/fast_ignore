@@ -6,7 +6,8 @@ class FastIgnore
       def initialize(root, format: :gitignore, append: :gitignore)
         @append = append
         @format = format
-        @root = PathExpander.expand_path(root)
+        root = PathExpander.expand_path(root)
+        @root_re = %r{\A#{Regexp.escape(root)}(?:\z|/)}i
       end
 
       def weight
@@ -21,7 +22,7 @@ class FastIgnore
       end
 
       def match(candidate)
-        if candidate.child_or_self?(@root) && candidate.directory?
+        if candidate.full_path.match?(@root_re) && candidate.directory?
           candidate.path_list.ignore!(
             from_file: './.gitignore',
             root: candidate.full_path,
@@ -30,7 +31,7 @@ class FastIgnore
           )
         end
 
-        nil
+        :allow
       end
     end
   end

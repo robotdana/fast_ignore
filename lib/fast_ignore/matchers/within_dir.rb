@@ -21,6 +21,14 @@ class FastIgnore
         # :nocov:
       end
 
+      def append(pattern)
+        appended = @matcher.append(pattern)
+        return false unless appended
+        return self if appended == @matcher
+
+        self.class.new(appended, @dir)
+      end
+
       def match(candidate)
         candidate.with_path_relative_to(@dir) do
           @matcher.match(candidate)

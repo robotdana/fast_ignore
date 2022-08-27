@@ -6,7 +6,6 @@ require 'set'
 class FastIgnore
   class Error < StandardError; end
 
-  require_relative 'fast_ignore/rule_set'
   require_relative 'fast_ignore/global_gitignore'
   require_relative 'fast_ignore/gitignore_rule_builder'
   require_relative 'fast_ignore/gitignore_include_rule_builder'
@@ -17,10 +16,12 @@ class FastIgnore
   require_relative 'fast_ignore/matchers/any'
   require_relative 'fast_ignore/matchers/all'
   require_relative 'fast_ignore/matchers/wrapper'
+  require_relative 'fast_ignore/matchers/appendable'
   require_relative 'fast_ignore/matchers/last_match'
   require_relative 'fast_ignore/matchers/match_or_default'
   require_relative 'fast_ignore/matchers/match_by_type'
   require_relative 'fast_ignore/matchers/unmatchable'
+  require_relative 'fast_ignore/matchers/allow_any'
   require_relative 'fast_ignore/matchers/shebang_regexp'
   require_relative 'fast_ignore/gitconfig_parser'
   require_relative 'fast_ignore/path_expander'
@@ -59,6 +60,7 @@ class FastIgnore
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
       @path_list.ignore!(from_file: path, format: :shebang_or_gitignore)
     end
+
     Array(include_files).each do |f|
       path = ::FastIgnore::PathExpander.expand_path(f, @root)
       @path_list.only!(from_file: path, format: :shebang_or_gitignore)

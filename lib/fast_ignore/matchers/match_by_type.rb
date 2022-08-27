@@ -9,8 +9,8 @@ class FastIgnore
 
         # return list_class.new(matchers) if dir_matchers == file_matchers
 
-        dir_matcher = dir_matchers.empty? ? Unmatchable : LastMatch.build(dir_matchers)
-        file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.build(file_matchers)
+        dir_matcher = dir_matchers.empty? ? Unmatchable : LastMatch.new(dir_matchers)
+        file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.new(file_matchers)
 
         new(file_matcher, dir_matcher)
       end
@@ -47,6 +47,20 @@ class FastIgnore
         # TODO: consistent api
         @dir_matcher == Unmatchable
         # :nocov:
+      end
+
+      def append(pattern)
+        appended_dir_matcher = @dir_matcher.append(pattern)
+        appended_file_matcher = @file_matcher.append(pattern)
+
+        return false unless appended_dir_matcher || appended_file_matcher
+
+        appended_dir_matcher ||= @dir_matcher
+        appended_file_matcher ||= @file_matcher
+
+        return self unless appended_dir_matcher != @dir_matcher || appended_file_matcher != @file_matcher
+
+        self.class.new(appended_file_matcher, appended_dir_matcher)
       end
 
       def match(candidate)

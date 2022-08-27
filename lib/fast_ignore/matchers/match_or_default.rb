@@ -16,6 +16,14 @@ class FastIgnore
         # :nocov:
       end
 
+      def append(pattern)
+        appended = @matcher.append(pattern)
+        return false unless appended
+        return self if appended == @matcher
+
+        self.class.new(appended, @default)
+      end
+
       def match(candidate)
         @matcher.match(candidate) || @default
       end

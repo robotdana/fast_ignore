@@ -21,6 +21,10 @@ class FastIgnore
         # :nocov:
       end
 
+      def append(_)
+        false
+      end
+
       def weight
         0
       end
@@ -30,9 +34,9 @@ class FastIgnore
       end
 
       # :nocov:
-      def inspect
-        "#<#{self.class.name}>"
-      end
+      # def inspect
+      #   "#<#{self.class.name}>"
+      # end
       # :nocov:
 
       def match(_)
