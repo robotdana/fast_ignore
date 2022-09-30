@@ -91,19 +91,19 @@ class FastIgnore
       self
     end
 
-    def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+    def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: nil)
       validate_options(patterns, from_file)
 
-      append_pattern(
+      and_pattern(
         Patterns.new(*patterns, from_file: from_file, format: format, root: root, append: append)
       )
       self
     end
 
-    def only!(*patterns, from_file: nil, format: nil, root: nil, append: false)
+    def only!(*patterns, from_file: nil, format: nil, root: nil, append: nil)
       validate_options(patterns, from_file)
 
-      append_pattern(
+      and_pattern(
         Patterns.new(*patterns, from_file: from_file, format: format, root: root, allow: true, append: append)
       )
 
@@ -112,7 +112,7 @@ class FastIgnore
 
     private
 
-    def append_pattern(pattern)
+    def and_pattern(pattern)
       @matcher = if pattern.label
         @matcher.append(pattern) || Matchers::All.new([@matcher, pattern.build])
       else
@@ -124,7 +124,7 @@ class FastIgnore
       # :nocov:
       # TODO: new api stuff
       if [(patterns unless patterns.empty?), from_file].compact.length > 1
-        raise FastIgnore::Error, 'Only use one of *patterns, from_file::'
+        raise FastIgnore::Error, 'Only use one of *patterns or from_file:'
       end
       # :nocov:
     end

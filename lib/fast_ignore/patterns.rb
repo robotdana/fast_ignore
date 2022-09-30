@@ -18,12 +18,9 @@ class FastIgnore
       shebang: FastIgnore::Builders::Shebang
     }.freeze
 
-    def initialize(*patterns, custom_matcher: nil, from_file: nil, format: nil, root: nil, allow: false, append: false) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists, Metrics/AbcSize
+    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
       @allow = allow
-      @label = append
-      @custom_matcher = custom_matcher
-      return if custom_matcher
-
+      @label = "#{allow}_#{append}" if append
       root = PathExpander.expand_dir(root) if root
 
       if from_file
@@ -36,17 +33,6 @@ class FastIgnore
       @root = PathExpander.expand_dir(root || '.')
       @format = BUILDERS.fetch(format || :gitignore, format)
     end
-
-    def ==(other) # rubocop:disable Metrics/AbcSize
-      @label == other.label &&
-        @custom_matcher == other.custom_matcher &&
-        allow == other.allow &&
-        from_file == other.from_file &&
-        root == other.root &&
-        patterns == other.patterns &&
-        format == other.format
-    end
-    alias_method :eql?, :==
 
     def build
       matcher = ::FastIgnore::Matchers::LastMatch.new(build_matchers)
