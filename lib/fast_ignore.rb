@@ -5,6 +5,7 @@ require 'set'
 
 class FastIgnore
   class Error < StandardError; end
+  class NotSquashableError < Error; end
 
   require_relative 'fast_ignore/global_gitignore'
   require_relative 'fast_ignore/gitignore_rule_builder'

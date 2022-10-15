@@ -9,23 +9,22 @@ class FastIgnore
         super(matcher)
       end
 
-      def squashable_with?(_)
-        # :nocov:
-        # TODO: consistent api
-        false
-        # :nocov:
+      def squashable_with?(other)
+        self == other
       end
 
-      def append(pattern)
-        appended = @matcher.append(pattern)
-        return false unless appended
-        return self if appended == @matcher
-
-        self.class.new(appended, @default)
+      def squash(_)
+        self
       end
 
       def match(candidate)
         @matcher.match(candidate) || @default
+      end
+
+      private
+
+      def new_with_matcher(matcher)
+        self.class.new(matcher, @default)
       end
     end
   end

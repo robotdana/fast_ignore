@@ -50,17 +50,15 @@ class FastIgnore
       end
 
       def append(pattern)
+        # :nocov:
+        # TODO: consistent api
         appended_dir_matcher = @dir_matcher.append(pattern)
         appended_file_matcher = @file_matcher.append(pattern)
 
-        return false unless appended_dir_matcher || appended_file_matcher
+        return unless appended_dir_matcher || appended_file_matcher
 
-        appended_dir_matcher ||= @dir_matcher
-        appended_file_matcher ||= @file_matcher
-
-        return self unless appended_dir_matcher != @dir_matcher || appended_file_matcher != @file_matcher
-
-        self.class.new(appended_file_matcher, appended_dir_matcher)
+        self.class.new(appended_file_matcher || @file_matcher, appended_dir_matcher || @dir_matcher)
+        # :nocov:
       end
 
       def match(candidate)

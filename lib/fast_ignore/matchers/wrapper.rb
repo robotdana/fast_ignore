@@ -22,25 +22,19 @@ class FastIgnore
       end
 
       def dir_only?
-        # :nocov:
-        # TODO: consistent api
         @matcher.dir_only?
-        # :nocov:
       end
 
       def file_only?
-        # :nocov:
-        # TODO: consistent api
         @matcher.file_only?
-        # :nocov:
       end
 
       def append(pattern)
         appended = @matcher.append(pattern)
-        return false unless appended
-        return self if appended == @matcher
 
-        self.class.new(appended)
+        return unless appended
+
+        new_with_matcher(appended)
       end
 
       def squashable_with?(other)
@@ -49,22 +43,20 @@ class FastIgnore
       end
 
       def squash(list)
-        # :nocov:
-        # TODO: consistent api
-        self.class.new(squashed_matcher(list))
-        # :nocov:
+        new_with_matcher(@matcher.squash(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc it breaks with protected methods
       end
 
       protected
 
-      def squash_matchers(list)
+      attr_reader :matcher
+
+      private
+
+      def new_with_matcher(matcher)
         # :nocov:
-        # TODO: consistent api
-        @matcher.squash(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(matcher)
         # :nocov:
       end
-
-      attr_reader :matcher
     end
   end
 end

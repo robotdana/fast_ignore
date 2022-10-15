@@ -78,7 +78,7 @@ class FastIgnore
     end
 
     # :nocov:
-    alias_method :original_inspect, :inspect
+    alias_method :original_inspect, :inspect # leftovers:keep
 
     def inspect
       "#<FastIgnore::Candidate #{@full_path}>"

@@ -9,27 +9,17 @@ class FastIgnore
         true
       end
 
-      def squash(_)
-        # :nocov:
-        self
-        # :nocov:
-      end
-
-      def squashable_with?(other)
-        # :nocov:
-        self == other
-        # :nocov:
-      end
-
-      # :nocov:
       def inspect
         '#<FastIgnore::Matchers::AllowAny>'
       end
-      # :nocov:
 
       def match(_)
         :allow
       end
+
+      freeze
     end
+
+    AllowAny.freeze
   end
 end

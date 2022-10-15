@@ -15,14 +15,16 @@ class FastIgnore
         false
       end
 
-      def squashable_with?(_)
-        # :nocov:
-        false
-        # :nocov:
+      def squashable_with?(other)
+        self == other
+      end
+
+      def squash(_)
+        self
       end
 
       def append(_)
-        false
+        nil
       end
 
       def weight

@@ -3,10 +3,9 @@
 class FastIgnore
   module Matchers
     class WithinDir < Wrapper
-      attr_reader :dir
-
       def initialize(matcher, dir)
         @dir = dir
+
         super(matcher)
       end
 
@@ -14,25 +13,23 @@ class FastIgnore
         super && @dir == other.dir
       end
 
-      def squash(list)
-        # :nocov:
-        # TODO: consistent api
-        self.class.new(squash_matchers(list), @dir)
-        # :nocov:
-      end
-
-      def append(pattern)
-        appended = @matcher.append(pattern)
-        return false unless appended
-        return self if appended == @matcher
-
-        self.class.new(appended, @dir)
-      end
-
       def match(candidate)
         candidate.with_path_relative_to(@dir) do
           @matcher.match(candidate)
         end
+      end
+
+      protected
+
+      attr_reader :dir
+
+      private
+
+      def new_with_matcher(matcher)
+        # :nocov:
+        # TODO: consistent api
+        self.class.new(matcher, @dir)
+        # :nocov:
       end
     end
   end

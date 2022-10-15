@@ -39,19 +39,6 @@ RSpec.describe FastIgnore do
           expect(subject).to match_files('b/c', 'b/d', 'a/b/d')
         end
 
-        it 'overrides parent rules in lower level files with 3 levels with allowed?' do
-          gitignore '**/b/d', '**/b/c'
-          gitignore '!b/d', '!b/e', 'b/c', path: 'a/.gitignore'
-          gitignore 'd', '!c', path: 'a/b/.gitignore'
-
-          # i want a new one each time
-          expect(described_class.new).to be_allowed('a/b/c')
-          expect(described_class.new).to be_allowed('a/b/e')
-          expect(described_class.new).not_to be_allowed('a/b/d')
-          expect(described_class.new).not_to be_allowed('b/d')
-          expect(described_class.new).not_to be_allowed('b/c')
-        end
-
         it 'overrides parent negations in lower level files' do
           gitignore '**/b/*', '!**/b/d'
           gitignore 'b/d', '!b/c', path: 'a/.gitignore'
@@ -85,12 +72,17 @@ RSpec.describe FastIgnore do
   end
 
   describe '.new' do
-    subject { described_class.new(relative: true, **args) }
-
-    let(:args) { {} }
-    let(:gitignore_path) { File.join(root, '.gitignore') }
+    subject { described_class.new(relative: true) }
 
     it_behaves_like 'gitignore: true'
+  end
+
+  describe FastIgnore::PathList do
+    describe '.gitignore' do
+      subject { described_class.gitignore }
+
+      it_behaves_like 'gitignore: true'
+    end
   end
 
   describe 'git ls-files' do

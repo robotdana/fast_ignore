@@ -11,11 +11,10 @@ class FastIgnore
           when :allow then return :allow
           # :nocov:
           when :ignore then ignore = true
-            # :nocov:
+          when nil then nil
           end
         end
 
-        # :nocov:
         :ignore if ignore
         # :nocov:
       end

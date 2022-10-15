@@ -83,8 +83,8 @@ class FastIgnore
 
       @matcher = Matchers::All.new([@matcher, collect_gitignore])
       ignore!(root: root, append: append, format: format)
-      ignore!(from_file: GlobalGitignore.path(root: root), root: root, append: append, format: format)
-      ignore!(from_file: './.git/info/exclude', root: root, append: append, format: format)
+      ignore!(from_file: GlobalGitignore.path(root: root), root: root || '.', append: append, format: format)
+      ignore!(from_file: './.git/info/exclude', root: root || '.', append: append, format: format)
       ignore!(from_file: './.gitignore', root: root, append: append, format: format)
       ignore!('.git', root: '/')
 

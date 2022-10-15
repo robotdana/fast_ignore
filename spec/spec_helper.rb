@@ -16,7 +16,7 @@ FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
 require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
-require 'fast_ignore'
+require_relative '../lib/fast_ignore'
 
 require_relative 'support/temp_dir_helper'
 require_relative 'support/stub_env_helper'

@@ -4,11 +4,9 @@ class FastIgnore
   class Patterns
     attr_reader :from_file
     attr_reader :root
-    attr_reader :patterns
     attr_reader :label
     attr_reader :allow
     attr_reader :format
-    attr_reader :custom_matcher
 
     BUILDERS = {
       expand_path_gitignore: FastIgnore::Builders::ExpandPathGitignore,
@@ -36,7 +34,7 @@ class FastIgnore
 
     def build
       matcher = ::FastIgnore::Matchers::LastMatch.new(build_matchers)
-      matcher = Matchers::Appendable.new(@label, [self], matcher) if @label
+      matcher = Matchers::Appendable.new(@label, matcher) if @label
 
       ::FastIgnore::Matchers::MatchOrDefault.new(matcher, default)
     end
@@ -60,8 +58,6 @@ class FastIgnore
     end
 
     def build_matchers
-      return [@custom_matcher] if custom_matcher
-
       matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
 

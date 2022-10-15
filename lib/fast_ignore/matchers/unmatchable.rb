@@ -5,31 +5,19 @@ class FastIgnore
     Unmatchable = Base.new
 
     class << Unmatchable
-      def squash(_)
-        # :nocov:
-        self
-        # :nocov:
-      end
-
-      def squashable_with?(other)
-        # :nocov:
-        self == other
-        # :nocov:
-      end
-
       def implicit?
         true
       end
 
-      # :nocov:
       def inspect
-        '#<Unmatchable>'
+        '#<FastIgnore::Matchers::Unmatchable>'
       end
-      # :nocov:
 
       def match(_)
         nil
       end
     end
+
+    Unmatchable.freeze
   end
 end

@@ -263,6 +263,25 @@ RSpec.describe FastIgnore do
       end
     end
 
+    describe 'with patterns in the higher level files being overridden by those in lower level files.' do
+      before do
+        create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d', 'a/b/e'
+      end
+
+      it 'overrides parent rules in lower level files with 3 levels with allowed?' do
+        gitignore '**/b/d', '**/b/c'
+        gitignore '!b/d', '!b/e', 'b/c', path: 'a/.gitignore'
+        gitignore 'd', '!c', path: 'a/b/.gitignore'
+
+        # i want a new one each time
+        expect(described_class.new).to be_allowed('a/b/c')
+        expect(described_class.new).to be_allowed('a/b/e')
+        expect(described_class.new).not_to be_allowed('a/b/d')
+        expect(described_class.new).not_to be_allowed('b/d')
+        expect(described_class.new).not_to be_allowed('b/c')
+      end
+    end
+
     it 'rescues soft links to nowhere' do
       create_file_list 'foo_target', '.gitignore'
       create_symlink('foo' => 'foo_target')

@@ -55,8 +55,7 @@ class FastIgnore
           appended_matcher || matcher
         end
 
-        return false unless did_append
-        return self if new_matchers == @matchers
+        return unless did_append
 
         self.class.new(new_matchers)
       end
