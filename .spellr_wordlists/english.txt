@@ -58,6 +58,7 @@ rdoc
 readme
 recurse
 regexp
+regexps
 rspec
 rubo
 rubocop

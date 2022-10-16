@@ -59,3 +59,20 @@ RSpec::Matchers.define(:allow_exactly) do |*expected|
     true
   end
 end
+
+RSpec::Matchers.define(:have_inspect_value) do |expected|
+  match do |actual|
+    @actual = actual.inspect
+    expect(@actual).to eq(expected)
+
+    true
+  end
+end
+
+RSpec::Matchers.define(:have_default_inspect_value) do
+  match do |actual|
+    expected = Object.instance_method(:inspect).bind(actual).call
+    @actual = actual.inspect
+    expect(@actual).to eq(expected)
+  end
+end

@@ -35,12 +35,6 @@ class FastIgnore
         false
       end
 
-      # :nocov:
-      # def inspect
-      #   "#<#{self.class.name}>"
-      # end
-      # :nocov:
-
       def match(_)
         nil
       end

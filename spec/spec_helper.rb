@@ -17,7 +17,6 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/fast_ignore'
-
 require_relative 'support/temp_dir_helper'
 require_relative 'support/stub_env_helper'
 require_relative 'support/stub_file_helper'
@@ -35,6 +34,7 @@ RSpec.configure do |config|
   end
 
   config.before do
+    Kernel.srand config.seed
     stub_blank_global_config
   end
 

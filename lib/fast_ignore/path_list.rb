@@ -3,8 +3,6 @@
 class FastIgnore
   class PathList
     class << self
-      # :nocov:
-      # TODO: new api stuff.
       def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
         new.gitignore!(root: root, append: append, format: format)
       end
@@ -16,7 +14,6 @@ class FastIgnore
       def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false) # leftovers:keep
         new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append)
       end
-      # :nocov:
     end
 
     include ::Enumerable
@@ -81,12 +78,12 @@ class FastIgnore
     def gitignore!(root: nil, append: :gitignore, format: :gitignore)
       collect_gitignore = Matchers::CollectGitignore.new(root, format: format, append: append)
 
-      @matcher = Matchers::All.new([@matcher, collect_gitignore])
       ignore!(root: root, append: append, format: format)
       ignore!(from_file: GlobalGitignore.path(root: root), root: root || '.', append: append, format: format)
       ignore!(from_file: './.git/info/exclude', root: root || '.', append: append, format: format)
       ignore!(from_file: './.gitignore', root: root, append: append, format: format)
       ignore!('.git', root: '/')
+      @matcher = Matchers::All.new([@matcher, collect_gitignore])
 
       self
     end

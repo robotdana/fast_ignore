@@ -3,33 +3,61 @@
 RSpec.describe FastIgnore::Matchers::AllowAnyParent do
   subject { described_class }
 
-  it { is_expected.to be_dir_only }
-  it { is_expected.not_to be_file_only }
-  it { is_expected.to be_implicit }
-  it { is_expected.to be_squashable_with(subject) }
-  it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAny) }
-  it { is_expected.not_to be_removable }
   it { is_expected.to be_frozen }
 
-  it 'returns self when squashing' do
-    expect(subject.squash([subject, subject])).to be subject
+  describe '#inspect' do
+    it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::AllowAnyParent>' }
   end
 
-  it 'returns nil when appending' do
-    expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+  describe '#dir_only?' do
+    it { is_expected.to be_dir_only }
   end
 
-  it 'returns :allow when matching parents' do
-    parent = instance_double(::FastIgnore::Candidate, parent?: true)
-    expect(subject.match(parent)).to be :allow
+  describe '#file_only?' do
+    it { is_expected.not_to be_file_only }
   end
 
-  it 'returns nil when matching non-parents' do
-    non_parent = instance_double(::FastIgnore::Candidate, parent?: false)
-    expect(subject.match(non_parent)).to be_nil
+  describe '#implicit?' do
+    it { is_expected.to be_implicit }
   end
 
-  it 'has an inspect value' do
-    expect(subject.inspect).to eq '#<FastIgnore::Matchers::AllowAnyParent>'
+  describe '#removable?' do
+    it { is_expected.not_to be_removable }
+  end
+
+  describe '#weight' do
+    it { is_expected.to have_attributes(weight: 0) }
+  end
+
+  describe '#squashable_with?' do
+    it { is_expected.to be_squashable_with(subject) }
+    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAny) }
+  end
+
+  describe '#squash' do
+    it 'returns self' do
+      expect(subject.squash([subject, subject])).to be subject
+    end
+  end
+
+  describe '#append' do
+    it 'returns nil' do
+      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+    end
+  end
+
+  describe '#match' do
+    let(:parent) { true }
+    let(:candidate) { instance_double(::FastIgnore::Candidate, parent?: parent) }
+
+    context 'when parent is true' do
+      it { expect(subject.match(candidate)).to be :allow }
+    end
+
+    context 'when parent is false' do
+      let(:parent) { false }
+
+      it { expect(subject.match(candidate)).to be_nil }
+    end
   end
 end

@@ -3,27 +3,52 @@
 RSpec.describe FastIgnore::Matchers::AllowAny do
   subject { described_class }
 
-  it { is_expected.not_to be_dir_only }
-  it { is_expected.not_to be_file_only }
-  it { is_expected.to be_implicit }
-  it { is_expected.to be_squashable_with(subject) }
-  it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAnyParent) }
-  it { is_expected.not_to be_removable }
   it { is_expected.to be_frozen }
 
-  it 'returns self when squashing' do
-    expect(subject.squash([subject, subject])).to be subject
+  describe '#inspect' do
+    it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::AllowAny>' }
   end
 
-  it 'returns nil when appending' do
-    expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+  describe '#dir_only?' do
+    it { is_expected.not_to be_dir_only }
   end
 
-  it 'returns :allows when matching' do
-    expect(subject.match(instance_double(::FastIgnore::Candidate))).to be :allow
+  describe '#file_only?' do
+    it { is_expected.not_to be_file_only }
   end
 
-  it 'has an inspect value' do
-    expect(subject.inspect).to eq '#<FastIgnore::Matchers::AllowAny>'
+  describe '#implicit?' do
+    it { is_expected.to be_implicit }
+  end
+
+  describe '#removable?' do
+    it { is_expected.not_to be_removable }
+  end
+
+  describe '#weight' do
+    it { is_expected.to have_attributes(weight: 0) }
+  end
+
+  describe '#squashable_with?' do
+    it { is_expected.to be_squashable_with(subject) }
+    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAnyParent) }
+  end
+
+  describe '#squash' do
+    it 'returns self' do
+      expect(subject.squash([subject, subject])).to be subject
+    end
+  end
+
+  describe '#append' do
+    it 'returns nil' do
+      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+    end
+  end
+
+  describe '#match' do
+    it 'returns :allow' do
+      expect(subject.match(instance_double(::FastIgnore::Candidate))).to be :allow
+    end
   end
 end

@@ -43,7 +43,11 @@ class FastIgnore
       end
 
       def squash(list)
-        new_with_matcher(@matcher.squash(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        new_with_matcher(
+          @matcher.squash(
+            list.map { |l| l.matcher } # rubocop:disable Style/SymbolProc it breaks with protected methods
+          )
+        )
       end
 
       protected
@@ -54,6 +58,7 @@ class FastIgnore
 
       def new_with_matcher(matcher)
         # :nocov:
+        # none actually hit this super
         self.class.new(matcher)
         # :nocov:
       end

@@ -14,8 +14,8 @@ class FastIgnore
       end
 
       def match(candidate)
-        candidate.with_path_relative_to(@dir) do
-          @matcher.match(candidate)
+        candidate.with_path_relative_to(@dir) do |relative_candidate|
+          @matcher.match(relative_candidate)
         end
       end
 
@@ -26,10 +26,7 @@ class FastIgnore
       private
 
       def new_with_matcher(matcher)
-        # :nocov:
-        # TODO: consistent api
         self.class.new(matcher, @dir)
-        # :nocov:
       end
     end
   end

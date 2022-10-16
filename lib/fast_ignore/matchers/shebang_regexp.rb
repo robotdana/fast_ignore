@@ -3,9 +3,9 @@
 class FastIgnore
   module Matchers
     class ShebangRegexp < Base
-      def initialize(rule, negation)
+      def initialize(rule, allow)
         @rule = rule
-        @return_value = negation ? :allow : :ignore
+        @return_value = allow ? :allow : :ignore
 
         freeze
       end
@@ -16,18 +16,21 @@ class FastIgnore
       end
 
       def squash(list)
-        self.class.new(::Regexp.union(list.map { |l| l.rule }), @return_value == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods
+        self.class.new(
+          ::Regexp.union(
+            list.map { |l| l.rule } # rubocop:disable Style/SymbolProc it breaks with protected methods
+          ),
+          @return_value == :allow
+        )
       end
 
       def file_only?
         true
       end
 
-      # :nocov:
       def inspect
-        "#<FastIgnore::Matchers::ShebangRegexp #{@return_value} /#{@rule.to_s[26..-4]}/>"
+        "#<#{self.class} #{@return_value.inspect} #{@rule.inspect}>"
       end
-      # :nocov:
 
       def match(candidate)
         return if candidate.filename.include?('.')

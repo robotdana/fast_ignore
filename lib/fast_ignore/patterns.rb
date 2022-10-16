@@ -18,7 +18,7 @@ class FastIgnore
 
     def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
       @allow = allow
-      @label = "#{allow}_#{append}" if append
+      @label = :"#{allow}_#{append}" if append
       root = PathExpander.expand_dir(root) if root
 
       if from_file

@@ -30,11 +30,9 @@ class FastIgnore
         1
       end
 
-      # :nocov:
       def inspect
-        "#<AllowParentPathRegexp #{@rule.inspect}>"
+        "#<#{self.class} #{@rule.inspect}>"
       end
-      # :nocov:
 
       def match(candidate)
         :allow if candidate.parent? && @rule.match?(candidate.path)

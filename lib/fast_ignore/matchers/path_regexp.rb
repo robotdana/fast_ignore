@@ -31,19 +31,22 @@ class FastIgnore
       end
 
       def squash(list)
-        rule = ::Regexp.union(list.map { |l| l.rule }) # rubocop:disable Style/SymbolProc it breaks with protected methods
-        self.class.new(rule, @squashable, @dir_only, @return_value == :allow, @implicit)
+        self.class.new(
+          ::Regexp.union(list.map { |l| l.rule }), # rubocop:disable Style/SymbolProc it breaks with protected methods,
+          @squashable,
+          @dir_only,
+          @return_value == :allow,
+          @implicit
+        )
       end
 
       def weight
         1
       end
 
-      # :nocov:
       def inspect
-        "#<PathRegexp #{@return_value} #{'dir_only ' if @dir_only}#{@rule.inspect}>"
+        "#<#{self.class} #{'dir_only ' if @dir_only}#{@return_value.inspect} #{@rule.inspect}>"
       end
-      # :nocov:
 
       def match(candidate)
         @return_value if @rule.match?(candidate.path)
