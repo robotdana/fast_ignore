@@ -70,20 +70,18 @@ class FastIgnore
     rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
       # :nocov: can't quite get this set up in a test
       @exists = false
-      # :nocov:
+      # :nocov: can't quite get this set up in a test
     end
 
     def filename
       @filename ||= ::File.basename(@full_path)
     end
 
-    # :nocov:
     alias_method :original_inspect, :inspect # leftovers:keep
 
     def inspect
       "#<FastIgnore::Candidate #{@full_path}>"
     end
-    # :nocov:
 
     # how long can a shebang be?
     # https://www.in-ulm.de/~mascheck/various/shebang/
@@ -100,9 +98,9 @@ class FastIgnore
       rescue ::EOFError, ::SystemCallError
         ''
       ensure
-        # :nocov:
+        # :nocov: can't quite get this set up in a test
         file&.close
-        # :nocov:
+        # :nocov: can't quite get this set up in a test
       end
     end
   end

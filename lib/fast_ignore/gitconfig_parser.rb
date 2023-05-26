@@ -142,10 +142,10 @@ class FastIgnore
             value << file.matched
           elsif file.skip(/\n/)
             raise ::FastIgnore::GitconfigParseError
-          # :nocov:
+          # :nocov: This shouldn't be possible
           else
             raise "Unmatched #{file.rest}"
-            # :nocov:
+            # :nocov: This shouldn't be possible
           end
         elsif file.skip(/"/)
           self.within_quotes = true
@@ -155,10 +155,10 @@ class FastIgnore
           break
         elsif file.scan(/\s+/) # rubocop:disable Lint/DuplicateBranch
           value << file.matched
-        # :nocov:
+        # :nocov: This shouldn't be possible
         else
           raise "Unmatched #{file.rest}"
-          # :nocov:
+          # :nocov: This shouldn't be possible
         end
       end
 
@@ -180,10 +180,10 @@ class FastIgnore
             nil
           elsif file.scan(/\n/)
             raise ::FastIgnore::GitconfigParseError
-          # :nocov:
+          # :nocov: This shouldn't be possible
           else
             raise "Unmatched #{file.rest}"
-            # :nocov:
+            # :nocov: This shouldn't be possible
           end
         elsif file.skip(/"/)
           self.within_quotes = true
@@ -193,10 +193,10 @@ class FastIgnore
           break
         elsif file.skip(/\s+/) # rubocop:disable Lint/DuplicateBranch
           nil
-        # :nocov:
+        # :nocov: This shouldn't be possible
         else
           raise "Unmatched #{file.rest}"
-          # :nocov:
+          # :nocov: This shouldn't be possible
         end
       end
 

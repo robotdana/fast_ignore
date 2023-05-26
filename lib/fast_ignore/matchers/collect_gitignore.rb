@@ -24,16 +24,6 @@ class FastIgnore
         # :nocov:
       end
 
-      # def dup
-      #   new_collect_gitignore = super
-      #   new_collect_gitignore.instance_variable_set(:@loaded, @loaded.dup)
-      #   new_collect_gitignore.freeze
-      # end
-
-      # def append(patterns)
-      #   dup if patterns.label == :"false_#{@append}"
-      # end
-
       def match(candidate)
         if candidate.full_path.match?(@root_re) && candidate.directory? && !@loaded.include?(candidate.full_path)
           candidate.path_list.ignore!(
