@@ -9,8 +9,8 @@ RubyProf.measure_mode = RubyProf::WALL_TIME
 
 RubyProf.start
 
-require_relative '../../lib/fast_ignore'
-FastIgnore.new(relative: true, argv_rules: ARGV).to_a
+require_relative '../../lib/path_list'
+PathList.gitignore.argv.to_a
 
 profile = RubyProf.stop
 

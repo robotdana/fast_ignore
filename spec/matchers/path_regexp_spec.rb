@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::PathRegexp do
+RSpec.describe PathList::Matchers::PathRegexp do
   subject { described_class.new(rule, squashable, dir_only, allow_value, implicit) }
 
   let(:rule) { /a/ }
@@ -13,13 +13,13 @@ RSpec.describe FastIgnore::Matchers::PathRegexp do
 
   describe '#inspect' do
     context 'when @dir_only' do
-      it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::PathRegexp dir_only :allow /a/>' }
+      it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp dir_only :allow /a/>' }
     end
 
     context 'when not @dir_only' do
       let(:dir_only) { false }
 
-      it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::PathRegexp :allow /a/>' }
+      it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp :allow /a/>' }
     end
   end
 
@@ -61,7 +61,7 @@ RSpec.describe FastIgnore::Matchers::PathRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
 
     it 'is squashable with the same property values' do
       other = described_class.new(/b/, squashable, dir_only, allow_value, implicit)
@@ -125,7 +125,7 @@ RSpec.describe FastIgnore::Matchers::PathRegexp do
 
   describe '#append' do
     it 'returns nil' do
-      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
     end
   end
 
@@ -133,7 +133,7 @@ RSpec.describe FastIgnore::Matchers::PathRegexp do
     let(:path) { 'my/file.rb' }
     let(:rule) { /\bfile.rb\b/ }
 
-    let(:candidate) { instance_double(::FastIgnore::Candidate, path: path) }
+    let(:candidate) { instance_double(::PathList::Candidate, path: path) }
 
     context 'with a matching rule' do
       context 'when allowing' do

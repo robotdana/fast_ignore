@@ -2,9 +2,9 @@
 
 require 'pathname'
 
-RSpec.describe FastIgnore do
+RSpec.describe PathList do
   it 'has a version number' do
-    expect(FastIgnore::VERSION).not_to be_nil
+    expect(PathList::VERSION).not_to be_nil
   end
 
   describe '.new' do

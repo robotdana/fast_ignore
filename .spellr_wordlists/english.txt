@@ -1,4 +1,5 @@
 allowlist
+appendables
 argv
 attributesfile
 backport
@@ -12,11 +13,14 @@ cov
 cyclomatic
 cygwin
 denylist
+dockerfile
+dockerignore
 enoent
 enumerables
 env
 eol
 errno
+eslintignore
 esque
 excludesfile
 extensionless
@@ -31,15 +35,18 @@ gitconfigs
 gith
 github
 gitignore
+gitignored
 gitkeep
 gnore
 hashbang
 heredoc
+i've
 includefile
 includeif
 janky
 jruby
 klass
+kwargs
 llo
 lookahead
 mascheck
@@ -52,6 +59,7 @@ nosystem
 params
 pathspec
 performant
+prettierignore
 pwd
 quotepath
 rdoc
@@ -69,6 +77,7 @@ rvm
 sherson
 simplecov
 stdin
+stdlib
 subdir
 submodule
 submodules

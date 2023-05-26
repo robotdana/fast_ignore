@@ -30,9 +30,9 @@ RSpec::Matchers.define(:allow_files) do |*expected|
   match do |actual|
     @actual = actual.to_a
     expect(@actual).to include(*expected)
-    if actual.respond_to?(:allowed?)
+    if actual.respond_to?(:include?)
       expected.each do |path|
-        expect(actual).to be_allowed(path)
+        expect(actual).to include(path)
       end
     end
 
@@ -43,7 +43,7 @@ RSpec::Matchers.define(:allow_files) do |*expected|
     @actual = actual.to_a
     expected.each do |path|
       expect(@actual).not_to include(path)
-      expect(actual).not_to be_allowed(path) if actual.respond_to?(:allowed?)
+      expect(actual).not_to include(path) if actual.respond_to?(:include?)
     end
 
     true

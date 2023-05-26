@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::Appendable do
+RSpec.describe PathList::Matchers::Appendable do
   subject { described_class.new(label, matcher) }
 
-  let(:matcher) { instance_double(::FastIgnore::Matchers::Base) }
+  let(:matcher) { instance_double(::PathList::Matchers::Base) }
   let(:label) { :false_gitignore }
   let(:other_label) { :true_nonsense }
   let(:random_boolean) { [true, false].sample }
@@ -102,7 +102,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
 
   describe '#squashable_with?' do
     it 'is squashable with something with the same label and the same kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(label, other_child_matcher)
 
@@ -110,7 +110,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
     end
 
     it 'is not squashable with something with a different label but the same kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(other_label, other_child_matcher)
 
@@ -118,7 +118,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
     end
 
     it 'is not squashable with something with the same label but a different kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
       other_matcher = described_class.new(label, other_child_matcher)
 
@@ -126,7 +126,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
     end
 
     it 'is not squashable with something different' do
-      expect(subject).not_to be_squashable_with(FastIgnore::Matchers::AllowAnyParent)
+      expect(subject).not_to be_squashable_with(PathList::Matchers::AllowAnyParent)
     end
   end
 
@@ -134,7 +134,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
     it 'returns a new matcher with squashed child matcher' do
       subject
       other = described_class.new(label, matcher)
-      new_matcher = instance_double(FastIgnore::Matchers::Base)
+      new_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squash).with([matcher, matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
@@ -145,7 +145,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::FastIgnore::Patterns) }
+    let(:patterns) { instance_double(::PathList::Patterns) }
 
     context "when the append value label doesn't match" do
       before { allow(patterns).to receive(:label).and_return(other_label) }
@@ -157,7 +157,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
       end
 
       it "passes append to the matcher, returns a new matcher when it's changed" do
-        new_matcher = instance_double(::FastIgnore::Matchers::Base)
+        new_matcher = instance_double(::PathList::Matchers::Base)
         allow(matcher).to receive(:append).with(patterns).and_return(new_matcher)
 
         subject
@@ -178,11 +178,11 @@ RSpec.describe FastIgnore::Matchers::Appendable do
 
         allow(matcher).to receive(:append).with(patterns).and_return(nil)
 
-        appended_matcher = instance_double(::FastIgnore::Matchers::Base)
+        appended_matcher = instance_double(::PathList::Matchers::Base)
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
-        new_child_matcher = instance_double(::FastIgnore::Matchers::LastMatch)
-        allow(::FastIgnore::Matchers::LastMatch).to receive(:new).with([
+        new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
+        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
           matcher,
           appended_matcher
         ]).and_return(new_child_matcher)
@@ -199,14 +199,14 @@ RSpec.describe FastIgnore::Matchers::Appendable do
       it "passes append to the matcher and uses the appended child matcher in the new matcher if it's present" do
         subject
 
-        appended_child_matcher = instance_double(::FastIgnore::Matchers::Base)
+        appended_child_matcher = instance_double(::PathList::Matchers::Base)
         allow(matcher).to receive(:append).with(patterns).and_return(appended_child_matcher)
 
-        appended_matcher = instance_double(::FastIgnore::Matchers::Base)
+        appended_matcher = instance_double(::PathList::Matchers::Base)
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
-        new_child_matcher = instance_double(::FastIgnore::Matchers::LastMatch)
-        allow(::FastIgnore::Matchers::LastMatch).to receive(:new).with([
+        new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
+        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
           appended_child_matcher,
           appended_matcher
         ]).and_return(new_child_matcher)
@@ -223,7 +223,7 @@ RSpec.describe FastIgnore::Matchers::Appendable do
   end
 
   describe '#match' do
-    let(:candidate) { instance_double(::FastIgnore::Candidate) }
+    let(:candidate) { instance_double(::PathList::Candidate) }
     let(:match_result) { [:allow, :ignore, nil].sample }
 
     it 'is matcher.match when :allow' do

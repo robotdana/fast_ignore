@@ -18,7 +18,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::FastIgnore::PathList.ignore(gitignore)
+        ::PathList.ignore(gitignore)
       end.not_to raise_error
     end
   end
@@ -29,7 +29,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::FastIgnore::PathList.only(gitignore)
+        ::PathList.only(gitignore)
       end.not_to raise_error
     end
   end
@@ -40,7 +40,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::FastIgnore::PathList.ignore(gitignore, format: :shebang_or_expand_path_gitignore)
+        ::PathList.ignore(gitignore, format: :glob)
       end.not_to raise_error
     end
   end

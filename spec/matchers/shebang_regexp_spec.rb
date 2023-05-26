@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::ShebangRegexp do
+RSpec.describe PathList::Matchers::ShebangRegexp do
   subject { described_class.new(rule, allow_value) }
 
   let(:rule) { /a/ }
@@ -9,7 +9,7 @@ RSpec.describe FastIgnore::Matchers::ShebangRegexp do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::ShebangRegexp :allow /a/>' }
+    it { is_expected.to have_inspect_value '#<PathList::Matchers::ShebangRegexp :allow /a/>' }
   end
 
   describe '#dir_only?' do
@@ -34,7 +34,7 @@ RSpec.describe FastIgnore::Matchers::ShebangRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
 
     it 'is squashable with the same return value' do
       other = described_class.new(/b/, allow_value)
@@ -70,7 +70,7 @@ RSpec.describe FastIgnore::Matchers::ShebangRegexp do
 
   describe '#append' do
     it 'returns nil' do
-      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
     end
   end
 
@@ -79,7 +79,7 @@ RSpec.describe FastIgnore::Matchers::ShebangRegexp do
     let(:rule) { /\bruby\b/ }
     let(:filename) { 'file.rb' }
 
-    let(:candidate) { instance_double(::FastIgnore::Candidate, filename: filename, first_line: first_line) }
+    let(:candidate) { instance_double(::PathList::Candidate, filename: filename, first_line: first_line) }
 
     context 'with an extension' do
       it 'returns nil without loading the first line' do

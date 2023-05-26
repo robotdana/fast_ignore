@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require 'bundler/setup'
-require 'fast_ignore'
+require 'path_list'
 
 require 'pry'
 Pry.start

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::WithinDir do
+RSpec.describe PathList::Matchers::WithinDir do
   subject { described_class.new(matcher, dir) }
 
-  let(:matcher) { instance_double(::FastIgnore::Matchers::Base) }
+  let(:matcher) { instance_double(::PathList::Matchers::Base) }
   let(:dir) { '/' }
   let(:other_dir) { '/tmp' }
   let(:random_boolean) { [true, false].sample }
@@ -118,7 +118,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
 
   describe '#squashable_with?' do
     it 'is squashable with something with the same dir and the same kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(other_child_matcher, dir)
 
@@ -126,7 +126,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
     end
 
     it 'is not squashable with something with a different dir but the same kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(other_child_matcher, other_dir)
 
@@ -134,7 +134,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
     end
 
     it 'is not squashable with something with the same dir but a different kind of matcher' do
-      other_child_matcher = instance_double(FastIgnore::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
       other_matcher = described_class.new(other_child_matcher, dir)
 
@@ -142,7 +142,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
     end
 
     it 'is not squashable with something different' do
-      expect(subject).not_to be_squashable_with(FastIgnore::Matchers::AllowAnyParent)
+      expect(subject).not_to be_squashable_with(PathList::Matchers::AllowAnyParent)
     end
   end
 
@@ -150,7 +150,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
     it 'returns a new matcher with squashed child matcher' do
       subject
       other = described_class.new(matcher, dir)
-      new_matcher = instance_double(FastIgnore::Matchers::Base)
+      new_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squash).with([matcher, matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
@@ -161,7 +161,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::FastIgnore::Patterns) }
+    let(:patterns) { instance_double(::PathList::Patterns) }
 
     it 'is matcher.append when nil' do
       allow(matcher).to receive(:append).with(patterns).and_return(nil)
@@ -170,7 +170,7 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
     end
 
     it 'returns a new matcher when matcher.append is changed' do
-      new_matcher = instance_double(::FastIgnore::Matchers::Base)
+      new_matcher = instance_double(::PathList::Matchers::Base)
       allow(matcher).to receive(:append).with(patterns).and_return(new_matcher)
 
       subject
@@ -184,8 +184,8 @@ RSpec.describe FastIgnore::Matchers::WithinDir do
   end
 
   describe '#match' do
-    let(:candidate) { instance_double(::FastIgnore::Candidate) }
-    let(:inner_candidate) { instance_double(::FastIgnore::Candidate) }
+    let(:candidate) { instance_double(::PathList::Candidate) }
+    let(:inner_candidate) { instance_double(::PathList::Candidate) }
 
     let(:match_result) { [:allow, :ignore, nil].sample }
 

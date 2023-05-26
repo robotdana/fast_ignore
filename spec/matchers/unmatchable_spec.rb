@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::Unmatchable do
+RSpec.describe PathList::Matchers::Unmatchable do
   subject { described_class }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::Unmatchable>' }
+    it { is_expected.to have_inspect_value '#<PathList::Matchers::Unmatchable>' }
   end
 
   describe '#dir_only?' do
@@ -31,7 +31,7 @@ RSpec.describe FastIgnore::Matchers::Unmatchable do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
   end
 
   describe '#squash' do
@@ -42,13 +42,13 @@ RSpec.describe FastIgnore::Matchers::Unmatchable do
 
   describe '#append' do
     it 'returns nil' do
-      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
     end
   end
 
   describe '#match' do
     it 'returns nil' do
-      expect(subject.match(instance_double(::FastIgnore::Candidate))).to be_nil
+      expect(subject.match(instance_double(::PathList::Candidate))).to be_nil
     end
   end
 end

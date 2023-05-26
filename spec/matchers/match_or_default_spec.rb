@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::MatchOrDefault do
+RSpec.describe PathList::Matchers::MatchOrDefault do
   subject { described_class.new(matcher, default) }
 
-  let(:matcher) { instance_double(::FastIgnore::Matchers::Base) }
+  let(:matcher) { instance_double(::PathList::Matchers::Base) }
   let(:default) { [:allow, :ignore].sample }
   let(:random_boolean) { [true, false].sample }
 
@@ -127,7 +127,7 @@ RSpec.describe FastIgnore::Matchers::MatchOrDefault do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::FastIgnore::Patterns) }
+    let(:patterns) { instance_double(::PathList::Patterns) }
 
     it 'is matcher.append when nil' do
       allow(matcher).to receive(:append).with(patterns).and_return(nil)
@@ -136,7 +136,7 @@ RSpec.describe FastIgnore::Matchers::MatchOrDefault do
     end
 
     it 'returns a new matcher when matcher.append is changed' do
-      new_matcher = instance_double(::FastIgnore::Matchers::Base)
+      new_matcher = instance_double(::PathList::Matchers::Base)
       allow(matcher).to receive(:append).with(patterns).and_return(new_matcher)
 
       subject
@@ -150,7 +150,7 @@ RSpec.describe FastIgnore::Matchers::MatchOrDefault do
   end
 
   describe '#match' do
-    let(:candidate) { instance_double(::FastIgnore::Candidate) }
+    let(:candidate) { instance_double(::PathList::Candidate) }
     let(:match_result) { [:allow, :ignore, nil].sample }
 
     it 'is matcher.match when :allow' do

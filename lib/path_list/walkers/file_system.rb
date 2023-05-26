@@ -1,0 +1,55 @@
+# frozen_string_literal: true
+
+class PathList
+  module Walkers
+    module FileSystem
+      class << self
+        def allowed?( # rubocop:disable Metrics/ParameterLists
+          path,
+          path_list:,
+          directory: nil,
+          content: nil,
+          exists: nil,
+          include_directories: false,
+          parent_if_directory: !include_directories
+        )
+          full_path = PathExpander.expand_path(path)
+          candidate = Candidate.new(
+            full_path, nil, directory, exists, content, path_list, parent_if_directory
+          )
+          return false if !include_directories && candidate.directory?
+          return false unless candidate.exists?
+
+          allowed_recursive?(candidate)
+        end
+
+        def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
+          ::Dir.children(parent_full_path).sort.each do |filename|
+            full_path = parent_full_path + filename
+            candidate = Candidate.new(full_path, filename, nil, true, nil, path_list, true)
+
+            next unless path_list.matcher.match(candidate) == :allow
+
+            relative_path = parent_relative_path + filename
+
+            if candidate.directory?
+              each(full_path + '/', relative_path + '/', path_list, &block)
+            else
+              yield(relative_path)
+            end
+          rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+            nil
+          end
+        end
+
+        private
+
+        def allowed_recursive?(candidate)
+          return true unless candidate.parent
+
+          allowed_recursive?(candidate.parent) && candidate.path_list.matcher.match(candidate) == :allow
+        end
+      end
+    end
+  end
+end

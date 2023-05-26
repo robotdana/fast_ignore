@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore do
+RSpec.describe PathList do
+  subject { described_class.gitignore }
+
   around { |e| within_temp_dir { e.run } }
 
   let(:root) { Dir.pwd }
+  let(:gitignore_path) { File.join(root, '.gitignore') }
 
   shared_examples 'the gitignore documentation' do
     describe 'A blank line matches no files, so it can serve as a separator for readability.' do
@@ -997,184 +1000,80 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '.new' do
-    subject { described_class.new(relative: true) }
+  describe '.gitignore' do
+    it_behaves_like 'the gitignore documentation'
+  end
 
-    let(:gitignore_path) { File.join(root, '.gitignore') }
-
-    describe 'gitignore: true' do
-      it_behaves_like 'the gitignore documentation'
+  describe '.ignore(from_file:)' do
+    subject do
+      described_class.ignore(from_file: gitignore_path)
     end
 
-    describe 'ignore_files:' do
-      subject do
-        described_class.new(
-          relative: true,
-          gitignore: false,
-          ignore_files: ignore_files
-        )
-      end
+    it_behaves_like 'the gitignore documentation'
+  end
 
-      describe 'with string argument' do
-        let(:ignore_files) { gitignore_path }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-
-      describe 'with array argument' do
-        let(:ignore_files) { [gitignore_path, gitignore_path] }
-
-        it_behaves_like 'the gitignore documentation'
+  describe "root: '..'" do
+    subject do
+      Dir.chdir File.join(root, '..') do
+        described_class.gitignore(root: root)
       end
     end
 
-    describe "root: '..'" do
-      subject do
-        Dir.chdir File.join(root, '..') do
-          described_class.new(relative: true, root: root)
-        end
-      end
-
-      around do |example|
-        Dir.mkdir 'sublevel'
-        Dir.chdir 'sublevel' do
-          example.run
-        end
-      end
-
-      let(:root) { Dir.pwd }
-
-      it_behaves_like 'the gitignore documentation'
-    end
-
-    describe 'ignore_rules:' do
-      subject do
-        described_class.new(
-          relative: true,
-          gitignore: false,
-          ignore_rules: ignore_rules
-        )
-      end
-
-      let(:gitignore_read) { File.exist?(gitignore_path) ? File.read(gitignore_path) : '' }
-
-      describe 'with string argument' do
-        let(:ignore_rules) { gitignore_read }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-
-      describe 'with array argument' do
-        let(:ignore_rules) { gitignore_read.each_line.to_a }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-    end
-
-    describe 'include_files:' do
-      subject do
-        described_class.new(
-          relative: true,
-          gitignore: false,
-          include_files: include_files
-        )
-      end
-
-      around do |example|
-        $doing_include = true
+    around do |example|
+      Dir.mkdir 'sublevel'
+      Dir.chdir 'sublevel' do
         example.run
-        $doing_include = false
-      end
-
-      let(:include_files) { include_path }
-      let(:include_path) { File.join(root, '.gitignore') }
-
-      it_behaves_like 'the gitignore documentation'
-
-      describe 'with array argument' do
-        let(:include_files) { [include_path, include_path] }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-
-      describe "root: '..'" do
-        subject do
-          Dir.chdir File.join(root, '..') do
-            described_class.new(
-              relative: true,
-              root: root,
-              gitignore: false,
-              include_files: include_path
-            )
-          end
-        end
-
-        around do |example|
-          Dir.mkdir 'sublevel'
-          Dir.chdir 'sublevel' do
-            example.run
-          end
-        end
-
-        let(:root) { Dir.pwd }
-
-        it_behaves_like 'the gitignore documentation'
       end
     end
 
-    describe 'include_rules:' do
-      subject do
-        described_class.new(
-          relative: true,
-          gitignore: false,
-          include_rules: include_rules
-        )
-      end
+    let(:root) { Dir.pwd }
 
-      around do |example|
-        $doing_include = true
-        example.run
-        $doing_include = false
-      end
+    it_behaves_like 'the gitignore documentation'
+  end
 
-      let(:include_path) { File.join(root, '.gitignore') }
-      let(:include_read) { File.exist?(include_path) ? File.read(include_path) : '' }
+  describe 'ignore(patterns)' do
+    subject do
+      described_class.ignore(ignore_rules)
+    end
 
-      describe 'with string argument' do
-        let(:include_rules) { include_read }
+    let(:gitignore_read) { File.exist?(gitignore_path) ? File.read(gitignore_path) : '' }
 
-        it_behaves_like 'the gitignore documentation'
-      end
+    describe 'with string argument' do
+      let(:ignore_rules) { gitignore_read }
 
-      describe 'with array argument' do
-        let(:include_rules) { include_read.each_line.to_a }
+      it_behaves_like 'the gitignore documentation'
+    end
 
-        it_behaves_like 'the gitignore documentation'
-      end
+    describe 'with array argument' do
+      let(:ignore_rules) { gitignore_read.each_line.to_a }
+
+      it_behaves_like 'the gitignore documentation'
     end
   end
 
-  describe FastIgnore::PathList do
-    subject { described_class.gitignore }
-
-    let(:gitignore_path) { File.join(root, '.gitignore') }
-
-    describe '.gitignore' do
-      it_behaves_like 'the gitignore documentation'
+  describe 'only(from_file:)' do
+    subject do
+      described_class.only(from_file: include_path)
     end
 
-    describe '.ignore(from_file:)' do
-      subject do
-        described_class.ignore(from_file: gitignore_path)
-      end
-
-      it_behaves_like 'the gitignore documentation'
+    around do |example|
+      $doing_include = true
+      example.run
+      $doing_include = false
     end
+
+    let(:include_files) { include_path }
+    let(:include_path) { File.join(root, '.gitignore') }
+
+    it_behaves_like 'the gitignore documentation'
 
     describe "root: '..'" do
       subject do
         Dir.chdir File.join(root, '..') do
-          described_class.gitignore(root: root)
+          described_class.only(
+            from_file: include_path,
+            root: root
+          )
         end
       end
 
@@ -1189,91 +1088,32 @@ RSpec.describe FastIgnore do
 
       it_behaves_like 'the gitignore documentation'
     end
+  end
 
-    describe 'ignore(patterns)' do
-      subject do
-        described_class.ignore(ignore_rules)
-      end
-
-      let(:gitignore_read) { File.exist?(gitignore_path) ? File.read(gitignore_path) : '' }
-
-      describe 'with string argument' do
-        let(:ignore_rules) { gitignore_read }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-
-      describe 'with array argument' do
-        let(:ignore_rules) { gitignore_read.each_line.to_a }
-
-        it_behaves_like 'the gitignore documentation'
-      end
+  describe 'only(patterns)' do
+    subject do
+      described_class.only(include_rules)
     end
 
-    describe 'only(from_file:)' do
-      subject do
-        described_class.only(from_file: include_path)
-      end
+    around do |example|
+      $doing_include = true
+      example.run
+      $doing_include = false
+    end
 
-      around do |example|
-        $doing_include = true
-        example.run
-        $doing_include = false
-      end
+    let(:include_path) { File.join(root, '.gitignore') }
+    let(:include_read) { File.exist?(include_path) ? File.read(include_path) : '' }
 
-      let(:include_files) { include_path }
-      let(:include_path) { File.join(root, '.gitignore') }
+    describe 'with string argument' do
+      let(:include_rules) { include_read }
 
       it_behaves_like 'the gitignore documentation'
-
-      describe "root: '..'" do
-        subject do
-          Dir.chdir File.join(root, '..') do
-            described_class.only(
-              from_file: include_path,
-              root: root
-            )
-          end
-        end
-
-        around do |example|
-          Dir.mkdir 'sublevel'
-          Dir.chdir 'sublevel' do
-            example.run
-          end
-        end
-
-        let(:root) { Dir.pwd }
-
-        it_behaves_like 'the gitignore documentation'
-      end
     end
 
-    describe 'only(patterns)' do
-      subject do
-        described_class.only(include_rules)
-      end
+    describe 'with array argument' do
+      let(:include_rules) { include_read.each_line.to_a }
 
-      around do |example|
-        $doing_include = true
-        example.run
-        $doing_include = false
-      end
-
-      let(:include_path) { File.join(root, '.gitignore') }
-      let(:include_read) { File.exist?(include_path) ? File.read(include_path) : '' }
-
-      describe 'with string argument' do
-        let(:include_rules) { include_read }
-
-        it_behaves_like 'the gitignore documentation'
-      end
-
-      describe 'with array argument' do
-        let(:include_rules) { include_read.each_line.to_a }
-
-        it_behaves_like 'the gitignore documentation'
-      end
+      it_behaves_like 'the gitignore documentation'
     end
   end
 

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore::Matchers::AllowAnyParent do
+RSpec.describe PathList::Matchers::AllowAnyParent do
   subject { described_class }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<FastIgnore::Matchers::AllowAnyParent>' }
+    it { is_expected.to have_inspect_value '#<PathList::Matchers::AllowAnyParent>' }
   end
 
   describe '#dir_only?' do
@@ -31,7 +31,7 @@ RSpec.describe FastIgnore::Matchers::AllowAnyParent do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::FastIgnore::Matchers::AllowAny) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAny) }
   end
 
   describe '#squash' do
@@ -42,13 +42,13 @@ RSpec.describe FastIgnore::Matchers::AllowAnyParent do
 
   describe '#append' do
     it 'returns nil' do
-      expect(subject.append(instance_double(::FastIgnore::Patterns))).to be_nil
+      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
     end
   end
 
   describe '#match' do
     let(:parent) { true }
-    let(:candidate) { instance_double(::FastIgnore::Candidate, parent?: parent) }
+    let(:candidate) { instance_double(::PathList::Candidate, parent?: parent) }
 
     context 'when parent is true' do
       it { expect(subject.match(candidate)).to be :allow }

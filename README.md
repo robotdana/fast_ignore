@@ -1,36 +1,36 @@
-# FastIgnore
+# PathList
 
-[![travis](https://travis-ci.com/robotdana/fast_ignore.svg?branch=main)](https://travis-ci.com/robotdana/fast_ignore)
-[![Gem Version](https://badge.fury.io/rb/fast_ignore.svg)](https://rubygems.org/gems/fast_ignore)
+[![Gem Version](https://badge.fury.io/rb/path_list.svg)](https://rubygems.org/gems/path_list)
 
-This started as a way to quickly and natively ruby-ly parse gitignore files and find matching files.
-It's now gained an equivalent includes file functionality, ARGV awareness, and some shebang matching, while still being extremely fast, to be a one-stop file-list for your linter.
-
-Filter a directory tree using a .gitignore file. Recognises all of the [gitignore rules](https://www.git-scm.com/docs/gitignore#_pattern_format)
+Quickly and native-ruby-ly parse gitignore files and find all non-ignored files.
 
 ```ruby
-FastIgnore.new(relative: true).sort == `git ls-files`.split("\n").sort
+PathList.gitignore.sort == `git ls-files`.split("\n").sort
 ```
 
 ## Features
 
-- Fast (faster than using `` `git ls-files`.split("\n") `` for small repos (because it avoids the overhead of ``` `` ```))
+- **Fast** (faster than using `` `git ls-files`.split("\n") `` for small repos (because it avoids the overhead of ``` `` ```))
+
+- with `PathList.gitignore`
+  - supports all [gitignore rule patterns](https://git-scm.com/docs/gitignore#_pattern_format)
+  - **doesn't require git to be installed**
+  - reads .gitignore in all subdirectories
+  - reads .git/info/excludes
+  - reads the global gitignore file mentioned in your git config
+
+- supports gitignore-style denylist and *allowlist*. ([`PathList.ignore`, `PathList.only`](#ignore_only))
+- supports a glob-like format for unsurprising ARGV use ([`PathList.only(ARGV, format: :argv)`](#format_glob))
+- supports matching by shebang rather than filename for extensionless files [`PathList.only("ruby", format: :shebang)`](#format_shebang)
+
 - Supports ruby 2.6-3.1.x & jruby
-- supports all [gitignore rule patterns](https://git-scm.com/docs/gitignore#_pattern_format)
-- doesn't require git to be installed
-- supports a gitignore-esque "include" patterns. ([`include_rules:`](#include_rules)/[`include_files:`](#include_files))
-- supports an expansion of include patterns, expanding and anchoring paths ([`argv_rules:`](#argv_rules))
-- supports [matching by shebang](#shebang_rules) rather than filename for extensionless files: `#!:`
-- reads .gitignore in all subdirectories
-- reads .git/info/excludes
-- reads the global gitignore file mentioned in your git config
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'fast_ignore'
+gem 'path_list'
 ```
 
 And then execute:
@@ -39,325 +39,292 @@ $ bundle
 ```
 Or install it yourself as:
 ```sh
-$ gem install fast_ignore
+$ gem install path_list
 ```
 
 ## Usage
 
-```ruby
-FastIgnore.new.each { |file| puts "#{file} is not ignored by the .gitignore file" }
-```
+- Build a `PathList` by chaining [`.gitignore`](#gitignore) [`.only`](#ignore_only), [`.ignore`](#ignore_only), combining with [`.any`](#any), or [`.and`](#and)
 
-### `#each`, `#map` etc
-
-This yields paths that are _not_ ignored by the gitignore, i.e. the paths that would be returned by `git ls-files`.
-
-A FastIgnore instance is an Enumerable and responds to all Enumerable methods:
+- Yield each of the files not ignored by your PathList with [`.each`](#each_map_to_a_find_etc) or other enumerable methods.
+- Test if a file path is not ignored by your PathList with [`.include?` or `===`](#include).
+- Test if a file path or its parent is not ignored by your PathList with [`.match?`](#match).
 
 ```ruby
-FastIgnore.new.to_a
-FastIgnore.new.map { |file| file.upcase }
+PathList.gitignore.each { |file| puts "#{file} is not ignored by git" }
+PathList.only('*.rb', '!config/').each { |file| puts "#{file} is a ruby file not in the config directory" }
+PathList.ignore(from_file: '.dockerignore').each { |file| puts "#{file} would be copied with dockerfile COPY" }
+
+PathList.gitignore.include?("is/this/file/gitignored")
+PathList.gitignore.match?("is/this/")
 ```
 
-Like other enumerables, `FastIgnore#each` can return an enumerator:
+**Note: If you want use the same PathList match rules more than once, save the instance to a variable to avoid having to read and parse the gitignore file and gitconfig files over and over again**
+
+### `each`, `map`, `to_a`, `find`, etc...
+
+`each` will successively yield each of the files not ignored by your PathList.
 
 ```ruby
-FastIgnore.new.each.with_index { |file, index| puts "#{file}#{index}" }
+PathList.gitignore.each { |file| puts "#{file} is not ignored by git" }
 ```
 
-**Warning: Do not change directory (e.g. `Dir.chdir`) in the block.**
+`each` can return an enumerator allowing even more chaining:
 
-### `#allowed?`
+```ruby
+PathList.gitignore.each.with_index { |file, index| puts "#{file}#{index}" }
+```
+
+Give `each` a path to start from instead of defaulting to the current working directory:
+
+```ruby
+PathList.gitignore.each("a/subdirectory") { |file| puts "#{file}#{index}" }
+PathList.each("/") { |file| puts "#{file}" } # traverse a whole filesystem?
+```
+
+A PathList instance is an Enumerable and responds to all Enumerable methods:
+
+```ruby
+PathList.gitignore.to_a
+PathList.gitignore.map { |file| file.upcase }
+```
+
+And returns an enumerator for chaining when called without a block
+
+```ruby
+PathList.gitignore.each.with_index { |file, index| puts "#{file}#{index}" }
+```
+
+### `#include?`
 
 To check if a single path is allowed, use
 ```ruby
-FastIgnore.new.allowed?('relative/path')
-FastIgnore.new.allowed?('./relative/path')
-FastIgnore.new.allowed?('/absolute/path')
-FastIgnore.new.allowed?('~/home/path')
+PathList.include?("relative/path")
+PathList.include?("./relative/path")
+PathList.include?("/absolute/path")
+PathList.include?("~/home/path")
+PathList.include?(Pathname.new("/stdlib/pathname"))
 ```
 
-Relative paths will be considered relative to the [`root:`](#root) directory, not the current directory.
-
-This is aliased as `===` so you can use a FastIgnore instance in case statements.
+This is also available as `===` so you can use a PathList instance in case statements.
 ```ruby
-@path_matcher ||= FastIgnore.new
+gitignore_matcher ||= PathList.gitignore
+ruby_matcher ||= PathList.only("*.rb")
 
 case my_path
-when @path_matcher
-  puts(my_path)
+when gitignore_matcher then "git ls-files"
+when ruby_file_matcher then "Dir.glob('**/*.rb')"
 end
 ```
 
-It's recommended to save the FastIgnore instance to a variable to avoid having to read and parse the gitignore file and gitconfig files repeatedly.
-
 #### directory: true/false/nil
 
-If your code already knows the path to test is/not a directory or wants to lie about whether it is/is not a directory, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
+default: `nil`
 
-```
-FastIgnore.new.allowed?('relative/path', directory: false) # matches `path` as a file
-FastIgnore.new.allowed?('relative/path', directory: true) # matches `path` as a directory
-FastIgnore.new.allowed?('relative/path', directory: nil) # matches path as whatever it is on the filesystem
-FastIgnore.new.allowed?('relative/path)                  # or as a file if it doesn't exist on the file system
+If your code already knows the path to test is/not a directory (or wants to lie about whether it is/is not a directory), you can pass `directory: true` or `directory: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `directory: nil` or nothing)
+
+```ruby
+PathList.include?("path", directory: false) # matches `path` as a file
+PathList.include?("path", directory: true)  # matches `path` as a directory
+PathList.include?("path", directory: nil)   # matches path as whatever it is on the filesystem
+PathList.include?("path")                   # or as a file if it doesn't exist on the file system
 ```
 
 #### content: true/false/nil
 
 default: `nil`
 
-If your code already knows the path to test is has a particular text content or wants to lie about the content, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
+If your code already knows the path to test is has a particular text content (or wants to lie about the content), you can pass `content: true` or `content: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `content: nil` or nothing)
 
-```
-FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
-FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
-FastIgnore.new.allowed?('relative/path', content: nil) # matches path as whatever content is on the filesystem
-FastIgnore.new.allowed?('relative/path)                # or as an empty file if it doesn't actually exist
+```ruby
+PathList.include?("path", content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
+PathList.include?("path", content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
+PathList.include?("path", content: nil) # matches as whatever the file content is on the filesystem
+PathList.include?("path")               # or as an empty file if it doesn't actually exist
 ```
 
-#### content: true/false/nil
+#### exists: true/false/nil
 
 default: `nil`
 
-If your code already knows the path to test is has a particular text content or wants to lie about the content, you can pass `directory: true` or `directory: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `directory: nil` or nothing)
-
-```
-FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
-FastIgnore.new.allowed?('relative/path', content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
-FastIgnore.new.allowed?('relative/path', content: nil) # matches path as whatever content is on the filesystem
-FastIgnore.new.allowed?('relative/path)                # or as an empty file if it doesn't actually exist
-```
-
-#### exist: true/false/nil
-
-default: `nil`
-
-If your code already knows the path to test exists or wants to lie about its existence, you can pass `exists: true` or `exists: false` as an argument to `allowed?` (to have FastIgnore ask the file system, you can pass `exists: nil` or nothing)
-
-```
-FastIgnore.new.allowed?('relative/path', exists: true) # will check the path regardless of whether it actually truly exists
-FastIgnore.new.allowed?('relative/path', exists: false) # will always return false
-FastIgnore.new.allowed?('relative/path', exists: nil) # asks the filesystem
-FastIgnore.new.allowed?('relative/path)               # asks the filesystem
-```
-
-#### include_directories: true/false
-
-default: `false`
-
-By default a file must not be a directory for it to be considered allowed. This is intended to match the behaviour of `git ls-files` which only lists files.
-
-To match directories you can pass `include_directories: true` to `allowed?`
-
-```
-FastIgnore.new.allowed?('relative/path', include_directories: true) # will test the path even if it's a directory
-FastIgnore.new.allowed?('relative/path', include_directories: false) # will always return false if the path is a directory
-FastIgnore.new.allowed?('relative/path)                        # will always return false if the path is a directory
-```
-
-### `relative: true`
-
-**Default: false**
-
-When `relative: false`: FastIgnore#each will yield full paths.
-When `relative: true`: FastIgnore#each will yield paths relative to the [`root:`](#root) directory
+If your code already knows the path to test exists (or wants to lie about its existence), you can pass `exists: true` or `exists: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `exists: nil` or nothing)
 
 ```ruby
-FastIgnore.new(relative: true).to_a
+PathList.include?('path', exists: true)  # will check the path regardless of whether it actually truly exists
+PathList.include?('path', exists: false) # will always return false
+PathList.include?('path', exists: nil)   # asks the filesystem
 ```
 
-### `root:`
+### `#match?`
 
-**Default: Dir.pwd ($PWD, the current working directory)**
-
-This directory is used for:
-- the location of `.git/core/exclude`
-- the ancestor of all non-global [automatically loaded `.gitignore` files](#gitignore_false)
-- the root directory for array rules ([`ignore_rules:`](#ignore_rules), [`include_rules:`](#include_rules), [`argv_rules:`](#argv_rules)) containing `/`
-- the path that [`relative:`](#relative_true) is relative to
-- the ancestor of all paths yielded by [`#each`](#each_map_etc)
-- the path that [`#allowed?`](#allowed) considers relative paths relative to
-- the ancestor of all [`include_files:`](#include_files) and [`ignore_files:`](#ignore_files)
-
-To use a different directory:
-```ruby
-FastIgnore.new(root: '/absolute/path/to/root').to_a
-FastIgnore.new(root: '../relative/path/to/root').to_a
-```
-
-A relative root will be found relative to the current working directory when the FastIgnore instance is initialized, and that will be the last time the current working directory is relevant.
-
-**Note: Changes to the current working directory (e.g. with `Dir.chdir`), after initialising a FastIgnore instance, will _not_ affect the FastIgnore instance. `root:` will always be what it was when the instance was initialized, even as a default value.**
-
-### `gitignore:`
-
-**Default: true**
-
-When `gitignore: true`: the .gitignore file in the [`root:`](#root) directory is loaded, plus any .gitignore files in its subdirectories, the global git ignore file as described in git config, and .git/info/exclude. `.git` directories are also excluded to match the behaviour of `git ls-files`.
-When `gitignore: false`: no ignore files or git config files are automatically read, and `.git` will not be automatically excluded.
+Like [`#include?`](#include) except also will be true if the given path **could contain** a file that is not ignored by the path list
 
 ```ruby
-FastIgnore.new(gitignore: false).to_a
+PathList.gitignore.include?('my_directory/my_file') # given this returns true
+PathList.gitignore.include?('my_directory') # returns false, as it's a directory, not a file that would be yielded by each.
+PathList.gitignore.match?('my_directory')   # returns true, because it *could contain* 'my_file'
 ```
 
-### `ignore_files:`
+This also supports the same performance arguments as [`#include?`](#include)
 
-**This is a list of files in the gitignore format to parse and match paths against, not a list of files to ignore**  If you want an array of files use [`ignore_rules:`](#ignore_rules)
+### `gitignore`
 
-Additional gitignore-style files, either as a path or an array of paths.
+This is intended to mimic the behaviour of `git ls-files`.
 
-You can specify other gitignore-style files to ignore as well.
+Because `git ls-files` uses its own index rather than what's actually on the file system it might not be a perfect match, [see these limitations](#limitations). This will also probably end up with differently sorted entries.
+
+When using `gitignore`: the .gitignore file in the current directory is loaded, plus any .gitignore files in its subdirectories, the global git ignore file as described in git config, and .git/info/exclude. any `.git` directories are also excluded.
+
+```ruby
+PathList.gitignore.to_a
+```
+### `ignore`, `only`:
+
+Additional rules or files containing rules, either as a path or an array of paths to ignore or only match.
+
+`ignore` is a denylist like .gitignore, and `only` is an allowlist, and will ignore everything else.
+
+You can chain these, and any matched files must pass each of these constraints.
+
+
+You can give rules directly:
+```ruby
+# these are all equivalent:
+PathList.only("tmp/*\n!tmp/.keep\nlog").to_a
+PathList.only("tmp/*", "!tmp/.keep", "log").to_a
+PathList.only(["tmp/*", "!tmp/.keep", "log"]).to_a
+```
+
+`.only([])` will be ignored.
+
+
+There is an equivalent bang method available:
+
+```ruby
+# these are identical
+path_list = PathList.new
+path_list.ignore!("tmp/*", "!tmp/.keep")
+path_list.ignore!("log/*", "!log/.keep")
+path_list.only!("*.rb")
+
+PathList.ignore("tmp/*", "!tmp/.keep").ignore("log/*", "!log/.keep").only("*.rb")
+```
+
+#### `root:`
+
+Use `root:` to define the location for parsing rules beginning with or containing `/`
+```ruby
+PathList.ignore("/cache/*", root: "tmp").to_a
+```
+
+#### `from_file:`
+
+Instead of listing rules themselves, can specify other gitignore-style files to parse for only/ignore rules.
 Missing files will raise an `Errno::ENOENT` error.
 
-Relative paths are relative to the [`root:`](#root) directory.
-Absolute paths also need to be within the [`root:`](#root) directory.
-
+The location of the files will affect any rules beginning with or containing `/`.
 
 ```ruby
-FastIgnore.new(ignore_files: 'relative/path/to/my/ignore/file').to_a
-FastIgnore.new(ignore_files: ['/absolute/path/to/my/ignore/file', '/and/another']).to_a
+PathList.only(from_file: '.dockerfile').to_a
+PathList.only(from_file: ['.dockerfile', '.prettierignore']).to_a
 ```
 
-Note: the location of the files will affect rules beginning with or containing `/`.
-
-To avoid raising `Errno::ENOENT` when the file doesn't exist:
-```ruby
-FastIgnore.new(ignore_files: ['/ignore/file'].select { |f| File.exist?(f) }).to_a
-```
-
-### `ignore_rules:`
-
-This can be a string, or an array of strings, and multiline strings can be used with one rule per line.
+Relative paths are relative to the `root:` directory (defaulting to the current directory).
 
 ```ruby
-FastIgnore.new(ignore_rules: '.DS_Store').to_a
-FastIgnore.new(ignore_rules: ['.git', '.gitkeep']).to_a
-FastIgnore.new(ignore_rules: ".git\n.gitkeep").to_a
+PathList.ignore(from_file: '.dockerfile', root: './subdir').to_a
 ```
 
-These rules use the [`root:`](#root) argument to resolve rules containing `/`.
+#### format: :gitignore
 
-### `include_files:`
+Use `format:` to choose how to interpret the rule patterns.
 
-**This is an array of files in the gitignore format to parse and match paths against, not a list of files to include.**  If you want an array of files use [`include_rules:`](#include_rules).
+The default is `:gitignore`. See [the git documentation](https://git-scm.com/docs/gitignore#_pattern_format) for more details.
 
-Building on the gitignore format, FastIgnore also accepts rules to include matching paths (rather than ignoring them).
-A rule matching a directory will include all descendants of that directory.
-
-These rules can be provided in files either as absolute or relative paths, or an array of paths.
-Relative paths are relative to the [`root:`](#root) directory.
-Absolute paths also need to be within the [`root:`](#root) directory.
+This format is used by more than just git, for example `.dockerignore` or `.eslintignore`
 
 ```ruby
-FastIgnore.new(include_files: 'my_include_file').to_a
-FastIgnore.new(include_files: ['/absolute/include/file', './relative/include/file']).to_a
+PathList.ignore('tmp/*', '!tmp/.keep', format: :gitignore)
 ```
 
-Missing files will raise an `Errno::ENOENT` error.
+#### format: :shebang
 
-To avoid raising `Errno::ENOENT` when the file doesn't exist:
-```ruby
-FastIgnore.new(include_files: ['include/file'].select { |f| File.exist?(f) }).to_a
-```
-
-**Note: All paths checked must not be excluded by any ignore files AND each included by include file separately AND the [`include_rules:`](#include_rules) AND the [`argv_rules:`](#argv_rules). see [Combinations](#combinations) for solutions to using OR.**
-
-### `include_rules:`
-
-Building on the gitignore format, FastIgnore also accepts rules to include matching paths (rather than ignoring them).
-A rule matching a directory will include all descendants of that directory.
-
-This can be a string, or an array of strings, and multiline strings can be used with one rule per line.
-```ruby
-FastIgnore.new(include_rules: %w{my*rule /and/another !rule}, gitignore: false).to_a
-```
-
-Rules use the [`root:`](#root) argument to resolve rules containing `/`.
-
-**Note: All paths checked must not be excluded by any ignore files AND each included by [include file](#include_files) separately AND the `include_rules:` AND the [`argv_rules:`](#argv_rules). see [Combinations](#combinations) for solutions to using OR.**
-
-### `argv_rules:`
-This is like [`include_rules:`](#include_rules) with additional features meant for dealing with humans and `ARGV` values.
-
-It expands rules that are absolute paths, and paths beginning with `~`, `../` and `./` (with and without `!`).
-This means rules beginning with `/` are absolute. Not relative to [`root:`](#root).
-
-Additionally it assumes all rules are relative to the [`root:`](#root) directory (after resolving absolute paths) unless they begin with `*` (or `!*`).
-
-This can be a string, or an array of strings, and multiline strings can be used with one rule per line.
+Use `:shebang` to match files *that have no extension* and have this shebang:
 
 ```ruby
-FastIgnore.new(argv_rules: ['./a/pasted/path', '/or/a/path/from/stdin', 'an/argument', '*.txt']).to_a
+PathList.only('ruby', format: :shebang, root: 'bin').to_a
 ```
 
-**Warning: it will *not* expand e.g. `/../` in the middle of a rule that doesn't begin with any of `~`,`../`,`./`,`/`.**
-
-**Note: All paths checked must not be excluded by any ignore files AND each included by [include file](#include_files) separately AND the [`include_rules:`](#include_rules) AND the `argv_rules:`. see [Combinations](#combinations) for solutions to using OR.**
-
-### shebang rules
-
-Sometimes you need to match files by their shebang/hashbang/etc rather than their path or filename
-
-Rules beginning with `#!:` will match whole words in the shebang line of extensionless files.
-e.g.
-```gitignore
-#!:ruby
-```
-will match shebang lines: `#!/usr/bin/env ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
-
-e.g.
-```gitignore
-#!:bin/ruby
-```
-will match `#!/bin/ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
+will match files in bin with `#!/bin/ruby` or `#!/usr/bin/ruby` or `#!/usr/bin/ruby -w`
 Only exact substring matches are available, There's no special handling of * or / or etc.
 
-These rules can be supplied any way regular rules are, whether in a .gitignore file or files mentioned in [`include_files:`](#include_files) or [`ignore_files:`](#ignore_files) or [`include_rules:`](#include_rules) or [`ignore_rules:`](#ignore_rules) or [`argv_rules:`](#argv_rules)
-```ruby
-FastIgnore.new(include_rules: ['*.rb', '#!:ruby']).to_a
-FastIgnore.new(ignore_rules: ['*.sh', '#!:sh', '#!:bash', '#!:zsh']).to_a
-```
+#### format: :glob
 
-**Note: git considers rules like this as a comment and will ignore them.**
+Use `:glob` when dealing with humans and `ARGV` values with glob expectations, but with gitignore style negation and better performance.
 
-## Combinations
-
-In the simplest case a file must be allowed by each ignore file, each include file, and each array of rules. That is, they are combined using `AND`.
-
-To combine files using `OR`, that is, a file may be matched by either file it doesn't have to be referred to in both:
-provide the files as strings to [`include_rules:`](#include_rules) or [`ignore_rules:`](#ignore_rules)
-```ruby
-FastIgnore.new(include_rules: [File.read('/my/path'), File.read('/another/path')])).to_a
-```
-This does unfortunately lose the file path as the root for rules containing `/`.
-If that's important, combine the files in the file system and use [`include_files:`](#include_files) or [`ignore_files:`](#ignore_files) as normal.
-
-To use the additional `ARGV` handling of [`argv_rules:`](#argv_rules) on a file, read the file into the array.
+It handles rules that are absolute paths, and paths beginning with `~`, `../` and `./` (with and without `!`).
+This means rules beginning with `/` are absolute. Not relative to the root directory.
+Additionally it assumes all other rules are relative to the [`root:`](#root) director unless they begin with `*` (or `!*`).
+After this the rule will be handled like any other gitignore rule.
 
 ```ruby
-FastIgnore.new(argv_rules: ["my/rule", File.read('/my/path')]).to_a
+PathList.only(ARGV, format: :glob)
+PathList.only(
+  './relative_to_current_dir',
+  '/Users/dana/Projects/my_project/or_an_absolute_path',
+  'relative_to_current_dir_not_just_any_descendant',
+  '**/any_descendant',
+  '!we_can_also_negate',
+  format: :glob
+).to_a
+PathList.only('./relative_to_root_dir', format: :glob, root: './subdir')
 ```
 
-This does unfortunately lose the file path as the root `/` and there is no workaround except setting the [`root:`](#root) for the whole FastIgnore instance.
+### any
+
+chained rules combine with AND.
+
+```ruby
+PathList.gitignore.only("*.rb").ignore("/vendor/")
+```
+
+will be any ruby files not ignored by git, and not in the vendor directory.
+
+To combine as `or` use an any chain
+
+```ruby
+PathList.gitignore.any(
+  PathList.only("*.rb"),
+  PathList.only("ruby", format: :shebang)
+)
+```
+this would match ruby files that have an .rb extension or a ruby shebang, that aren't ignored by git.
+
+### and
+
+merge other PathList instances into one matcher
+
+```ruby
+# these are equivalent
+PathList.gitignore.and(PathList.only("*.rb"), PathList.ignore("/vendor/"))
+PathList.gitignore.only("*.rb").ignore("/vendor/")
+```
+
 ## Limitations
-- Doesn't know what to do if you change the current working directory inside the [`FastIgnore#each`](#each_map_etc) block.
-  So don't do that.
-
-  (It does handle changing the current working directory between [`FastIgnore#allowed?`](#allowed) calls)
-- FastIgnore always matches patterns case-insensitively. (git varies by filesystem).
-- FastIgnore always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
-- git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. FastIgnore assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined, use git's built-in way to override this by adding `export GIT_CONFIG_SYSTEM='/the/actual/location'` to your shell profile.
-- Because git looks at its own index objects and FastIgnore looks at the file system there may be some differences between FastIgnore and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead
-  - Tracked files that were committed before the matching ignore rule was committed will be returned by `git ls-files`, but not by FastIgnore.
-  - Untracked files will be returned by FastIgnore, but not by `git ls-files`
-  - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by FastIgnore
-  - On a case insensitive file system, with files that differ only by case, `git ls-files` will include all case variations, while FastIgnore will only include whichever variation git placed in the file system.
-  - FastIgnore is unaware of submodules and just treats them like regular directories. For example: `git ls-files --recurse-submodules` won't use the parent repo's gitignore on a submodule, while FastIgnore doesn't know it's a submodule and will.
-  - FastIgnore will only return the files actually on the file system when using `git sparse-checkout`.
+- PathList always matches patterns case-insensitively. (git varies by filesystem).
+- PathList always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
+- git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. PathList assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined (why?), use git's built-in way to override this by adding `export GIT_CONFIG_SYSTEM='/the/actual/location'` to your shell profile.
+- Because git looks at its own index objects and PathList looks at the file system there may be some differences between `PathList.gitignore` and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead
+  - Tracked files that were committed before the matching ignore rule was committed, or were added with `git add --force`, will be returned by `git ls-files`, but not by `PathList.gitignore`.
+  - Untracked files will be returned by `PathList.gitignore`, but not by `git ls-files`
+  - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by `PathList.gitignore`
+  - On a case insensitive file system, with files that differ only by case, `git ls-files` will include all case variations, while `PathList.gitignore` will only include whichever variation git placed in the file system.
+  - PathList.gitignore is unaware of submodules and just treats them like regular directories. For example: `git ls-files --recurse-submodules` won't use the parent repo's gitignore on a submodule, while `PathList.gitignore` doesn't know it's a submodule and will.
+  - `PathList.gitignore` will only return the files actually on the file system when using `git sparse-checkout`.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/fast_ignore.
+Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/path_list.
 
 Some tools that may help:
 
@@ -367,10 +334,9 @@ Some tools that may help:
 - `bin/console`: open a `pry` console with everything required for experimenting
 - `bin/ls [argv_rules]`: the equivalent of `git ls-files`
 - `bin/prof/ls [argv_rules]`: ruby-prof report for `bin/ls`
-- `bin/prof/parse [argv_rules]`: ruby-prof report for parsing root and global gitignore files and any arguments.
 - `bin/time [argv_rules]`: the average time for 30 runs of `bin/ls`<br>
-  This repo is too small to stress bin/time more than 0.01s, switch to a large repo and find the average time before and after changes.
-- `bin/compare`: compare the speed and output of FastIgnore and `git ls-files`.
+  This repo is too small to stress bin/time more than 0.01s, switch to a repo with thousands of files and find the average time before and after changes.
+- `bin/compare`: compare the speed and output of `PathList.gitignore` and `git ls-files`.
   (suppressing differences that are because of known [limitations](#limitations))
 
 ## License

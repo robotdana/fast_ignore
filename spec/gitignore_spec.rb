@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe FastIgnore do
+RSpec.describe ::PathList::PathList do
   around { |e| within_temp_dir { e.run } }
 
   let(:root) { Dir.pwd }
@@ -71,18 +71,10 @@ RSpec.describe FastIgnore do
     end
   end
 
-  describe '.new' do
-    subject { described_class.new(relative: true) }
+  describe '.gitignore' do
+    subject { described_class.gitignore }
 
     it_behaves_like 'gitignore: true'
-  end
-
-  describe FastIgnore::PathList do
-    describe '.gitignore' do
-      subject { described_class.gitignore }
-
-      it_behaves_like 'gitignore: true'
-    end
   end
 
   describe 'git ls-files' do

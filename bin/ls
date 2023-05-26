@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby --disable-all
 # frozen_string_literal: true
 
-require_relative '../lib/fast_ignore'
+require_relative '../lib/path_list'
 
-puts FastIgnore.new(relative: true, argv_rules: ARGV).to_a
+puts PathList.gitignore.only(ARGV, format: :glob).to_a

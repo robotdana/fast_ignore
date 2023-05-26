@@ -244,4 +244,4 @@ RSpec/MultipleMemoizedHelpers:
 
 Lint/MissingSuper:
   Exclude:
-    - 'lib/fast_ignore/matchers/*'
+    - 'lib/path_list/matchers/*'

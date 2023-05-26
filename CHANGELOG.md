@@ -1,3 +1,27 @@
+# v0.19.0
+- Major api change
+  - New name! FastIgnore is now PathList
+  - You can now chain rulesets rather than building them from a set of kwargs
+    - FastIgnore.new(gitignore: true) is now PathList.gitignore
+    - FastIgnore.new(include_rules: "rule") is now PathList.only("rule")
+    - FastIgnore.new(argv_rules: "rule") is now PathList.only("rule", format: :glob)
+    - FastIgnore.new(include_files: "file") is now PathList.only(from_file: "file")
+    - FastIgnore.new(ignore_rules: "rule") is now PathList.ignore("rule")
+    - FastIgnore.new(ignore_files: "file") is now PathList.ignore(from_file: "file")
+    - FastIgnore.new(ignore_rules: "rule", include_rules: "rule", gitignore: true) is now PathList.ignore("rule").only("rule").gitignore
+  - Shebang rules are now not mixed in with other rules
+    - FastIgnore.new(include_rules: "#!: ruby") is now PathList.only("ruby", format: :shebang)
+  - PathLists can be joined with AND or OR
+    - PathList.and(PathList.only("rule"), PathList.only("other rule"))
+    - PathList.any(PathList.only("rule"), PathList.only("other rule"))
+  - root can be set at each call time, rather than initialize time
+    - FastIgnore.new(root: "./subdir").each is now PathList.each("./subdir")
+  - Dir.chdir can now happen within PathList.each block
+  - FastIgnore.allowed? is now PathList.include? to be closer to ruby expectations
+  - FastIgnore.allowed?(include_directories: true) is now PathList.match? because you're probably doing definitely one or the other.
+  - A lot of the internals have been refactored to allow for these changes
+  - A lot of minor fixes i've forgotten
+
 # v0.18.0
 - Drop support for ruby 2.5 as its been eol for a while
 - Remove deprecated `follow_symlinks:` code.
