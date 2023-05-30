@@ -31,7 +31,7 @@ RSpec.describe PathList::Matchers::AllowAnyParent do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAny) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::List.new([])) }
   end
 
   describe '#squash' do

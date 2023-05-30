@@ -23,7 +23,6 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/matchers/match_or_default'
   require_relative 'path_list/matchers/match_by_type'
   require_relative 'path_list/matchers/unmatchable'
-  require_relative 'path_list/matchers/allow_any'
   require_relative 'path_list/matchers/shebang_regexp'
   require_relative 'path_list/gitconfig_parser'
   require_relative 'path_list/path_expander'
