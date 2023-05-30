@@ -4,20 +4,17 @@ class PathList
   module Walkers
     module FileSystem
       class << self
-        def allowed?( # rubocop:disable Metrics/ParameterLists
+        def include?( # rubocop:disable Metrics/ParameterLists
           path,
           path_list:,
           directory: nil,
           content: nil,
           exists: nil,
-          include_directories: false,
-          parent_if_directory: !include_directories
+          as_parent: false
         )
           full_path = PathExpander.expand_path(path)
-          candidate = Candidate.new(
-            full_path, nil, directory, exists, content, path_list, parent_if_directory
-          )
-          return false if !include_directories && candidate.directory?
+          candidate = Candidate.new(full_path, nil, directory, exists, content, path_list)
+          return false if !as_parent && candidate.directory?
           return false unless candidate.exists?
 
           allowed_recursive?(candidate)
@@ -26,7 +23,7 @@ class PathList
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
           ::Dir.children(parent_full_path).each do |filename|
             full_path = parent_full_path + filename
-            candidate = Candidate.new(full_path, filename, nil, true, nil, path_list, true)
+            candidate = Candidate.new(full_path, filename, nil, true, nil, path_list)
 
             next unless path_list.matcher.match(candidate) == :allow
 

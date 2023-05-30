@@ -18,7 +18,7 @@ class PathList
       end
 
       def match(candidate)
-        :allow if candidate.parent?
+        :allow if candidate.directory?
       end
     end
 

@@ -35,7 +35,7 @@ class PathList
       end
 
       def match(candidate)
-        :allow if candidate.parent? && @rule.match?(candidate.path)
+        :allow if candidate.directory? && @rule.match?(candidate.path)
       end
 
       protected

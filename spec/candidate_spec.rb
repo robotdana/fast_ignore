@@ -8,8 +8,7 @@ RSpec.describe PathList::Candidate do
       directory,
       exists,
       content,
-      path_list,
-      parent_if_directory
+      path_list
     )
   end
 
@@ -19,7 +18,6 @@ RSpec.describe PathList::Candidate do
   let(:exists) { true }
   let(:content) { '' }
   let(:path_list) { PathList }
-  let(:parent_if_directory) { true }
 
   describe '#original_inspect' do
     it 'returns the default inspect' do
@@ -34,8 +32,7 @@ RSpec.describe PathList::Candidate do
         '@exists=true',
         '@first_line=""',
         '@path_was=[]',
-        '@path_list=PathList',
-        '@parent_if_directory=true'
+        '@path_list=PathList'
       )
     end
   end

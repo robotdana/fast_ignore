@@ -64,10 +64,10 @@ RSpec.describe PathList::Matchers::AllowParentPathRegexp do
 
   describe '#match' do
     let(:path) { 'a' }
-    let(:parent) { true }
-    let(:candidate) { instance_double(::PathList::Candidate, parent?: parent, path: path) }
+    let(:directory) { true }
+    let(:candidate) { instance_double(::PathList::Candidate, directory?: directory, path: path) }
 
-    context 'when parent is true' do
+    context 'when directory is true' do
       context 'when path matches the rule' do
         it { expect(subject.match(candidate)).to be :allow }
       end
@@ -79,8 +79,8 @@ RSpec.describe PathList::Matchers::AllowParentPathRegexp do
       end
     end
 
-    context 'when parent is false' do
-      let(:parent) { false }
+    context 'when directory is false' do
+      let(:directory) { false }
 
       it "is nil and doesn't try matching the path" do
         expect(subject.match(candidate)).to be_nil

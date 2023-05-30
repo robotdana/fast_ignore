@@ -36,9 +36,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/walkers/file_system'
   require_relative 'path_list/builders/shebang'
   require_relative 'path_list/builders/gitignore'
-  require_relative 'path_list/builders/shebang_or_gitignore'
-  require_relative 'path_list/builders/shebang_or_expand_path_gitignore'
-  require_relative 'path_list/builders/expand_path_gitignore'
+  require_relative 'path_list/builders/glob_gitignore'
   require_relative 'path_list/patterns'
 
   class << self
@@ -72,7 +70,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   end
 
   def include?(path, directory: nil, content: nil, exists: nil)
-    Walkers::FileSystem.allowed?(
+    Walkers::FileSystem.include?(
       path,
       path_list: self,
       directory: directory,
@@ -84,18 +82,18 @@ class PathList # rubocop:disable Metrics/ClassLength
   alias_method :member?, :include?
 
   def match?(path, directory: nil, content: nil, exists: nil)
-    Walkers::FileSystem.allowed?(
+    Walkers::FileSystem.include?(
       path,
       path_list: self,
       directory: directory,
       content: content,
       exists: exists,
-      include_directories: true
+      as_parent: true
     )
   end
 
   def ===(path)
-    Walkers::FileSystem.allowed?(path, path_list: self)
+    Walkers::FileSystem.include?(path, path_list: self)
   end
 
   def to_proc
@@ -104,9 +102,7 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   def each(root = '.', &block)
     return enum_for(:each, root) unless block
-    return unless Walkers::FileSystem.allowed?(
-      root, path_list: self, include_directories: true, parent_if_directory: true
-    )
+    return unless Walkers::FileSystem.include?(root, path_list: self, as_parent: true)
 
     Walkers::FileSystem.each(PathExpander.expand_dir(root), '', self, &block)
   end

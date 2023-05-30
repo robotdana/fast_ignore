@@ -4,22 +4,21 @@ class PathList
   class Candidate
     class << self
       def dir(dir, path_list)
-        new(dir, nil, true, true, nil, path_list, true)
+        new(dir, nil, true, true, nil, path_list)
       end
     end
 
     attr_reader :path_list
     attr_reader :full_path
 
-    def initialize(full_path, filename, directory, exists, content, path_list, parent_if_directory) # rubocop:disable Metrics/ParameterLists
+    def initialize(full_path, filename, directory, exists, content, path_list) # rubocop:disable Metrics/ParameterLists
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
-      (@first_line = content.slice(/.*/)) if content # we only care about the first line
+      (@first_line = content.slice(/\A#!.*/) || '') if content # we only care about the first line that might be a shebang
       @path_was = []
       @path_list = path_list
-      @parent_if_directory = parent_if_directory
     end
 
     def parent
@@ -30,10 +29,6 @@ class PathList
       else
         self.class.dir(::File.dirname(@full_path), path_list)
       end
-    end
-
-    def parent?
-      directory? && @parent_if_directory
     end
 
     def path
@@ -58,7 +53,7 @@ class PathList
       return @directory if defined?(@directory)
 
       @directory = ::File.lstat(@full_path).directory?
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG, ::Errno::ENOTDIR
       @exists ||= false
       @directory = false
     end
@@ -68,9 +63,7 @@ class PathList
 
       @exists = ::File.exist?(@full_path)
     rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-      # :nocov: can't quite get this set up in a test
       @exists = false
-      # :nocov: can't quite get this set up in a test
     end
 
     def filename
@@ -85,12 +78,21 @@ class PathList
 
     # how long can a shebang be?
     # https://www.in-ulm.de/~mascheck/various/shebang/
+    # way too long
+    # so we assume 64 charcters probably,
+    # but will grab the whole first line if it starts with hashbang chars.
+    # we don't want to always just grab the first line regardless of length,
+    # in case it's a binary or minified file
     def first_line # rubocop:disable Metrics/MethodLength
       @first_line ||= begin
         file = ::File.new(@full_path)
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
-          first_line += file.readline unless first_line.include?("\n")
+          begin
+            first_line += file.readline unless first_line.include?("\n")
+          rescue ::EOFError, ::SystemCallError
+            nil
+          end
           first_line
         else
           ''
@@ -98,9 +100,7 @@ class PathList
       rescue ::EOFError, ::SystemCallError
         ''
       ensure
-        # :nocov: can't quite get this set up in a test
         file&.close
-        # :nocov: can't quite get this set up in a test
       end
     end
   end
