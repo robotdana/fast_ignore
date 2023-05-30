@@ -24,7 +24,7 @@ class PathList
         end
 
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
-          ::Dir.children(parent_full_path).sort.each do |filename|
+          ::Dir.children(parent_full_path).each do |filename|
             full_path = parent_full_path + filename
             candidate = Candidate.new(full_path, filename, nil, true, nil, path_list, true)
 
