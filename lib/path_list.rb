@@ -5,9 +5,9 @@ require 'set'
 
 class PathList # rubocop:disable Metrics/ClassLength
   class Error < StandardError; end
-  class GitconfigParseError < Error; end
   class NotSquashableError < Error; end
 
+  require_relative 'path_list/gitconfig_parse_error'
   require_relative 'path_list/global_gitignore'
   require_relative 'path_list/gitignore_rule_builder'
   require_relative 'path_list/gitignore_include_rule_builder'

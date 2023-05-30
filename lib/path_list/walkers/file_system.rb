@@ -17,7 +17,7 @@ class PathList
           return false if !as_parent && candidate.directory?
           return false unless candidate.exists?
 
-          allowed_recursive?(candidate)
+          allowed_recursive?(candidate, path_list)
         end
 
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
@@ -41,10 +41,10 @@ class PathList
 
         private
 
-        def allowed_recursive?(candidate)
+        def allowed_recursive?(candidate, path_list)
           return true unless candidate.parent
 
-          allowed_recursive?(candidate.parent) && candidate.path_list.matcher.match(candidate) == :allow
+          allowed_recursive?(candidate.parent) && path_list.matcher.match(candidate) == :allow
         end
       end
     end

@@ -14,7 +14,7 @@ class PathList
     end
 
     def parse
-      raise GitconfigParseError if nesting >= 10
+      raise GitconfigParseError, "Include level too deep #{path}" if nesting >= 10
 
       read_file(path)
       return unless value
@@ -64,7 +64,7 @@ class PathList
         elsif file.skip(/[a-zA-Z0-9]\w*\s*=(\s|\\\n)*/)
           skip_value(file)
         else
-          raise GitconfigParseError
+          raise GitconfigParseError.new('Unexpected character', scanner: file, path: path)
         end
       end
     end
@@ -75,12 +75,14 @@ class PathList
         file.skip(/"\]/)
         value
       else
-        raise GitconfigParseError
+        raise GitconfigParseError.new('Unexpected character in condition', scanner: file, path: path)
       end
     end
 
     def skip_condition_value(file)
-      raise GitconfigParseError unless file.skip(/([^\0\\\n"]|\\(\\{2})*"|\\{2}*)+"\]/)
+      unless file.skip(/([^\0\\\n"]|\\(\\{2})*"|\\{2}*)+"\]/)
+        raise GitconfigParseError.new('Unexpected character in condition', scanner: file, path: path)
+      end
     end
 
     def include_if(file)
@@ -132,18 +134,14 @@ class PathList
         elsif file.skip(/\\"/)
           value << '"'
         elsif file.skip(/\\/)
-          raise GitconfigParseError
+          raise GitconfigParseError.new('Unrecognized escape sequence in value', scanner: file, path: path)
         elsif within_quotes
           if file.skip(/"/)
             self.within_quotes = false
           elsif file.scan(/[^"\\\n]+/)
             value << file.matched
-          elsif file.skip(/\n/)
-            raise GitconfigParseError
-          # :nocov: This shouldn't be possible
           else
-            raise "Unmatched #{file.rest}"
-            # :nocov: This shouldn't be possible
+            raise GitconfigParseError.new('Unexpected character in quoted value', scanner: file, path: path)
           end
         elsif file.skip(/"/)
           self.within_quotes = true
@@ -155,12 +153,12 @@ class PathList
           value << file.matched
         # :nocov: This shouldn't be possible
         else
-          raise "Unmatched #{file.rest}"
+          raise GitconfigParseError.new('Unexpected character in value', scanner: file, path: path)
           # :nocov: This shouldn't be possible
         end
       end
 
-      raise GitconfigParseError if within_quotes
+      raise GitconfigParseError.new('Unclosed quoted value', scanner: file, path: path) if within_quotes
 
       value
     end
@@ -170,18 +168,14 @@ class PathList
         if file.skip(/\\(?:\n|\\|n|t|b|")/)
           nil
         elsif file.skip(/\\/)
-          raise GitconfigParseError
+          raise GitconfigParseError.new('Unrecognized escape sequence in value', scanner: file, path: path)
         elsif within_quotes
           if file.skip(/"/)
             self.within_quotes = false
           elsif file.skip(/[^"\\\n]+/)
             nil
-          elsif file.scan(/\n/)
-            raise GitconfigParseError
-          # :nocov: This shouldn't be possible
           else
-            raise "Unmatched #{file.rest}"
-            # :nocov: This shouldn't be possible
+            raise GitconfigParseError.new('Unexpected character in quoted value', scanner: file, path: path)
           end
         elsif file.skip(/"/)
           self.within_quotes = true
@@ -193,12 +187,12 @@ class PathList
           nil
         # :nocov: This shouldn't be possible
         else
-          raise "Unmatched #{file.rest}"
+          raise GitconfigParseError.new('Unexpected character in value', scanner: file, path: path)
           # :nocov: This shouldn't be possible
         end
       end
 
-      raise GitconfigParseError if within_quotes
+      raise GitconfigParseError.new('Unclosed quoted value', scanner: file, path: path) if within_quotes
     end
   end
 end

@@ -17,7 +17,9 @@ class PathList
           gitconfig_gitignore_path(global_config_path) ||
           gitconfig_gitignore_path(default_user_config_path) ||
           gitconfig_gitignore_path(system_config_path)
-      rescue GitconfigParseError
+      rescue GitconfigParseError => e
+        ::Warning.warn("PathList gitconfig parser failed\n" + e.message)
+
         ''
       end
 
@@ -80,7 +82,7 @@ class PathList
         elsif !value || value.match?(/\A(no|off|false|0|)\z/i)
           false
         else
-          raise GitconfigParseError
+          raise GitconfigParseError, "Invalid value #{value.inspect} for $#{env_var}"
         end
       end
     end

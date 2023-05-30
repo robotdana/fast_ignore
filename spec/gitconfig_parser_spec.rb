@@ -12,13 +12,23 @@ RSpec.describe ::PathList::GitconfigParser do
   it 'raises for invalid file' do
     create_file('[', path: '.gitconfig')
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character
+      .gitconfig:1:0
+      [
+      ^
+    MESSAGE
   end
 
   it 'raises for another invalid file' do
     create_file('x[', path: '.gitconfig')
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character
+      .gitconfig:1:0
+      x[
+      ^
+    MESSAGE
   end
 
   it 'returns nil for nonexistent file' do
@@ -414,7 +424,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = "~/gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in quoted value
+      .gitconfig:2:29
+        excludesfile = "~/gitignore
+                                   ^
+    MESSAGE
   end
 
   it 'raises for file with unclosed quote and no trailing newline' do
@@ -423,7 +438,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = "~/gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unclosed quoted value
+      .gitconfig:2:29
+        excludesfile = "~/gitignore
+                                   ^
+    MESSAGE
   end
 
   it 'raises for file with excludesfile after attributesfile with unclosed quote' do
@@ -433,7 +453,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in quoted value
+      .gitconfig:2:35
+        attributesfile = "~/gitattributes
+                                         ^
+    MESSAGE
   end
 
   it 'raises for file with excludesfile before attributesfile with unclosed quote and no trailing newline' do
@@ -443,7 +468,12 @@ RSpec.describe ::PathList::GitconfigParser do
         attributesfile = "~/gitattributes
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unclosed quoted value
+      .gitconfig:3:35
+        attributesfile = "~/gitattributes
+                                         ^
+    MESSAGE
   end
 
   it 'raises for file with unclosed quote followed by more stuff' do
@@ -453,7 +483,12 @@ RSpec.describe ::PathList::GitconfigParser do
         mergeoptions = --no-edit
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in quoted value
+      .gitconfig:2:29
+        excludesfile = "~/gitignore
+                                   ^
+    MESSAGE
   end
 
   it 'raises for file with quote containing a newline' do
@@ -463,7 +498,12 @@ RSpec.describe ::PathList::GitconfigParser do
       ignore"
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in quoted value
+      .gitconfig:2:23
+        excludesfile = "~/git
+                             ^
+    MESSAGE
   end
 
   it 'raises for file with excludesfile after attributesfile with quoted newline' do
@@ -474,7 +514,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in quoted value
+      .gitconfig:2:25
+        attributesfile = "~/git
+                               ^
+    MESSAGE
   end
 
   it 'raises for file with invalid \ escape' do
@@ -483,7 +528,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = "~/gitignore\\x"
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unrecognized escape sequence in value
+      .gitconfig:2:30
+        excludesfile = "~/gitignore\\x"
+                                    ^
+    MESSAGE
   end
 
   it 'raises for file with excludesfile after attributesfile with invalid escape' do
@@ -493,7 +543,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unrecognized escape sequence in value
+      .gitconfig:2:26
+        attributesfile = "~/git\\xattributes
+                                ^
+    MESSAGE
   end
 
   it 'returns value for file when included' do
@@ -616,7 +671,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in condition
+      .gitconfig:1:21
+      [includeif "onbranch:ma
+                           ^
+    MESSAGE
   end
 
   it 'raises for file when includeif nonsense with newline' do
@@ -631,7 +691,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in condition
+      .gitconfig:1:12
+      [includeif "nonsense
+                  ^
+    MESSAGE
   end
 
   it 'raises for file when includeif onbranch with null' do
@@ -645,7 +710,12 @@ RSpec.describe ::PathList::GitconfigParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE
+      Unexpected character in condition
+      .gitconfig:1:21
+      [includeif "onbranch:ma\0in"]
+                           ^
+    MESSAGE
   end
 
   it 'returns value for file when includeif gitdir matches leading **/' do
@@ -746,7 +816,9 @@ RSpec.describe ::PathList::GitconfigParser do
         path = .gitconfig
     GITCONFIG
 
-    expect { described_class.parse('.gitconfig') }.to raise_error(::PathList::GitconfigParseError)
+    expect { described_class.parse('.gitconfig') }.to raise_error ::PathList::GitconfigParseError, <<~MESSAGE.chomp
+      Include level too deep #{Dir.pwd}/.gitconfig
+    MESSAGE
   end
 
   it 'returns value for file when included nestedly' do
