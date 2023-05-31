@@ -44,7 +44,7 @@ class PathList
         def allowed_recursive?(candidate, path_list)
           return true unless candidate.parent
 
-          allowed_recursive?(candidate.parent) && path_list.matcher.match(candidate) == :allow
+          allowed_recursive?(candidate.parent, path_list) && path_list.matcher.match(candidate) == :allow
         end
       end
     end

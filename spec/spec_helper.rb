@@ -3,7 +3,7 @@
 if RUBY_PLATFORM != 'java'
   module Warning # leftovers:allow
     def warn(msg) # leftovers:allow
-      raise msg unless msg.include?('PathList deprecation:')
+      raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed')
     end
   end
 end
@@ -17,6 +17,7 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
+require_relative 'support/inspect_helper'
 require_relative 'support/temp_dir_helper'
 require_relative 'support/stub_env_helper'
 require_relative 'support/stub_file_helper'

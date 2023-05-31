@@ -24,9 +24,5 @@ class PathList
         #{(' ' * col) + '^'}
       MESSAGE
     end
-
-    def inspect
-      "<#{self.class.name}: #{message}>"
-    end
   end
 end

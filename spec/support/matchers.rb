@@ -71,8 +71,7 @@ end
 
 RSpec::Matchers.define(:have_default_inspect_value) do
   match do |actual|
-    expected = Object.instance_method(:inspect).bind(actual).call
     @actual = actual.inspect
-    expect(@actual).to eq(expected)
+    expect(@actual).to eq(default_inspect_value(actual))
   end
 end
