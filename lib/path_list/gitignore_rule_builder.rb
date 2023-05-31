@@ -186,14 +186,10 @@ class PathList
       out
     end
 
-    def build_rule(parent: false)
+    def build_rule
       @re.prepend(prefix)
 
-      if parent && @anchored && @dir_only && @negation
-        Matchers::AllowParentPathRegexp.new(@re.to_regexp)
-      else
-        Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation, false)
-      end
+      Matchers::PathRegexp.new(@re.to_regexp, @anchored, @dir_only, @negation, false)
     end
 
     def build
