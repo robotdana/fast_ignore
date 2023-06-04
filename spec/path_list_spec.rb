@@ -483,7 +483,8 @@ RSpec.describe PathList do
       subject(:path_list) do
         described_class.gitignore.any(
           described_class.only(['*.rb', 'Rakefile']),
-                                      described_class.only('ruby', format: :shebang))
+          described_class.only('ruby', format: :shebang)
+        )
       end
 
       it 'matches files based on either the pathname or the format' do
@@ -653,6 +654,29 @@ RSpec.describe PathList do
 
         expect(subject.include?('foo')).to be false
         expect(subject.include?('foo', content: fake_content)).to be true
+      end
+    end
+
+    context 'with full-name shebang args' do
+      subject(:path_list) { described_class.only('#!/usr/bin/env ruby', format: :shebang) }
+
+      it 'matches files with that shebang' do
+        create_file <<~RUBY, path: 'foo'
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file <<~BASH, path: 'bar'
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        create_file_list 'baz', 'baz.rb'
+
+        expect(subject).to allow_files('foo')
+        expect(subject).not_to allow_files('bar', 'baz', 'baz.rb')
       end
     end
 

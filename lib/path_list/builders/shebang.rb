@@ -4,8 +4,12 @@ class PathList
   module Builders
     module Shebang
       def self.build(shebang, allow, _root)
-        shebang.strip!
-        pattern = /\A#!.*\b#{::Regexp.escape(shebang)}\b/i
+        shebang = shebang.delete_prefix('#!').strip
+        # we only want word boundary anchors if we are going from word characters to non-word
+        boundary_left = '\\b' if shebang.match?(/\A\w/)
+        boundary_right = '\\b' if shebang.match?(/\w\z/)
+        pattern = /\A#!.*#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}/i
+
         rule = Matchers::ShebangRegexp.new(pattern, allow)
         return rule unless allow
 
