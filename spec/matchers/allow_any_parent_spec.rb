@@ -40,6 +40,11 @@ RSpec.describe PathList::Matchers::AllowAnyParent do
     end
   end
 
+  describe '#eql?' do
+    it { is_expected.to eq(subject) }
+    it { is_expected.not_to eq(::PathList::Matchers::Unmatchable) }
+  end
+
   describe '#append' do
     it 'returns nil' do
       expect(subject.append(instance_double(::PathList::Patterns))).to be_nil

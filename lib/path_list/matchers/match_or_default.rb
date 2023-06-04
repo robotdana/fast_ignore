@@ -10,7 +10,7 @@ class PathList
       end
 
       def squashable_with?(other)
-        self == other
+        equal?(other)
       end
 
       def squash(_)

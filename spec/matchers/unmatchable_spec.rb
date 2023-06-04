@@ -51,4 +51,9 @@ RSpec.describe PathList::Matchers::Unmatchable do
       expect(subject.match(instance_double(::PathList::Candidate))).to be_nil
     end
   end
+
+  describe '#eql?' do
+    it { is_expected.to eq(subject) }
+    it { is_expected.not_to eq(::PathList::Matchers::AllowAnyParent) }
+  end
 end

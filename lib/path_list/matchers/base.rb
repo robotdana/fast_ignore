@@ -16,7 +16,7 @@ class PathList
       end
 
       def squashable_with?(other)
-        self == other
+        equal?(other)
       end
 
       def squash(_)
@@ -37,6 +37,18 @@ class PathList
 
       def match(_)
         nil
+      end
+
+      def eql?(other)
+        self.class == other.class &&
+          (instance_variables | other.instance_variables).all? do |var|
+            instance_variable_get(var) == other.instance_variable_get(var)
+          end
+      end
+      alias_method :==, :eql?
+
+      def hash
+        self.class.hash
       end
     end
   end

@@ -37,6 +37,12 @@ RSpec.describe PathList::Matchers::AllowParentPathRegexp do
     it { is_expected.to be_squashable_with(described_class.new(/b/)) }
   end
 
+  describe '#eql?' do
+    it { is_expected.to eq(subject) }
+    it { is_expected.to eq(described_class.new(rule)) }
+    it { is_expected.not_to eq(::PathList::Matchers::PathRegexp.new(rule, true, true, true, true)) }
+  end
+
   describe '#squash' do
     it 'squashes the regexps together' do
       subject

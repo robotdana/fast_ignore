@@ -20,6 +20,9 @@ class PathList
       def match(candidate)
         :allow if candidate.directory?
       end
+
+      alias_method :eql?, :equal?
+      alias_method :==, :eql?
     end
 
     AllowAnyParent.freeze

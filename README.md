@@ -280,9 +280,9 @@ PathList.only(
 PathList.only('./relative_to_root_dir', format: :glob, root: './subdir')
 ```
 
-### any
+### any()
 
-chained rules combine with AND.
+by default chained rules combine with AND.
 
 ```ruby
 PathList.gitignore.only("*.rb").ignore("/vendor/")
@@ -290,7 +290,7 @@ PathList.gitignore.only("*.rb").ignore("/vendor/")
 
 will be any ruby files not ignored by git, and not in the vendor directory.
 
-To combine as `or` use an any chain
+To instead combine with OR use an `any` chain
 
 ```ruby
 PathList.gitignore.any(
@@ -298,9 +298,10 @@ PathList.gitignore.any(
   PathList.only("ruby", format: :shebang)
 )
 ```
+
 this would match ruby files that have an .rb extension or a ruby shebang, that aren't ignored by git.
 
-### and
+### and()
 
 merge other PathList instances into one matcher
 

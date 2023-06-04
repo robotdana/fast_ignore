@@ -16,6 +16,9 @@ class PathList
       def match(_)
         nil
       end
+
+      alias_method :eql?, :equal?
+      alias_method :==, :eql?
     end
 
     Unmatchable.freeze
