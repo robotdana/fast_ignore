@@ -3,13 +3,13 @@
 class PathList
   module Matchers
     class WithinDir < Wrapper
-      def self.build(matcher, dir)
+      def self.build(dir, matcher)
         return matcher if dir == '/'
 
-        new(matcher, dir)
+        new(dir, matcher)
       end
 
-      def initialize(matcher, dir)
+      def initialize(dir, matcher)
         @dir = dir
 
         super(matcher)
@@ -32,7 +32,7 @@ class PathList
       private
 
       def new_with_matcher(matcher)
-        self.class.new(matcher, @dir)
+        self.class.new(@dir, matcher)
       end
     end
   end

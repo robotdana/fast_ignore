@@ -62,7 +62,7 @@ class PathList
       return matchers if matchers.empty?
 
       matcher = Matchers::CompressedLastMatch.build(matchers)
-      matcher = Matchers::WithinDir.build(matcher, @root)
+      matcher = Matchers::WithinDir.build(@root, matcher)
       return [matcher] unless @allow
 
       [matcher, Matchers::Any.build(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]

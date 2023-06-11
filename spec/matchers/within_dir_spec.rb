@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::WithinDir do
-  subject { described_class.new(matcher, dir) }
+  subject { described_class.new(dir, matcher) }
 
   let(:matcher) { instance_double(::PathList::Matchers::Base) }
   let(:dir) { '/' }
@@ -80,7 +80,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     it 'is squashable with something with the same dir and the same kind of matcher' do
       other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
-      other_matcher = described_class.new(other_child_matcher, dir)
+      other_matcher = described_class.new(dir, other_child_matcher)
 
       expect(subject).to be_squashable_with(other_matcher)
     end
@@ -88,7 +88,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     it 'is not squashable with something with a different dir but the same kind of matcher' do
       other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
-      other_matcher = described_class.new(other_child_matcher, other_dir)
+      other_matcher = described_class.new(other_dir, other_child_matcher)
 
       expect(subject).not_to be_squashable_with(other_matcher)
     end
@@ -96,7 +96,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     it 'is not squashable with something with the same dir but a different kind of matcher' do
       other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
-      other_matcher = described_class.new(other_child_matcher, dir)
+      other_matcher = described_class.new(dir, other_child_matcher)
 
       expect(subject).not_to be_squashable_with(other_matcher)
     end
@@ -109,14 +109,14 @@ RSpec.describe PathList::Matchers::WithinDir do
   describe '#squash' do
     it 'returns a new matcher with squashed child matcher' do
       subject
-      other = described_class.new(matcher, dir)
+      other = described_class.new(dir, matcher)
       new_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squash).with([matcher, matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
       subject.squash([subject, other])
 
-      expect(described_class).to have_received(:new).with(new_matcher, dir)
+      expect(described_class).to have_received(:new).with(dir, new_matcher)
     end
   end
 
@@ -135,7 +135,7 @@ RSpec.describe PathList::Matchers::WithinDir do
 
       subject
 
-      allow(described_class).to receive(:new).with(new_matcher, dir).and_call_original
+      allow(described_class).to receive(:new).with(dir, new_matcher).and_call_original
       appended_matcher = subject.append(patterns)
       expect(appended_matcher).to be_a(described_class)
       expect(appended_matcher).not_to be(subject)

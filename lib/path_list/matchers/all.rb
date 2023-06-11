@@ -7,11 +7,7 @@ class PathList
         matchers -= [Allow]
         return [Allow] if matchers.empty?
 
-        matchers
-      end
-
-      def initialize(matchers)
-        @matchers = matchers.sort_by(&:weight)
+        matchers.sort_by(&:weight)
       end
 
       def match(candidate)

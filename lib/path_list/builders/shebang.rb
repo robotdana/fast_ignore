@@ -14,7 +14,7 @@ class PathList
         return rule unless allow
 
         # also allow all directories in case they include a file with the matching shebang file
-        [Matchers::MatchIfDir.new(Matchers::Allow), rule]
+        [Matchers::AllowAnyDir, rule]
       end
     end
   end

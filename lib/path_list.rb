@@ -38,6 +38,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/matchers/match_unless_dir'
   require_relative 'path_list/matchers/ignore'
   require_relative 'path_list/matchers/allow'
+  require_relative 'path_list/matchers/allow_any_dir'
 
   class << self
     def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
