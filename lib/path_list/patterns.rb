@@ -31,7 +31,7 @@ class PathList
     end
 
     def build
-      matcher = Matchers::LastMatch.new(build_matchers)
+      matcher = Matchers::LastMatch.build(build_matchers)
       matcher = Matchers::Appendable.new(@label, matcher) if @label
 
       Matchers::MatchOrDefault.new(matcher, default)

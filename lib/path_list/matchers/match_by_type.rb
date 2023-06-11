@@ -7,10 +7,10 @@ class PathList
         dir_matchers = matchers.reject(&:file_only?)
         file_matchers = matchers.reject(&:dir_only?)
 
-        return LastMatch.new(matchers) if dir_matchers == file_matchers
+        return LastMatch.build(matchers) if dir_matchers == file_matchers
 
-        dir_matcher = dir_matchers.empty? ? Unmatchable : LastMatch.new(dir_matchers)
-        file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.new(file_matchers)
+        dir_matcher = dir_matchers.empty? ? Unmatchable : LastMatch.build(dir_matchers)
+        file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.build(file_matchers)
 
         new(file_matcher, dir_matcher)
       end

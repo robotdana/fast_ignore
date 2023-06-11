@@ -23,7 +23,7 @@ class PathList
 
       def append(pattern)
         if pattern.label == @label
-          new_matcher = LastMatch.new([@matcher.append(pattern) || @matcher, *pattern.build_appended])
+          new_matcher = LastMatch.build([@matcher.append(pattern) || @matcher, *pattern.build_appended])
 
           self.class.new(@label, new_matcher)
         else

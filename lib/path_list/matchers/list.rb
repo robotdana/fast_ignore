@@ -3,6 +3,8 @@
 class PathList
   module Matchers
     class List < Base
+      attr_reader :matchers
+
       def initialize(matchers)
         @matchers = matchers
 
@@ -59,10 +61,6 @@ class PathList
 
         self.class.new(new_matchers)
       end
-
-      protected
-
-      attr_reader :matchers
     end
   end
 end

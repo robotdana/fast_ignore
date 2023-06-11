@@ -3,7 +3,9 @@
 RSpec.describe PathList::Matchers::Appendable do
   subject { described_class.new(label, matcher) }
 
-  let(:matcher) { instance_double(::PathList::Matchers::Base) }
+  let(:matcher) do
+    instance_double(::PathList::Matchers::Base, removable?: false, implicit?: false, squashable_with?: false)
+  end
   let(:label) { :false_gitignore }
   let(:other_label) { :true_nonsense }
   let(:random_boolean) { [true, false].sample }
@@ -102,7 +104,8 @@ RSpec.describe PathList::Matchers::Appendable do
 
   describe '#squashable_with?' do
     it 'is squashable with something with the same label and the same kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(::PathList::Matchers::Base,
+        removable?: false, implicit?: false, squashable_with?: false)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(label, other_child_matcher)
 
@@ -110,7 +113,8 @@ RSpec.describe PathList::Matchers::Appendable do
     end
 
     it 'is not squashable with something with a different label but the same kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(::PathList::Matchers::Base,
+        removable?: false, implicit?: false, squashable_with?: false)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(other_label, other_child_matcher)
 
@@ -118,7 +122,8 @@ RSpec.describe PathList::Matchers::Appendable do
     end
 
     it 'is not squashable with something with the same label but a different kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(::PathList::Matchers::Base,
+        removable?: false, implicit?: false, squashable_with?: false)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
       other_matcher = described_class.new(label, other_child_matcher)
 
@@ -134,7 +139,8 @@ RSpec.describe PathList::Matchers::Appendable do
     it 'returns a new matcher with squashed child matcher' do
       subject
       other = described_class.new(label, matcher)
-      new_matcher = instance_double(PathList::Matchers::Base)
+      new_matcher = instance_double(::PathList::Matchers::Base,
+        removable?: false, implicit?: false, squashable_with?: false)
       allow(matcher).to receive(:squash).with([matcher, matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
@@ -157,7 +163,8 @@ RSpec.describe PathList::Matchers::Appendable do
       end
 
       it "passes append to the matcher, returns a new matcher when it's changed" do
-        new_matcher = instance_double(::PathList::Matchers::Base)
+        new_matcher = instance_double(::PathList::Matchers::Base,
+          removable?: false, implicit?: false, squashable_with?: false)
         allow(matcher).to receive(:append).with(patterns).and_return(new_matcher)
 
         subject
@@ -178,7 +185,8 @@ RSpec.describe PathList::Matchers::Appendable do
 
         allow(matcher).to receive(:append).with(patterns).and_return(nil)
 
-        appended_matcher = instance_double(::PathList::Matchers::Base)
+        appended_matcher = instance_double(::PathList::Matchers::Base,
+          removable?: false, implicit?: false, squashable_with?: false)
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
         new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
@@ -199,10 +207,12 @@ RSpec.describe PathList::Matchers::Appendable do
       it "passes append to the matcher and uses the appended child matcher in the new matcher if it's present" do
         subject
 
-        appended_child_matcher = instance_double(::PathList::Matchers::Base)
+        appended_child_matcher = instance_double(::PathList::Matchers::Base,
+          removable?: false, implicit?: false, squashable_with?: false)
         allow(matcher).to receive(:append).with(patterns).and_return(appended_child_matcher)
 
-        appended_matcher = instance_double(::PathList::Matchers::Base)
+        appended_matcher = instance_double(::PathList::Matchers::Base,
+          removable?: false, implicit?: false, squashable_with?: false)
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
         new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
