@@ -41,7 +41,7 @@ class PathList
 
       @child_re.prepend(prefix)
 
-      Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, false, @negation, true)
+      Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, @negation, true)
     end
 
     def build_as_parent

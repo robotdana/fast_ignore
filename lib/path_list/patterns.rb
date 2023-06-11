@@ -59,7 +59,7 @@ class PathList
       matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
 
-      matcher = Matchers::MatchByType.build(matchers)
+      matcher = Matchers::LastMatch.build(matchers)
       matcher = Matchers::WithinDir.build(matcher, @root)
       return [matcher] unless @allow
 

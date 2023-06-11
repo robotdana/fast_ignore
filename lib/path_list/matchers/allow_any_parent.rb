@@ -5,10 +5,6 @@ class PathList
     AllowAnyParent = Base.new
 
     class << AllowAnyParent
-      def dir_only?
-        true
-      end
-
       def implicit?
         true
       end

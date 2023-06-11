@@ -1,42 +1,17 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexp do
-  subject { described_class.new(rule, squashable, dir_only, allow_value, implicit) }
+  subject { described_class.new(rule, squashable, allow_value, implicit) }
 
   let(:rule) { /a/ }
   let(:squashable) { true }
-  let(:dir_only) { true }
   let(:allow_value) { true }
   let(:implicit) { true }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    context 'when @dir_only' do
-      it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp dir_only :allow /a/>' }
-    end
-
-    context 'when not @dir_only' do
-      let(:dir_only) { false }
-
-      it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp :allow /a/>' }
-    end
-  end
-
-  describe '#dir_only?' do
-    context 'when @dir_only' do
-      it { is_expected.to be_dir_only }
-    end
-
-    context 'when not @dir_only' do
-      let(:dir_only) { false }
-
-      it { is_expected.not_to be_dir_only }
-    end
-  end
-
-  describe '#file_only?' do
-    it { is_expected.not_to be_file_only }
+    it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp :allow /a/>' }
   end
 
   describe '#implicit?' do
@@ -64,7 +39,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
     it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
 
     it 'is squashable with the same property values' do
-      other = described_class.new(/b/, squashable, dir_only, allow_value, implicit)
+      other = described_class.new(/b/, squashable, allow_value, implicit)
 
       expect(subject).to be_squashable_with(other)
     end
@@ -73,32 +48,26 @@ RSpec.describe PathList::Matchers::PathRegexp do
       let(:squashable) { false }
 
       it 'is not squashable even with the same property values' do
-        other = described_class.new(/b/, squashable, dir_only, allow_value, implicit)
+        other = described_class.new(/b/, squashable, allow_value, implicit)
 
         expect(subject).not_to be_squashable_with(other)
       end
 
       it 'is not squashable even when other is "squashable" and has otherwise the same property values' do
-        other = described_class.new(/b/, !squashable, allow_value, allow_value, implicit)
+        other = described_class.new(/b/, !squashable, allow_value, implicit)
 
         expect(subject).not_to be_squashable_with(other)
       end
     end
 
-    it 'is not squashable with a different dir_only value' do
-      other = described_class.new(/b/, squashable, !dir_only, allow_value, implicit)
-
-      expect(subject).not_to be_squashable_with(other)
-    end
-
     it 'is not squashable with a different allow value' do
-      other = described_class.new(/b/, squashable, dir_only, !allow_value, implicit)
+      other = described_class.new(/b/, squashable, !allow_value, implicit)
 
       expect(subject).not_to be_squashable_with(other)
     end
 
     it 'is not squashable with a different implicit value' do
-      other = described_class.new(/b/, squashable, dir_only, allow_value, !implicit)
+      other = described_class.new(/b/, squashable, allow_value, !implicit)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -107,10 +76,10 @@ RSpec.describe PathList::Matchers::PathRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.new(/b/, squashable, dir_only, allow_value, implicit)
+      other = described_class.new(/b/, squashable, allow_value, implicit)
 
       allow(described_class).to receive(:new)
-        .with(/(?-mix:a)|(?-mix:b)/, squashable, dir_only, allow_value, implicit)
+        .with(/(?-mix:a)|(?-mix:b)/, squashable, allow_value, implicit)
         .and_call_original
       squashed = subject.squash([subject, other])
 
@@ -119,7 +88,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
       expect(squashed).not_to be other
 
       expect(described_class).to have_received(:new)
-        .with(/(?-mix:a)|(?-mix:b)/, squashable, dir_only, allow_value, implicit)
+        .with(/(?-mix:a)|(?-mix:b)/, squashable, allow_value, implicit)
     end
   end
 

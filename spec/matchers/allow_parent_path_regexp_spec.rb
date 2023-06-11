@@ -11,14 +11,6 @@ RSpec.describe PathList::Matchers::AllowParentPathRegexp do
     it { is_expected.to have_inspect_value '#<PathList::Matchers::AllowParentPathRegexp /a/>' }
   end
 
-  describe '#dir_only?' do
-    it { is_expected.to be_dir_only }
-  end
-
-  describe '#file_only?' do
-    it { is_expected.not_to be_file_only }
-  end
-
   describe '#implicit?' do
     it { is_expected.to be_implicit }
   end
@@ -40,7 +32,7 @@ RSpec.describe PathList::Matchers::AllowParentPathRegexp do
   describe '#eql?' do
     it { is_expected.to eq(subject) }
     it { is_expected.to eq(described_class.new(rule)) }
-    it { is_expected.not_to eq(::PathList::Matchers::PathRegexp.new(rule, true, true, true, true)) }
+    it { is_expected.not_to eq(::PathList::Matchers::PathRegexp.new(rule, true, true, true)) }
   end
 
   describe '#squash' do

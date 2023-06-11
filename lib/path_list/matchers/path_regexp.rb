@@ -3,17 +3,12 @@
 class PathList
   module Matchers
     class PathRegexp < Base
-      attr_reader :dir_only
-      alias_method :dir_only?, :dir_only
-      undef :dir_only
-
       attr_reader :implicit
       alias_method :implicit?, :implicit
       undef :implicit
 
-      def initialize(rule, squashable, dir_only, allow, implicit)
+      def initialize(rule, squashable, allow, implicit)
         @rule = rule
-        @dir_only = dir_only
         @implicit = implicit
         @squashable = squashable
         @return_value = allow ? :allow : :ignore
@@ -26,15 +21,13 @@ class PathList
           other.instance_of?(self.class) &&
           other.squashable? &&
           @return_value == other.return_value &&
-          @implicit == other.implicit? &&
-          @dir_only == other.dir_only?
+          @implicit == other.implicit?
       end
 
       def squash(list)
         self.class.new(
           ::Regexp.union(list.map { |l| l.rule }), # rubocop:disable Style/SymbolProc it breaks with protected methods,
           @squashable,
-          @dir_only,
           @return_value == :allow,
           @implicit
         )

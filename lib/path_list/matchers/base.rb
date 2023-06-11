@@ -7,14 +7,6 @@ class PathList
         self.class
       end
 
-      def dir_only?
-        false
-      end
-
-      def file_only?
-        false
-      end
-
       def implicit?
         false
       end

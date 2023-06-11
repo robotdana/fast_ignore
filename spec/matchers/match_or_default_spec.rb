@@ -13,46 +13,6 @@ RSpec.describe PathList::Matchers::MatchOrDefault do
     it { is_expected.to have_default_inspect_value }
   end
 
-  describe '#dir_only?' do
-    it 'is matcher.dir_only? when true' do
-      allow(matcher).to receive(:dir_only?).and_return(true)
-      expect(subject).to be_dir_only
-      expect(matcher).to have_received(:dir_only?)
-    end
-
-    it 'is matcher.dir_only? when false' do
-      allow(matcher).to receive(:dir_only?).and_return(false)
-      expect(subject).not_to be_dir_only
-      expect(matcher).to have_received(:dir_only?)
-    end
-
-    it 'is matcher.dir_only? when random' do
-      allow(matcher).to receive(:dir_only?).and_return(random_boolean)
-      expect(subject.dir_only?).to be random_boolean
-      expect(matcher).to have_received(:dir_only?)
-    end
-  end
-
-  describe '#file_only?' do
-    it 'is matcher.file_only? when true' do
-      allow(matcher).to receive(:file_only?).and_return(true)
-      expect(subject).to be_file_only
-      expect(matcher).to have_received(:file_only?)
-    end
-
-    it 'is matcher.file_only? when false' do
-      allow(matcher).to receive(:file_only?).and_return(false)
-      expect(subject).not_to be_file_only
-      expect(matcher).to have_received(:file_only?)
-    end
-
-    it 'is matcher.file_only? when random' do
-      allow(matcher).to receive(:file_only?).and_return(random_boolean)
-      expect(subject.file_only?).to be random_boolean
-      expect(matcher).to have_received(:file_only?)
-    end
-  end
-
   describe '#implicit?' do
     it 'is matcher.implicit? when true' do
       allow(matcher).to receive(:implicit?).and_return(true)

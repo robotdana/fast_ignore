@@ -25,14 +25,6 @@ class PathList
         @matcher.removable?
       end
 
-      def dir_only?
-        @matcher.dir_only?
-      end
-
-      def file_only?
-        @matcher.file_only?
-      end
-
       def append(pattern)
         appended = @matcher.append(pattern)
 

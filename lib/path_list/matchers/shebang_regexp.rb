@@ -28,10 +28,6 @@ class PathList
         )
       end
 
-      def file_only?
-        true
-      end
-
       def inspect
         "#<#{self.class} #{@return_value.inspect} #{@rule.inspect}>"
       end

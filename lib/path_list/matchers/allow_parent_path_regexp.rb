@@ -22,10 +22,6 @@ class PathList
         true
       end
 
-      def dir_only?
-        true
-      end
-
       def weight
         1
       end

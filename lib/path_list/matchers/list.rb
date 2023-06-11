@@ -53,18 +53,6 @@ class PathList
         @matchers.sum(&:weight)
       end
 
-      def file_only?
-        # :nocov:
-        @matchers.all?(&:file_only?)
-        # :nocov:
-      end
-
-      def dir_only?
-        # :nocov:
-        @matchers.all?(&:dir_only?)
-        # :nocov:
-      end
-
       def removable?
         @matchers.empty? || @matchers.all?(&:removable?)
       end

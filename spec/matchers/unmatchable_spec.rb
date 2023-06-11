@@ -9,14 +9,6 @@ RSpec.describe PathList::Matchers::Unmatchable do
     it { is_expected.to have_inspect_value '#<PathList::Matchers::Unmatchable>' }
   end
 
-  describe '#dir_only?' do
-    it { is_expected.not_to be_dir_only }
-  end
-
-  describe '#file_only?' do
-    it { is_expected.not_to be_file_only }
-  end
-
   describe '#implicit?' do
     it { is_expected.to be_implicit }
   end

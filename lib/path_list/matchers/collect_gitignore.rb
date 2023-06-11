@@ -21,13 +21,6 @@ class PathList
         :mixed
       end
 
-      def dir_only?
-        # :nocov:
-        # TODO: new api stuff
-        true
-        # :nocov:
-      end
-
       def match(candidate)
         if candidate.full_path.match?(@root_re) && candidate.directory? && !@loaded.include?(candidate.full_path)
           candidate.path_list.ignore!(
