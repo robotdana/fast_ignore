@@ -17,6 +17,10 @@ class PathList
         self
       end
 
+      def polarity
+        :mixed
+      end
+
       def match(candidate)
         @matcher.match(candidate) || @default
       end

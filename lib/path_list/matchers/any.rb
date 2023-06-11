@@ -3,6 +3,25 @@
 class PathList
   module Matchers
     class Any < List
+      def self.compress(matchers) # rubocop:disable Metrics/MethodLength
+        squashable_sets = {}
+        matchers.each do |a_matcher|
+          s = squashable_sets.find do |b_matcher|
+            a_matcher.squashable_with?(b_matcher)
+          end
+
+          break s << a_matcher if s
+
+          squashable_sets[a_matcher] = [a_matcher]
+        end
+
+        squashable_sets.each_value.map do |matcher_set|
+          next matcher_set.first if matcher_set.length == 1
+
+          matcher_set.first.squash(matcher_set)
+        end.sort_by(&:weight)
+      end
+
       def match(candidate)
         ignore = false
 

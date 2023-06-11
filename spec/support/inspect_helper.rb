@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module InspectHelper
   def default_inspect_value(object)
     Object.instance_method(:inspect).bind(object).call

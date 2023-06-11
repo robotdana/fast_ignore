@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PathList
   class GitconfigParseError < Error
     def initialize(message, scanner: nil, path: nil)
@@ -7,7 +9,7 @@ class PathList
       super(message)
     end
 
-    def message
+    def message # rubocop:disable Metrics/AbcSize
       return super unless @scanner && @path
 
       lineno = @scanner.string[0...@scanner.pos].count("\n") + 1

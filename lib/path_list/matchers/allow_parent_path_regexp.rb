@@ -30,6 +30,10 @@ class PathList
         1
       end
 
+      def polarity
+        :allow
+      end
+
       def inspect
         "#<#{self.class} #{@rule.inspect}>"
       end

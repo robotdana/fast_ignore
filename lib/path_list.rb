@@ -64,7 +64,7 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   attr_reader :matcher
 
-  def initialize(matcher: Matchers::All.new([]))
+  def initialize(matcher: Matchers::All.build([]))
     @matcher = matcher
   end
 
@@ -138,7 +138,7 @@ class PathList # rubocop:disable Metrics/ClassLength
     ignore!(from_file: './.git/info/exclude', root: root || '.', append: append, format: format)
     ignore!(from_file: './.gitignore', root: root, append: append, format: format)
     ignore!('.git', root: '/')
-    @matcher = Matchers::All.new([@matcher, collect_gitignore])
+    @matcher = Matchers::All.build([@matcher, collect_gitignore])
 
     self
   end
@@ -164,14 +164,14 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   # TODO: handle merged appendables
   def and!(*path_lists)
-    @matcher = Matchers::All.new([@matcher, *path_lists.flat_map(&:matcher)])
+    @matcher = Matchers::All.build([@matcher, *path_lists.flat_map(&:matcher)])
 
     self
   end
 
   # TODO: handle merged appendables
   def any!(*path_lists)
-    @matcher = Matchers::All.new([@matcher, Matchers::Any.new(path_lists.flat_map(&:matcher))])
+    @matcher = Matchers::All.build([@matcher, Matchers::Any.build(path_lists.flat_map(&:matcher))])
 
     self
   end
@@ -180,9 +180,9 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   def and_pattern(pattern)
     @matcher = if pattern.label
-      @matcher.append(pattern) || Matchers::All.new([@matcher, pattern.build])
+      @matcher.append(pattern) || Matchers::All.build([@matcher, pattern.build])
     else
-      Matchers::All.new([@matcher, pattern.build])
+      Matchers::All.build([@matcher, pattern.build])
     end
   end
 

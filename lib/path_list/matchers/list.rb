@@ -3,12 +3,38 @@
 class PathList
   module Matchers
     class List < Base
+      def self.build(matchers)
+        matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
+
+        unmatchable = matchers.include?(Unmatchable)
+        matchers -= [Unmatchable]
+        matchers.reject!(&:removable?)
+
+        matchers = compress(matchers)
+
+        case matchers.length
+        when 0 then unmatchable ? Unmatchable : new([])
+        when 1 then matchers.first
+        else new(matchers)
+        end
+      end
+
+      def self.compress(matchers)
+        matchers
+      end
+
       attr_reader :matchers
 
       def initialize(matchers)
         @matchers = matchers
 
         freeze
+      end
+
+      def polarity
+        return :mixed if matchers.empty? # TODO: temporary
+
+        matchers.all? { |m| m.polarity == matchers.first.polarity } ? matchers.first.polarity : :mixed
       end
 
       def squashable_with?(other)

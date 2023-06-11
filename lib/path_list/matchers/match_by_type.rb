@@ -22,6 +22,10 @@ class PathList
         freeze
       end
 
+      def polarity
+        @dir_matcher.polarity == @file_matcher.polarity ? @dir_matcher.polarity : :mixed
+      end
+
       def removable?
         (@dir_matcher.removable? && @file_matcher.removable?) ||
           (@dir_matcher == Unmatchable && @file_matcher == Unmatchable)

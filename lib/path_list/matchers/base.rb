@@ -3,6 +3,10 @@
 class PathList
   module Matchers
     class Base
+      def type
+        self.class
+      end
+
       def dir_only?
         false
       end
@@ -13,6 +17,10 @@ class PathList
 
       def implicit?
         false
+      end
+
+      def polarity
+        :mixed
       end
 
       def squashable_with?(other)

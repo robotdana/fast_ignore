@@ -16,7 +16,10 @@ class PathList
       @filename = filename
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
-      (@first_line = content.slice(/\A#!.*/) || '') if content # we only care about the first line that might be a shebang
+      if content
+        # we only care about the first line that might be a shebang
+        (@first_line = content.slice(/\A#!.*/) || '')
+      end
       @path_was = []
       @path_list = path_list
     end

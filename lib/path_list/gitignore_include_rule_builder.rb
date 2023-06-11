@@ -54,7 +54,7 @@ class PathList
       end
     end
 
-    def build_rule(child_file_rule: true, parent: false)
+    def build_rule(child_file_rule: true, parent: false) # rubocop:disable Metrics/MethodLength
       @child_re ||= @re.dup # in case emit_end wasn't called
 
       [

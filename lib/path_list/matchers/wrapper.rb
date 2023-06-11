@@ -9,6 +9,10 @@ class PathList
         freeze
       end
 
+      def polarity
+        @matcher.polarity
+      end
+
       def weight
         @matcher.weight
       end

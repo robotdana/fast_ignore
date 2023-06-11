@@ -63,7 +63,7 @@ class PathList
       matcher = Matchers::WithinDir.build(matcher, @root)
       return [matcher] unless @allow
 
-      [matcher, Matchers::Any.new(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]
+      [matcher, Matchers::Any.build(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]
     end
   end
 end

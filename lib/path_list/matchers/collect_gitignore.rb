@@ -17,6 +17,10 @@ class PathList
         -Float::INFINITY
       end
 
+      def polarity
+        :mixed
+      end
+
       def dir_only?
         # :nocov:
         # TODO: new api stuff

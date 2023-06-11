@@ -13,6 +13,14 @@ class PathList
         true
       end
 
+      def polarity
+        :allow
+      end
+
+      def type
+        self
+      end
+
       def inspect
         '#<PathList::Matchers::AllowAnyParent>'
       end

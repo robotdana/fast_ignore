@@ -17,6 +17,10 @@ class PathList
         nil
       end
 
+      def type
+        self
+      end
+
       alias_method :eql?, :equal?
       alias_method :==, :eql?
     end

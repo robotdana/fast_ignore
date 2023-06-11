@@ -4,10 +4,7 @@ class PathList
   module Matchers
     class All < List
       def initialize(matchers)
-        matchers = matchers.flat_map { |m| m.is_a?(All) ? m.matchers : m }
-        matchers.reject!(&:removable?)
-        matchers.sort_by!(&:weight)
-        @matchers = matchers.freeze
+        @matchers = matchers.sort_by(&:weight)
       end
 
       def match(candidate)

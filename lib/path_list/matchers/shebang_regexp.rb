@@ -15,6 +15,10 @@ class PathList
           @return_value == other.return_value
       end
 
+      def polarity
+        @return_value
+      end
+
       def squash(list)
         self.class.new(
           ::Regexp.union(

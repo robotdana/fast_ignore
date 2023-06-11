@@ -44,6 +44,10 @@ class PathList
         1
       end
 
+      def polarity
+        @return_value
+      end
+
       def inspect
         "#<#{self.class} #{'dir_only ' if @dir_only}#{@return_value.inspect} #{@rule.inspect}>"
       end
