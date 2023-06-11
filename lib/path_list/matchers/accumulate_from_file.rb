@@ -2,12 +2,11 @@
 
 class PathList
   module Matchers
-    class CollectGitignore < Base
-      def initialize(root, format: :gitignore, append: :gitignore)
+    class AccumulateFromFile < Base
+      def initialize(from_file, format: :gitignore, append: :gitignore)
         @append = append
         @format = format
-        root = PathExpander.expand_path(root)
-        @root_re = %r{\A#{Regexp.escape(root)}(?:\z|/)}i
+        @from_file = from_file
         @loaded = []
 
         freeze
@@ -22,9 +21,9 @@ class PathList
       end
 
       def match(candidate)
-        if candidate.full_path.match?(@root_re) && candidate.directory? && !@loaded.include?(candidate.full_path)
+        if !@loaded.include?(candidate.full_path)
           candidate.path_list.ignore!(
-            from_file: './.gitignore',
+            from_file: @from_file,
             root: candidate.full_path,
             append: @append,
             format: @format
