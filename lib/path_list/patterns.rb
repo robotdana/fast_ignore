@@ -60,7 +60,7 @@ class PathList
       return matchers if matchers.empty?
 
       matcher = Matchers::MatchByType.build_from_list(matchers)
-      matcher = Matchers::WithinDir.new(matcher, @root)
+      matcher = Matchers::WithinDir.build(matcher, @root)
       return [matcher] unless @allow
 
       [matcher, Matchers::Any.new(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]
