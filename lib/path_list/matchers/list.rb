@@ -4,22 +4,23 @@ class PathList
   module Matchers
     class List < Base
       def self.build(matchers)
-        matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
-
-        unmatchable = matchers.include?(Unmatchable)
-        matchers -= [Unmatchable]
-        matchers.reject!(&:removable?)
-
         matchers = compress(matchers)
 
         case matchers.length
-        when 0 then unmatchable ? Unmatchable : new([])
+        when 0 then new([])
         when 1 then matchers.first
         else new(matchers)
         end
       end
 
       def self.compress(matchers)
+        matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
+
+        unmatchable = matchers.include?(Unmatchable)
+        matchers -= [Unmatchable]
+        matchers.reject!(&:removable?)
+        return [Unmatchable] if matchers.empty? && unmatchable
+
         matchers
       end
 
@@ -37,16 +38,8 @@ class PathList
         matchers.all? { |m| m.polarity == matchers.first.polarity } ? matchers.first.polarity : :mixed
       end
 
-      def squashable_with?(other)
-        # :nocov:
-        other.instance_of?(self.class)
-        # :nocov:
-      end
-
-      def squash(list)
-        # :nocov:
-        self.class.new(list.flat_map { |l| l.matchers }) # rubocop:disable Style/SymbolProc it breaks with protected methods
-        # :nocov:
+      def squashable_with?(_)
+        false
       end
 
       def weight

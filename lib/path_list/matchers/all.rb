@@ -4,7 +4,7 @@ class PathList
   module Matchers
     class All < List
       def self.compress(matchers)
-        matchers -= [Allow]
+        matchers = super(matchers) - [Allow]
         return [Allow] if matchers.empty?
 
         matchers.sort_by(&:weight)

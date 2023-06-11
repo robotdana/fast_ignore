@@ -31,20 +31,41 @@ class PathList
     end
 
     def build
-      matcher = Matchers::CompressedLastMatch.build(build_matchers)
-      matcher = Matchers::Appendable.new(@label, matcher) if @label
+      implicit_matcher, explicit_matcher = build_matchers
 
-      return Matchers::Allow if matcher.removable?
-
-      Matchers::LastMatch.build([default, matcher])
-    end
-
-    def build_appended
-      build_matchers
+      if @label
+        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher) if @label
+      elsif implicit_matcher.removable? && explicit_matcher.removable?
+        Matchers::Allow
+      else
+        Matchers::LastMatch.build([default, implicit_matcher, explicit_matcher])
+      end
     end
 
     def default
       @allow ? Matchers::Ignore : Matchers::Allow
+    end
+
+    def build_matchers
+      matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
+      implicit, explicit = matchers.partition(&:implicit?)
+      implicit = Matchers::Any.build(implicit)
+      explicit = Matchers::LastMatch.build(explicit)
+
+      return [implicit, explicit] if matchers.empty?
+
+      implicit = Matchers::WithinDir.build(@root, implicit)
+      explicit = Matchers::WithinDir.build(@root, explicit)
+      return [implicit, explicit] unless @allow
+
+      implicit_b, explicit_b = GitignoreIncludeRuleBuilder.new(@root).build_as_parent.partition(&:implicit?)
+      implicit_b = Matchers::Any.build(implicit_b)
+      explicit_b = Matchers::LastMatch.build(explicit_b)
+
+      implicit = Matchers::Any.build([implicit, implicit_b])
+      explicit = Matchers::LastMatch.build([explicit, explicit_b])
+
+      [implicit, explicit]
     end
 
     private
@@ -55,17 +76,6 @@ class PathList
       else
         @patterns
       end
-    end
-
-    def build_matchers
-      matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
-      return matchers if matchers.empty?
-
-      matcher = Matchers::CompressedLastMatch.build(matchers)
-      matcher = Matchers::WithinDir.build(@root, matcher)
-      return [matcher] unless @allow
-
-      [matcher, Matchers::Any.build(GitignoreIncludeRuleBuilder.new(@root).build_as_parent)]
     end
   end
 end

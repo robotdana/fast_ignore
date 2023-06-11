@@ -3,7 +3,12 @@
 RSpec.describe PathList::Matchers::WithinDir do
   subject { described_class.new(dir, matcher) }
 
-  let(:matcher) { instance_double(::PathList::Matchers::Base) }
+  let(:matcher) do
+    instance_double(
+      ::PathList::Matchers::Base,
+      removable?: false, squashable_with?: false, weight: 1
+    )
+  end
   let(:dir) { '/' }
   let(:other_dir) { '/tmp' }
   let(:random_boolean) { [true, false].sample }
@@ -93,12 +98,12 @@ RSpec.describe PathList::Matchers::WithinDir do
       expect(subject).not_to be_squashable_with(other_matcher)
     end
 
-    it 'is not squashable with something with the same dir but a different kind of matcher' do
+    it 'is squashable with something with the same dir but a different kind of matcher' do
       other_child_matcher = instance_double(PathList::Matchers::Base)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
       other_matcher = described_class.new(dir, other_child_matcher)
 
-      expect(subject).not_to be_squashable_with(other_matcher)
+      expect(subject).to be_squashable_with(other_matcher)
     end
 
     it 'is not squashable with something different' do
@@ -109,9 +114,18 @@ RSpec.describe PathList::Matchers::WithinDir do
   describe '#squash' do
     it 'returns a new matcher with squashed child matcher' do
       subject
-      other = described_class.new(dir, matcher)
-      new_matcher = instance_double(PathList::Matchers::Base)
-      allow(matcher).to receive(:squash).with([matcher, matcher]).and_return(new_matcher)
+
+      other_matcher = instance_double(
+        PathList::Matchers::Base,
+        removable?: false, squashable_with?: false, weight: 1
+      )
+      other = described_class.new(dir, other_matcher)
+
+      new_matcher = instance_double(
+        PathList::Matchers::Any,
+        removable?: false, squashable_with?: false, weight: 1
+      )
+      allow(PathList::Matchers::Any).to receive(:new).with([matcher, other_matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
       subject.squash([subject, other])

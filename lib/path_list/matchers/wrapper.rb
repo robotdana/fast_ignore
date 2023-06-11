@@ -34,15 +34,12 @@ class PathList
       end
 
       def squashable_with?(other)
-        other.instance_of?(self.class) &&
-          @matcher.squashable_with?(other.matcher)
+        other.instance_of?(self.class)
       end
 
       def squash(list)
         new_with_matcher(
-          @matcher.squash(
-            list.map { |l| l.matcher } # rubocop:disable Style/SymbolProc it breaks with protected methods
-          )
+          Any.build(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
         )
       end
 

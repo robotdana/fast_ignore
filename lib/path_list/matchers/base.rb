@@ -3,6 +3,10 @@
 class PathList
   module Matchers
     class Base
+      class << self
+        alias_method :build, :new
+      end
+
       def implicit?
         false
       end

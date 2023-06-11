@@ -75,10 +75,10 @@ RSpec.describe ::PathList::Patterns do
           # implicit
           PathList::Matchers::Any.new([
             PathList::Matchers::AllowAnyDir,
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true)
-          ]),
-          # actual matchers
-          PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false)
+            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true),
+            # actual matchers
+            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false)
+          ])
         ])
       end
     end
@@ -91,9 +91,7 @@ RSpec.describe ::PathList::Patterns do
 
         it 'ignores a' do
           expect(matchers).to eq PathList::Matchers::LastMatch.new([
-            # default
             PathList::Matchers::Allow,
-            # actual matchers
             PathList::Matchers::WithinDir.new(
               '/b/',
               PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false)
@@ -107,22 +105,20 @@ RSpec.describe ::PathList::Patterns do
 
         it 'allows a, and implicitly any children of a' do
           expect(matchers).to eq PathList::Matchers::LastMatch.new([
-            # default
             PathList::Matchers::Ignore,
-            PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::PathRegexp.new(/\Ab\z/i, true, true, true)
-            ),
-            PathList::Matchers::WithinDir.new(
-              '/b/',
-              PathList::Matchers::CompressedLastMatch.new([
-                # implicit
+            PathList::Matchers::Any.new([
+              PathList::Matchers::MatchIfDir.new(
+                PathList::Matchers::PathRegexp.new(/\Ab\z/i, true, true, true)
+              ),
+              PathList::Matchers::WithinDir.new(
+                '/b/',
                 PathList::Matchers::Any.new([
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false),
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true)
-                ]),
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false)
-              ])
-            )
+                ])
+              )
+            ])
           ])
         end
       end
