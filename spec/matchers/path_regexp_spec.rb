@@ -36,7 +36,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
       other = described_class.new(/b/, squashable, allow_value, implicit)

@@ -23,7 +23,7 @@ RSpec.describe PathList::Matchers::Unmatchable do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
   end
 
   describe '#squash' do
@@ -46,6 +46,6 @@ RSpec.describe PathList::Matchers::Unmatchable do
 
   describe '#eql?' do
     it { is_expected.to eq(subject) }
-    it { is_expected.not_to eq(::PathList::Matchers::AllowAnyParent) }
+    it { is_expected.not_to eq(::PathList::Matchers::Allow) }
   end
 end

@@ -28,7 +28,7 @@ class PathList
         parent_pattern = @s.string.dup
         GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
       else
-        [Matchers::AllowAnyParent]
+        [Matchers::MatchIfDir.new(Matchers::Allow)]
       end
     end
 
@@ -61,7 +61,10 @@ class PathList
         (
           if parent && @anchored && @dir_only && @negation
             @re.prepend(prefix)
-            Matchers::AllowParentPathRegexp.new(@re.to_regexp)
+
+            Matchers::MatchIfDir.new(
+              Matchers::PathRegexp.new(@re.to_regexp, true, true, true)
+            )
           else
             super()
           end

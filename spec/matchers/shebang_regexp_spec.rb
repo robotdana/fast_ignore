@@ -26,7 +26,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::AllowAnyParent) }
+    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
 
     it 'is squashable with the same return value' do
       other = described_class.new(/b/, allow_value)

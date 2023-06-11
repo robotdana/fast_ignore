@@ -102,7 +102,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     end
 
     it 'is not squashable with something different' do
-      expect(subject).not_to be_squashable_with(PathList::Matchers::AllowAnyParent)
+      expect(subject).not_to be_squashable_with(PathList::Matchers::Allow)
     end
   end
 
