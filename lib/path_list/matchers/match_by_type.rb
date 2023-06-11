@@ -3,11 +3,11 @@
 class PathList
   module Matchers
     class MatchByType < Base
-      def self.build_from_list(matchers)
+      def self.build(matchers)
         dir_matchers = matchers.reject(&:file_only?)
         file_matchers = matchers.reject(&:dir_only?)
 
-        # return list_class.new(matchers) if dir_matchers == file_matchers
+        return LastMatch.new(matchers) if dir_matchers == file_matchers
 
         dir_matcher = dir_matchers.empty? ? Unmatchable : LastMatch.new(dir_matchers)
         file_matcher = file_matchers.empty? ? Unmatchable : LastMatch.new(file_matchers)
