@@ -13,10 +13,6 @@ class PathList
         :allow
       end
 
-      def type
-        self
-      end
-
       def inspect
         '#<PathList::Matchers::AllowAnyParent>'
       end

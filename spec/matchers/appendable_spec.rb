@@ -164,8 +164,8 @@ RSpec.describe PathList::Matchers::Appendable do
         )
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
-        new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
-        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+        new_child_matcher = instance_double(::PathList::Matchers::CompressedLastMatch)
+        allow(::PathList::Matchers::CompressedLastMatch).to receive(:new).with([
           matcher,
           appended_matcher
         ]).and_return(new_child_matcher)
@@ -194,8 +194,8 @@ RSpec.describe PathList::Matchers::Appendable do
         )
         allow(patterns).to receive(:build_appended).and_return([appended_matcher])
 
-        new_child_matcher = instance_double(::PathList::Matchers::LastMatch)
-        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+        new_child_matcher = instance_double(::PathList::Matchers::CompressedLastMatch)
+        allow(::PathList::Matchers::CompressedLastMatch).to receive(:new).with([
           appended_child_matcher,
           appended_matcher
         ]).and_return(new_child_matcher)

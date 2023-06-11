@@ -6,6 +6,11 @@ class PathList
       def match(candidate)
         @matcher.match(candidate) if candidate.directory?
       end
+
+      def weight
+        # arbitrary, files to directories ratio
+        (@matcher.weight / 5.0) + 1
+      end
     end
   end
 end

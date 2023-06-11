@@ -3,10 +3,6 @@
 class PathList
   module Matchers
     class Base
-      def type
-        self.class
-      end
-
       def implicit?
         false
       end

@@ -31,10 +31,12 @@ class PathList
     end
 
     def build
-      matcher = Matchers::LastMatch.build(build_matchers)
+      matcher = Matchers::CompressedLastMatch.build(build_matchers)
       matcher = Matchers::Appendable.new(@label, matcher) if @label
 
-      Matchers::MatchOrDefault.new(matcher, default)
+      return Matchers::Allow if matcher.removable?
+
+      Matchers::LastMatch.build([default, matcher])
     end
 
     def build_appended
@@ -42,7 +44,7 @@ class PathList
     end
 
     def default
-      @allow ? :ignore : :allow
+      @allow ? Matchers::Ignore : Matchers::Allow
     end
 
     private
@@ -59,7 +61,7 @@ class PathList
       matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
       return matchers if matchers.empty?
 
-      matcher = Matchers::LastMatch.build(matchers)
+      matcher = Matchers::CompressedLastMatch.build(matchers)
       matcher = Matchers::WithinDir.build(matcher, @root)
       return [matcher] unless @allow
 

@@ -2,25 +2,29 @@
 
 class PathList
   module Matchers
-    Unmatchable = Base.new
+    Allow = Base.new
 
-    class << Unmatchable
+    class << Allow
       def implicit?
         true
       end
 
+      def polarity
+        :allow
+      end
+
       def inspect
-        '#<PathList::Matchers::Unmatchable>'
+        '#<PathList::Matchers::Allow>'
       end
 
       def match(_)
-        nil
+        :allow
       end
 
       alias_method :eql?, :equal?
       alias_method :==, :eql?
     end
 
-    Unmatchable.freeze
+    Allow.freeze
   end
 end

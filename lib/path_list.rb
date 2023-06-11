@@ -20,7 +20,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/matchers/wrapper'
   require_relative 'path_list/matchers/appendable'
   require_relative 'path_list/matchers/last_match'
-  require_relative 'path_list/matchers/match_or_default'
+  require_relative 'path_list/matchers/compressed_last_match'
   require_relative 'path_list/matchers/unmatchable'
   require_relative 'path_list/matchers/shebang_regexp'
   require_relative 'path_list/gitconfig_parser'
@@ -38,6 +38,8 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/patterns'
   require_relative 'path_list/matchers/match_if_dir'
   require_relative 'path_list/matchers/match_unless_dir'
+  require_relative 'path_list/matchers/ignore'
+  require_relative 'path_list/matchers/allow'
 
   class << self
     def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
@@ -65,7 +67,7 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   attr_reader :matcher
 
-  def initialize(matcher: Matchers::All.build([]))
+  def initialize(matcher: Matchers::Allow)
     @matcher = matcher
   end
 

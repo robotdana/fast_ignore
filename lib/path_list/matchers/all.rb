@@ -3,6 +3,13 @@
 class PathList
   module Matchers
     class All < List
+      def self.compress(matchers)
+        matchers -= [Allow]
+        return [Allow] if matchers.empty?
+
+        matchers
+      end
+
       def initialize(matchers)
         @matchers = matchers.sort_by(&:weight)
       end
