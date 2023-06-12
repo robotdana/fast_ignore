@@ -3,15 +3,15 @@
 class PathList
   class Candidate
     class << self
-      def dir(dir, path_list)
-        new(dir, nil, true, true, nil, path_list)
+      def dir(dir)
+        new(dir, nil, true, true, nil)
       end
     end
 
     attr_reader :path_list
     attr_reader :full_path
 
-    def initialize(full_path, filename, directory, exists, content, path_list) # rubocop:disable Metrics/ParameterLists
+    def initialize(full_path, filename, directory, exists, content)
       @full_path = full_path
       @filename = filename
       (@directory = directory) unless directory.nil?
@@ -30,7 +30,7 @@ class PathList
       @parent = if @full_path == '/'
         nil
       else
-        self.class.dir(::File.dirname(@full_path), path_list)
+        self.class.dir(::File.dirname(@full_path))
       end
     end
 
@@ -82,7 +82,7 @@ class PathList
     # how long can a shebang be?
     # https://www.in-ulm.de/~mascheck/various/shebang/
     # way too long
-    # so we assume 64 charcters probably,
+    # so we assume 64 characters probably,
     # but will grab the whole first line if it starts with hashbang chars.
     # we don't want to always just grab the first line regardless of length,
     # in case it's a binary or minified file

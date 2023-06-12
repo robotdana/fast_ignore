@@ -3,6 +3,8 @@
 class PathList
   module Matchers
     class Base
+      include ComparableInstance
+
       class << self
         alias_method :build, :new
       end
@@ -33,18 +35,6 @@ class PathList
 
       def match(_)
         nil
-      end
-
-      def eql?(other)
-        self.class == other.class &&
-          (instance_variables | other.instance_variables).all? do |var|
-            instance_variable_get(var) == other.instance_variable_get(var)
-          end
-      end
-      alias_method :==, :eql?
-
-      def hash
-        self.class.hash
       end
     end
   end

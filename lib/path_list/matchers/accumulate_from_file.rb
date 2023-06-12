@@ -3,11 +3,11 @@
 class PathList
   module Matchers
     class AccumulateFromFile < Base
-      def initialize(from_file, label:, format: :gitignore)
-        @label = label
+      def initialize(from_file, appendable_matcher:, format: :gitignore, label: nil)
+        @appendable_matcher = appendable_matcher
         @format = format
         @from_file = from_file
-        @loaded = []
+        @label = label
 
         freeze
       end
@@ -21,16 +21,14 @@ class PathList
       end
 
       def match(candidate)
-        unless @loaded.include?(candidate.full_path)
-          candidate.path_list.append!(
+        @appendable_matcher.append(
+          Patterns.new(
             from_file: @from_file,
             root: candidate.full_path,
-            label: @label,
-            format: @format
+            format: @format,
+            label: @label
           )
-
-          @loaded << candidate.full_path
-        end
+        )
 
         :allow
       end

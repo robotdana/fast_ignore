@@ -7,6 +7,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   class Error < StandardError; end
   class NotSquashableError < Error; end
 
+  require_relative 'path_list/comparable_instance'
   require_relative 'path_list/gitconfig_parse_error'
   require_relative 'path_list/global_gitignore'
   require_relative 'path_list/gitignore_rule_builder'
@@ -220,7 +221,7 @@ recursive: recursive)
   end
 
   def and_recursive(pattern)
-    and_matcher(pattern.build_accumulator)
+    and_matcher(pattern.build_accumulator(fetch_appendable(pattern.label))) if pattern.recursive?
   end
 
   def and_matcher(new_matcher)

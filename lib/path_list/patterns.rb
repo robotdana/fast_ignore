@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 
 class PathList
-  class Patterns
-    attr_reader :from_file
-    attr_reader :root
-    attr_reader :label
+  class Patterns # rubocop:disable Metrics/ClassLength
+    include ComparableInstance
+
     attr_accessor :allow
-    attr_reader :format
-    attr_reader :recursive
+    attr_reader :label
 
     BUILDERS = {
       glob: Builders::GlobGitignore,
@@ -23,18 +21,23 @@ class PathList
       allow: false,
       label: nil,
       recursive: false
-    )
-      @allow = allow
+    ) # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
       @label = label.to_sym if label
-      @recursive = recursive
       root = PathExpander.expand_dir(root) if root
+
       if from_file
         @from_file = PathExpander.expand_path(from_file, root || '.')
-        @label ||= :"path_list_recursive_#{::File.basename(from_file)}" if recursive
+        @exists = ::File.exist?(@from_file)
+        if recursive
+          @label ||= :"PathList::Patterns.new(from_file: \"./#{::File.basename(from_file)}\", recursive: true)"
+        end
         root ||= ::File.dirname(from_file)
       else
         @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
       end
+
+      @allow = allow
+      @recursive = recursive
 
       @root = PathExpander.expand_dir(root || '.')
       @format = BUILDERS.fetch(format || :gitignore, format)
@@ -46,7 +49,7 @@ class PathList
       implicit_matcher, explicit_matcher = build_matchers
 
       if @label
-        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher)
+        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher, self)
       elsif implicit_matcher.removable? && explicit_matcher.removable?
         Matchers::Allow
       else
@@ -54,7 +57,7 @@ class PathList
       end
     end
 
-    def build_accumulator
+    def build_accumulator(appendable_matcher) # rubocop:disable Metrics/MethodLength
       return unless @recursive
 
       Matchers::LastMatch.new([
@@ -63,19 +66,30 @@ class PathList
           ::File.dirname(::File.dirname(@from_file)),
           Matchers::MatchIfDir.new(
             Matchers::AccumulateFromFile.new(
-              "./#{::File.basename(@from_file)}", format: @format, label: @label
+              "./#{::File.basename(@from_file)}",
+              format: @format,
+              appendable_matcher: appendable_matcher,
+              label: @label
             )
           )
         )
       ])
     end
 
+    def content?
+      @patterns || @exists
+    end
+
+    def recursive?
+      @recursive
+    end
+
     def default
       @allow ? Matchers::Ignore : Matchers::Allow
     end
 
-    def build_matchers
-      matchers = read_patterns.flat_map { |p| format.build(p, @allow, @root) }.compact
+    def build_matchers # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      matchers = read_patterns.flat_map { |p| @format.build(p, @allow, @root) }.compact
       implicit, explicit = matchers.partition(&:implicit?)
       implicit = Matchers::Any.build(implicit)
       explicit = Matchers::LastMatch.build(explicit)
@@ -99,8 +113,8 @@ class PathList
     private
 
     def read_patterns
-      if from_file
-        ::File.exist?(@from_file) ? ::File.readlines(@from_file) : []
+      if @from_file
+        @exists ? ::File.readlines(@from_file) : []
       else
         @patterns
       end

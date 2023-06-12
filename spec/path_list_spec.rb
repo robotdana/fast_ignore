@@ -195,7 +195,7 @@ RSpec.describe PathList do
         create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d', 'a/b/e'
       end
 
-      it 'respects rules overriden in child gitignore files' do
+      it 'respects rules overridden in child gitignore files' do
         gitignore '**/b/d', '**/b/c'
         gitignore '!b/d', '!b/e', 'b/c', path: 'a/.gitignore'
         gitignore 'd', '!c', path: 'a/b/.gitignore'

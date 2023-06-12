@@ -7,8 +7,7 @@ RSpec.describe PathList::Candidate do
       filename,
       directory,
       exists,
-      content,
-      path_list
+      content
     )
   end
 
@@ -17,7 +16,6 @@ RSpec.describe PathList::Candidate do
   let(:directory) { false }
   let(:exists) { true }
   let(:content) { '' }
-  let(:path_list) { PathList }
 
   describe '#original_inspect' do
     it 'returns the default inspect' do

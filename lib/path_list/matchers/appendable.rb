@@ -3,11 +3,12 @@
 class PathList
   module Matchers
     class Appendable < Wrapper
-      def initialize(label, default_matcher, implicit_matcher, explicit_matcher)
+      def initialize(label, default_matcher, implicit_matcher, explicit_matcher, pattern)
         @label = label
         @default_matcher = default_matcher
         @implicit_matcher = implicit_matcher
         @explicit_matcher = explicit_matcher
+        @loaded = [pattern]
 
         build_matcher
       end
@@ -26,10 +27,14 @@ class PathList
 
       def append(pattern)
         pattern.allow = append_with_allow
+        return unless pattern.content?
+        return if @loaded.include?(pattern)
+
         new_implicit, new_explicit = pattern.build_matchers
 
         @implicit_matcher = Any.new([@implicit_matcher, new_implicit])
         @explicit_matcher = LastMatch.new([@explicit_matcher, new_explicit])
+        @loaded << pattern
 
         build_matcher
       end

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::Appendable do
-  subject { described_class.new(label, default, implicit_matcher, explicit_matcher) }
+  subject { described_class.new(label, default, implicit_matcher, explicit_matcher, original_pattern) }
 
   let(:default) { PathList::Matchers::Unmatchable }
-
+  let(:original_pattern) { instance_double(::PathList::Patterns) }
   let(:implicit_matcher) do
     instance_double(
       ::PathList::Matchers::Base,
@@ -62,14 +62,14 @@ RSpec.describe PathList::Matchers::Appendable do
 
   describe '#squashable_with?' do
     it 'is not squashable' do
-      other_matcher = described_class.new(label, default, implicit_matcher, explicit_matcher)
+      other_matcher = described_class.new(label, default, implicit_matcher, explicit_matcher, original_pattern)
 
       expect(subject).not_to be_squashable_with(other_matcher)
     end
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::PathList::Patterns, label: label, 'allow=': nil) }
+    let(:patterns) { instance_double(::PathList::Patterns, label: label, content?: true, 'allow=': nil) }
 
     it 'appends the patterns to the matcher' do
       subject
@@ -110,9 +110,6 @@ RSpec.describe PathList::Matchers::Appendable do
       ]).and_return(new_appended_matcher)
 
       subject.append(patterns)
-
-      expect(subject).to be_a(described_class)
-      expect(subject).to be(subject)
       expect(subject.match(candidate)).to be_nil
       expect(new_appended_matcher).to have_received(:match).with(candidate)
     end

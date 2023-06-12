@@ -13,7 +13,7 @@ class PathList
           as_parent: false
         )
           full_path = PathExpander.expand_path(path)
-          candidate = Candidate.new(full_path, nil, directory, exists, content, path_list)
+          candidate = Candidate.new(full_path, nil, directory, exists, content)
           return false if !as_parent && candidate.directory?
           return false unless candidate.exists?
 
@@ -23,7 +23,7 @@ class PathList
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
           ::Dir.children(parent_full_path).each do |filename|
             full_path = parent_full_path + filename
-            candidate = Candidate.new(full_path, filename, nil, true, nil, path_list)
+            candidate = Candidate.new(full_path, filename, nil, true, nil)
 
             next unless path_list.matcher.match(candidate) == :allow
 
