@@ -18,6 +18,7 @@ class PathList
 
         unmatchable = matchers.include?(Unmatchable)
         matchers -= [Unmatchable]
+        matchers.compact!
         matchers.reject!(&:removable?)
         return [Unmatchable] if matchers.empty? && unmatchable
 

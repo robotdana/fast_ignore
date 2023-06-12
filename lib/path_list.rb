@@ -44,12 +44,12 @@ class PathList # rubocop:disable Metrics/ClassLength
       new.gitignore!(root: root, append: append, format: format)
     end
 
-    def only(*patterns, from_file: nil, format: nil, root: nil, append: false, accumulate: false) # leftovers:keep
-      new.only!(*patterns, from_file: from_file, format: format, root: root, append: append, accumulate: accumulate)
+    def only(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
+      new.only!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
     end
 
-    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, accumulate: false) # leftovers:keep
-      new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, accumulate: accumulate)
+    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
+      new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
     end
 
     def and(*path_lists) # leftovers:keep
@@ -115,12 +115,12 @@ class PathList # rubocop:disable Metrics/ClassLength
     dup.gitignore!(root: root, append: append, format: format)
   end
 
-  def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, accumulate: false) # leftovers:keep
-    dup.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, accumulate: accumulate)
+  def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
+    dup.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
   end
 
-  def only(*patterns, from_file: nil, format: nil, root: nil, append: false, accumulate: false) # leftovers:keep
-    dup.only!(*patterns, from_file: from_file, format: format, root: root, append: append, accumulate: accumulate)
+  def only(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
+    dup.only!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
   end
 
   def any(*path_lists) # leftovers:keep
@@ -135,22 +135,20 @@ class PathList # rubocop:disable Metrics/ClassLength
     ignore!(root: root, append: append, format: format)
     ignore!(from_file: GlobalGitignore.path(root: root), root: root || '.', append: append, format: format)
     ignore!(from_file: './.git/info/exclude', root: root || '.', append: append, format: format)
-    ignore!(from_file: './.gitignore', root: root, append: append, format: format, accumulate: true)
+    ignore!(from_file: './.gitignore', root: root, append: append, format: format, recursive: true)
     ignore!('.git', root: '/')
 
     self
   end
 
-  def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: nil, accumulate: false)
-    and_pattern(*patterns, from_file: from_file, format: format, root: root, append: append, accumulate: accumulate)
+  def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: nil, recursive: false)
+    and_pattern(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
 
     self
   end
 
-  def only!(*patterns, from_file: nil, format: nil, root: nil, append: nil, accumulate: false)
-    and_pattern(
-      *patterns, from_file: from_file, format: format, root: root, allow: true, append: append, accumulate: accumulate
-    )
+  def only!(*patterns, from_file: nil, format: nil, root: nil, append: nil, recursive: false)
+     and_pattern(*patterns, from_file: from_file, format: format, root: root, allow: true, append: append, recursive: recursive)
 
     self
   end
@@ -171,43 +169,18 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   private
 
-  def and_pattern(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil, accumulate: false)
-    validate_options(patterns, from_file, accumulate)
+  def and_pattern(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil, recursive: false)
+    pattern = Patterns.new(
+      *patterns,
+      from_file: from_file,
+      format: format,
+      root: root,
+      allow: allow,
+      append: append,
+      recursive: recursive,
+    )
 
-    append ||= ::File.basename(from_file).to_sym if accumulate
-    pattern = Patterns.new(*patterns, from_file: from_file, format: format, root: root, allow: allow, append: append)
-    accumulator = build_accumulator(pattern) if accumulate
-
-    @matcher = if pattern.label
-      @matcher.append(pattern) || Matchers::All.build([@matcher, pattern.build])
-    else
-      Matchers::All.build([@matcher, pattern.build])
-    end
-
-    @matcher = Matchers::All.new([@matcher, accumulator]) if accumulate
-  end
-
-  def build_accumulator(pattern)
-    Matchers::LastMatch.new([
-      Matchers::Allow,
-      Matchers::WithinDir.build(
-        ::File.dirname(::File.dirname(pattern.from_file)),
-        Matchers::MatchIfDir.new(
-          Matchers::AccumulateFromFile.new(
-            "./#{::File.basename(pattern.from_file)}",
-            format: pattern.format,
-            append: pattern.label
-          )
-        )
-      )
-    ])
-  end
-
-  def validate_options(patterns, from_file, accumulate)
-    if [(patterns unless patterns.empty?), from_file].compact.length > 1
-      raise Error, 'Only use one of *patterns or from_file:'
-    end
-
-    raise Error, 'accumulate: can only be used with from_file:' if accumulate && !from_file
+    @matcher = (pattern.label && @matcher.append(pattern)) || Matchers::All.build([@matcher, pattern.build])
+    @matcher = Matchers::All.build([@matcher, pattern.build_accumulator])
   end
 end

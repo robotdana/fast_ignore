@@ -7,6 +7,7 @@ class PathList
     attr_reader :label
     attr_reader :allow
     attr_reader :format
+    attr_reader :recursive
 
     BUILDERS = {
       glob: Builders::GlobGitignore,
@@ -14,13 +15,22 @@ class PathList
       shebang: Builders::Shebang
     }.freeze
 
-    def initialize(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+    def initialize(
+      *patterns,
+      from_file: nil,
+      format: nil,
+      root: nil,
+      allow: false,
+      append: nil,
+      recursive: false
+    ) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
       @allow = allow
       @label = append.to_sym if append
+      @recursive = recursive
       root = PathExpander.expand_dir(root) if root
-
       if from_file
         @from_file = PathExpander.expand_path(from_file, root || '.')
+        @label ||= :"path_list_recursive_#{::File.basename(from_file)}" if recursive
         root ||= ::File.dirname(from_file)
       else
         @patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
@@ -28,6 +38,8 @@ class PathList
 
       @root = PathExpander.expand_dir(root || '.')
       @format = BUILDERS.fetch(format || :gitignore, format)
+
+      valid?
     end
 
     def build
@@ -40,6 +52,22 @@ class PathList
       else
         Matchers::LastMatch.build([default, implicit_matcher, explicit_matcher])
       end
+    end
+
+    def build_accumulator
+      return unless @recursive
+
+      Matchers::LastMatch.new([
+        Matchers::Allow,
+        Matchers::WithinDir.build(
+          ::File.dirname(::File.dirname(@from_file)),
+          Matchers::MatchIfDir.new(
+            Matchers::AccumulateFromFile.new(
+              "./#{::File.basename(@from_file)}", format: @format, append: @label
+            )
+          )
+        )
+      ])
     end
 
     def default
@@ -75,6 +103,20 @@ class PathList
         ::File.exist?(@from_file) ? ::File.readlines(@from_file) : []
       else
         @patterns
+      end
+    end
+
+    def valid?
+      if @recursive && !@from_file
+        raise Error, 'recursive: must only be used with from_file:'
+      end
+
+      if (@patterns && !@patterns.empty?) && @from_file
+        raise Error, 'Only use one of *patterns, from_file:'
+      end
+
+      if !@format.respond_to?(:build)
+        raise Error, "format: is not a recognized format. must be in #{BUILDERS.keys} or be a format processor class"
       end
     end
   end
