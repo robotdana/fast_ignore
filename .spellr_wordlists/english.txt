@@ -57,6 +57,7 @@ nocov
 noninfringement
 nosystem
 params
+pathlist
 pathspec
 performant
 prettierignore

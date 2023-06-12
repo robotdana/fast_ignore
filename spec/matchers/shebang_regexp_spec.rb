@@ -60,12 +60,6 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     end
   end
 
-  describe '#append' do
-    it 'returns nil' do
-      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
-    end
-  end
-
   describe '#match' do
     let(:first_line) { "#!/usr/bin/env ruby\n" }
     let(:rule) { /\bruby\b/ }

@@ -32,12 +32,6 @@ RSpec.describe PathList::Matchers::Unmatchable do
     end
   end
 
-  describe '#append' do
-    it 'returns nil' do
-      expect(subject.append(instance_double(::PathList::Patterns))).to be_nil
-    end
-  end
-
   describe '#match' do
     it 'returns nil' do
       expect(subject.match(instance_double(::PathList::Candidate))).to be_nil

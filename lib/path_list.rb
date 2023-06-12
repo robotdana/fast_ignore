@@ -40,16 +40,16 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/matchers/allow_any_dir'
 
   class << self
-    def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
-      new.gitignore!(root: root, append: append, format: format)
+    def gitignore(root: nil) # leftovers:keep
+      new.gitignore!(root: root)
     end
 
-    def only(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
-      new.only!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
+    def only(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+      new.only!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
     end
 
-    def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
-      new.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
+    def ignore(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+      new.ignore!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
     end
 
     def and(*path_lists) # leftovers:keep
@@ -65,8 +65,9 @@ class PathList # rubocop:disable Metrics/ClassLength
 
   attr_reader :matcher
 
-  def initialize(matcher: Matchers::Allow)
+  def initialize(matcher: Matchers::Allow, appendable_matchers: {})
     @matcher = matcher
+    @appendable_matchers = appendable_matchers
   end
 
   def include?(path, directory: nil, content: nil, exists: nil)
@@ -108,19 +109,19 @@ class PathList # rubocop:disable Metrics/ClassLength
   end
 
   def dup
-    self.class.new(matcher: @matcher)
+    self.class.new(matcher: @matcher, appendable_matchers: @appendable_matchers)
   end
 
-  def gitignore(root: nil, append: :gitignore, format: :gitignore) # leftovers:keep
-    dup.gitignore!(root: root, append: append, format: format)
+  def gitignore(root: nil) # leftovers:keep
+    dup.gitignore!(root: root)
   end
 
-  def ignore(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
-    dup.ignore!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
+  def ignore(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+    dup.ignore!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
   end
 
-  def only(*patterns, from_file: nil, format: nil, root: nil, append: false, recursive: false) # leftovers:keep
-    dup.only!(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
+  def only(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+    dup.only!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
   end
 
   def any(*path_lists) # leftovers:keep
@@ -131,56 +132,110 @@ class PathList # rubocop:disable Metrics/ClassLength
     dup.all!(*path_lists)
   end
 
-  def gitignore!(root: nil, append: :gitignore, format: :gitignore)
-    ignore!(root: root, append: append, format: format)
-    ignore!(from_file: GlobalGitignore.path(root: root), root: root || '.', append: append, format: format)
-    ignore!(from_file: './.git/info/exclude', root: root || '.', append: append, format: format)
-    ignore!(from_file: './.gitignore', root: root, append: append, format: format, recursive: true)
+  APPENDABLE_GITIGNORE_LABEL = :'PathList::APPENDABLE_GITIGNORE_LABEL'
+  private_constant :APPENDABLE_GITIGNORE_LABEL
+
+  def gitignore!(root: nil)
+    ignore!(label: APPENDABLE_GITIGNORE_LABEL, root: root)
+
+    append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: GlobalGitignore.path(root: root), root: root || '.')
+    append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: './.git/info/exclude', root: root || '.')
+    append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: './.gitignore', recursive: true, root: root)
     ignore!('.git', root: '/')
 
     self
   end
 
-  def ignore!(*patterns, from_file: nil, format: nil, root: nil, append: nil, recursive: false)
-    and_pattern(*patterns, from_file: from_file, format: format, root: root, append: append, recursive: recursive)
+  def ignore!(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false)
+    and_pattern(
+      Patterns.new(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
+    )
 
     self
   end
 
-  def only!(*patterns, from_file: nil, format: nil, root: nil, append: nil, recursive: false)
-     and_pattern(*patterns, from_file: from_file, format: format, root: root, allow: true, append: append, recursive: recursive)
+  def only!(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false)
+    and_pattern(
+      Patterns.new(*patterns, from_file: from_file, format: format, root: root, allow: true, label: label,
+recursive: recursive)
+    )
 
     self
   end
 
   # TODO: handle merged appendables
   def and!(*path_lists)
-    @matcher = Matchers::All.build([@matcher, *path_lists.flat_map(&:matcher)])
+    and_matcher(Matchers::All.build(path_lists.flat_map(&:matcher)))
+    and_pathlist_appendable_matchers(path_lists)
 
     self
   end
 
   # TODO: handle merged appendables
   def any!(*path_lists)
-    @matcher = Matchers::All.build([@matcher, Matchers::Any.build(path_lists.flat_map(&:matcher))])
+    and_matcher(Matchers::Any.build(path_lists.flat_map(&:matcher)))
+    and_pathlist_appendable_matchers(path_lists)
 
     self
   end
 
-  private
-
-  def and_pattern(*patterns, from_file: nil, format: nil, root: nil, allow: false, append: nil, recursive: false)
+  def append!(*patterns, label:, from_file: nil, format: nil, root: nil, recursive: false)
     pattern = Patterns.new(
       *patterns,
       from_file: from_file,
       format: format,
       root: root,
-      allow: allow,
-      append: append,
-      recursive: recursive,
+      label: label,
+      recursive: recursive
     )
 
-    @matcher = (pattern.label && @matcher.append(pattern)) || Matchers::All.build([@matcher, pattern.build])
-    @matcher = Matchers::All.build([@matcher, pattern.build_accumulator])
+    append_pattern(pattern)
+  end
+
+  protected
+
+  attr_reader :appendable_matchers
+
+  private
+
+  def and_pathlist_appendable_matchers(path_lists)
+    and_appendable_matchers(*path_lists.flat_map { |p| p.appendable_matchers })
+  end
+
+  def and_appendable_matchers(*matchers)
+    @appendable_matchers = @appendable_matchers.merge(*matchers) do |label|
+      raise Error, "Appendable label #{label} already exists"
+    end
+  end
+
+  def append_pattern(pattern); end
+
+  def and_pattern(pattern)
+    new_matcher = pattern.build
+
+    and_appendable_matchers(pattern.label => new_matcher) if pattern.label
+
+    and_matcher(new_matcher)
+    and_recursive(pattern)
+  end
+
+  def and_recursive(pattern)
+    and_matcher(pattern.build_accumulator)
+  end
+
+  def and_matcher(new_matcher)
+    @matcher = Matchers::All.build([@matcher, new_matcher])
+  end
+
+  def append_pattern(pattern)
+    appendable = fetch_appendable(pattern.label)
+    appendable.append(pattern)
+    and_recursive(pattern)
+  end
+
+  def fetch_appendable(label)
+    @appendable_matchers.fetch(label)
+  rescue KeyError
+    raise Error, "Appendable label #{label} doesn't exist to append to"
   end
 end

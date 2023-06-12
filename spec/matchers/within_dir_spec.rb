@@ -134,29 +134,6 @@ RSpec.describe PathList::Matchers::WithinDir do
     end
   end
 
-  describe '#append' do
-    let(:patterns) { instance_double(::PathList::Patterns) }
-
-    it 'is matcher.append when nil' do
-      allow(matcher).to receive(:append).with(patterns).and_return(nil)
-      expect(subject.append(patterns)).to be_nil
-      expect(matcher).to have_received(:append).with(patterns)
-    end
-
-    it 'returns a new matcher when matcher.append is changed' do
-      new_matcher = instance_double(::PathList::Matchers::Base)
-      allow(matcher).to receive(:append).with(patterns).and_return(new_matcher)
-
-      subject
-
-      allow(described_class).to receive(:new).with(dir, new_matcher).and_call_original
-      appended_matcher = subject.append(patterns)
-      expect(appended_matcher).to be_a(described_class)
-      expect(appended_matcher).not_to be(subject)
-      expect(matcher).to have_received(:append).with(patterns)
-    end
-  end
-
   describe '#match' do
     let(:candidate) { instance_double(::PathList::Candidate) }
     let(:inner_candidate) { instance_double(::PathList::Candidate) }

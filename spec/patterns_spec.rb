@@ -6,7 +6,7 @@ RSpec.describe ::PathList::Patterns do
       format: format_arg,
       root: root,
       allow: allow_arg,
-      append: append
+      label: label
     ).build
   end
 
@@ -16,7 +16,7 @@ RSpec.describe ::PathList::Patterns do
   let(:format_arg) { nil }
   let(:root) { nil }
   let(:allow_arg) { false }
-  let(:append) { nil }
+  let(:label) { nil }
 
   around do |e|
     if from_file

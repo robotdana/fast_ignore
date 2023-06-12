@@ -5,7 +5,7 @@ class PathList
     attr_reader :from_file
     attr_reader :root
     attr_reader :label
-    attr_reader :allow
+    attr_accessor :allow
     attr_reader :format
     attr_reader :recursive
 
@@ -21,11 +21,11 @@ class PathList
       format: nil,
       root: nil,
       allow: false,
-      append: nil,
+      label: nil,
       recursive: false
-    ) # rubocop:disable Metrics/MethodLength, Metrics/ParameterLists
+    )
       @allow = allow
-      @label = append.to_sym if append
+      @label = label.to_sym if label
       @recursive = recursive
       root = PathExpander.expand_dir(root) if root
       if from_file
@@ -46,7 +46,7 @@ class PathList
       implicit_matcher, explicit_matcher = build_matchers
 
       if @label
-        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher) if @label
+        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher)
       elsif implicit_matcher.removable? && explicit_matcher.removable?
         Matchers::Allow
       else
@@ -63,7 +63,7 @@ class PathList
           ::File.dirname(::File.dirname(@from_file)),
           Matchers::MatchIfDir.new(
             Matchers::AccumulateFromFile.new(
-              "./#{::File.basename(@from_file)}", format: @format, append: @label
+              "./#{::File.basename(@from_file)}", format: @format, label: @label
             )
           )
         )
@@ -107,15 +107,11 @@ class PathList
     end
 
     def valid?
-      if @recursive && !@from_file
-        raise Error, 'recursive: must only be used with from_file:'
-      end
+      raise Error, 'recursive: must only be used with from_file:' if @recursive && !@from_file
 
-      if (@patterns && !@patterns.empty?) && @from_file
-        raise Error, 'Only use one of *patterns, from_file:'
-      end
+      raise Error, 'Only use one of *patterns, from_file:' if (@patterns && !@patterns.empty?) && @from_file
 
-      if !@format.respond_to?(:build)
+      unless @format.respond_to?(:build)
         raise Error, "format: is not a recognized format. must be in #{BUILDERS.keys} or be a format processor class"
       end
     end

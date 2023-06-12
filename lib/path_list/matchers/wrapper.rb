@@ -25,14 +25,6 @@ class PathList
         @matcher.removable?
       end
 
-      def append(pattern)
-        appended = @matcher.append(pattern)
-
-        return unless appended
-
-        new_with_matcher(appended)
-      end
-
       def squashable_with?(other)
         other.instance_of?(self.class)
       end

@@ -54,21 +54,6 @@ class PathList
       def implicit?
         @matchers.all?(&:implicit?)
       end
-
-      def append(pattern)
-        did_append = false
-
-        new_matchers = @matchers.map do |matcher|
-          appended_matcher = matcher.append(pattern)
-          did_append ||= appended_matcher
-
-          appended_matcher || matcher
-        end
-
-        return unless did_append
-
-        self.class.new(new_matchers)
-      end
     end
   end
 end

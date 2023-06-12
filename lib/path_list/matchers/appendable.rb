@@ -3,24 +3,13 @@
 class PathList
   module Matchers
     class Appendable < Wrapper
-      attr_reader :default
-      attr_reader :label
-      attr_reader :implicit
-      attr_reader :explicit
-
-      def initialize(label, default, implicit, explicit)
+      def initialize(label, default_matcher, implicit_matcher, explicit_matcher)
         @label = label
-        @default = default
-        @implicit = implicit
-        @explicit = explicit
+        @default_matcher = default_matcher
+        @implicit_matcher = implicit_matcher
+        @explicit_matcher = explicit_matcher
 
-        @matcher = if implicit.removable? && explicit.removable?
-          Allow
-        else
-          LastMatch.build([default, implicit, explicit])
-        end
-
-        freeze
+        build_matcher
       end
 
       def removable?
@@ -35,37 +24,29 @@ class PathList
         @matcher.match(candidate)
       end
 
-      def append(patterns)
-        if patterns.label == @label
-          patterns_implicit, patterns_explicit = patterns.build_matchers
+      def append(pattern)
+        pattern.allow = append_with_allow
+        new_implicit, new_explicit = pattern.build_matchers
 
-          self.class.new(
-            @label,
-            @default,
-            Any.build([@implicit, patterns_implicit]),
-            LastMatch.build([@explicit, patterns_explicit])
-          )
-        else
-          appended_implicit = @implicit.append(patterns)
-          appended_explicit = @explicit.append(patterns)
+        @implicit_matcher = Any.new([@implicit_matcher, new_implicit])
+        @explicit_matcher = LastMatch.new([@explicit_matcher, new_explicit])
 
-          return unless appended_implicit || appended_explicit
-
-          self.class.new(
-            @label,
-            @default,
-            appended_implicit || @implicit,
-            appended_explicit || @explicit
-          )
-        end
+        build_matcher
       end
 
-      protected
+      private
 
-      attr_reader :default
-      attr_reader :label
-      attr_reader :implicit
-      attr_reader :explicit
+      def append_with_allow
+        @default_matcher == Matchers::Ignore
+      end
+
+      def build_matcher
+        @matcher = if @implicit_matcher.removable? && @explicit_matcher.removable?
+          Allow
+        else
+          LastMatch.build([@default_matcher, @implicit_matcher, @explicit_matcher])
+        end
+      end
     end
   end
 end

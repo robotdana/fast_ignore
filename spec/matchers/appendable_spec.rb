@@ -20,8 +20,9 @@ RSpec.describe PathList::Matchers::Appendable do
   let(:label) { :false_gitignore }
   let(:other_label) { :true_nonsense }
   let(:random_boolean) { [true, false].sample }
+  let(:candidate) { instance_double(::PathList::Candidate) }
 
-  it { is_expected.to be_frozen }
+  it { is_expected.not_to be_frozen }
 
   describe '#inspect' do
     it { is_expected.to have_default_inspect_value }
@@ -68,89 +69,52 @@ RSpec.describe PathList::Matchers::Appendable do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::PathList::Patterns) }
+    let(:patterns) { instance_double(::PathList::Patterns, label: label, 'allow=': nil) }
 
-    context "when the append value label doesn't match" do
-      before { allow(patterns).to receive(:label).and_return(other_label) }
+    it 'appends the patterns to the matcher' do
+      subject
 
-      it "passes append to the matchers, returns nil when it's nil if the append value doesn't match" do
-        allow(explicit_matcher).to receive(:append).with(patterns).and_return(nil)
-        allow(implicit_matcher).to receive(:append).with(patterns).and_return(nil)
-        expect(subject.append(patterns)).to be_nil
-        expect(explicit_matcher).to have_received(:append).with(patterns)
-        expect(implicit_matcher).to have_received(:append).with(patterns)
-      end
+      appended_implicit_matcher = instance_double(
+        ::PathList::Matchers::Base,
+        removable?: false, implicit?: true, squashable_with?: false, polarity: :mixed, weight: 1
+      )
+      appended_explicit_matcher = instance_double(
+        ::PathList::Matchers::Base,
+        removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+      )
+      allow(patterns).to receive(:build_matchers).and_return([appended_implicit_matcher, appended_explicit_matcher])
 
-      it "passes append to the matcher, returns a new matcher when it's changed" do
-        new_implicit_matcher = instance_double(
-          ::PathList::Matchers::Base,
-          removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-        new_explicit_matcher = instance_double(
-          ::PathList::Matchers::Base,
-          removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-        allow(explicit_matcher).to receive(:append).with(patterns).and_return(new_explicit_matcher)
-        allow(implicit_matcher).to receive(:append).with(patterns).and_return(new_implicit_matcher)
+      new_explicit_matcher = instance_double(
+        ::PathList::Matchers::LastMatch,
+        removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+      )
 
-        subject
+      new_implicit_matcher = instance_double(
+        ::PathList::Matchers::Any,
+        removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+      )
 
-        allow(described_class).to receive(:new).with(label, default, new_implicit_matcher,
-                                                     new_explicit_matcher).and_call_original
-        appended_matcher = subject.append(patterns)
-        expect(appended_matcher).to be_a(described_class)
-        expect(appended_matcher).not_to be(subject)
-        expect(explicit_matcher).to have_received(:append).with(patterns)
-        expect(implicit_matcher).to have_received(:append).with(patterns)
-      end
-    end
+      new_appended_matcher = instance_double(::PathList::Matchers::LastMatch, match: nil)
 
-    context 'when the append value label does match' do
-      before { allow(patterns).to receive(:label).and_return(label) }
+      allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+        explicit_matcher,
+        appended_explicit_matcher
+      ]).and_return(new_explicit_matcher)
+      allow(::PathList::Matchers::Any).to receive(:new).with([
+        implicit_matcher,
+        appended_implicit_matcher
+      ]).and_return(new_implicit_matcher)
 
-      it 'appends the patterns to the matcher' do
-        subject
+      allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+        new_implicit_matcher, new_explicit_matcher
+      ]).and_return(new_appended_matcher)
 
-        appended_implicit_matcher = instance_double(
-          ::PathList::Matchers::Base,
-          removable?: false, implicit?: true, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-        appended_explicit_matcher = instance_double(
-          ::PathList::Matchers::Base,
-          removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-        allow(patterns).to receive(:build_matchers).and_return([appended_implicit_matcher, appended_explicit_matcher])
+      subject.append(patterns)
 
-        new_explicit_matcher = instance_double(
-          ::PathList::Matchers::LastMatch,
-          removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-
-        new_implicit_matcher = instance_double(
-          ::PathList::Matchers::Any,
-          removable?: false, implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
-        )
-
-        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
-          explicit_matcher,
-          appended_explicit_matcher
-        ]).and_return(new_explicit_matcher)
-        allow(::PathList::Matchers::Any).to receive(:new).with([
-          implicit_matcher,
-          appended_implicit_matcher
-        ]).and_return(new_implicit_matcher)
-
-        allow(::PathList::Matchers::LastMatch).to receive(:new).with([
-          new_implicit_matcher, new_explicit_matcher
-        ]).and_call_original
-
-        allow(described_class).to receive(:new).with(label, default, new_implicit_matcher,
-                                                     new_explicit_matcher).and_call_original
-
-        appended_matcher = subject.append(patterns)
-        expect(appended_matcher).to be_a(described_class)
-        expect(appended_matcher).not_to be(subject)
-      end
+      expect(subject).to be_a(described_class)
+      expect(subject).to be(subject)
+      expect(subject.match(candidate)).to be_nil
+      expect(new_appended_matcher).to have_received(:match).with(candidate)
     end
   end
 

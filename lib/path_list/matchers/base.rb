@@ -23,10 +23,6 @@ class PathList
         self
       end
 
-      def append(_)
-        nil
-      end
-
       def weight
         0
       end
