@@ -8,11 +8,11 @@ class PathList
         if allow
           build_implicit(path)
         else
-          Matchers::PathRegexp.new(/\A#{Regexp.escape(path)}\z/i, true, allow, true)
+          Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow, true)
         end
       end
 
-      def self.build_implicit(path)
+      def self.build_implicit(path) # rubocop:disable Metrics/MethodLength
         path_segments = path.split('/')
         re = PathRegexpBuilder.new
         re.append_start_anchor
@@ -27,7 +27,7 @@ class PathList
         re.append_end_anchor
         re.append_group_close_all
 
-        Matchers::PathRegexp.new(re.to_regexp, true, true, true)
+        Matchers::PathRegexp.build(re.to_regexp, true, true, true)
       end
     end
   end

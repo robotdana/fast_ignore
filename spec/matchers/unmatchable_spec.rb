@@ -13,10 +13,6 @@ RSpec.describe PathList::Matchers::Unmatchable do
     it { is_expected.to be_implicit }
   end
 
-  describe '#removable?' do
-    it { is_expected.not_to be_removable }
-  end
-
   describe '#weight' do
     it { is_expected.to have_attributes(weight: 0) }
   end

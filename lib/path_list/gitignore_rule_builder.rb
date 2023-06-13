@@ -189,9 +189,9 @@ class PathList
     def build_rule
       @re.prepend(prefix)
 
-      m = Matchers::PathRegexp.new(@re.to_regexp, @anchored, @negation, false)
+      m = Matchers::PathRegexp.build(@re.to_regexp, @anchored, @negation, false)
 
-      m = Matchers::MatchIfDir.new(m) if @dir_only
+      m = Matchers::MatchIfDir.build(m) if @dir_only
 
       m
     end

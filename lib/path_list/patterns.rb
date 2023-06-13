@@ -49,8 +49,8 @@ class PathList
       implicit_matcher, explicit_matcher = build_matchers
 
       if @label
-        Matchers::Appendable.new(@label, default, implicit_matcher, explicit_matcher, self)
-      elsif implicit_matcher.removable? && explicit_matcher.removable?
+        Matchers::Appendable.build(@label, default, implicit_matcher, explicit_matcher, self)
+      elsif implicit_matcher == Matchers::Null && explicit_matcher == Matchers::Null
         Matchers::Allow
       else
         Matchers::LastMatch.build([default, implicit_matcher, explicit_matcher])
@@ -60,12 +60,12 @@ class PathList
     def build_accumulator(appendable_matcher) # rubocop:disable Metrics/MethodLength
       return unless @recursive
 
-      Matchers::LastMatch.new([
+      Matchers::LastMatch.build([
         Matchers::Allow,
         Matchers::WithinDir.build(
           ::File.dirname(::File.dirname(@from_file)),
-          Matchers::MatchIfDir.new(
-            Matchers::AccumulateFromFile.new(
+          Matchers::MatchIfDir.build(
+            Matchers::AccumulateFromFile.build(
               "./#{::File.basename(@from_file)}",
               format: @format,
               appendable_matcher: appendable_matcher,
@@ -88,17 +88,18 @@ class PathList
       @allow ? Matchers::Ignore : Matchers::Allow
     end
 
-    def build_matchers
+    def build_matchers # rubocop:disable Metrics/AbcSize
       matchers = read_patterns.flat_map { |p| @format.build(p, @allow, @root) }.compact
       implicit, explicit = matchers.partition(&:implicit?)
+      return [Matchers::Null, Matchers::Null] if matchers.empty?
+
       implicit = Matchers::Any.build(implicit)
       explicit = Matchers::LastMatch.build(explicit)
 
-      return [implicit, explicit] if matchers.empty?
-
       implicit = Matchers::WithinDir.build(@root, implicit)
       explicit = Matchers::WithinDir.build(@root, explicit)
-      return [implicit, explicit] unless @allow
+
+      return [implicit, explicit] if !@allow || (implicit == Matchers::Null && explicit == Matchers::Null)
 
       implicit = Matchers::Any.build([implicit, build_root_matcher])
 

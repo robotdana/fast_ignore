@@ -7,7 +7,7 @@ class PathList
         matchers = compress(matchers)
 
         case matchers.length
-        when 0 then new([])
+        when 0 then Null
         when 1 then matchers.first
         else new(matchers)
         end
@@ -17,9 +17,7 @@ class PathList
         matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
 
         unmatchable = matchers.include?(Unmatchable)
-        matchers -= [Unmatchable]
-        matchers.compact!
-        matchers.reject!(&:removable?)
+        matchers -= [Unmatchable, Null]
         return [Unmatchable] if matchers.empty? && unmatchable
 
         matchers
@@ -34,8 +32,6 @@ class PathList
       end
 
       def polarity
-        return :mixed if matchers.empty? # TODO: temporary
-
         matchers.all? { |m| m.polarity == matchers.first.polarity } ? matchers.first.polarity : :mixed
       end
 
@@ -45,10 +41,6 @@ class PathList
 
       def weight
         @matchers.sum(&:weight)
-      end
-
-      def removable?
-        @matchers.empty? || @matchers.all?(&:removable?)
       end
 
       def implicit?

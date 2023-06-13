@@ -29,10 +29,6 @@ class PathList
         0
       end
 
-      def removable?
-        false
-      end
-
       def match(_)
         nil
       end

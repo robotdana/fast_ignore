@@ -16,6 +16,7 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/gitignore_rule_scanner'
   require_relative 'path_list/matchers/base'
   require_relative 'path_list/matchers/unmatchable'
+  require_relative 'path_list/matchers/null'
   require_relative 'path_list/matchers/list'
   require_relative 'path_list/matchers/allow'
   require_relative 'path_list/matchers/ignore'

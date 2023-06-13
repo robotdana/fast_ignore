@@ -2,6 +2,6 @@
 
 class PathList
   module Matchers
-    AllowAnyDir = MatchIfDir.new(Allow)
+    AllowAnyDir = MatchIfDir.build(Allow)
   end
 end

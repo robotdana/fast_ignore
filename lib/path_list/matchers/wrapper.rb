@@ -3,6 +3,12 @@
 class PathList
   module Matchers
     class Wrapper < Base
+      def self.build(matcher)
+        return Null if matcher == Null
+
+        new(matcher)
+      end
+
       def initialize(matcher)
         @matcher = matcher
 
@@ -19,10 +25,6 @@ class PathList
 
       def implicit?
         @matcher.implicit?
-      end
-
-      def removable?
-        @matcher.removable?
       end
 
       def squashable_with?(other)

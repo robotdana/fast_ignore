@@ -11,7 +11,7 @@ class PathList
         pattern = /\A#!.*#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}/i
 
         [
-          Matchers::MatchUnlessDir.new(Matchers::ShebangRegexp.new(pattern, allow)),
+          Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow)),
           build_implicit(shebang, allow, root)
         ]
       end

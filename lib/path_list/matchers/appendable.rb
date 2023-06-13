@@ -3,6 +3,10 @@
 class PathList
   module Matchers
     class Appendable < Wrapper
+      class << self
+        alias_method :build, :new
+      end
+
       def initialize(label, default_matcher, implicit_matcher, explicit_matcher, pattern)
         @label = label
         @default_matcher = default_matcher
@@ -11,10 +15,6 @@ class PathList
         @loaded = [pattern]
 
         build_matcher
-      end
-
-      def removable?
-        false
       end
 
       def squashable_with?(_)
@@ -32,8 +32,8 @@ class PathList
 
         new_implicit, new_explicit = pattern.build_matchers
 
-        @implicit_matcher = Any.new([@implicit_matcher, new_implicit])
-        @explicit_matcher = LastMatch.new([@explicit_matcher, new_explicit])
+        @implicit_matcher = Any.build([@implicit_matcher, new_implicit])
+        @explicit_matcher = LastMatch.build([@explicit_matcher, new_explicit])
         @loaded << pattern
 
         build_matcher
@@ -42,11 +42,11 @@ class PathList
       private
 
       def append_with_allow
-        @default_matcher == Matchers::Ignore
+        @default_matcher == Ignore
       end
 
       def build_matcher
-        @matcher = if @implicit_matcher.removable? && @explicit_matcher.removable?
+        @matcher = if @implicit_matcher == Null && @explicit_matcher == Null
           Allow
         else
           LastMatch.build([@default_matcher, @implicit_matcher, @explicit_matcher])

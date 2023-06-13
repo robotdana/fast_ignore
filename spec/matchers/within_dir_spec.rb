@@ -4,12 +4,9 @@ RSpec.describe PathList::Matchers::WithinDir do
   subject { described_class.new(dir, matcher) }
 
   let(:matcher) do
-    instance_double(
-      ::PathList::Matchers::Base,
-      removable?: false, squashable_with?: false, weight: 1
-    )
+    instance_double(::PathList::Matchers::Base, squashable_with?: false, weight: 1)
   end
-  let(:dir) { '/' }
+  let(:dir) { '/a_dir' }
   let(:other_dir) { '/tmp' }
   let(:random_boolean) { [true, false].sample }
 
@@ -36,26 +33,6 @@ RSpec.describe PathList::Matchers::WithinDir do
       allow(matcher).to receive(:implicit?).and_return(random_boolean)
       expect(subject.implicit?).to be random_boolean
       expect(matcher).to have_received(:implicit?)
-    end
-  end
-
-  describe '#removable?' do
-    it 'is matcher.removable? when true' do
-      allow(matcher).to receive(:removable?).and_return(true)
-      expect(subject).to be_removable
-      expect(matcher).to have_received(:removable?)
-    end
-
-    it 'is matcher.removable? when false' do
-      allow(matcher).to receive(:removable?).and_return(false)
-      expect(subject).not_to be_removable
-      expect(matcher).to have_received(:removable?)
-    end
-
-    it 'is matcher.removable? when random' do
-      allow(matcher).to receive(:removable?).and_return(random_boolean)
-      expect(subject.removable?).to be random_boolean
-      expect(matcher).to have_received(:removable?)
     end
   end
 
@@ -117,13 +94,13 @@ RSpec.describe PathList::Matchers::WithinDir do
 
       other_matcher = instance_double(
         PathList::Matchers::Base,
-        removable?: false, squashable_with?: false, weight: 1
+        squashable_with?: false, weight: 1
       )
       other = described_class.new(dir, other_matcher)
 
       new_matcher = instance_double(
         PathList::Matchers::Any,
-        removable?: false, squashable_with?: false, weight: 1
+        squashable_with?: false, weight: 1
       )
       allow(PathList::Matchers::Any).to receive(:new).with([matcher, other_matcher]).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original

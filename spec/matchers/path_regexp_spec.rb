@@ -26,10 +26,6 @@ RSpec.describe PathList::Matchers::PathRegexp do
     end
   end
 
-  describe '#removable?' do
-    it { is_expected.not_to be_removable }
-  end
-
   describe '#weight' do
     it { is_expected.to have_attributes(weight: 1) }
   end
