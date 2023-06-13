@@ -18,7 +18,6 @@ RSpec.describe PathList::Matchers::Appendable do
     )
   end
   let(:label) { :false_gitignore }
-  let(:other_label) { :true_nonsense }
   let(:random_boolean) { [true, false].sample }
   let(:candidate) { instance_double(::PathList::Candidate) }
 

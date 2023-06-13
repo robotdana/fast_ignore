@@ -1,5 +1,5 @@
-# v0.19.0
-- Major api change
+# v1.0.0.rc1
+- Major api change to make this 1.0.0
   - New name! FastIgnore is now PathList
   - You can now chain rulesets rather than building them from a set of kwargs
     - FastIgnore.new(gitignore: true) is now PathList.gitignore
@@ -14,12 +14,13 @@
   - PathLists can be joined with AND or OR
     - PathList.and(PathList.only("rule"), PathList.only("other rule"))
     - PathList.any(PathList.only("rule"), PathList.only("other rule"))
-  - root can be set at each call time, rather than initialize time
+  - root for walking the file system can be set at each call time, rather than initialize time
     - FastIgnore.new(root: "./subdir").each is now PathList.each("./subdir")
+    - root for each set of patterns is still handled at PathList.only or PathList.ignore time and can be set independently
   - Dir.chdir can now happen within PathList.each block
   - FastIgnore.allowed? is now PathList.include? to be closer to ruby expectations
-  - FastIgnore.allowed?(include_directories: true) is now PathList.match? because you're probably doing definitely one or the other.
-  - A lot of the internals have been refactored to allow for these changes
+  - FastIgnore.allowed?(include_directories: true) is now PathList.match?
+  - Almost the entire codebase has been refactored to allow for these changes
   - A lot of minor fixes i've forgotten
 
 # v0.18.0

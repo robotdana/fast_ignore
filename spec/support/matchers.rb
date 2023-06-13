@@ -75,3 +75,10 @@ RSpec::Matchers.define(:have_default_inspect_value) do
     expect(@actual).to eq(default_inspect_value(actual))
   end
 end
+
+RSpec::Matchers.define(:have_instance_variables) do |expected|
+  match do |actual|
+    @actual = actual.instance_variables.to_h { |ivar| [ivar, actual.instance_variable_get(ivar)] }
+    expect(@actual).to eq(expected)
+  end
+end

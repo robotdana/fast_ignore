@@ -4,7 +4,7 @@ class PathList
   class Patterns # rubocop:disable Metrics/ClassLength
     include ComparableInstance
 
-    attr_accessor :allow
+    attr_writer :allow
     attr_reader :label
 
     BUILDERS = {
@@ -13,7 +13,7 @@ class PathList
       shebang: Builders::Shebang
     }.freeze
 
-    def initialize(
+    def initialize( # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
       *patterns,
       from_file: nil,
       format: nil,
@@ -21,7 +21,7 @@ class PathList
       allow: false,
       label: nil,
       recursive: false
-    ) # rubocop:disable Metrics/ParameterLists, Metrics/MethodLength, Metrics/AbcSize
+    )
       @label = label.to_sym if label
       root = PathExpander.expand_dir(root) if root
 

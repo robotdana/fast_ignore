@@ -3,7 +3,7 @@
 class PathList
   module Matchers
     class Any < List
-      def self.compress(matchers) # rubocop:disable Metrics/MethodLength
+      def self.compress(matchers) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         matchers = super(matchers)
         return [Allow] if matchers.include?(Allow)
 
@@ -22,7 +22,7 @@ class PathList
         squashable_sets.each_value.map do |matcher_set|
           next matcher_set.first if matcher_set.length == 1
 
-          matcher_set.first.squash(matcher_set.sort_by(&:weight))
+          matcher_set.first.squash(matcher_set.uniq.sort_by(&:weight))
         end.sort_by(&:weight)
       end
 
@@ -32,14 +32,11 @@ class PathList
         @matchers.each do |m|
           case m.match(candidate)
           when :allow then return :allow
-          # :nocov:
           when :ignore then ignore = true
-          when nil then nil
           end
         end
 
         :ignore if ignore
-        # :nocov:
       end
     end
   end

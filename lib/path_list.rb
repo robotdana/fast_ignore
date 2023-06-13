@@ -5,7 +5,6 @@ require 'set'
 
 class PathList # rubocop:disable Metrics/ClassLength
   class Error < StandardError; end
-  class NotSquashableError < Error; end
 
   require_relative 'path_list/comparable_instance'
   require_relative 'path_list/gitconfig_parse_error'
@@ -45,11 +44,11 @@ class PathList # rubocop:disable Metrics/ClassLength
       new.gitignore!(root: root)
     end
 
-    def only(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+    def only(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false) # leftovers:keep
       new.only!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
     end
 
-    def ignore(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+    def ignore(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false) # leftovers:keep
       new.ignore!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
     end
 
@@ -117,11 +116,11 @@ class PathList # rubocop:disable Metrics/ClassLength
     dup.gitignore!(root: root)
   end
 
-  def ignore(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+  def ignore(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false) # leftovers:keep
     dup.ignore!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
   end
 
-  def only(*patterns, from_file: nil, format: nil, root: nil, label: false, recursive: false) # leftovers:keep
+  def only(*patterns, from_file: nil, format: nil, root: nil, label: nil, recursive: false) # leftovers:keep
     dup.only!(*patterns, from_file: from_file, format: format, root: root, label: label, recursive: recursive)
   end
 
@@ -164,7 +163,6 @@ recursive: recursive)
     self
   end
 
-  # TODO: handle merged appendables
   def and!(*path_lists)
     and_matcher(Matchers::All.build(path_lists.flat_map(&:matcher)))
     and_pathlist_appendable_matchers(path_lists)
@@ -172,7 +170,6 @@ recursive: recursive)
     self
   end
 
-  # TODO: handle merged appendables
   def any!(*path_lists)
     and_matcher(Matchers::Any.build(path_lists.flat_map(&:matcher)))
     and_pathlist_appendable_matchers(path_lists)
@@ -200,16 +197,15 @@ recursive: recursive)
   private
 
   def and_pathlist_appendable_matchers(path_lists)
-    and_appendable_matchers(*path_lists.flat_map { |p| p.appendable_matchers })
+    and_appendable_matchers(*path_lists.flat_map { |p| p.appendable_matchers }) # rubocop:disable Style/SymbolProc
   end
 
+  # TODO: handle merged appendables
   def and_appendable_matchers(*matchers)
     @appendable_matchers = @appendable_matchers.merge(*matchers) do |label|
       raise Error, "Appendable label #{label} already exists"
     end
   end
-
-  def append_pattern(pattern); end
 
   def and_pattern(pattern)
     new_matcher = pattern.build

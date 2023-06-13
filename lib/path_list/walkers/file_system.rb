@@ -4,7 +4,7 @@ class PathList
   module Walkers
     module FileSystem
       class << self
-        def include?( # rubocop:disable Metrics/ParameterLists
+        def include?(
           path,
           path_list:,
           directory: nil,
@@ -17,7 +17,7 @@ class PathList
           return false if !as_parent && candidate.directory?
           return false unless candidate.exists?
 
-          allowed_recursive?(candidate, path_list)
+          match_recursive?(candidate, path_list)
         end
 
         def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
@@ -41,10 +41,10 @@ class PathList
 
         private
 
-        def allowed_recursive?(candidate, path_list)
+        def match_recursive?(candidate, path_list)
           return true unless candidate.parent
 
-          allowed_recursive?(candidate.parent, path_list) && path_list.matcher.match(candidate) == :allow
+          match_recursive?(candidate.parent, path_list) && path_list.matcher.match(candidate) == :allow
         end
       end
     end

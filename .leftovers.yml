@@ -1,4 +1,26 @@
 exclude_paths:
   - vendor
 keep:
-  - allowed? # public api
+  ## public api
+  - PathList
+
+  # query
+  - include?
+  - member?
+  - each
+  - ===
+  - to_proc
+
+  # build
+  - ignore
+  - ignore!
+  - only
+  - only!
+  - and
+  - and!
+  - any
+  - any!
+  - append
+  - append!
+  - gitignore
+  - gitignore!

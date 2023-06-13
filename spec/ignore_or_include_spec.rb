@@ -1062,7 +1062,6 @@ RSpec.describe PathList do
       $doing_include = false
     end
 
-    let(:include_files) { include_path }
     let(:include_path) { File.join(root, '.gitignore') }
 
     it_behaves_like 'the gitignore documentation'
