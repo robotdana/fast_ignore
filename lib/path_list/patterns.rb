@@ -88,7 +88,7 @@ class PathList
       @allow ? Matchers::Ignore : Matchers::Allow
     end
 
-    def build_matchers # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def build_matchers
       matchers = read_patterns.flat_map { |p| @format.build(p, @allow, @root) }.compact
       implicit, explicit = matchers.partition(&:implicit?)
       implicit = Matchers::Any.build(implicit)
@@ -100,17 +100,16 @@ class PathList
       explicit = Matchers::WithinDir.build(@root, explicit)
       return [implicit, explicit] unless @allow
 
-      implicit_b, explicit_b = GitignoreIncludeRuleBuilder.new(@root).build_as_parent.partition(&:implicit?)
-      implicit_b = Matchers::Any.build(implicit_b)
-      explicit_b = Matchers::LastMatch.build(explicit_b)
-
-      implicit = Matchers::Any.build([implicit, implicit_b])
-      explicit = Matchers::LastMatch.build([explicit, explicit_b])
+      implicit = Matchers::Any.build([implicit, build_root_matcher])
 
       [implicit, explicit]
     end
 
     private
+
+    def build_root_matcher
+      PathList::Matchers::MatchIfDir.build(Builders::FullPath.build(@root, true, nil))
+    end
 
     def read_patterns
       if @from_file

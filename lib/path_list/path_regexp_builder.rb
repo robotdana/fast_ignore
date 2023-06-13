@@ -3,6 +3,7 @@
 class PathList
   class PathRegexpBuilder
     def initialize
+      @group_open_count = 0
       @string = +''
     end
 
@@ -97,6 +98,24 @@ class PathList
 
     def append_end_anchor
       append('\\z')
+    end
+
+    def append_group_open
+      @group_open_count += 1
+      append('(?:')
+    end
+
+    def append_group_close
+      @group_open_count -= 1
+      append(')')
+    end
+
+    def append_or
+      append('|')
+    end
+
+    def append_group_close_all
+      append_group_close while @group_open_count > 0
     end
 
     def append_start_anchor

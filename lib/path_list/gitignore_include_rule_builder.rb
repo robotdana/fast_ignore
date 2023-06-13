@@ -26,6 +26,7 @@ class PathList
 
       if @anchored
         parent_pattern = @s.string.dup
+
         GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
       else
         [Matchers::AllowAnyDir]
