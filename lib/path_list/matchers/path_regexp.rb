@@ -42,7 +42,7 @@ class PathList
       end
 
       def inspect
-        "#<#{self.class} #{'dir_only ' if @dir_only}#{@return_value.inspect} #{@rule.inspect}>"
+        "#<#{self.class} #{@return_value.inspect} #{@rule.inspect} #{@squashable} #{@implicit}>"
       end
 
       def match(candidate)

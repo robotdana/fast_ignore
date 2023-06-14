@@ -121,6 +121,61 @@ RSpec.describe ::PathList::Patterns do
       end
     end
 
+    # f38b597
+
+    describe 'with glob format' do
+      let(:patterns) { ['*', '!./foo', '!/a/b/c/baz'] }
+      let(:root) { '/a/b/c' }
+      let(:format_arg) { :glob }
+
+      context 'when ignore' do
+        let(:allow_arg) { false }
+
+        it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
+          expect(matchers).to eq PathList::Matchers::LastMatch.new([
+            PathList::Matchers::Allow,
+            PathList::Matchers::WithinDir.new(
+              '/a/b/c/',
+              PathList::Matchers::LastMatch.new([
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, false, false),
+                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, true, false)
+              ])
+            )
+          ])
+        end
+      end
+
+      context 'when allow' do
+        let(:allow_arg) { true }
+
+        it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
+          expect(matchers).to eq PathList::Matchers::LastMatch.new([
+            PathList::Matchers::Ignore,
+            PathList::Matchers::Any.new([
+              PathList::Matchers::MatchIfDir.new(
+                PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b(?:\z|/c\z))}i, true, true, true)
+              ),
+              PathList::Matchers::WithinDir.new(
+                '/a/b/c/',
+                PathList::Matchers::Any.new([
+                  PathList::Matchers::AllowAnyDir,
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/}i, false, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Afoo/)|(?i-mx:\Abaz/)}, true, false, true)
+                ])
+              )
+            ]),
+            PathList::Matchers::WithinDir.new(
+              '/a/b/c/',
+              PathList::Matchers::LastMatch.new([
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, true, false),
+                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, false, false)
+              ])
+            )
+          ])
+        end
+      end
+    end
+
     describe 'with more complex patterns' do
       let(:patterns) { ['a', '/b', 'd', '/bb', '!c/d', '**/e', '# comment'] }
       let(:root) { '/f/g/' }
