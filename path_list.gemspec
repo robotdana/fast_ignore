@@ -37,5 +37,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'simplecov', '~> 0.18.5'
   spec.add_development_dependency 'simplecov-console'
   spec.add_development_dependency 'spellr', '>= 0.8.3'
+  spec.add_development_dependency 'syntax_suggest'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

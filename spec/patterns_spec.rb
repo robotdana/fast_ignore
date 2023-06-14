@@ -50,7 +50,7 @@ RSpec.describe ::PathList::Patterns do
     end
   end
 
-  describe 'with basic patterns' do
+  describe 'with some patterns' do
     let(:patterns) { 'a' }
     let(:root) { '/' }
 
@@ -59,9 +59,7 @@ RSpec.describe ::PathList::Patterns do
 
       it 'ignores a' do
         expect(matchers).to eq PathList::Matchers::LastMatch.new([
-          # default
           PathList::Matchers::Allow,
-          # actual matchers
           PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false)
         ])
       end
@@ -72,13 +70,10 @@ RSpec.describe ::PathList::Patterns do
 
       it 'allows a, and implicitly any children of a' do
         expect(matchers).to eq PathList::Matchers::LastMatch.new([
-          # default
           PathList::Matchers::Ignore,
-          # implicit
           PathList::Matchers::Any.new([
             PathList::Matchers::AllowAnyDir,
             PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true),
-            # actual matchers
             PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false)
           ])
         ])
@@ -121,6 +116,71 @@ RSpec.describe ::PathList::Patterns do
                 ])
               )
             ])
+          ])
+        end
+      end
+    end
+
+    describe 'with more complex patterns' do
+      let(:patterns) { ['a', '/b', 'd', '/bb', '!c/d', '**/e', '# comment'] }
+      let(:root) { '/f/g/' }
+
+      context 'when ignore' do
+        let(:allow_arg) { false }
+
+        it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
+          expect(matchers).to eq PathList::Matchers::LastMatch.new([
+            PathList::Matchers::Allow,
+            PathList::Matchers::WithinDir.new(
+              '/f/g/',
+              PathList::Matchers::LastMatch.new([
+                PathList::Matchers::Any.new([
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false),
+                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, false, false),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, false, false)
+                ]),
+                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, true, false),
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, false, false)
+              ])
+            )
+          ])
+        end
+      end
+
+      context 'when allow' do
+        let(:allow_arg) { true }
+
+        it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
+          expect(matchers).to eq PathList::Matchers::LastMatch.new([
+            PathList::Matchers::Ignore,
+            PathList::Matchers::Any.new([
+              PathList::Matchers::MatchIfDir.new(
+                PathList::Matchers::PathRegexp.new(%r{\Af(?:\z|/g\z)}i, true, true, true)
+              ),
+              PathList::Matchers::WithinDir.new(
+                '/f/g/',
+                PathList::Matchers::Any.new([
+                  PathList::Matchers::AllowAnyDir,
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Ab/)|(?i-mx:\Abb/)}, true, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d/}i, false, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{\Ac/d/}i, true, false, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e/}i, false, true, true)
+                ])
+              )
+            ]),
+            PathList::Matchers::WithinDir.new(
+              '/f/g/',
+              PathList::Matchers::LastMatch.new([
+                PathList::Matchers::Any.new([
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false),
+                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, true, false),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, true, false)
+                ]),
+                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, false, false),
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, true, false)
+              ])
+            )
           ])
         end
       end

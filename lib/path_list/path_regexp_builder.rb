@@ -115,7 +115,7 @@ class PathList
     end
 
     def append_group_close_all
-      append_group_close while @group_open_count > 0
+      append_group_close while @group_open_count.positive?
     end
 
     def append_start_anchor

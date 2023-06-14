@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe PathList::Builders::FullPath do
   subject(:matcher) { described_class.build(path, allow_arg, nil) }
 
@@ -56,11 +58,6 @@ RSpec.describe PathList::Builders::FullPath do
       expect(matcher.match(PathList::Candidate.new('/pathtoexactsomething', nil, nil, nil, nil))) # spellr:disable-line
         .to be_nil
     end
-
-    it "doesn't match path concatenation" do
-      expect(matcher.match(PathList::Candidate.new('/pathtoexactsomething', nil, nil, nil, nil))) # spellr:disable-line
-        .to be_nil
-    end
   end
 
   context 'when not allow' do
@@ -78,7 +75,7 @@ RSpec.describe PathList::Builders::FullPath do
     end
 
     it 'matches exact path case insensitively' do
-      expect(matcher.match(PathList::Candidate.new(path, nil, nil, nil, nil))).to be :ignore
+      expect(matcher.match(PathList::Candidate.new(path.upcase, nil, nil, nil, nil))).to be :ignore
     end
 
     it "doesn't match most parent path" do

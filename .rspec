@@ -1,3 +1,4 @@
 --format documentation
 --color
+--require syntax_suggest
 --require spec_helper
