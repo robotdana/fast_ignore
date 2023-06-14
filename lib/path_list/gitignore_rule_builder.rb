@@ -189,10 +189,8 @@ class PathList
     def build_rule
       @re.prepend(prefix)
 
-      m = Matchers::PathRegexp.build(@re.to_regexp, @anchored, @negation, false)
-
+      m = Matchers::PathRegexp.build(@re.to_regexp, @anchored, @negation)
       m = Matchers::MatchIfDir.build(m) if @dir_only
-
       m
     end
 
@@ -214,9 +212,9 @@ class PathList
 
       dir_only! if @s.match?(%r{.*/\s*\z})
 
-      @s.string.replace(PathExpander.expand_path(@s.rest, @expand_path_with))
-      @s.string.delete_prefix!(@expand_path_with)
-      @s.pos = 0
+      new_rule = PathExpander.expand_path(@s.rest, @expand_path_with)
+      new_rule.delete_prefix!(@expand_path_with)
+      @s = GitignoreRuleScanner.new(new_rule)
     end
   end
 end

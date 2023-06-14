@@ -10,15 +10,12 @@ class PathList
         boundary_right = '\\b' if shebang.match?(/\w\z/)
         pattern = /\A#!.*#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}/i
 
-        [
-          Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow)),
-          build_implicit(shebang, allow, root)
-        ]
+        Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow))
       end
 
       # also allow all directories in case they include a file with the matching shebang file
       def self.build_implicit(_shebang, allow, _root)
-        Matchers::AllowAnyDir if allow
+        allow ? Matchers::AllowAnyDir : Matchers::Null
       end
     end
   end

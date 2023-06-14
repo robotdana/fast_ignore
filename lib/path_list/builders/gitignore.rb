@@ -10,6 +10,12 @@ class PathList
           GitignoreRuleBuilder.new(rule).build
         end
       end
+
+      def self.build_implicit(rule, allow, _root)
+        return Matchers::Null unless allow
+
+        GitignoreIncludeRuleBuilder.new(rule).build_implicit
+      end
     end
   end
 end

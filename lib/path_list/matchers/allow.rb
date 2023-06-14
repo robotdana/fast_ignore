@@ -5,10 +5,6 @@ class PathList
     Allow = Base.new
 
     class << Allow
-      def implicit?
-        true
-      end
-
       def polarity
         :allow
       end

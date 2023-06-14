@@ -5,10 +5,6 @@ class PathList
     Null = Base.new
 
     class << Null
-      def implicit?
-        true
-      end
-
       def inspect
         '#<PathList::Matchers::Null>'
       end

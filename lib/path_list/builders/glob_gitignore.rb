@@ -12,6 +12,14 @@ class PathList
           # :nocov:
         end
       end
+
+      def self.build_implicit(rule, allow, root)
+        if allow
+          GitignoreIncludeRuleBuilder.new(rule, expand_path_with: root).build_implicit
+        else
+          Matchers::Null
+        end
+      end
     end
   end
 end

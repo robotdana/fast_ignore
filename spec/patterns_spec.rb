@@ -60,7 +60,7 @@ RSpec.describe ::PathList::Patterns do
       it 'ignores a' do
         expect(matchers).to eq PathList::Matchers::LastMatch.new([
           PathList::Matchers::Allow,
-          PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false)
+          PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false)
         ])
       end
     end
@@ -73,8 +73,8 @@ RSpec.describe ::PathList::Patterns do
           PathList::Matchers::Ignore,
           PathList::Matchers::Any.new([
             PathList::Matchers::AllowAnyDir,
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true),
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false)
+            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true),
+            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true)
           ])
         ])
       end
@@ -91,7 +91,7 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::Allow,
             PathList::Matchers::WithinDir.new(
               '/b/',
-              PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false)
+              PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false)
             )
           ])
         end
@@ -105,14 +105,14 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::Ignore,
             PathList::Matchers::Any.new([
               PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(/\Ab\z/i, true, true, true)
+                PathList::Matchers::PathRegexp.new(/\Ab\z/i, true, true)
               ),
               PathList::Matchers::WithinDir.new(
                 '/b/',
                 PathList::Matchers::Any.new([
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true),
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true)
                 ])
               )
             ])
@@ -137,8 +137,8 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::WithinDir.new(
               '/a/b/c/',
               PathList::Matchers::LastMatch.new([
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, false, false),
-                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, true, false)
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, false),
+                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, true)
               ])
             )
           ])
@@ -153,22 +153,22 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::Ignore,
             PathList::Matchers::Any.new([
               PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b(?:\z|/c\z))}i, true, true, true)
+                PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b(?:\z|/c\z))}i, true, true)
               ),
               PathList::Matchers::WithinDir.new(
                 '/a/b/c/',
                 PathList::Matchers::Any.new([
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/}i, false, true, true),
-                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Afoo/)|(?i-mx:\Abaz/)}, true, false, true)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/}i, false, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Afoo/)|(?i-mx:\Abaz/)}, true, false)
                 ])
               )
             ]),
             PathList::Matchers::WithinDir.new(
               '/a/b/c/',
               PathList::Matchers::LastMatch.new([
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, true, false),
-                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, false, false)
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, true),
+                PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, false)
               ])
             )
           ])
@@ -190,12 +190,12 @@ RSpec.describe ::PathList::Patterns do
               '/f/g/',
               PathList::Matchers::LastMatch.new([
                 PathList::Matchers::Any.new([
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false, false),
-                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, false, false),
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, false, false)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, false),
+                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, false),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, false)
                 ]),
-                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, true, false),
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, false, false)
+                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, true),
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, false)
               ])
             )
           ])
@@ -210,17 +210,17 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::Ignore,
             PathList::Matchers::Any.new([
               PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(%r{\Af(?:\z|/g\z)}i, true, true, true)
+                PathList::Matchers::PathRegexp.new(%r{\Af(?:\z|/g\z)}i, true, true)
               ),
               PathList::Matchers::WithinDir.new(
                 '/f/g/',
                 PathList::Matchers::Any.new([
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true, true),
-                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Ab/)|(?i-mx:\Abb/)}, true, true, true),
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d/}i, false, true, true),
-                  PathList::Matchers::PathRegexp.new(%r{\Ac/d/}i, true, false, true),
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e/}i, false, true, true)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, false, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Ab/)|(?i-mx:\Abb/)}, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d/}i, false, true),
+                  PathList::Matchers::PathRegexp.new(%r{\Ac/d/}i, true, false),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e/}i, false, true)
                 ])
               )
             ]),
@@ -228,12 +228,12 @@ RSpec.describe ::PathList::Patterns do
               '/f/g/',
               PathList::Matchers::LastMatch.new([
                 PathList::Matchers::Any.new([
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true, false),
-                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, true, false),
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, true, false)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, false, true),
+                  PathList::Matchers::PathRegexp.new(/(?i-mx:\Ab\z)|(?i-mx:\Abb\z)/, true, true),
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)d\z}i, false, true)
                 ]),
-                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, false, false),
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, true, false)
+                PathList::Matchers::PathRegexp.new(%r{\Ac/d\z}i, true, false),
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)e\z}i, false, true)
               ])
             )
           ])

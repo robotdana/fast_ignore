@@ -16,26 +16,6 @@ RSpec.describe PathList::Matchers::WithinDir do
     it { is_expected.to have_default_inspect_value }
   end
 
-  describe '#implicit?' do
-    it 'is matcher.implicit? when true' do
-      allow(matcher).to receive(:implicit?).and_return(true)
-      expect(subject).to be_implicit
-      expect(matcher).to have_received(:implicit?)
-    end
-
-    it 'is matcher.implicit? when false' do
-      allow(matcher).to receive(:implicit?).and_return(false)
-      expect(subject).not_to be_implicit
-      expect(matcher).to have_received(:implicit?)
-    end
-
-    it 'is matcher.implicit? when random' do
-      allow(matcher).to receive(:implicit?).and_return(random_boolean)
-      expect(subject.implicit?).to be random_boolean
-      expect(matcher).to have_received(:implicit?)
-    end
-  end
-
   describe '#weight' do
     let(:random_int) { rand(10) }
 

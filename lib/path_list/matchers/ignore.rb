@@ -5,10 +5,6 @@ class PathList
     Ignore = Base.new
 
     class << Ignore
-      def implicit?
-        true
-      end
-
       def polarity
         :ignore
       end

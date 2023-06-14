@@ -22,14 +22,17 @@ class PathList
     end
 
     def build_parent_dir_rules
-      return unless @negation
+      return Matchers::Null unless @negation
 
       if @anchored
         parent_pattern = @s.string.dup
-
-        GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
+        if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
+          GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
+        else
+          Matchers::Null
+        end
       else
-        [Matchers::AllowAnyDir]
+        Matchers::AllowAnyDir
       end
     end
 
@@ -42,7 +45,7 @@ class PathList
 
       @child_re.prepend(prefix)
 
-      Matchers::PathRegexp.new(@child_re.to_regexp, @anchored, @negation, true)
+      Matchers::PathRegexp.build(@child_re.to_regexp, @anchored, @negation)
     end
 
     def build_as_parent
@@ -51,28 +54,41 @@ class PathList
 
       catch :abort_build do
         process_rule
-        build_rule(child_file_rule: false, parent: true)
+        build_implicit_rule(child_file_rule: false, parent: true)
       end
     end
 
-    def build_rule(child_file_rule: true, parent: false) # rubocop:disable Metrics/MethodLength
+    def build_implicit
+      catch :abort_build do
+        blank! if @s.hash?
+
+        negated! if @s.exclamation_mark?
+        process_rule
+
+        @anchored = false if @anchored == :never
+
+        build_implicit_rule
+      end
+    end
+
+    def build_implicit_rule(child_file_rule: true, parent: false) # rubocop:disable Metrics/MethodLength
       @child_re ||= @re.dup # in case emit_end wasn't called
 
-      [
+      Matchers::Any.build([
         (
           if parent && @anchored && @dir_only && @negation
             @re.prepend(prefix)
 
-            Matchers::MatchIfDir.new(
-              Matchers::PathRegexp.new(@re.to_regexp, true, true, true)
+            Matchers::MatchIfDir.build(
+              Matchers::PathRegexp.build(@re.to_regexp, true, true)
             )
-          else
-            super()
+          elsif parent
+            build_rule
           end
         ),
         *build_parent_dir_rules,
         (build_child_file_rule if child_file_rule)
-      ].compact
+      ].compact)
     end
   end
 end

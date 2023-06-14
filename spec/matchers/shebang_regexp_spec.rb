@@ -12,10 +12,6 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     it { is_expected.to have_inspect_value '#<PathList::Matchers::ShebangRegexp :allow /a/>' }
   end
 
-  describe '#implicit?' do
-    it { is_expected.not_to be_implicit }
-  end
-
   describe '#weight' do
     it { is_expected.to have_attributes(weight: 2) }
   end

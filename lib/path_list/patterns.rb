@@ -88,28 +88,47 @@ class PathList
       @allow ? Matchers::Ignore : Matchers::Allow
     end
 
-    def build_matchers # rubocop:disable Metrics/AbcSize
-      matchers = read_patterns.flat_map { |p| @format.build(p, @allow, @root) }.compact
-      implicit, explicit = matchers.partition(&:implicit?)
-      return [Matchers::Null, Matchers::Null] if matchers.empty?
+    def build_matchers
+      patterns = read_patterns
 
-      implicit = Matchers::Any.build(implicit)
-      explicit = Matchers::LastMatch.build(explicit)
-
-      implicit = Matchers::WithinDir.build(@root, implicit)
-      explicit = Matchers::WithinDir.build(@root, explicit)
+      implicit = @allow ? build_implicit_matcher(patterns) : Matchers::Null
+      explicit = build_explicit_matcher(patterns)
 
       return [implicit, explicit] if !@allow || (implicit == Matchers::Null && explicit == Matchers::Null)
 
-      implicit = Matchers::Any.build([implicit, build_root_matcher])
+      implicit = Matchers::Any.build([implicit, build_implicit_root_matcher])
 
       [implicit, explicit]
     end
 
     private
 
-    def build_root_matcher
-      PathList::Matchers::MatchIfDir.build(Builders::FullPath.build(@root, true, nil))
+    def build_implicit_root_matcher
+      PathList::Matchers::MatchIfDir.build(
+        Builders::FullPath.build_implicit(@root, true, nil)
+      )
+    end
+
+    def build_implicit_matcher(patterns)
+      Matchers::WithinDir.build(
+        @root,
+        Matchers::Any.build(
+          patterns.map do |pattern|
+            @format.build_implicit(pattern, @allow, @root)
+          end
+        )
+      )
+    end
+
+    def build_explicit_matcher(patterns)
+      Matchers::WithinDir.build(
+        @root,
+        Matchers::LastMatch.build(
+          patterns.map do |pattern|
+            @format.build(pattern, @allow, @root)
+          end
+        )
+      )
     end
 
     def read_patterns

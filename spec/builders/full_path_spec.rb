@@ -9,6 +9,8 @@ RSpec.describe PathList::Builders::FullPath do
   let(:allow_arg) { true }
 
   context 'when allow' do
+    subject(:matcher) { described_class.build_implicit(path, allow_arg, nil) }
+
     it 'builds a regex that matches parent and child somethings' do
       # i know it's bad but checking the ivar here is easy
       # and i want to match the regexp i expect to see
@@ -62,6 +64,7 @@ RSpec.describe PathList::Builders::FullPath do
 
   context 'when not allow' do
     let(:allow_arg) { false }
+    subject(:matcher) { described_class.build(path, allow_arg, nil) }
 
     it 'builds a regex that matches exact something' do
       # i know it's bad but checking the ivar here is easy

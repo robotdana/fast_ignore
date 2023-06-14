@@ -8,13 +8,13 @@ RSpec.describe PathList::Matchers::Appendable do
   let(:implicit_matcher) do
     instance_double(
       ::PathList::Matchers::Base,
-      implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+      squashable_with?: false, polarity: :mixed, weight: 1
     )
   end
   let(:explicit_matcher) do
     instance_double(
       ::PathList::Matchers::Base,
-      implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+      squashable_with?: false, polarity: :mixed, weight: 1
     )
   end
   let(:label) { :false_gitignore }
@@ -71,22 +71,22 @@ RSpec.describe PathList::Matchers::Appendable do
 
       appended_implicit_matcher = instance_double(
         ::PathList::Matchers::Base,
-        implicit?: true, squashable_with?: false, polarity: :mixed, weight: 1
+        squashable_with?: false, polarity: :mixed, weight: 1
       )
       appended_explicit_matcher = instance_double(
         ::PathList::Matchers::Base,
-        implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+        squashable_with?: false, polarity: :mixed, weight: 1
       )
       allow(patterns).to receive(:build_matchers).and_return([appended_implicit_matcher, appended_explicit_matcher])
 
       new_explicit_matcher = instance_double(
         ::PathList::Matchers::LastMatch,
-        implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+        squashable_with?: false, polarity: :mixed, weight: 1
       )
 
       new_implicit_matcher = instance_double(
         ::PathList::Matchers::Any,
-        implicit?: false, squashable_with?: false, polarity: :mixed, weight: 1
+        squashable_with?: false, polarity: :mixed, weight: 1
       )
 
       new_appended_matcher = instance_double(::PathList::Matchers::LastMatch, match: nil)

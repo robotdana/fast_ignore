@@ -5,10 +5,6 @@ class PathList
     Unmatchable = Base.new
 
     class << Unmatchable
-      def implicit?
-        true
-      end
-
       def inspect
         '#<PathList::Matchers::Unmatchable>'
       end

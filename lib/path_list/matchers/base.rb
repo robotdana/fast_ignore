@@ -9,10 +9,6 @@ class PathList
         alias_method :build, :new
       end
 
-      def implicit?
-        false
-      end
-
       def polarity
         :mixed
       end

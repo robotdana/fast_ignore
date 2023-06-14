@@ -9,10 +9,6 @@ RSpec.describe PathList::Matchers::Unmatchable do
     it { is_expected.to have_inspect_value '#<PathList::Matchers::Unmatchable>' }
   end
 
-  describe '#implicit?' do
-    it { is_expected.to be_implicit }
-  end
-
   describe '#weight' do
     it { is_expected.to have_attributes(weight: 0) }
   end

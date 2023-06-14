@@ -23,10 +23,6 @@ class PathList
         @matcher.weight
       end
 
-      def implicit?
-        @matcher.implicit?
-      end
-
       def squashable_with?(other)
         other.instance_of?(self.class)
       end

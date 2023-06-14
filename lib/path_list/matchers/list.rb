@@ -42,10 +42,6 @@ class PathList
       def weight
         @matchers.sum(&:weight)
       end
-
-      def implicit?
-        @matchers.all?(&:implicit?)
-      end
     end
   end
 end

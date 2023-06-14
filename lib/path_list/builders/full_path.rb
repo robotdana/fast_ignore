@@ -5,14 +5,11 @@ class PathList
     module FullPath
       def self.build(path, allow, _root)
         path = path.delete_prefix('/')
-        if allow
-          build_implicit(path)
-        else
-          Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow, true)
-        end
+        Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow)
       end
 
-      def self.build_implicit(path) # rubocop:disable Metrics/MethodLength
+      def self.build_implicit(path, allow, _root) # rubocop:disable Metrics/MethodLength
+        path = path.delete_prefix('/')
         path_segments = path.split('/')
         re = PathRegexpBuilder.new
         re.append_start_anchor
@@ -27,7 +24,7 @@ class PathList
         re.append_end_anchor
         re.append_group_close_all
 
-        Matchers::PathRegexp.build(re.to_regexp, true, true, true)
+        Matchers::PathRegexp.build(re.to_regexp, true, true)
       end
     end
   end
