@@ -16,6 +16,10 @@ class PathList
         -Float::INFINITY
       end
 
+      def inspect
+        "#<#{self.class} #{@from_file} @label=#{@label} @format=#{@format}>"
+      end
+
       def polarity
         :mixed
       end

@@ -3,20 +3,18 @@
 class PathList
   module Matchers
     class ShebangRegexp < Base
+      attr_reader :polarity
+
       def initialize(rule, allow)
         @rule = rule
-        @return_value = allow ? :allow : :ignore
+        @polarity = allow ? :allow : :ignore
 
         freeze
       end
 
       def squashable_with?(other)
-        other.instance_of?(ShebangRegexp) &&
-          @return_value == other.return_value
-      end
-
-      def polarity
-        @return_value
+        other.instance_of?(self.class) &&
+          @polarity == other.polarity
       end
 
       def squash(list)
@@ -24,18 +22,18 @@ class PathList
           ::Regexp.union(
             list.map { |l| l.rule } # rubocop:disable Style/SymbolProc it breaks with protected methods
           ),
-          @return_value == :allow
+          @polarity == :allow
         )
       end
 
       def inspect
-        "#<#{self.class} #{@return_value.inspect} #{@rule.inspect}>"
+        "#<#{self.class} #{@polarity.inspect} #{@rule.inspect}>"
       end
 
       def match(candidate)
         return if candidate.filename.include?('.')
 
-        @return_value if candidate.first_line.match?(@rule)
+        @polarity if candidate.first_line.match?(@rule)
       end
 
       def weight
@@ -44,7 +42,6 @@ class PathList
 
       protected
 
-      attr_reader :return_value
       attr_reader :rule
     end
   end

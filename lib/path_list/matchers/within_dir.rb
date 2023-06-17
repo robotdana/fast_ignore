@@ -25,6 +25,10 @@ class PathList
         end
       end
 
+      def inspect
+        super("@dir=#{@dir.inspect}")
+      end
+
       protected
 
       attr_reader :dir

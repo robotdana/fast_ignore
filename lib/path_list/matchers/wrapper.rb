@@ -33,6 +33,10 @@ class PathList
         )
       end
 
+      def inspect(extra = '')
+        "#<#{self.class} #{extra}#{' ' if extra}@matcher=(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)>"
+      end
+
       protected
 
       attr_reader :matcher
@@ -40,10 +44,7 @@ class PathList
       private
 
       def new_with_matcher(matcher)
-        # :nocov:
-        # none actually hit this super
         self.class.new(matcher)
-        # :nocov:
       end
     end
   end

@@ -3,10 +3,12 @@
 class PathList
   module Matchers
     class PathRegexp < Base
+      attr_reader :polarity
+
       def initialize(rule, squashable, allow)
         @rule = rule
         @squashable = squashable
-        @return_value = allow ? :allow : :ignore
+        @polarity = allow ? :allow : :ignore
 
         freeze
       end
@@ -15,14 +17,14 @@ class PathList
         @squashable &&
           other.instance_of?(self.class) &&
           other.squashable? &&
-          @return_value == other.return_value
+          @polarity == other.polarity
       end
 
       def squash(list)
         self.class.new(
           ::Regexp.union(list.map { |l| l.rule }), # rubocop:disable Style/SymbolProc it breaks with protected methods,
           @squashable,
-          @return_value == :allow
+          @polarity == :allow
         )
       end
 
@@ -30,22 +32,17 @@ class PathList
         1
       end
 
-      def polarity
-        @return_value
-      end
-
       def inspect
-        "#<#{self.class} #{@return_value.inspect} #{@rule.inspect}>"
+        "#<#{self.class} #{@polarity.inspect} #{@rule.inspect}>"
       end
 
       def match(candidate)
-        @return_value if @rule.match?(candidate.path)
+        @polarity if @rule.match?(candidate.path)
       end
 
       protected
 
       attr_reader :rule
-      attr_reader :return_value
 
       attr_reader :squashable
       alias_method :squashable?, :squashable

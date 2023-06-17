@@ -17,12 +17,17 @@ class PathList
         build_matcher
       end
 
+      # TODO: maybe w the same label?
       def squashable_with?(_)
         false
       end
 
       def match(candidate)
         @matcher.match(candidate)
+      end
+
+      def inspect
+        super("@label=#{@label.inspect}")
       end
 
       def append(pattern)

@@ -13,6 +13,12 @@ class PathList
         :mixed
       end
 
+      alias_method :original_inspect, :inspect
+
+      def inspect
+        "#<#{self.class}>"
+      end
+
       def squashable_with?(other)
         equal?(other)
       end

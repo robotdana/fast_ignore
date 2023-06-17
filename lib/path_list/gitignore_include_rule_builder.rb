@@ -21,7 +21,7 @@ class PathList
       super
     end
 
-    def build_parent_dir_rules
+    def build_parent_dir_rules # rubocop:disable Metrics/MethodLength
       return Matchers::Null unless @negation
 
       if @anchored

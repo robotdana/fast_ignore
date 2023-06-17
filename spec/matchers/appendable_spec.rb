@@ -24,7 +24,16 @@ RSpec.describe PathList::Matchers::Appendable do
   it { is_expected.not_to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_default_inspect_value }
+    it 'is nicely formatted' do
+      expect(subject.inspect).to eq <<~INSPECT.chomp
+        #<PathList::Matchers::Appendable @label=:false_gitignore @matcher=(
+          #<PathList::Matchers::LastMatch @matchers=[
+            #{implicit_matcher.inspect},
+            #{explicit_matcher.inspect}
+          ]>
+        )>
+      INSPECT
+    end
   end
 
   describe '#weight' do

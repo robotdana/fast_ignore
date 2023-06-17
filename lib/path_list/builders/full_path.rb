@@ -24,7 +24,7 @@ class PathList
         re.append_end_anchor
         re.append_group_close_all
 
-        Matchers::PathRegexp.build(re.to_regexp, true, true)
+        Matchers::PathRegexp.build(re.to_regexp, true, allow)
       end
     end
   end

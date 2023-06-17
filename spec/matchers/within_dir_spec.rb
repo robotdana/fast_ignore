@@ -13,7 +13,13 @@ RSpec.describe PathList::Matchers::WithinDir do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_default_inspect_value }
+    it 'is nicely formatted' do
+      expect(subject.inspect).to eq <<~INSPECT.chomp
+        #<PathList::Matchers::WithinDir @dir="/a_dir" @matcher=(
+          #{matcher.inspect}
+        )>
+      INSPECT
+    end
   end
 
   describe '#weight' do

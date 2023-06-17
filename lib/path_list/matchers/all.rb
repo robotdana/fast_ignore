@@ -7,7 +7,9 @@ class PathList
         matchers = super(matchers) - [Allow]
         return [Allow] if matchers.empty?
 
-        matchers.sort_by(&:weight).uniq
+        matchers.sort_by!(&:weight)
+        matchers.uniq!
+        matchers.freeze
       end
 
       def match(candidate)

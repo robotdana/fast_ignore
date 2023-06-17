@@ -5,9 +5,8 @@ class PathList
     class LastMatch < List
       def self.compress(matchers)
         super(matchers)
-          .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }.map do |chunk|
-            Any.build(chunk)
-          end
+          .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
+          .map { |chunk| Any.build(chunk) }
       end
 
       def match(candidate)

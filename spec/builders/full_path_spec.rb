@@ -63,8 +63,9 @@ RSpec.describe PathList::Builders::FullPath do
   end
 
   context 'when not allow' do
-    let(:allow_arg) { false }
     subject(:matcher) { described_class.build(path, allow_arg, nil) }
+
+    let(:allow_arg) { false }
 
     it 'builds a regex that matches exact something' do
       # i know it's bad but checking the ivar here is easy

@@ -3,7 +3,7 @@
 class PathList
   module Builders
     module Shebang
-      def self.build(shebang, allow, root)
+      def self.build(shebang, allow, _root)
         shebang = shebang.delete_prefix('#!').strip
         # we only want word boundary anchors if we are going from word characters to non-word
         boundary_left = '\\b' if shebang.match?(/\A\w/)

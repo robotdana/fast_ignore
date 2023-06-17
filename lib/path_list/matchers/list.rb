@@ -24,23 +24,39 @@ class PathList
       end
 
       attr_reader :matchers
+      attr_reader :polarity
+      attr_reader :weight
 
       def initialize(matchers)
         @matchers = matchers
+        @polarity = calculate_polarity
+        @weight = calculate_weight
 
         freeze
-      end
-
-      def polarity
-        matchers.all? { |m| m.polarity == matchers.first.polarity } ? matchers.first.polarity : :mixed
       end
 
       def squashable_with?(_)
         false
       end
 
-      def weight
+      def inspect
+        "#<#{self.class} @matchers=[\n#{
+          @matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')
+        }\n]>"
+      end
+
+      private
+
+      def calculate_weight
         @matchers.sum(&:weight)
+      end
+
+      def calculate_polarity
+        first_matcher_polarity = @matchers.first.polarity
+
+        return :mixed unless @matchers.all? { |m| m.polarity == first_matcher_polarity }
+
+        first_matcher_polarity
       end
     end
   end

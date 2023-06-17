@@ -11,6 +11,10 @@ class PathList
         # arbitrary, files to directories ratio
         (@matcher.weight / 5.0) + 1
       end
+
+      def inspect
+        matcher == Allow ? '#<PathList::Matchers::AllowAnyDir>' : super
+      end
     end
   end
 end

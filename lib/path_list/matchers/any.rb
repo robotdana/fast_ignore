@@ -7,19 +7,19 @@ class PathList
         matchers = super(matchers)
         return [Allow] if matchers.include?(Allow)
 
-        squashable_sets = {}
+        squashable_sets = []
 
         matchers.each do |a_matcher|
-          _, s = squashable_sets.find do |(b_matcher, _)|
+          squashable_set = squashable_sets.find do |(b_matcher, *)|
             a_matcher.squashable_with?(b_matcher)
           end
 
-          next s << a_matcher if s
+          next squashable_set << a_matcher if squashable_set
 
-          squashable_sets[a_matcher] = [a_matcher]
+          squashable_sets << [a_matcher]
         end
 
-        squashable_sets.each_value.map do |matcher_set|
+        squashable_sets.each.map do |matcher_set|
           next matcher_set.first if matcher_set.length == 1
 
           matcher_set.first.squash(matcher_set.uniq.sort_by(&:weight))
