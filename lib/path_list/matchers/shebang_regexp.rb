@@ -4,11 +4,12 @@ class PathList
   module Matchers
     class ShebangRegexp < Base
       attr_reader :polarity
+      attr_reader :weight
 
       def initialize(rule, allow)
         @rule = rule
         @polarity = allow ? :allow : :ignore
-
+        @weight = (rule.inspect.length / 3.0) + 2
         freeze
       end
 
@@ -27,17 +28,13 @@ class PathList
       end
 
       def inspect
-        "#<#{self.class} #{@polarity.inspect} #{@rule.inspect}>"
+        super("#{@polarity.inspect} #{@rule.inspect}")
       end
 
       def match(candidate)
         return if candidate.filename.include?('.')
 
         @polarity if candidate.first_line.match?(@rule)
-      end
-
-      def weight
-        2
       end
 
       protected

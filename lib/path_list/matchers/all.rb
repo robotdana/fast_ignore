@@ -19,6 +19,12 @@ class PathList
           :ignore
         end
       end
+
+      private
+
+      def calculate_weight
+        super + 1
+      end
     end
   end
 end

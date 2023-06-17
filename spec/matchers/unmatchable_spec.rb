@@ -10,7 +10,7 @@ RSpec.describe PathList::Matchers::Unmatchable do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 0) }
+    it { is_expected.to have_attributes(weight: 1) }
   end
 
   describe '#squashable_with?' do

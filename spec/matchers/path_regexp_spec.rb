@@ -14,7 +14,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 1) }
+    it { is_expected.to have_attributes(weight: 2) }
   end
 
   describe '#squashable_with?' do

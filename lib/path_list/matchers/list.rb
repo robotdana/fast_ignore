@@ -40,9 +40,9 @@ class PathList
       end
 
       def inspect
-        "#<#{self.class} @matchers=[\n#{
+        super("@matchers=[\n#{
           @matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')
-        }\n]>"
+        }\n]")
       end
 
       private

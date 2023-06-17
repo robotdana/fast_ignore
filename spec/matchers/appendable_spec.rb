@@ -42,7 +42,7 @@ RSpec.describe PathList::Matchers::Appendable do
     it 'is matcher.weight when 0' do
       allow(explicit_matcher).to receive(:weight).and_return(0)
       allow(implicit_matcher).to receive(:weight).and_return(0)
-      expect(subject.weight).to be 0
+      expect(subject.weight).to eq 1.0
       expect(explicit_matcher).to have_received(:weight).at_least(:once)
       expect(implicit_matcher).to have_received(:weight).at_least(:once)
     end
@@ -50,7 +50,7 @@ RSpec.describe PathList::Matchers::Appendable do
     it 'is matcher.weight when 1' do
       allow(explicit_matcher).to receive(:weight).and_return(1)
       allow(implicit_matcher).to receive(:weight).and_return(1)
-      expect(subject.weight).to be 2
+      expect(subject.weight).to eq 2
       expect(explicit_matcher).to have_received(:weight).at_least(:once)
       expect(implicit_matcher).to have_received(:weight).at_least(:once)
     end
@@ -58,7 +58,7 @@ RSpec.describe PathList::Matchers::Appendable do
     it 'is matcher.weight when random' do
       allow(explicit_matcher).to receive(:weight).and_return(random_int)
       allow(implicit_matcher).to receive(:weight).and_return(0)
-      expect(subject.weight).to be random_int
+      expect(subject.weight).to eq (random_int / 2) + 1
       expect(explicit_matcher).to have_received(:weight).at_least(:once)
       expect(implicit_matcher).to have_received(:weight).at_least(:once)
     end

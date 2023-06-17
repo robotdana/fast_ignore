@@ -25,28 +25,28 @@ RSpec.describe PathList::Matchers::WithinDir do
   describe '#weight' do
     let(:random_int) { rand(10) }
 
-    it 'is matcher.weight when 0' do
+    it 'is matcher.weight / 2 + 1 when matcher.weight = 0' do
       allow(matcher).to receive(:weight).and_return(0)
-      expect(subject.weight).to be 0
+      expect(subject.weight).to eq 1
       expect(matcher).to have_received(:weight)
     end
 
-    it 'is matcher.weight when 1' do
+    it 'is matcher.weight / 2 + 1 when matcher.weight = 1' do
       allow(matcher).to receive(:weight).and_return(1)
-      expect(subject.weight).to be 1
+      expect(subject.weight).to eq 1.5
       expect(matcher).to have_received(:weight)
     end
 
-    it 'is matcher.weight when random' do
+    it 'is matcher.weight / 2 + 1 when matcher.weight random' do
       allow(matcher).to receive(:weight).and_return(random_int)
-      expect(subject.weight).to be random_int
+      expect(subject.weight).to eq (random_int / 2) + 1
       expect(matcher).to have_received(:weight)
     end
   end
 
   describe '#squashable_with?' do
     it 'is squashable with something with the same dir and the same kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base, weight: 0)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(dir, other_child_matcher)
 
@@ -54,7 +54,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     end
 
     it 'is not squashable with something with a different dir but the same kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base, weight: 0)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(true)
       other_matcher = described_class.new(other_dir, other_child_matcher)
 
@@ -62,7 +62,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     end
 
     it 'is squashable with something with the same dir but a different kind of matcher' do
-      other_child_matcher = instance_double(PathList::Matchers::Base)
+      other_child_matcher = instance_double(PathList::Matchers::Base, weight: 0)
       allow(matcher).to receive(:squashable_with?).with(other_child_matcher).and_return(false)
       other_matcher = described_class.new(dir, other_child_matcher)
 

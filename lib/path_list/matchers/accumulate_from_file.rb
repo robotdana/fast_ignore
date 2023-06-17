@@ -12,12 +12,15 @@ class PathList
         freeze
       end
 
+      # TODO: avoid this hack to sort things to the front.
+      # it's misleading
+
       def weight
         -Float::INFINITY
       end
 
       def inspect
-        "#<#{self.class} #{@from_file} @label=#{@label} @format=#{@format}>"
+        super("#{@from_file} @label=#{@label} @format=#{@format}")
       end
 
       def polarity

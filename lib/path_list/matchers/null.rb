@@ -5,8 +5,8 @@ class PathList
     Null = Base.new
 
     class << Null
-      def inspect
-        '#<PathList::Matchers::Null>'
+      def name
+        'PathList::Matchers::Null'
       end
 
       def match(_)

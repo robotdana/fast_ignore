@@ -5,8 +5,8 @@ class PathList
     Unmatchable = Base.new
 
     class << Unmatchable
-      def inspect
-        '#<PathList::Matchers::Unmatchable>'
+      def name
+        'PathList::Matchers::Unmatchable'
       end
 
       def match(_)

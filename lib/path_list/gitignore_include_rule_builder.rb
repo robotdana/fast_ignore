@@ -82,7 +82,7 @@ class PathList
             Matchers::MatchIfDir.build(
               Matchers::PathRegexp.build(@re.to_regexp, true, true)
             )
-          elsif parent
+          elsif parent && @negation
             build_rule
           end
         ),

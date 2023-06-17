@@ -17,6 +17,12 @@ class PathList
 
         nil
       end
+
+      private
+
+      def calculate_weight
+        super / 2.0
+      end
     end
   end
 end

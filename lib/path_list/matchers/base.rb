@@ -14,9 +14,10 @@ class PathList
       end
 
       alias_method :original_inspect, :inspect
+      alias_method :name, :class
 
-      def inspect
-        "#<#{self.class}>"
+      def inspect(data = nil)
+        "#<#{name}#{' ' if data}#{data}>"
       end
 
       def squashable_with?(other)
@@ -28,7 +29,7 @@ class PathList
       end
 
       def weight
-        0
+        1
       end
 
       def match(_)

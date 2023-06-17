@@ -38,6 +38,11 @@ class PathList
       def new_with_matcher(matcher)
         self.class.build(@dir, matcher)
       end
+
+      def calculate_weight
+        # how much of this project is inside this directory...
+        (super / 2.0) + 1
+      end
     end
   end
 end

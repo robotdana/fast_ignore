@@ -7,13 +7,15 @@ class PathList
         @matcher.match(candidate) if candidate.directory?
       end
 
-      def weight
-        # arbitrary, files to directories ratio
-        (@matcher.weight / 5.0) + 1
-      end
-
       def inspect
         matcher == Allow ? '#<PathList::Matchers::AllowAnyDir>' : super
+      end
+
+      private
+
+      def calculate_weight
+        # arbitrary, files to directories ratio from my projects dir
+        (super * 0.2) + 1
       end
     end
   end

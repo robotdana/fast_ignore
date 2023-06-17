@@ -9,8 +9,8 @@ class PathList
         :allow
       end
 
-      def inspect
-        '#<PathList::Matchers::Allow>'
+      def name
+        'PathList::Matchers::Allow'
       end
 
       def match(_)

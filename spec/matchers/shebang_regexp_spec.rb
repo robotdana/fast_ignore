@@ -13,7 +13,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 2) }
+    it { is_expected.to have_attributes(weight: 3.0) }
   end
 
   describe '#squashable_with?' do

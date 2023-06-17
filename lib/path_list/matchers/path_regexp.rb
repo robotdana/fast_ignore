@@ -4,10 +4,14 @@ class PathList
   module Matchers
     class PathRegexp < Base
       attr_reader :polarity
+      attr_reader :weight
 
       def initialize(rule, squashable, allow)
         @rule = rule
         @squashable = squashable
+        # chaos
+        @weight = squashable ? 2 : (rule.inspect.length / 4.0) + 2
+
         @polarity = allow ? :allow : :ignore
 
         freeze
@@ -28,12 +32,8 @@ class PathList
         )
       end
 
-      def weight
-        1
-      end
-
       def inspect
-        "#<#{self.class} #{@polarity.inspect} #{@rule.inspect}>"
+        super("#{@polarity.inspect} #{@rule.inspect}")
       end
 
       def match(candidate)

@@ -9,8 +9,8 @@ class PathList
         :ignore
       end
 
-      def inspect
-        '#<PathList::Matchers::Ignore>'
+      def name
+        'PathList::Matchers::Ignore'
       end
 
       def match(_)

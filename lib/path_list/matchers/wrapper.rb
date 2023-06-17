@@ -3,6 +3,8 @@
 class PathList
   module Matchers
     class Wrapper < Base
+      attr_reader :weight
+
       def self.build(matcher)
         return Null if matcher == Null
 
@@ -11,16 +13,13 @@ class PathList
 
       def initialize(matcher)
         @matcher = matcher
+        @weight = calculate_weight
 
         freeze
       end
 
       def polarity
         @matcher.polarity
-      end
-
-      def weight
-        @matcher.weight
       end
 
       def squashable_with?(other)
@@ -33,8 +32,8 @@ class PathList
         )
       end
 
-      def inspect(extra = '')
-        "#<#{self.class} #{extra}#{' ' if extra}@matcher=(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)>"
+      def inspect(data = '')
+        super("#{data}#{' ' if data}@matcher=(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)")
       end
 
       protected
@@ -45,6 +44,10 @@ class PathList
 
       def new_with_matcher(matcher)
         self.class.new(matcher)
+      end
+
+      def calculate_weight
+        @matcher.weight
       end
     end
   end

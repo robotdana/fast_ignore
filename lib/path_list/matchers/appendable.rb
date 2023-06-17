@@ -26,6 +26,10 @@ class PathList
         @matcher.match(candidate)
       end
 
+      def weight
+        @weight ||= @matcher.weight + 1
+      end
+
       def inspect
         super("@label=#{@label.inspect}")
       end
@@ -56,6 +60,7 @@ class PathList
         else
           LastMatch.build([@default_matcher, @implicit_matcher, @explicit_matcher])
         end
+        @weight = nil
       end
     end
   end
