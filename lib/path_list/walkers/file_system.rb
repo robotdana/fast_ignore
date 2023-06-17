@@ -12,7 +12,7 @@ class PathList
           exists: nil,
           as_parent: false
         )
-          full_path = PathExpander.expand_path(path)
+          full_path = PathExpander.expand_path_pwd(path)
           candidate = Candidate.new(full_path, nil, directory, exists, content)
           return false if !as_parent && candidate.directory?
           return false unless candidate.exists?

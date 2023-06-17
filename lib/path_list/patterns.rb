@@ -23,10 +23,10 @@ class PathList
       recursive: false
     )
       @label = label.to_sym if label
-      root = PathExpander.expand_dir(root) if root
+      root = PathExpander.expand_dir_pwd(root) if root
 
       if from_file
-        @from_file = PathExpander.expand_path(from_file, root || '.')
+        @from_file = PathExpander.expand_path(from_file, root)
         @exists = ::File.exist?(@from_file)
         if recursive
           @label ||= :"PathList::Patterns.new(from_file: \"./#{::File.basename(from_file)}\", recursive: true)"
@@ -39,7 +39,7 @@ class PathList
       @allow = allow
       @recursive = recursive
 
-      @root = PathExpander.expand_dir(root || '.')
+      @root = root
       @format = BUILDERS.fetch(format || :gitignore, format)
 
       valid?

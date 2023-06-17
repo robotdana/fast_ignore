@@ -39,7 +39,7 @@ RSpec.describe PathList::Matchers::WithinDir do
 
     it 'is matcher.weight / 2 + 1 when matcher.weight random' do
       allow(matcher).to receive(:weight).and_return(random_int)
-      expect(subject.weight).to eq (random_int / 2) + 1
+      expect(subject.weight).to eq (random_int / 2.0) + 1
       expect(matcher).to have_received(:weight)
     end
   end

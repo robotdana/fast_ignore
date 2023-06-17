@@ -107,7 +107,7 @@ class PathList # rubocop:disable Metrics/ClassLength
     return enum_for(:each, root) unless block
     return unless Walkers::FileSystem.include?(root, path_list: self, as_parent: true)
 
-    Walkers::FileSystem.each(PathExpander.expand_dir(root), '', self, &block)
+    Walkers::FileSystem.each(PathExpander.expand_dir_pwd(root), '', self, &block)
   end
 
   def dup
