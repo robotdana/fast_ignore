@@ -3,16 +3,14 @@
 
 require 'ruby-prof'
 
-RubyProf.measure_mode = RubyProf::WALL_TIME
+profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 # RubyProf.measure_mode = RubyProf::ALLOCATIONS
 # RubyProf.measure_mode = RubyProf::MEMORY
 
-RubyProf.start
-
-require_relative '../../lib/path_list'
-PathList.gitignore.argv.to_a
-
-profile = RubyProf.stop
+profile.profile do
+  require_relative '../../lib/path_list'
+  PathList.gitignore.only(ARGV, format: :glob).to_a
+end
 
 printer = RubyProf::GraphPrinter.new(profile)
 printer.print($stdout, min_percent: 2, sort_method: :self_time)
