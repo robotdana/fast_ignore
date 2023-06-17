@@ -159,7 +159,6 @@ RSpec.describe ::PathList::Patterns do
                 '/a/b/c/',
                 PathList::Matchers::Any.new([
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Afoo/)|(?i-mx:\Abaz/)}, true, false),
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/}i, false, true)
                 ])
               )
