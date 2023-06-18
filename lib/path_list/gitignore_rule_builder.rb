@@ -161,6 +161,7 @@ class PathList
     end
 
     def build_rule
+      @rule.compress
       @rule.build
     end
 

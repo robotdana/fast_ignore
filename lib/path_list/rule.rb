@@ -2,6 +2,31 @@
 
 class PathList
   class Rule # rubocop:disable Metrics/ClassLength
+    def self.merge_parts_lists(parts_lists)
+      return parts_lists.first if parts_lists.length < 2
+
+      merged = []
+      grouped_by_first = parts_lists.group_by(&:first)
+      grouped_by_first.delete(nil)
+      return merged if grouped_by_first.empty?
+
+      if grouped_by_first.length == 1
+        merged << parts_lists.first.first
+        merged += merge_parts_lists(parts_lists.map { |parts_list| parts_list.drop(1) })
+      else
+        new_fork = []
+        merged << new_fork
+
+        grouped_by_first.each do |first_item, sub_parts_lists|
+          tail = [first_item]
+          tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
+          new_fork << tail
+        end
+      end
+
+      merged
+    end
+
     def initialize(parts = [:dir_or_start_anchor], negated = false)
       @negated = negated
       @unanchorable = false
@@ -43,8 +68,7 @@ class PathList
     end
 
     def build_path_matcher
-      parts = compress_parts(@parts.dup)
-      re_string = parts.map { |part| part_to_regexp(part) }.join
+      re_string = @parts.map { |part| part_to_regexp(part) }.join
       return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
@@ -79,35 +103,33 @@ class PathList
       [:one_non_dir, :any_non_dir] => [:any_non_dir, :one_non_dir]
     }.freeze
 
-    def compress_parts(parts) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def compress # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       changed = false
       START_COMPRESSION_RULES.each do |rule, replacement|
-        if rule == parts.take(rule.length)
-          parts[0, rule.length] = replacement
+        if rule == @parts.take(rule.length)
+          @parts[0, rule.length] = replacement
           changed = true
         end
       end
 
       END_COMPRESSION_RULES.each do |rule, replacement|
-        if rule == parts.slice(-1 * rule.length, rule.length)
-          parts[-1 * rule.length, rule.length] = replacement
+        if rule == @parts.slice(-1 * rule.length, rule.length)
+          @parts[-1 * rule.length, rule.length] = replacement
           # changed = true
         end
       end
 
       MID_COMPRESSION_RULES.each do |rule, replacement|
-        parts.each_cons(rule.length).with_index do |parts_cons, index|
+        @parts.each_cons(rule.length).with_index do |parts_cons, index|
           if rule == parts_cons
-            parts[index, rule.length] = replacement
+            @parts[index, rule.length] = replacement
             changed = true
           end
         end
-        parts.compact!
+        @parts.compact!
       end
 
-      return parts unless changed
-
-      compress_parts(parts)
+      compress if changed
     end
 
     def build_parents # rubocop:disable Metrics/MethodLength Metrics/AbcSize

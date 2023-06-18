@@ -49,6 +49,7 @@ class PathList
         @child_rule.append_dir
       end
 
+      @child_rule.compress
       @child_rule.build_path_matcher
     end
 
@@ -58,6 +59,7 @@ class PathList
 
       catch :abort_build do
         process_rule
+        @rule.compress
         build_implicit_rule(child_file_rule: false, parent: true)
       end
     end
@@ -69,6 +71,7 @@ class PathList
         negated! if @s.exclamation_mark?
         process_rule
 
+        @rule.compress
         build_implicit_rule
       end
     end
