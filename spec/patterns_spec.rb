@@ -73,8 +73,7 @@ RSpec.describe ::PathList::Patterns do
           PathList::Matchers::Ignore,
           PathList::Matchers::Any.new([
             PathList::Matchers::AllowAnyDir,
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, true),
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, true)
+            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true)
           ])
         ])
       end
@@ -111,8 +110,7 @@ RSpec.describe ::PathList::Patterns do
                 '/b/',
                 PathList::Matchers::Any.new([
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a/}i, true),
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\z}i, true)
+                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true)
                 ])
               )
             ])
