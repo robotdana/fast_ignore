@@ -5,11 +5,11 @@ class PathList
     def initialize(rule, expand_path_with: nil)
       super
 
-      @negation = true
+      @rule.negated!
     end
 
     def negated!
-      @negation = false
+      @rule.unnegated!
     end
 
     def unmatchable_rule!
@@ -17,14 +17,15 @@ class PathList
     end
 
     def emit_end
-      @child_re = @re.dup
+      @child_rule = @rule.dup
       super
     end
 
     def build_parent_dir_rules # rubocop:disable Metrics/MethodLength
-      return Matchers::Blank unless @negation
+      return Matchers::Blank unless @rule.negated?
 
-      if @anchored
+      # TODO: unfuck this:
+      if @rule.anchored?
         parent_pattern = @s.string.dup
         if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
           GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
@@ -37,20 +38,21 @@ class PathList
     end
 
     def build_child_file_rule
-      if @child_re.end_with?('/')
-        @child_re.append_many_non_dir.append_dir if @dir_only
+      if @child_rule.end_with?(:dir)
+        if @rule.dir_only?
+          @child_rule.append_many_non_dir
+          @child_rule.append_dir
+        end
       else
-        @child_re.append_dir
+        @child_rule.append_dir
       end
 
-      @child_re.prepend(prefix)
-
-      Matchers::PathRegexp.build(@child_re.to_regexp, @anchored, @negation)
+      Matchers::PathRegexp.build(@child_rule.to_regexp, @child_rule.anchored?, @child_rule.negated?)
     end
 
     def build_as_parent
-      anchored!
-      dir_only!
+      @rule.anchored!
+      @rule.dir_only!
 
       catch :abort_build do
         process_rule
@@ -65,29 +67,25 @@ class PathList
         negated! if @s.exclamation_mark?
         process_rule
 
-        @anchored = false if @anchored == :never
-
         build_implicit_rule
       end
     end
 
     def build_implicit_rule(child_file_rule: true, parent: false) # rubocop:disable Metrics/MethodLength
-      @child_re ||= @re.dup # in case emit_end wasn't called
+      @child_rule ||= @rule.dup # in case emit_end wasn't called
 
       Matchers::Any.build([
         (
-          if parent && @anchored && @dir_only && @negation
-            @re.prepend(prefix)
-
+          if parent && @rule.anchored? && @rule.dir_only? && @rule.negated?
             Matchers::MatchIfDir.build(
-              Matchers::PathRegexp.build(@re.to_regexp, true, true)
+              Matchers::PathRegexp.build(@rule.to_regexp, true, true)
             )
           elsif parent
             build_rule
           end
         ),
         *build_parent_dir_rules,
-        (build_child_file_rule if child_file_rule && @negation)
+        (build_child_file_rule if child_file_rule && @rule.negated?)
       ].compact)
     end
   end
