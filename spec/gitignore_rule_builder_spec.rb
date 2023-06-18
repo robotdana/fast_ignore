@@ -198,7 +198,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
             it 'matches multiple directories when sequential /*/' do
               expect(described_class.new('a/*/*').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/[^/]+\z}i, true, false)
+                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/[^/]*[^/]\z}i, true, false)
             end
 
             it 'matches multiple directories when beginning sequential /*/' do
@@ -208,12 +208,12 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
             it 'matches multiple directories when ending with /**/*' do
               expect(described_class.new('a/**/*').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?[^/]+\z}i, true, false)
+                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?[^/]*[^/]\z}i, true, false)
             end
 
             it 'matches multiple directories when ending with **/*' do
               expect(described_class.new('a**/*').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa(?:.*/)?[^/]+\z}i, true, false)
+                .to eq PathList::Matchers::PathRegexp.new(%r{\Aa(?:.*/)?[^/]*[^/]\z}i, true, false)
             end
 
             it 'matches multiple directories when beginning with **/*/' do
@@ -556,7 +556,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
           it 'matches files or directories in all directories with **/*' do
             expect(described_class.new('**/*').build)
-              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]+\z}i, false, false)
+              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*[^/]\z}i, false, false)
           end
 
           it 'matches files or directories in all directories when also followed by a star before text' do

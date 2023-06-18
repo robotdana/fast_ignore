@@ -25,6 +25,7 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
+require_relative 'support/actual_git_ls_files'
 require_relative 'support/inspect_helper'
 require_relative 'support/temp_dir_helper'
 require_relative 'support/stub_env_helper'

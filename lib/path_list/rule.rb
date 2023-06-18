@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class PathList
-  class Rule
+  class Rule # rubocop:disable Metrics/ClassLength
     def initialize
       @negated = false
+      @unanchorable = false
       @dir_only = false
       @start = :dir_or_start_anchor
       @parts = []
@@ -22,7 +23,7 @@ class PathList
     end
 
     def anchored!
-      @start = :start_anchor unless @start == :no_anchor
+      @start = :start_anchor unless @unanchorable
     end
 
     def anchored?
@@ -30,7 +31,8 @@ class PathList
     end
 
     def never_anchored!
-      @start = :no_anchor
+      @start = :dir_or_start_anchor
+      @unanchorable = true
     end
 
     def dir_only!
@@ -43,22 +45,52 @@ class PathList
 
     def to_regexp
       # Regexp::IGNORECASE = 1
-      Regexp.new("#{part_to_regexp(@start)}#{@parts.map { |part| part_to_regexp(part) }.join}", 1)
+      Regexp.new(compress_parts([@start, *@parts]).map { |part| part_to_regexp(part) }.join, 1)
     end
 
-    def compress_parts
-      # [:character_class_open, single_non_slash_literal, :character_class_close] #> single_non_slash_literal
-      # [:any_non_dir, *] => [:any_non_dir]
-      #
+    START_COMPRESSION_RULES = {
+      [:start_anchor, :any_dir] => [:any_non_dir],
+      [:start_anchor, :any] => [],
+      [:dir_or_start_anchor, :any] => []
+    }.freeze
+
+    COMPRESSION_RULES = {
+      # needs to be the same length
+      [:any_non_dir, :any_non_dir] => [nil, :any_non_dir],
+      [:one_non_dir, :any_non_dir] => [:any_non_dir, :one_non_dir]
+    }.freeze
+
+    def compress_parts(parts) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      changed = false
+      START_COMPRESSION_RULES.each do |rule, replacement|
+        if rule == parts.take(rule.length)
+          parts[0, rule.length] = replacement
+          changed = true
+        end
+      end
+
+      COMPRESSION_RULES.each do |rule, replacement|
+        parts.each_cons(rule.length).with_index do |parts_cons, index|
+          if rule == parts_cons
+            parts[index, rule.length] = replacement
+            changed = true
+          end
+        end
+        parts.compact!
+      end
+
+      return parts unless changed
+
+      compress_parts(parts)
     end
 
-    def part_to_regexp(part)
+    def part_to_regexp(part) # rubocop:disable Metrics/MethodLength
       case part
       when :dir then '/'
       when :any_dir then '(?:.*/)?'
+      when :any then '.*'
       when :one_non_dir then '[^/]'
       when :any_non_dir then '[^/]*'
-      when :many_non_dir then '[^/]+'
       when :end_anchor then '\\z'
       when :start_anchor then '\\A'
       when :dir_or_start_anchor then '(?:\\A|/)'
@@ -66,7 +98,6 @@ class PathList
       when :character_class_negation then '^'
       when :character_class_dash then '-'
       when :character_class_close then ']'
-      when :no_anchor then '(?:\\A|/)'
       when nil, String then part
       else raise 'Unknown token'
       end
@@ -109,7 +140,8 @@ class PathList
     end
 
     def append_many_non_dir
-      @parts << :many_non_dir
+      @parts << :any_non_dir
+      @parts << :one_non_dir
     end
 
     def append_character_class_open
@@ -131,7 +163,11 @@ class PathList
     def append_escaped(value)
       return unless value
 
-      @parts << ::Regexp.escape(value)
+      if @parts[-1].is_a?(String)
+        @parts[-1] << ::Regexp.escape(value)
+      else
+        @parts << ::Regexp.escape(value)
+      end
     end
   end
 end

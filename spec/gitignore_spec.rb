@@ -18,16 +18,16 @@ RSpec.describe ::PathList do
           gitignore '**/b/d'
           gitignore 'b/c', path: 'a/.gitignore'
 
-          expect(subject).not_to match_files('b/c', 'a/.gitignore')
-          expect(subject).to match_files('a/b/d', 'a/b/c', 'b/d')
+          expect(subject).not_to match_files('b/c', 'a/.gitignore', create: false)
+          expect(subject).to match_files('a/b/d', 'a/b/c', 'b/d', create: false)
         end
 
         it 'overrides parent rules in lower level files' do
           gitignore '**/b/d'
           gitignore '!b/d', 'b/c', path: 'a/.gitignore'
 
-          expect(subject).not_to match_files('a/b/d', 'b/c', 'a/.gitignore')
-          expect(subject).to match_files('a/b/c', 'b/d')
+          expect(subject).not_to match_files('a/b/d', 'b/c', 'a/.gitignore', create: false)
+          expect(subject).to match_files('a/b/c', 'b/d', create: false)
         end
 
         it 'overrides parent rules in lower level files with 3 levels' do
@@ -35,23 +35,21 @@ RSpec.describe ::PathList do
           gitignore '!b/d', 'b/c', path: 'a/.gitignore'
           gitignore 'd', '!c', path: 'a/b/.gitignore'
 
-          expect(subject).not_to match_files('a/b/c', 'a/.gitignore', 'a/b/.gitignore', '.gitignore')
-          expect(subject).to match_files('b/c', 'b/d', 'a/b/d')
+          expect(subject).not_to match_files('a/b/c', 'a/.gitignore', 'a/b/.gitignore', '.gitignore', create: false)
+          expect(subject).to match_files('b/c', 'b/d', 'a/b/d', create: false)
         end
 
         it 'overrides parent negations in lower level files' do
           gitignore '**/b/*', '!**/b/d'
           gitignore 'b/d', '!b/c', path: 'a/.gitignore'
 
-          expect(subject).not_to match_files('b/d', 'a/b/c', 'a/.gitignore')
-          expect(subject).to match_files('b/c', 'a/b/d')
+          expect(subject).not_to match_files('b/d', 'a/b/c', 'a/.gitignore', create: false)
+          expect(subject).to match_files('b/c', 'a/b/d', create: false)
         end
       end
 
       describe 'Patterns read from $GIT_DIR/info/exclude' do
         before do
-          create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
-
           gitignore 'b/d'
           gitignore 'a/b/c', path: '.git/info/exclude'
         end
@@ -64,8 +62,6 @@ RSpec.describe ::PathList do
     end
 
     it 'ignore .git by default' do
-      create_file_list '.gitignore', '.git/WHATEVER', 'WHATEVER'
-
       expect(subject).to match_files('.git/WHATEVER')
       expect(subject).not_to match_files('WHATEVER')
     end
@@ -78,10 +74,7 @@ RSpec.describe ::PathList do
   end
 
   describe 'git ls-files' do
-    subject do
-      `git init && git -c core.excludesfile='' add -N .`
-      `git -c core.excludesfile='' ls-files`.split("\n")
-    end
+    subject { ActualGitLSFiles.new }
 
     it_behaves_like 'gitignore: true'
   end

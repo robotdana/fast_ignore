@@ -10,15 +10,13 @@ RSpec.describe PathList do
 
   shared_examples 'the gitignore documentation' do
     describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-      before { create_file_list 'foo', 'bar', 'baz' }
-
       # an empty list matches everything for include rules
       # So this uses allow_files instead of match_files
       it 'matches nothing when gitignore is empty' do
         gitignore
 
         expect(subject).to allow_files('foo', 'bar', 'baz')
-        expect(subject).not_to allow_files('/.gitignore') # files outside root are not allowed
+        expect(subject).not_to allow_files('/.gitignore', create: false) # files outside root are not allowed
       end
 
       # an empty list matches everything for include rules
@@ -38,8 +36,6 @@ RSpec.describe PathList do
     end
 
     describe 'A line starting with # serves as a comment.' do
-      before { create_file_list '#foo', 'foo' }
-
       it "doesn't match files whose names look like a comment" do
         gitignore '#foo', 'foo'
 
@@ -57,93 +53,75 @@ RSpec.describe PathList do
       end
     end
 
-    describe 'with unquoted subject' do
-      # unfortunately git likes to output path names with quotes and escaped backslashes.
-      # we need the string without quotes and without escaped backslashes.
-      let(:unquoted_subject) do
-        next subject unless subject.is_a?(Array)
+    describe 'literal backslashes in filenames' do
+      it "never matches backslashes when they're not in the pattern" do
+        gitignore 'foo'
 
-        subject.map do |path|
-          next path unless path[0] == '"' && path[-1] == '"'
-
-          path[1..-2].gsub('\\\\', '\\')
-        end
+        expect(subject).to match_files('foo')
+        expect(subject).not_to match_files('foo\\', '\\\\foo', 'foo\\\\', '\\foo', 'fo\\o/\\foo')
       end
 
-      describe 'literal backslashes in filenames' do
-        before { create_file_list 'foo', 'foo\\', 'foo\\\\', '\\\\foo', '\\foo', 'fo\\o/\\foo' }
+      it 'matches an escaped backslash at the end of the pattern' do
+        gitignore 'foo\\\\'
 
-        it "never matches backslashes when they're not in the pattern" do
-          gitignore 'foo'
-
-          expect(unquoted_subject).to match_files('foo')
-          expect(unquoted_subject).not_to match_files('foo\\', '\\\\foo', 'foo\\\\', '\\foo', 'fo\\o/\\foo')
-        end
-
-        it 'matches an escaped backslash at the end of the pattern' do
-          gitignore 'foo\\\\'
-
-          expect(unquoted_subject).to match_files('foo\\')
-          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
-        end
-
-        it 'never matches a literal backslash at the end of the pattern' do
-          gitignore 'foo\\'
-
-          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
-        end
-
-        it 'matches an escaped backslash at the start of the pattern' do
-          gitignore '\\\\foo'
-
-          expect(unquoted_subject).to match_files('\\foo', 'fo\\o/\\foo')
-          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'foo\\\\')
-        end
-
-        it 'matches a literal escaped f at the start of the pattern' do
-          gitignore '\\foo'
-
-          expect(unquoted_subject).not_to match_files('\\\\foo', 'foo\\', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
-          expect(unquoted_subject).to match_files('foo')
-        end
+        expect(subject).to match_files('foo\\')
+        expect(subject).not_to match_files('\\\\foo', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
       end
 
-      describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
-        before { create_file_list 'foo', 'foo ', 'foo  ', 'foo\\' }
+      it 'never matches a literal backslash at the end of the pattern' do
+        gitignore 'foo\\'
 
-        it 'ignores trailing spaces in the gitignore file' do
-          gitignore 'foo  '
+        expect(subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
+      end
 
-          expect(unquoted_subject).not_to match_files('foo  ', 'foo ')
-          expect(unquoted_subject).to match_files('foo')
-        end
+      it 'matches an escaped backslash at the start of the pattern' do
+        gitignore '\\\\foo'
 
-        it "doesn't ignore trailing spaces if there's a backslash" do
-          gitignore "foo \\ \n"
+        expect(subject).to match_files('\\foo', 'fo\\o/\\foo')
+        expect(subject).not_to match_files('\\\\foo', 'foo\\', 'foo', 'foo\\\\')
+      end
 
-          expect(unquoted_subject).not_to match_files('foo', 'foo ', 'foo\\')
-          expect(unquoted_subject).to match_files('foo  ')
-        end
+      it 'matches a literal escaped f at the start of the pattern' do
+        gitignore '\\foo'
 
-        it 'considers trailing backslashes to never be matched' do
-          gitignore "foo\\\n"
+        expect(subject).not_to match_files('\\\\foo', 'foo\\', 'fo\\o/\\foo', 'foo\\\\', '\\foo')
+        expect(subject).to match_files('foo')
+      end
+    end
 
-          expect(unquoted_subject).not_to match_files('foo  ', 'foo ', 'foo', 'foo\\')
-        end
+    describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
+      it 'ignores trailing spaces in the gitignore file' do
+        gitignore 'foo  '
 
-        it "doesn't ignore trailing spaces if there's a backslash before every space" do
-          gitignore "foo\\ \\ \n"
+        expect(subject).not_to match_files('foo  ', 'foo ')
+        expect(subject).to match_files('foo')
+      end
 
-          expect(unquoted_subject).not_to match_files('foo', 'foo ', 'foo\\')
-          expect(unquoted_subject).to match_files('foo  ')
-        end
+      it "doesn't ignore trailing spaces if there's a backslash" do
+        gitignore "foo \\ \n"
 
-        it "doesn't ignore just that trailing space if there's a backslash before the non last space" do
-          gitignore "foo\\  \n"
+        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
+        expect(subject).to match_files('foo  ')
+      end
 
-          expect(unquoted_subject).not_to match_files('foo', 'foo  ', 'foo\\')
-          expect(unquoted_subject).to match_files('foo ')
-        end
+      it 'considers trailing backslashes to never be matched' do
+        gitignore "foo\\\n"
+
+        expect(subject).not_to match_files('foo  ', 'foo ', 'foo', 'foo\\')
+      end
+
+      it "doesn't ignore trailing spaces if there's a backslash before every space" do
+        gitignore "foo\\ \\ \n"
+
+        expect(subject).not_to match_files('foo', 'foo ', 'foo\\')
+        expect(subject).to match_files('foo  ')
+      end
+
+      it "doesn't ignore just that trailing space if there's a backslash before the non last space" do
+        gitignore "foo\\  \n"
+
+        expect(subject).not_to match_files('foo', 'foo  ', 'foo\\')
+        expect(subject).to match_files('foo ')
       end
     end
 
@@ -161,15 +139,15 @@ RSpec.describe PathList do
         it 'ignores directories but not files or symbolic links that match patterns ending with /' do
           gitignore 'foo/'
 
-          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz')
-          expect(subject).to match_files('foo/bar')
+          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz', create: false)
+          expect(subject).to match_files('foo/bar', create: false)
         end
 
         it 'handles this specific edge case i stumbled across' do
           gitignore "Ȋ/\nfoo/"
 
-          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz')
-          expect(subject).to match_files('foo/bar')
+          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz', create: false)
+          expect(subject).to match_files('foo/bar', create: false)
         end
       end
     end
@@ -177,8 +155,6 @@ RSpec.describe PathList do
     # The slash / is used as the directory separator.
     # Separators may occur at the beginning, middle or end of the .gitignore search pattern.
     describe 'If there is a separator at the beginning or middle (or both) of the pattern' do
-      before { create_file_list 'doc/frotz/b', 'a/doc/frotz/c', 'd/doc/frotz' }
-
       describe 'then the pattern is relative to the directory level of the particular .gitignore file itself.' do
         # For example, a pattern doc/frotz/ matches doc/frotz directory, but not a/doc/frotz directory;
         # The pattern doc/frotz and /doc/frotz have the same effect in any .gitignore file.
@@ -218,8 +194,6 @@ RSpec.describe PathList do
 
     describe 'An optional prefix "!" which negates the pattern' do
       describe 'any matching file excluded by a previous pattern will become included again.' do
-        before { create_file_list 'foo', 'foe' }
-
         it 'includes previously excluded files' do
           gitignore 'fo*', '!foo'
 
@@ -248,8 +222,6 @@ RSpec.describe PathList do
         # thus the awkwardness with match_files and allow_files.
         # TODO: make include rules match ignore rules behavior.
         it "doesn't negate files inside previously matched directories" do
-          create_file_list 'foo/bar', 'foo/foo', 'bar/bar'
-
           gitignore 'foo', '!foo/bar'
 
           expect(subject).not_to match_files('bar/bar')
@@ -258,8 +230,6 @@ RSpec.describe PathList do
         end
 
         it 'does negate files inside previously matched directories/*' do
-          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
-
           gitignore '/foo/*', '!/foo/bar/', '!/foo/baz/'
 
           expect(subject).not_to match_files('foo/bar/baz', 'bar/bar', 'foo/baz/baz')
@@ -279,8 +249,6 @@ RSpec.describe PathList do
         # thus the awkwardness with match_files and allow_files.
         # TODO: make include rules match ignore rules behavior.
         it "doesn't negate files inside previously matched directories/**" do
-          create_file_list 'foo/bar/baz', 'foo/baz/baz', 'foo/foo', 'bar/bar'
-
           gitignore '/foo/**', '!/foo/bar/', '!/foo/baz/'
 
           expect(subject).not_to match_files('bar/bar')
@@ -291,8 +259,6 @@ RSpec.describe PathList do
 
       describe 'Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!"' do
         # for example, "\!important!.txt".'
-
-        before { create_file_list '!important!.txt', 'important!.txt' }
 
         it 'matches files starting with a literal ! if its preceded by a backslash' do
           gitignore '\!important!.txt'
@@ -306,8 +272,6 @@ RSpec.describe PathList do
     describe 'Otherwise, Git treats the pattern as a shell glob' do
       describe '"*" matches anything except "/"' do
         describe 'single level' do
-          before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour' }
-
           it "matches any number of characters at the beginning if there's a star" do
             gitignore '*our'
 
@@ -345,8 +309,6 @@ RSpec.describe PathList do
         end
 
         describe 'multi level' do
-          before { create_file_list 'a/b/c', 'a/b/d', 'a/c/c', 'a/c/d', 'b/b/c', 'b/b/d', 'b/c/c', 'b/c/d' }
-
           it 'matches a whole directory' do
             gitignore 'a/*/c'
 
@@ -413,8 +375,6 @@ RSpec.describe PathList do
       end
 
       describe '"?" matches any one character except "/"' do
-        before { create_file_list 'four', 'fouled', 'fear', 'tour', 'flour', 'favour', 'fa/our', 'foul' }
-
         it "matches one character at the beginning if there's a ?" do
           gitignore '?our'
 
@@ -445,14 +405,6 @@ RSpec.describe PathList do
       end
 
       describe '"[]" matches one character in a selected range' do
-        before do
-          create_file_list(
-            'aa', 'ab', 'ac', 'ad', 'bib', 'b/b',
-            'bab', 'a[', 'a]', 'bb', 'a^', 'a[bc',
-            'a!', 'a+', 'a-', 'a$'
-          )
-        end
-
         it 'matches a single character in a character class' do
           gitignore 'a[ab]'
 
@@ -823,8 +775,6 @@ RSpec.describe PathList do
 
     describe 'A leading slash matches the beginning of the pathname.' do
       # For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
-      before { create_file_list 'cat-file.c', 'mozilla-sha1/sha1.c' }
-
       it 'matches only at the beginning of everything' do
         gitignore '/*.c'
 
@@ -837,8 +787,6 @@ RSpec.describe PathList do
       describe 'A leading "**" followed by a slash means match in all directories.' do
         # 'For example, "**/foo" matches file or directory "foo" anywhere, the same as pattern "foo".
         # "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".'
-        before { create_file_list 'foo', 'bar/foo', 'bar/bar/bar', 'bar/bar/foo/in_dir' }
-
         it 'matches files or directories in all directories' do
           gitignore '**/foo'
 
@@ -904,8 +852,6 @@ RSpec.describe PathList do
 
       describe 'A trailing "/**" matches everything inside relative to the location of the .gitignore file.' do
         # For example, "abc/**" matches all files inside directory "abc",
-        before { create_file_list 'abc/bar', 'abc/foo/bar', 'bar/abc/foo', 'bar/bar/foo' }
-
         it 'matches files or directories inside the mentioned directory' do
           gitignore 'abc/**'
 
@@ -930,8 +876,6 @@ RSpec.describe PathList do
 
       describe 'A slash followed by two consecutive asterisks then a slash matches zero or more directories.' do
         # For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.'
-        before { create_file_list 'a/b', 'a/x/b', 'a/x/y/b', 'z/a/b', 'z/a/x/b', 'z/y' }
-
         it 'matches multiple intermediate dirs' do
           gitignore 'a/**/b'
 
@@ -950,8 +894,6 @@ RSpec.describe PathList do
       describe 'Other consecutive asterisks are considered regular asterisks' do
         describe 'and will match according to the previous rules' do
           context 'with two stars' do
-            before { create_file_list 'f/our', 'few', 'four', 'fewer', 'favour', 'file/four' }
-
             it 'matches any number of characters at the beginning' do
               gitignore '**our'
 
@@ -1117,10 +1059,7 @@ RSpec.describe PathList do
   end
 
   describe 'git ls-files' do
-    subject do
-      `git init && git -c core.excludesfile='' add -N .`
-      `git -c core.excludesfile='' ls-files`.split("\n")
-    end
+    subject { ActualGitLSFiles.new }
 
     it_behaves_like 'the gitignore documentation'
   end

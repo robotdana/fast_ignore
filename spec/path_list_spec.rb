@@ -16,8 +16,6 @@ RSpec.describe PathList do
     end
 
     it 'ignores the given gitignore file and returns all files anyway' do
-      create_file_list 'foo', 'bar'
-
       gitignore 'foo', 'bar'
 
       expect(subject).to allow_files('foo', 'bar')
@@ -135,14 +133,12 @@ RSpec.describe PathList do
     end
 
     it 'matches uppercase paths to lowercase patterns' do
-      create_file_list 'FOO'
       gitignore 'foo'
 
       expect(subject).to match_files('FOO')
     end
 
     it 'matches lowercase paths to uppercase patterns' do
-      create_file_list 'foo'
       gitignore 'FOO'
 
       expect(subject).to match_files('foo')
@@ -211,8 +207,6 @@ RSpec.describe PathList do
 
     describe 'Patterns read from gitignore referred by gitconfig' do
       before do
-        create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d'
-
         gitignore 'b/d'
       end
 
@@ -253,8 +247,6 @@ RSpec.describe PathList do
   describe '.only' do
     context 'with subdir includes file' do
       subject(:path_list) { described_class.only(from_file: 'a/.includes_file') }
-
-      before { create_file_list 'a/b/c', 'a/b/d', 'a/b/e', 'b/c', 'b/d', 'a/c' }
 
       it 'recognises subdir includes file' do
         create_file '/b/d', 'c', path: 'a/.includes_file'
@@ -316,8 +308,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only(['bar', 'baz']) }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo', 'bar', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo', 'bar')
@@ -337,8 +327,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only(:bar, :baz) }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo', 'bar', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo', 'bar')
@@ -350,8 +338,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only(['bar']) }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo/bar', 'baz/bar'
-
         gitignore 'foo'
 
         expect(subject).not_to allow_files('foo/bar')
@@ -363,8 +349,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only('/bar', '/baz') }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo/bar/foo', 'foo/bar/baz', 'bar/foo', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo/bar/foo', 'foo/bar/baz', 'bar/foo')
@@ -376,8 +360,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only('bar/', 'baz/') }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo/baz/foo', 'foo/bar/baz', 'bar/foo', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('baz', 'foo/bar/baz', 'bar/foo')
@@ -389,8 +371,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only('fo*', '!foo', 'food') }
 
       it 'reads the list of rules and gitignore' do
-        create_file_list 'foo', 'food', 'foe', 'for'
-
         gitignore 'for'
 
         expect(subject).not_to allow_files('foo', 'for')
@@ -402,8 +382,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only(['./bar', "#{Dir.pwd}/baz"], format: :glob) }
 
       it 'resolves the paths to the current directory' do
-        create_file_list 'foo', 'bar', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo', 'bar')
@@ -415,8 +393,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.only('~not-a-user635728345/foo', format: :glob) }
 
       it 'treats it as literal' do
-        create_file_list 'foo', './~not-a-user635728345/foo'
-
         expect(subject).not_to allow_files('foo')
         expect(subject).to allow_files('~not-a-user635728345/foo')
       end
@@ -426,8 +402,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.only(['*', '!./foo', "!#{Dir.pwd}/baz"], format: :glob) }
 
       it 'resolves the paths even when negated' do
-        create_file_list 'foo', 'bar', 'baz', 'boo'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo', 'baz', 'bar')
@@ -439,9 +413,7 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.only(['**/foo', '*baz'], format: :glob) }
 
       it 'treats the rules as unanchored' do
-        create_file_list 'bar/foo', 'bar/baz', 'bar/bar', 'foo', 'baz/foo', 'baz/baz'
-
-        expect(subject).not_to allow_files('bar/bar', 'baz', 'bar')
+        expect(subject).not_to allow_files('bar/bar')
         expect(subject).to allow_files('bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz')
       end
     end
@@ -450,8 +422,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.only(['./foo/'], format: :glob) }
 
       it 'treats the rule as dir only' do
-        create_file_list 'foo/bar', 'bar/foo'
-
         expect(subject).not_to allow_files('bar/foo')
         expect(subject).to allow_files('foo/bar')
       end
@@ -461,8 +431,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.only(['foo', 'baz'], format: :glob) }
 
       it 'anchors the rules to the given dir, for performance reasons' do
-        create_file_list 'bar/foo', 'bar/baz', 'foo', 'baz/foo', 'baz/baz'
-
         expect(subject).not_to allow_files('bar/foo', 'bar/baz')
         expect(subject).to allow_files('foo', 'baz/foo', 'baz/baz')
       end
@@ -472,8 +440,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.only(['foo', 'baz']).only('foo', 'bar', format: :glob) }
 
       it 'adds the rulesets, they must pass both lists' do
-        create_file_list 'foo', 'bar', 'baz'
-
         expect(subject).not_to allow_files('baz', 'bar')
         expect(subject).to allow_files('foo')
       end
@@ -530,9 +496,10 @@ RSpec.describe PathList do
 
         gitignore 'ignored_foo', 'ignored_bar'
 
-        expect(subject).to allow_files('sub/foo', 'foo', 'baz.rb', 'Rakefile')
+        expect(subject).to allow_files('sub/foo', 'foo', 'baz.rb', 'Rakefile', create: false)
         expect(subject).not_to allow_files(
-          'ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb', 'nonexistent/file', '.simplecov'
+          'ignored_foo', 'bar', 'baz', 'ignored_bar/ruby.rb', 'nonexistent/file', '.simplecov',
+          create: false
         )
       end
     end
@@ -567,8 +534,8 @@ RSpec.describe PathList do
 
         create_file 'ruby', path: 'a/.include'
 
-        expect(subject).not_to allow_files('foo', 'a/bar')
-        expect(subject).to allow_files('a/foo', 'a/b/foo')
+        expect(subject).not_to allow_files('foo', 'a/bar', create: false)
+        expect(subject).to allow_files('a/foo', 'a/b/foo', create: false)
       end
     end
 
@@ -610,8 +577,8 @@ RSpec.describe PathList do
 
         gitignore 'ignored_bar', 'ignored_foo'
 
-        expect(subject).to allow_files('sub/foo', 'foo')
-        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb', 'ignored_bar/ruby')
+        expect(subject).to allow_files('sub/foo', 'foo', create: false)
+        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb', 'ignored_bar/ruby', create: false)
       end
     end
 
@@ -633,8 +600,8 @@ RSpec.describe PathList do
 
         create_file_list 'baz', 'baz.rb'
 
-        expect(subject).to allow_files('foo')
-        expect(subject).not_to allow_files('bar', 'baz', 'baz.rb')
+        expect(subject).to allow_files('foo', create: false)
+        expect(subject).not_to allow_files('bar', 'baz', 'baz.rb', create: false)
       end
 
       it 'uses content given to include?, ignoring the actual content' do
@@ -675,8 +642,8 @@ RSpec.describe PathList do
 
         create_file_list 'baz', 'baz.rb'
 
-        expect(subject).to allow_files('foo')
-        expect(subject).not_to allow_files('bar', 'baz', 'baz.rb')
+        expect(subject).to allow_files('foo', create: false)
+        expect(subject).not_to allow_files('bar', 'baz', 'baz.rb', create: false)
       end
     end
 
@@ -702,8 +669,8 @@ RSpec.describe PathList do
           echo -e "no"
         BASH
 
-        expect(subject).to allow_files('sub/foo')
-        expect(subject).not_to allow_files('foo', 'sub/bar')
+        expect(subject).to allow_files('sub/foo', create: false)
+        expect(subject).not_to allow_files('foo', 'sub/bar', create: false)
       end
     end
 
@@ -733,8 +700,8 @@ RSpec.describe PathList do
 
         gitignore 'ignored_foo'
 
-        expect(subject).to allow_files('foo')
-        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb')
+        expect(subject).to allow_files('foo', create: false)
+        expect(subject).not_to allow_files('ignored_foo', 'bar', 'baz', 'baz.rb', create: false)
       end
     end
 
@@ -764,8 +731,8 @@ RSpec.describe PathList do
 
         gitignore 'ignored_foo'
 
-        expect(subject).to allow_files('foo', 'bar')
-        expect(subject).not_to allow_files('ignored_foo', 'baz', 'baz.rb')
+        expect(subject).to allow_files('foo', 'bar', create: false)
+        expect(subject).not_to allow_files('ignored_foo', 'baz', 'baz.rb', create: false)
       end
     end
   end
@@ -775,7 +742,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.ignore(from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file' do
-        create_file_list 'foo', 'bar', 'baz'
         gitignore 'bar'
         create_file 'foo', path: 'fancyignore'
 
@@ -788,7 +754,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.ignore(from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file and the gitignore file' do
-        create_file_list 'foo', 'bar', 'baz'
         gitignore 'bar'
         create_file 'foo', path: 'fancyignore'
 
@@ -801,7 +766,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.ignore('foo') }
 
       it 'ignores files based on the list of rules' do
-        create_file_list 'foo', 'bar', 'baz'
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo')
@@ -813,8 +777,6 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.gitignore.ignore('foo') }
 
       it 'ignores files based on the list of rules and gitignore' do
-        create_file_list 'foo', 'bar', 'baz'
-
         gitignore 'bar'
 
         expect(subject).not_to allow_files('foo', 'bar')
@@ -849,8 +811,8 @@ RSpec.describe PathList do
 
         create_file 'ruby', 'bash', path: 'a/.ignore'
 
-        expect(subject).not_to allow_files('a/foo')
-        expect(subject).to allow_files('foo')
+        expect(subject).not_to allow_files('a/foo', create: false)
+        expect(subject).to allow_files('foo', create: false)
       end
     end
 
@@ -872,8 +834,8 @@ RSpec.describe PathList do
           echo ok
         BASH
 
-        expect(subject).not_to allow_files('foo')
-        expect(subject).to allow_files('bar')
+        expect(subject).not_to allow_files('foo', create: false)
+        expect(subject).to allow_files('bar', create: false)
       end
     end
 
@@ -895,8 +857,8 @@ RSpec.describe PathList do
           echo ok
         BASH
 
-        expect(subject).not_to allow_files('foo')
-        expect(subject).to allow_files('bar')
+        expect(subject).not_to allow_files('foo', create: false)
+        expect(subject).to allow_files('bar', create: false)
       end
     end
 
@@ -918,8 +880,8 @@ RSpec.describe PathList do
           echo ok
         BASH
 
-        expect(subject).not_to allow_files('foo')
-        expect(subject).to allow_files('bar')
+        expect(subject).not_to allow_files('foo', create: false)
+        expect(subject).to allow_files('bar', create: false)
       end
     end
   end

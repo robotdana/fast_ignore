@@ -1,36 +1,55 @@
 # frozen_string_literal: true
 
-RSpec::Matchers.define(:match_files) do |*expected|
+RSpec::Matchers.define(:match_files) do |*expected, create: true|
   match do |actual|
+    raise "Can't expect non-relative file, we actually have to make them" if create && expected.any? do |x|
+      x.match?(%r{\A(\.\.|/)})
+    end
+
+    create_file_list(*expected) if create
+
     @actual = actual.to_a
 
     if defined?($doing_include) && $doing_include
-      expect(@actual).to allow_files(*expected)
+      expect(@actual).to allow_files(*expected, create: false)
     else
-      expect(@actual).not_to allow_files(*expected)
+      expect(@actual).not_to allow_files(*expected, create: false)
     end
 
     true
   end
 
   match_when_negated do |actual|
+    raise "Can't expect non-relative file, we actually have to make them" if create && expected.any? do |x|
+      x.match?(%r{\A(\.\.|/)})
+    end
+
+    create_file_list(*expected) if create
+
     @actual = actual.to_a
 
     if defined?($doing_include) && $doing_include
-      expect(@actual).not_to allow_files(*expected)
+      expect(actual).not_to allow_files(*expected, create: false)
     else
-      expect(@actual).to allow_files(*expected)
+      expect(actual).to allow_files(*expected, create: false)
     end
 
     true
   end
 end
 
-RSpec::Matchers.define(:allow_files) do |*expected|
+RSpec::Matchers.define(:allow_files) do |*expected, create: true|
   match do |actual|
+    raise "Can't expect non-relative file, we actually have to make them" if create && expected.any? do |x|
+      x.match?(%r{\A(\.\.|/)})
+    end
+
+    create_file_list(*expected) if create
+
     @actual = actual.to_a
     expect(@actual).to include(*expected)
-    if actual.respond_to?(:include?)
+
+    unless actual.is_a?(ActualGitLSFiles)
       expected.each do |path|
         expect(actual).to include(path)
       end
@@ -40,10 +59,17 @@ RSpec::Matchers.define(:allow_files) do |*expected|
   end
 
   match_when_negated do |actual|
+    raise "Can't expect non-relative file, we actually have to make them" if create && expected.any? do |x|
+      x.match?(%r{\A(\.\.|/)})
+    end
+
+    create_file_list(*expected) if create
+
     @actual = actual.to_a
+
     expected.each do |path|
       expect(@actual).not_to include(path)
-      expect(actual).not_to include(path) if actual.respond_to?(:include?)
+      expect(actual).not_to include(path) unless actual.is_a?(ActualGitLSFiles)
     end
 
     true
@@ -54,7 +80,7 @@ RSpec::Matchers.define(:allow_exactly) do |*expected|
   match do |actual|
     @actual = actual.to_a
     expect(@actual).to contain_exactly(*expected)
-    expect(actual).to allow_files(*expected)
+    expect(actual).to allow_files(*expected, create: false)
 
     true
   end
