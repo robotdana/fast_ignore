@@ -5,23 +5,26 @@ class PathList
     class PathRegexp < Base
       attr_reader :polarity
       attr_reader :weight
+      attr_writer :parts
 
-      def initialize(rule, squashable, allow, parts = nil)
+      def self.build(rule, allow, parts)
+        raise unless parts
+
+        m = new(rule, allow)
+        m.parts = parts
+        m.freeze
+      end
+
+      def initialize(rule, allow)
         @rule = rule
-        @squashable = squashable
-        # chaos
-        @weight = (rule.inspect.length / 4.0) + 2
-
         @polarity = allow ? :allow : :ignore
 
-        @parts = parts
-
-        freeze
+        # chaos guesses
+        @weight = (rule.inspect.length / 4.0) + 2
       end
 
       def squashable_with?(other)
-        @squashable &&
-          other.instance_of?(self.class) &&
+        other.instance_of?(self.class) &&
           @polarity == other.polarity &&
           @parts && other.parts
       end
@@ -44,7 +47,7 @@ class PathList
       end
 
       def eql?(other)
-        super(other, except: [:@rule, :@parts, :@squashable]) &&
+        super(other, except: [:@rule, :@parts]) &&
           @rule.inspect == other.instance_variable_get(:@rule).inspect
       end
       alias_method :==, :eql?
@@ -53,10 +56,6 @@ class PathList
 
       attr_reader :rule
       attr_reader :parts
-
-      attr_reader :squashable
-      alias_method :squashable?, :squashable
-      undef :squashable
     end
   end
 end

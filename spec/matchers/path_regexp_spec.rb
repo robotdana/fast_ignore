@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexp do
-  subject { described_class.new(rule, squashable, allow_value, parts) }
+  subject { described_class.build(rule, allow_value, parts) }
 
   let(:rule) { /a/ }
-  let(:squashable) { true }
   let(:allow_value) { true }
-  let(:parts) { ['a'] if squashable }
+  let(:parts) { ['a'] }
 
   it { is_expected.to be_frozen }
 
@@ -23,29 +22,13 @@ RSpec.describe PathList::Matchers::PathRegexp do
     it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
-      other = described_class.new(/b/, squashable, allow_value, ['b'])
+      other = described_class.build(/b/, allow_value, ['b'])
 
       expect(subject).to be_squashable_with(other)
     end
 
-    context 'with squashable false' do
-      let(:squashable) { false }
-
-      it 'is not squashable even with the same property values' do
-        other = described_class.new(/b/, squashable, allow_value)
-
-        expect(subject).not_to be_squashable_with(other)
-      end
-
-      it 'is not squashable even when other is "squashable" and has otherwise the same property values' do
-        other = described_class.new(/b/, !squashable, allow_value)
-
-        expect(subject).not_to be_squashable_with(other)
-      end
-    end
-
     it 'is not squashable with a different allow value' do
-      other = described_class.new(/b/, squashable, !allow_value)
+      other = described_class.build(/b/, !allow_value, ['b'])
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -54,17 +37,16 @@ RSpec.describe PathList::Matchers::PathRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.new(/b/, squashable, allow_value, ['b'])
+      other = described_class.build(/b/, allow_value, ['b'])
 
-      allow(described_class).to receive(:new)
-        .and_call_original
+      allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other])
 
       expect(squashed).to be_a(described_class)
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to eq(described_class.new(/(?:a|b)/i, anything, allow_value))
+      expect(squashed).to eq(described_class.build(/(?:a|b)/i, allow_value, [[['a'], ['b']]]))
     end
   end
 

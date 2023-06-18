@@ -85,7 +85,7 @@ class PathList
       return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?, @parts.dup.freeze)
+      Matchers::PathRegexp.build(Regexp.new(re_string, 1), negated?, @parts.dup.freeze)
     end
 
     def build
