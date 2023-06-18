@@ -16,7 +16,7 @@ class PathList
       end
 
       def squashable_with?(other)
-        super && @dir == other.dir
+        other.instance_of?(self.class) && @dir == other.dir
       end
 
       def match(candidate)

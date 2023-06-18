@@ -6,7 +6,7 @@ class PathList
       def self.compress(matchers)
         super(matchers)
           .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
-          .map { |chunk| Any.build(chunk) }
+          .flat_map { |chunk| Any.compress(chunk).reverse }
       end
 
       def match(candidate)

@@ -71,10 +71,8 @@ RSpec.describe ::PathList::Patterns do
       it 'allows a, and implicitly any children of a' do
         expect(matchers).to eq PathList::Matchers::LastMatch.new([
           PathList::Matchers::Ignore,
-          PathList::Matchers::Any.new([
-            PathList::Matchers::AllowAnyDir,
-            PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true)
-          ])
+          PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true),
+          PathList::Matchers::AllowAnyDir
         ])
       end
     end
@@ -102,18 +100,16 @@ RSpec.describe ::PathList::Patterns do
         it 'allows a, and implicitly any children of a' do
           expect(matchers).to eq PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
-            PathList::Matchers::Any.new([
-              PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(/\Ab\z/i, true)
-              ),
-              PathList::Matchers::WithinDir.new(
-                '/b/',
-                PathList::Matchers::Any.new([
-                  PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true)
-                ])
-              )
-            ])
+            PathList::Matchers::WithinDir.new(
+              '/b/',
+              PathList::Matchers::Any.new([
+                PathList::Matchers::AllowAnyDir,
+                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?:/|\z)}i, true)
+              ])
+            ),
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::PathRegexp.new(/\Ab\z/i, true)
+            )
           ])
         end
       end
@@ -149,18 +145,16 @@ RSpec.describe ::PathList::Patterns do
         it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
           expect(matchers).to eq PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
-            PathList::Matchers::Any.new([
-              PathList::Matchers::WithinDir.new(
-                '/a/b/c/',
-                PathList::Matchers::Any.new([
-                  PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{/}i, true)
-                ])
-              ),
-              PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b(?:\z|/c\z))}i, true)
-              )
-            ]),
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b(?:\z|/c\z))}i, true)
+            ),
+            PathList::Matchers::WithinDir.new(
+              '/a/b/c/',
+              PathList::Matchers::Any.new([
+                PathList::Matchers::AllowAnyDir,
+                PathList::Matchers::PathRegexp.new(%r{/}i, true)
+              ])
+            ),
             PathList::Matchers::WithinDir.new(
               '/a/b/c/',
               PathList::Matchers::LastMatch.new([
@@ -201,18 +195,16 @@ RSpec.describe ::PathList::Patterns do
         it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
           expect(matchers).to eq PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
-            PathList::Matchers::Any.new([
-              PathList::Matchers::MatchIfDir.new(
-                PathList::Matchers::PathRegexp.new(%r{\Af(?:\z|/g\z)}i, true)
-              ),
-              PathList::Matchers::WithinDir.new(
-                '/f/g/',
-                PathList::Matchers::Any.new([
-                  PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A(?:b/|bb/)|(?:\A|/)(?:a/|d/|e/))}i, true)
-                ])
-              )
-            ]),
+            PathList::Matchers::WithinDir.new(
+              '/f/g/',
+              PathList::Matchers::Any.new([
+                PathList::Matchers::AllowAnyDir,
+                PathList::Matchers::PathRegexp.new(%r{(?:\A(?:b/|bb/)|(?:\A|/)(?:a/|d/|e/))}i, true)
+              ])
+            ),
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::PathRegexp.new(%r{\Af(?:\z|/g\z)}i, true)
+            ),
             PathList::Matchers::WithinDir.new(
               '/f/g/',
               PathList::Matchers::LastMatch.new([
