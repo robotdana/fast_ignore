@@ -27,6 +27,7 @@ class PathList
 
       # TODO: unfuck this:
       if @rule.anchored?
+        # @rule.dup.build_parents
         parent_pattern = @s.string.dup
         if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
           GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent

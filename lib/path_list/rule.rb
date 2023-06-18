@@ -129,13 +129,14 @@ class PathList
         parent.pop
 
         @parts = head
+        dir_only!
         build
       else
         Matchers::Blank
       end
     end
 
-    def part_to_regexp(part) # rubocop:disable Metrics/MethodLength
+    def part_to_regexp(part) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       case part
       when :dir then '/'
       when :any_dir then '(?:.*/)?'

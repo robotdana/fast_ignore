@@ -104,9 +104,7 @@ class PathList
     private
 
     def build_implicit_root_matcher
-      PathList::Matchers::MatchIfDir.build(
-        Builders::FullPath.build_implicit(@root, true, nil)
-      )
+      Builders::FullPath.build_implicit(@root, true, nil)
     end
 
     def build_implicit_matcher(patterns)

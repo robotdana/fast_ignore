@@ -5,9 +5,14 @@ class PathList
     module FullPath
       def self.build(path, allow, _root)
         path = path.delete_prefix('/')
-        Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow)
+        dir_only = path.end_with?('/')
+        path.delete_suffix('/')
+        m = Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow)
+        Matchers::MatchIfDir.new(m) if dir_only
+        m
       end
 
+      # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
       def self.build_implicit(path, allow, _root)
         @rule = Rule.new(
           [:start_anchor] + path

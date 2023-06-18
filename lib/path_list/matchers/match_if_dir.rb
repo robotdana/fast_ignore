@@ -3,6 +3,12 @@
 class PathList
   module Matchers
     class MatchIfDir < Wrapper
+      def build(matcher)
+        return matcher if matcher.is_a?(self.class)
+
+        super
+      end
+
       def match(candidate)
         @matcher.match(candidate) if candidate.directory?
       end
