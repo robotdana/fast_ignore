@@ -48,7 +48,7 @@ class PathList
       return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?, parts)
+      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?)
     end
 
     def build
@@ -110,7 +110,7 @@ class PathList
       compress_parts(parts)
     end
 
-    def build_parents
+    def build_parents # rubocop:disable Metrics/MethodLength Metrics/AbcSize
       tail = []
       parent = nil
       head = tail
@@ -145,10 +145,6 @@ class PathList
       when :end_anchor, :end_anchor_for_include then '\\z'
       when :start_anchor then '\\A'
       when :dir_or_start_anchor then '(?:\\A|/)'
-      when :character_class_open then '(?!/)['
-      when :character_class_negation then '^'
-      when :character_class_dash then '-'
-      when :character_class_close then ']'
       when nil, String then part
       when Array
         if part.length == 1
@@ -156,6 +152,17 @@ class PathList
         else
           "(?:#{part.map { |sub_parts| sub_parts.map { |sub_part| part_to_regexp(sub_part) }.join }.join('|')})"
         end
+      else raise 'Unknown token'
+      end
+    end
+
+    def character_class_part_to_regexp(part)
+      case part
+      when :character_class_open then '(?!/)['
+      when :character_class_negation then '^'
+      when :character_class_dash then '-'
+      when :character_class_close then ']'
+      when nil, String then part
       else raise 'Unknown token'
       end
     end
@@ -206,28 +213,39 @@ class PathList
     end
 
     def append_character_class_open
-      @parts << :character_class_open
+      @character_class = [:character_class_open]
     end
 
     def append_character_class_negation
-      @parts << :character_class_negation
+      @character_class << :character_class_negation
     end
 
     def append_character_class_close
-      @parts << :character_class_close
+      @character_class << :character_class_close
+      re_string = @character_class.map { |part| character_class_part_to_regexp(part) }.join
+      @character_class = nil
+      @parts.append(re_string)
     end
 
     def append_character_class_dash
-      @parts << :character_class_dash
+      @character_class << :character_class_dash
     end
 
     def append_escaped(value)
       return unless value
 
-      if @parts[-1].is_a?(String)
-        @parts[-1] << ::Regexp.escape(value)
+      append(::Regexp.escape(value))
+    end
+
+    def append(value)
+      return unless value
+
+      if @character_class
+        @character_class << value
+      elsif @parts[-1].is_a?(String)
+        @parts[-1] << value
       else
-        @parts << ::Regexp.escape(value)
+        @parts << value
       end
     end
   end
