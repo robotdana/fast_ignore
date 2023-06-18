@@ -3,28 +3,41 @@
 class PathList
   class Rule # rubocop:disable Metrics/ClassLength
     def self.merge_parts_lists(parts_lists)
-      return parts_lists.first if parts_lists.length < 2
+      return parts_lists.first if parts_lists.length <= 1
 
       merged = []
-      grouped_by_first = parts_lists.group_by(&:first)
-      grouped_by_first.delete(nil)
-      return merged if grouped_by_first.empty?
 
-      if grouped_by_first.length == 1
-        merged << parts_lists.first.first
-        merged += merge_parts_lists(parts_lists.map { |parts_list| parts_list.drop(1) })
+      parts_lists = parts_lists.reject(&:empty?)
+      return merged if parts_lists.empty?
+
+      start_with_fork, start_with_value = parts_lists
+        .partition { |parts_list| parts_list.first.is_a?(Array) }
+
+      if start_with_value.empty?
+        merged = merge_parts_lists(start_with_fork.flatten(1)) unless start_with_fork.empty?
       else
-        new_fork = []
-        merged << new_fork
+        grouped_by_first = start_with_value.group_by(&:first)
+        grouped_by_first.delete(nil)
 
-        grouped_by_first.each do |first_item, sub_parts_lists|
-          tail = [first_item]
-          tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
-          new_fork << tail
+        if grouped_by_first.length == 1
+          merged = [grouped_by_first.first.first]
+          merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
+          merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
+        else
+          new_fork = []
+          merged = [new_fork]
+
+          grouped_by_first.each do |first_item, sub_parts_lists|
+            tail = [first_item]
+            tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
+            new_fork << tail
+          end
+
+          merged = merge_parts_lists(new_fork.flatten(1) + start_with_fork.flatten(1)) unless start_with_fork.empty?
         end
-      end
 
-      merged
+        merged
+      end
     end
 
     def initialize(parts = [:dir_or_start_anchor], negated = false)
@@ -72,7 +85,7 @@ class PathList
       return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?)
+      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?, @parts.dup.freeze)
     end
 
     def build

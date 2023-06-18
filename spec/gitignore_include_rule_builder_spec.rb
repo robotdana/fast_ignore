@@ -877,7 +877,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/*/c').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/[^/]*[^/]\z)|(?i-mx:\Aa\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*[^/]\z)}i, true, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/c\/}i, true, true)
                 ])
@@ -887,7 +887,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/b*/c').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/b[^/]*\z)|(?i-mx:\Aa\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b[^/]*\z)}i, true, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/b[^/]*/c\/}i, true, true)
                 ])
@@ -897,7 +897,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/*b/c').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/[^/]*b\z)|(?i-mx:\Aa\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*b\z)}i, true, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*b/c\/}i, true, true)
                 ])
@@ -907,7 +907,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/*/*').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/[^/]*[^/]\z)|(?i-mx:\Aa\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*[^/]\z)}i, true, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/[^/]*[^/]\/}i, true, true)
                 ])
@@ -917,7 +917,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('*/*/c').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\A[^/]*/[^/]*[^/]\z)|(?i-mx:\A[^/]*\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\A[^/]*(?:\z|/[^/]*[^/]\z)}i, true, true)
                   ), PathList::Matchers::PathRegexp.new(%r{\A[^/]*/[^/]*/c\/}i, true, true)
                 ])
             end
@@ -926,7 +926,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/**/*').build_implicit)
                 .to eq PathList::Matchers::Any.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/)|(?i-mx:\Aa\z)}, true, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:/|\z)}i, true, true)
                   ), PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?[^/]*[^/]\/}i, true, true)
                 ])
             end
@@ -1499,7 +1499,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
             expect(described_class.new('a/**/b').build_implicit)
               .to eq PathList::Matchers::Any.new([
                 PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/)|(?i-mx:\Aa\z)}, true, true)
+                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:/|\z)}i, true, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b\/}i, true, true)
               ])
@@ -1509,7 +1509,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
             expect(described_class.new('a/***/b').build_implicit)
               .to eq PathList::Matchers::Any.new([
                 PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{(?i-mx:\Aa/)|(?i-mx:\Aa\z)}, true, true)
+                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:/|\z)}i, true, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b\/}i, true, true)
               ])

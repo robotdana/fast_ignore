@@ -7,9 +7,9 @@ class PathList
         path = path.delete_prefix('/')
         dir_only = path.end_with?('/')
         path.delete_suffix('/')
-        m = Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow)
-        Matchers::MatchIfDir.new(m) if dir_only
-        m
+        rule = Rule.new([:start_anchor, Regexp.escape(path), :end_anchor], allow)
+        rule.dir_only!
+        rule.build
       end
 
       # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case

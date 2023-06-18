@@ -385,14 +385,9 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'interprets character dash dash dash as a character range of only with " to - with literal -' do
               # for some reason this as a regexp literal triggers the warning raise
               # and building it with Regexp.new results in a regexp that is identical but not equal
-              matcher = described_class.new('a["---]').build
-              expect(matcher).to be_a PathList::Matchers::PathRegexp
-              expect(matcher).to have_instance_variables(
-                :@polarity => :ignore,
-                :@weight => be_a(Numeric),
-                :@squashable => false,
-                :@rule => have_attributes(class: Regexp, inspect: '/(?:\\A|\\/)a(?!\\/)["-\\-\\-]\\z/i')
-              )
+              expect(described_class.new('a["---]').build)
+                .to eq PathList::Matchers::PathRegexp.new(
+                  Regexp.new('(?:\\A|\\/)a(?!\\/)["-\\-\\-]\\z', 1), false, false)
             end
 
             it 'interprets dash dash dash character as a character range of only - with literal c' do

@@ -12,8 +12,6 @@ RSpec.describe PathList::Builders::FullPath do
     subject(:matcher) { described_class.build_implicit(path, allow_arg, nil) }
 
     it 'builds a regex that matches parent and child somethings' do
-      # i know it's bad but checking the ivar here is easy
-      # and i want to match the regexp i expect to see
       expect(matcher).to eq(PathList::Matchers::MatchIfDir.new(
         PathList::Matchers::PathRegexp.new(%r{\Apath(?:\z|/to(?:\z|/exact(?:\z|/something\z)))}i, true, true)
       ))
@@ -69,10 +67,9 @@ RSpec.describe PathList::Builders::FullPath do
     let(:allow_arg) { false }
 
     it 'builds a regex that matches exact something' do
-      # i know it's bad but checking the ivar here is easy
-      # and i want to match the regexp i expect to see
-      expect(matcher.instance_variable_get(:@rule))
-        .to eq %r{\Apath/to/exact/something\z}i
+      expect(matcher).to eq(PathList::Matchers::MatchIfDir.new(
+        PathList::Matchers::PathRegexp.new(%r{\Apath/to/exact/something\z}i, true, false)
+      ))
     end
 
     it 'matches exact path' do
