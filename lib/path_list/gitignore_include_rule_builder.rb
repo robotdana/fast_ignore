@@ -13,7 +13,7 @@ class PathList
     end
 
     def unmatchable_rule!
-      throw :abort_build, Matchers::Unmatchable
+      throw :abort_build, Matchers::Invalid
     end
 
     def emit_end
@@ -22,14 +22,14 @@ class PathList
     end
 
     def build_parent_dir_rules # rubocop:disable Metrics/MethodLength
-      return Matchers::Null unless @negation
+      return Matchers::Blank unless @negation
 
       if @anchored
         parent_pattern = @s.string.dup
         if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
           GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
         else
-          Matchers::Null
+          Matchers::Blank
         end
       else
         Matchers::AllowAnyDir

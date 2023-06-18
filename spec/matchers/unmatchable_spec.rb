@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Matchers::Unmatchable do
+RSpec.describe PathList::Matchers::Invalid do
   subject { described_class }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<PathList::Matchers::Unmatchable>' }
+    it { is_expected.to have_inspect_value '#<PathList::Matchers::Invalid>' }
   end
 
   describe '#weight' do

@@ -138,7 +138,7 @@ RSpec.describe PathList do
           expect(unquoted_subject).to match_files('foo  ')
         end
 
-        it "doesn't ignore trailing spaces if there's a backslash before the non last space" do
+        it "doesn't ignore just that trailing space if there's a backslash before the non last space" do
           gitignore "foo\\  \n"
 
           expect(unquoted_subject).not_to match_files('foo', 'foo  ', 'foo\\')
@@ -415,7 +415,7 @@ RSpec.describe PathList do
       describe '"?" matches any one character except "/"' do
         before { create_file_list 'four', 'fouled', 'fear', 'tour', 'flour', 'favour', 'fa/our', 'foul' }
 
-        it "matches any number of characters at the beginning if there's a star" do
+        it "matches one character at the beginning if there's a ?" do
           gitignore '?our'
 
           expect(subject).not_to match_files('fouled', 'fear', 'favour', 'fa/our', 'foul')
@@ -655,7 +655,7 @@ RSpec.describe PathList do
 
           it 'interprets character dash dash character as a character range ending with - and a literal c' do
             # this could just as easily be interpreted the other way around (" is the literal, --c is the range),
-            # but ruby regex and git seem to tread this edge case the same
+            # but ruby regex and git seem to treat this edge case the same
             gitignore 'a["--c]'
 
             expect(subject).not_to match_files('ab', 'a[', 'ad', 'a^', 'aa', 'ab')

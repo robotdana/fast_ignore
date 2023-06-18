@@ -79,6 +79,6 @@ end
 RSpec::Matchers.define(:have_instance_variables) do |expected|
   match do |actual|
     @actual = actual.instance_variables.to_h { |ivar| [ivar, actual.instance_variable_get(ivar)] }
-    expect(@actual).to eq(expected)
+    expect(@actual).to match(expected)
   end
 end

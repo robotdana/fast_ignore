@@ -12,7 +12,7 @@ class PathList
       end
 
       def self.build_implicit(rule, allow, _root)
-        return Matchers::Null unless allow
+        return Matchers::Blank unless allow
 
         GitignoreIncludeRuleBuilder.new(rule).build_implicit
       end

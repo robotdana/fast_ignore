@@ -3,12 +3,20 @@
 if RUBY_PLATFORM != 'java'
   module Warning # leftovers:allow
     def warn(msg) # leftovers:allow
-      raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed')
+      raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed') || $allow_warning
     end
   end
 end
 
 $doing_include = false
+$allow_warning = false
+
+def ignore_warning
+  $allow_warning = true
+  yield
+ensure
+  $allow_warning = false
+end
 
 require 'fileutils'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))

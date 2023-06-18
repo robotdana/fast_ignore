@@ -7,7 +7,7 @@ class PathList
         matchers = compress(matchers)
 
         case matchers.length
-        when 0 then Null
+        when 0 then Blank
         when 1 then matchers.first
         else new(matchers)
         end
@@ -16,9 +16,9 @@ class PathList
       def self.compress(matchers)
         matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
 
-        unmatchable = matchers.include?(Unmatchable)
-        matchers -= [Unmatchable, Null]
-        return [Unmatchable] if matchers.empty? && unmatchable
+        invalid = matchers.include?(Invalid)
+        matchers -= [Invalid, Blank]
+        return [Invalid] if matchers.empty? && invalid
 
         matchers
       end

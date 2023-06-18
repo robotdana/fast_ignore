@@ -3,7 +3,7 @@
 RSpec.describe PathList::Matchers::Appendable do
   subject { described_class.new(label, default, implicit_matcher, explicit_matcher, original_pattern) }
 
-  let(:default) { PathList::Matchers::Unmatchable }
+  let(:default) { PathList::Matchers::Invalid }
   let(:original_pattern) { instance_double(::PathList::Patterns) }
   let(:implicit_matcher) do
     instance_double(

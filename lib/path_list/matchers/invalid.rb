@@ -2,11 +2,11 @@
 
 class PathList
   module Matchers
-    Unmatchable = Base.new
+    Invalid = Base.new
 
-    class << Unmatchable
+    class << Invalid
       def name
-        'PathList::Matchers::Unmatchable'
+        'PathList::Matchers::Invalid'
       end
 
       def match(_)
@@ -17,6 +17,6 @@ class PathList
       alias_method :==, :eql?
     end
 
-    Unmatchable.freeze
+    Invalid.freeze
   end
 end

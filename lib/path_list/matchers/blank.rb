@@ -2,11 +2,11 @@
 
 class PathList
   module Matchers
-    Null = Base.new
+    Blank = Base.new
 
-    class << Null
+    class << Blank
       def name
-        'PathList::Matchers::Null'
+        'PathList::Matchers::Blank'
       end
 
       def match(_)
@@ -17,6 +17,6 @@ class PathList
       alias_method :==, :eql?
     end
 
-    Null.freeze
+    Blank.freeze
   end
 end

@@ -6,7 +6,7 @@ class PathList
       attr_reader :weight
 
       def self.build(matcher)
-        return Null if matcher == Null
+        return Blank if matcher == Blank
 
         new(matcher)
       end

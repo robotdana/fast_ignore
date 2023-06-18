@@ -15,7 +15,7 @@ class PathList
 
       # also allow all directories in case they include a file with the matching shebang file
       def self.build_implicit(_shebang, allow, _root)
-        allow ? Matchers::AllowAnyDir : Matchers::Null
+        allow ? Matchers::AllowAnyDir : Matchers::Blank
       end
     end
   end

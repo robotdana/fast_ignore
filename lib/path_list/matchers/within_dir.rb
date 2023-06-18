@@ -4,7 +4,7 @@ class PathList
   module Matchers
     class WithinDir < Wrapper
       def self.build(dir, matcher)
-        return matcher if matcher == Null || dir == '/'
+        return matcher if matcher == Blank || dir == '/'
 
         new(dir, matcher)
       end

@@ -39,7 +39,7 @@ class PathList
       @allow = allow
       @recursive = recursive
 
-      @root = root
+      @root = PathExpander.expand_dir_pwd(root)
       @format = BUILDERS.fetch(format || :gitignore, format)
 
       valid?
@@ -50,7 +50,7 @@ class PathList
 
       if @label
         Matchers::Appendable.build(@label, default, implicit_matcher, explicit_matcher, self)
-      elsif implicit_matcher == Matchers::Null && explicit_matcher == Matchers::Null
+      elsif implicit_matcher == Matchers::Blank && explicit_matcher == Matchers::Blank
         Matchers::Allow
       else
         Matchers::LastMatch.build([default, implicit_matcher, explicit_matcher])
@@ -91,10 +91,10 @@ class PathList
     def build_matchers
       patterns = read_patterns
 
-      implicit = @allow ? build_implicit_matcher(patterns) : Matchers::Null
+      implicit = @allow ? build_implicit_matcher(patterns) : Matchers::Blank
       explicit = build_explicit_matcher(patterns)
 
-      return [implicit, explicit] if !@allow || (implicit == Matchers::Null && explicit == Matchers::Null)
+      return [implicit, explicit] if !@allow || (implicit == Matchers::Blank && explicit == Matchers::Blank)
 
       implicit = Matchers::Any.build([implicit, build_implicit_root_matcher])
 

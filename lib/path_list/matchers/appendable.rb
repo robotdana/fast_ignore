@@ -55,7 +55,7 @@ class PathList
       end
 
       def build_matcher
-        @matcher = if @implicit_matcher == Null && @explicit_matcher == Null
+        @matcher = if @implicit_matcher == Blank && @explicit_matcher == Blank
           Allow
         else
           LastMatch.build([@default_matcher, @implicit_matcher, @explicit_matcher])

@@ -6,6 +6,7 @@ require 'set'
 class PathList # rubocop:disable Metrics/ClassLength
   class Error < StandardError; end
 
+  require_relative 'path_list/rule'
   require_relative 'path_list/builders/full_path'
   require_relative 'path_list/comparable_instance'
   require_relative 'path_list/gitconfig_parse_error'
@@ -15,8 +16,8 @@ class PathList # rubocop:disable Metrics/ClassLength
   require_relative 'path_list/path_regexp_builder'
   require_relative 'path_list/gitignore_rule_scanner'
   require_relative 'path_list/matchers/base'
-  require_relative 'path_list/matchers/unmatchable'
-  require_relative 'path_list/matchers/null'
+  require_relative 'path_list/matchers/invalid'
+  require_relative 'path_list/matchers/blank'
   require_relative 'path_list/matchers/list'
   require_relative 'path_list/matchers/allow'
   require_relative 'path_list/matchers/ignore'

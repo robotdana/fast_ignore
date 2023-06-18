@@ -15,7 +15,7 @@ class PathList
         if allow
           GitignoreIncludeRuleBuilder.new(rule, expand_path_with: root).build_implicit
         else
-          Matchers::Null
+          Matchers::Blank
         end
       end
     end

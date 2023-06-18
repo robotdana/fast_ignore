@@ -17,11 +17,11 @@ class PathList
     end
 
     def blank!
-      throw :abort_build, []
+      throw :abort_build, Matchers::Blank
     end
 
     def unmatchable_rule!
-      throw :abort_build, []
+      throw :abort_build, Matchers::Blank
     end
 
     def negated!
