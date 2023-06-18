@@ -2,12 +2,11 @@
 
 class PathList
   class Rule # rubocop:disable Metrics/ClassLength
-    def initialize
-      @negated = false
+    def initialize(parts = [:dir_or_start_anchor], negated = false)
+      @negated = negated
       @unanchorable = false
       @dir_only = false
-      @start = :dir_or_start_anchor
-      @parts = []
+      @parts = parts
     end
 
     def negated!
@@ -23,15 +22,15 @@ class PathList
     end
 
     def anchored!
-      @start = :start_anchor unless @unanchorable
+      @parts[0] = :start_anchor unless @unanchorable
     end
 
     def anchored?
-      @start == :start_anchor
+      @parts[0] == :start_anchor
     end
 
     def never_anchored!
-      @start = :dir_or_start_anchor
+      @parts[0] = :dir_or_start_anchor
       @unanchorable = true
     end
 
@@ -44,11 +43,12 @@ class PathList
     end
 
     def build_path_matcher
-      re_string = compress_parts([@start, *@parts]).map { |part| part_to_regexp(part) }.join
+      parts = compress_parts(@parts.dup)
+      re_string = parts.map { |part| part_to_regexp(part) }.join
       return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?)
+      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?, parts)
     end
 
     def build
@@ -110,6 +110,31 @@ class PathList
       compress_parts(parts)
     end
 
+    def build_parents
+      tail = []
+      parent = nil
+      head = tail
+      @parts.each do |part|
+        if part == :dir || part == :any_dir
+          new_tail = []
+          new_fork = [[:end_anchor_for_include], new_tail]
+          tail << new_fork
+          parent = new_fork
+          tail = new_tail
+        end
+        tail << part
+      end
+
+      if parent
+        parent.pop
+
+        @parts = head
+        build
+      else
+        Matchers::Blank
+      end
+    end
+
     def part_to_regexp(part) # rubocop:disable Metrics/MethodLength
       case part
       when :dir then '/'
@@ -125,12 +150,18 @@ class PathList
       when :character_class_dash then '-'
       when :character_class_close then ']'
       when nil, String then part
+      when Array
+        if part.length == 1
+          part_to_regexp(part.first)
+        else
+          "(?:#{part.map { |sub_parts| sub_parts.map { |sub_part| part_to_regexp(sub_part) }.join }.join('|')})"
+        end
       else raise 'Unknown token'
       end
     end
 
     def empty?
-      @parts.empty?
+      @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
     end
 
     def dup

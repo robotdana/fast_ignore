@@ -8,23 +8,14 @@ class PathList
         Matchers::PathRegexp.build(/\A#{Regexp.escape(path)}\z/i, true, allow)
       end
 
-      def self.build_implicit(path, allow, _root) # rubocop:disable Metrics/MethodLength
-        path = path.delete_prefix('/')
-        path_segments = path.split('/')
-        re = PathRegexpBuilder.new
-        re.append_start_anchor
-        re.append_escaped(path_segments.shift)
-        path_segments.each do |segment|
-          re.append_group_open
-          re.append_end_anchor
-          re.append_or
-          re.append_dir
-          re.append_escaped(segment)
-        end
-        re.append_end_anchor
-        re.append_group_close_all
-
-        Matchers::PathRegexp.build(re.to_regexp, true, allow)
+      def self.build_implicit(path, allow, _root)
+        @rule = Rule.new(
+          [:start_anchor] + path
+            .delete_prefix('/')
+            .split('/')
+            .flat_map { |x| [Regexp.escape(x), :dir] } + [:any_non_dir],
+          allow
+        ).build_parents
       end
     end
   end
