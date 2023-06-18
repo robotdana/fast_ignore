@@ -40,7 +40,7 @@ class PathList
     end
 
     def emit_end
-      @rule.append_dir_or_end_anchor
+      @rule.append_end_anchor
       break!
     end
 

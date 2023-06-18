@@ -60,15 +60,15 @@ class PathList
       [:start_anchor, :any] => [],
       [:dir_or_start_anchor, :any] => [],
       [:dir_or_start_anchor, :any_non_dir] => [],
-      [:dir_or_end_anchor] => [],
+      [:end_anchor_for_include] => [],
       [:end_anchor] => []
     }.freeze
 
     END_COMPRESSION_RULES = {
-      [:any_dir, :dir_or_end_anchor] => [],
-      [:dir, :any_non_dir, :dir_or_end_anchor] => [],
-      [:dir_or_start_anchor, :any_non_dir, :dir_or_end_anchor] => [],
-      [:start_anchor, :any_non_dir, :dir_or_end_anchor] => [],
+      [:any_dir, :end_anchor] => [],
+      [:dir, :any_non_dir, :end_anchor] => [],
+      [:dir_or_start_anchor, :any_non_dir, :end_anchor] => [],
+      [:start_anchor, :any_non_dir, :end_anchor] => [],
       [:start_anchor] => [],
       [:dir_or_start_anchor] => []
     }.freeze
@@ -117,10 +117,9 @@ class PathList
       when :any then '.*'
       when :one_non_dir then '[^/]'
       when :any_non_dir then '[^/]*'
-      when :end_anchor then '\\z'
+      when :end_anchor, :end_anchor_for_include then '\\z'
       when :start_anchor then '\\A'
       when :dir_or_start_anchor then '(?:\\A|/)'
-      when :dir_or_end_anchor then '\\z'
       when :character_class_open then '(?!/)['
       when :character_class_negation then '^'
       when :character_class_dash then '-'
@@ -154,6 +153,10 @@ class PathList
       @parts << :any_dir
     end
 
+    def append_end_anchor_for_include
+      @parts << :end_anchor_for_include
+    end
+
     def append_end_anchor
       @parts << :end_anchor
     end
@@ -169,10 +172,6 @@ class PathList
     def append_many_non_dir
       @parts << :any_non_dir
       @parts << :one_non_dir
-    end
-
-    def append_dir_or_end_anchor
-      @parts << :dir_or_end_anchor
     end
 
     def append_character_class_open

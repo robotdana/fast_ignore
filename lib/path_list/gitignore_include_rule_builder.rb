@@ -18,7 +18,7 @@ class PathList
 
     def emit_end
       @child_rule = @rule.dup
-      @rule.append_end_anchor
+      @rule.append_end_anchor_for_include
       break!
     end
 
