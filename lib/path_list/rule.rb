@@ -43,18 +43,37 @@ class PathList
       @dir_only
     end
 
-    def to_regexp
+    def build_path_matcher
+      re_string = compress_parts([@start, *@parts]).map { |part| part_to_regexp(part) }.join
+      return negated? ? Matchers::Allow : Matchers::Ignore if re_string.empty?
+
       # Regexp::IGNORECASE = 1
-      Regexp.new(compress_parts([@start, *@parts]).map { |part| part_to_regexp(part) }.join, 1)
+      Matchers::PathRegexp.build(Regexp.new(re_string, 1), anchored?, negated?)
+    end
+
+    def build
+      dir_only? ? Matchers::MatchIfDir.build(build_path_matcher) : build_path_matcher
     end
 
     START_COMPRESSION_RULES = {
       [:start_anchor, :any_dir] => [:any_non_dir],
       [:start_anchor, :any] => [],
-      [:dir_or_start_anchor, :any] => []
+      [:dir_or_start_anchor, :any] => [],
+      [:dir_or_start_anchor, :any_non_dir] => [],
+      [:dir_or_end_anchor] => [],
+      [:end_anchor] => []
     }.freeze
 
-    COMPRESSION_RULES = {
+    END_COMPRESSION_RULES = {
+      [:any_dir, :dir_or_end_anchor] => [],
+      [:dir, :any_non_dir, :dir_or_end_anchor] => [],
+      [:dir_or_start_anchor, :any_non_dir, :dir_or_end_anchor] => [],
+      [:start_anchor, :any_non_dir, :dir_or_end_anchor] => [],
+      [:start_anchor] => [],
+      [:dir_or_start_anchor] => []
+    }.freeze
+
+    MID_COMPRESSION_RULES = {
       # needs to be the same length
       [:any_non_dir, :any_non_dir] => [nil, :any_non_dir],
       [:one_non_dir, :any_non_dir] => [:any_non_dir, :one_non_dir]
@@ -69,7 +88,14 @@ class PathList
         end
       end
 
-      COMPRESSION_RULES.each do |rule, replacement|
+      END_COMPRESSION_RULES.each do |rule, replacement|
+        if rule == parts.slice(-1 * rule.length, rule.length)
+          parts[-1 * rule.length, rule.length] = replacement
+          # changed = true
+        end
+      end
+
+      MID_COMPRESSION_RULES.each do |rule, replacement|
         parts.each_cons(rule.length).with_index do |parts_cons, index|
           if rule == parts_cons
             parts[index, rule.length] = replacement
@@ -94,6 +120,7 @@ class PathList
       when :end_anchor then '\\z'
       when :start_anchor then '\\A'
       when :dir_or_start_anchor then '(?:\\A|/)'
+      when :dir_or_end_anchor then '\\z'
       when :character_class_open then '(?!/)['
       when :character_class_negation then '^'
       when :character_class_dash then '-'
@@ -142,6 +169,10 @@ class PathList
     def append_many_non_dir
       @parts << :any_non_dir
       @parts << :one_non_dir
+    end
+
+    def append_dir_or_end_anchor
+      @parts << :dir_or_end_anchor
     end
 
     def append_character_class_open

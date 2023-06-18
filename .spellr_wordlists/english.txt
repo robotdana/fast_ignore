@@ -3,7 +3,9 @@ appendables
 argv
 attributesfile
 backport
+barfoo
 baz
+boofoo
 changelog
 chdir
 codebase
@@ -56,6 +58,7 @@ nestedly
 nocov
 noninfringement
 nosystem
+ofo
 params
 pathlist
 pathspec

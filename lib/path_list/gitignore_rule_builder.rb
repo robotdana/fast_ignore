@@ -25,18 +25,6 @@ class PathList
       @rule.negated!
     end
 
-    def anchored!
-      @rule.anchored!
-    end
-
-    def never_anchored!
-      @rule.never_anchored!
-    end
-
-    def dir_only!
-      @rule.dir_only!
-    end
-
     def nothing_emitted?
       @rule.empty?
     end
@@ -52,7 +40,7 @@ class PathList
     end
 
     def emit_end
-      @rule.append_end_anchor
+      @rule.append_dir_or_end_anchor
       break!
     end
 
@@ -70,10 +58,10 @@ class PathList
         break!
       elsif @s.star_slash_end?
         @rule.append_many_non_dir
-        dir_only!
+        @rule.dir_only!
         emit_end
       elsif @s.two_star_slash_end?
-        dir_only!
+        @rule.dir_only!
         break!
       else
         true
@@ -96,12 +84,12 @@ class PathList
       if @s.slash?
         if @s.end?
           @rule.append_any_non_dir
-          dir_only!
+          @rule.dir_only!
         elsif @s.slash?
           unmatchable_rule!
         else
           if nothing_emitted?
-            never_anchored!
+            @rule.never_anchored!
           else
             emit_any_dir
           end
@@ -173,9 +161,7 @@ class PathList
     end
 
     def build_rule
-      m = Matchers::PathRegexp.build(@rule.to_regexp, @rule.anchored?, @rule.negated?)
-      m = Matchers::MatchIfDir.build(m) if @rule.dir_only?
-      m
+      @rule.build
     end
 
     def build

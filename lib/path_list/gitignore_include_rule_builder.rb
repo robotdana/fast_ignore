@@ -18,7 +18,8 @@ class PathList
 
     def emit_end
       @child_rule = @rule.dup
-      super
+      @rule.append_end_anchor
+      break!
     end
 
     def build_parent_dir_rules # rubocop:disable Metrics/MethodLength
@@ -47,7 +48,7 @@ class PathList
         @child_rule.append_dir
       end
 
-      Matchers::PathRegexp.build(@child_rule.to_regexp, @child_rule.anchored?, @child_rule.negated?)
+      @child_rule.build_path_matcher
     end
 
     def build_as_parent
@@ -71,19 +72,11 @@ class PathList
       end
     end
 
-    def build_implicit_rule(child_file_rule: true, parent: false) # rubocop:disable Metrics/MethodLength
+    def build_implicit_rule(child_file_rule: true, parent: false)
       @child_rule ||= @rule.dup # in case emit_end wasn't called
 
       Matchers::Any.build([
-        (
-          if parent && @rule.anchored? && @rule.dir_only? && @rule.negated?
-            Matchers::MatchIfDir.build(
-              Matchers::PathRegexp.build(@rule.to_regexp, true, true)
-            )
-          elsif parent
-            build_rule
-          end
-        ),
+        (build_rule if parent),
         *build_parent_dir_rules,
         (build_child_file_rule if child_file_rule && @rule.negated?)
       ].compact)

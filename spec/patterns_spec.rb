@@ -137,7 +137,7 @@ RSpec.describe ::PathList::Patterns do
             PathList::Matchers::WithinDir.new(
               '/a/b/c/',
               PathList::Matchers::LastMatch.new([
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, false),
+                PathList::Matchers::Ignore,
                 PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, true)
               ])
             )
@@ -159,14 +159,14 @@ RSpec.describe ::PathList::Patterns do
                 '/a/b/c/',
                 PathList::Matchers::Any.new([
                   PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/}i, false, true)
+                  PathList::Matchers::PathRegexp.new(%r{/}i, false, true)
                 ])
               )
             ]),
             PathList::Matchers::WithinDir.new(
               '/a/b/c/',
               PathList::Matchers::LastMatch.new([
-                PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false, true),
+                PathList::Matchers::Allow,
                 PathList::Matchers::PathRegexp.new(/(?i-mx:\Afoo\z)|(?i-mx:\Abaz\z)/, true, false)
               ])
             )

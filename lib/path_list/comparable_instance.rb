@@ -2,9 +2,9 @@
 
 class PathList
   module ComparableInstance
-    def eql?(other)
+    def eql?(other, except: nil)
       self.class == other.class &&
-        instance_variables.all? do |var|
+        (instance_variables - Array(except)).all? do |var|
           instance_variable_get(var) == other.instance_variable_get(var)
         end
     end

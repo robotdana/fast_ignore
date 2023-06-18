@@ -156,7 +156,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
           describe 'single level' do
             it "matches any number of characters at the beginning if there's a star" do
               expect(described_class.new('*our').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*our\z}i, false, false)
+                .to eq PathList::Matchers::PathRegexp.new(/our\z/i, false, false)
             end
 
             it "matches any number of characters at the beginning if there's a star followed by a slash" do
@@ -176,7 +176,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
             it "matches any number of characters at the end if there's a star" do
               expect(described_class.new('few*').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few[^/]*\z}i, false, false)
+                .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few[^\/]*\z}i, false, false)
             end
           end
 
@@ -218,12 +218,12 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
             it 'matches multiple directories when beginning with **/*/' do
               expect(described_class.new('**/*/c').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*/c\z}i, false, false)
+                .to eq PathList::Matchers::PathRegexp.new(%r{/c\z}i, false, false)
             end
 
             it 'matches multiple directories when beginning with **/*' do
               expect(described_class.new('**/*c').build)
-                .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*c\z}i, false, false)
+                .to eq PathList::Matchers::PathRegexp.new(/c\z/i, false, false)
             end
           end
         end
@@ -528,14 +528,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
           # "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".'
 
           it 'matches files or directories in all directories' do
-            matcher = described_class.new('**/foo').build
-            expect(matcher).to be_a PathList::Matchers::PathRegexp
-            expect(matcher).to have_instance_variables(
-              :@polarity => :ignore,
-              :@weight => be_a(Numeric),
-              :@squashable => false,
-              :@rule => have_attributes(class: Regexp, inspect: %r{(?:\A|\/)foo\z}i.inspect)
-            )
+            expect(described_class.new('**/foo').build)
+              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\z}i, false, false)
           end
 
           it 'matches nothing with double slash' do
@@ -545,8 +539,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
           it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
             expect(described_class.new('**/').build)
-              .to eq PathList::Matchers::MatchIfDir.new(PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*\z}i, false,
-                                                                                           false))
+              .to eq PathList::Matchers::MatchIfDir.new(PathList::Matchers::Ignore)
           end
 
           it 'matches files or directories in all directories when repeated' do
@@ -556,12 +549,12 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
           it 'matches files or directories in all directories with **/*' do
             expect(described_class.new('**/*').build)
-              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*[^/]\z}i, false, false)
+              .to eq PathList::Matchers::PathRegexp.new(%r{[^/]\z}i, false, false)
           end
 
           it 'matches files or directories in all directories when also followed by a star before text' do
             expect(described_class.new('**/*foo').build)
-              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*foo\z}i, false, false)
+              .to eq PathList::Matchers::PathRegexp.new(/foo\z/i, false, false)
           end
 
           it 'matches files or directories in all directories when also followed by a star within text' do
@@ -571,7 +564,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
           it 'matches files or directories in all directories when also followed by a star after text' do
             expect(described_class.new('**/fo*').build)
-              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)fo[^/]*\z}i, false, false)
+              .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)fo[^\/]*\z}i, false, false)
           end
 
           it 'matches files or directories in all directories when three stars' do
@@ -614,7 +607,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             context 'with two stars' do
               it 'matches any number of characters at the beginning' do
                 expect(described_class.new('**our').build)
-                  .to eq PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]*our\z}i, false, false)
+                  .to eq PathList::Matchers::PathRegexp.new(/our\z/i, false, false)
               end
 
               it "doesn't match a slash" do

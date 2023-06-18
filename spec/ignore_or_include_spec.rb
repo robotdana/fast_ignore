@@ -824,28 +824,27 @@ RSpec.describe PathList do
           gitignore '**/*foo'
 
           expect(subject).not_to match_files('bar/bar/bar')
-          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+          expect(subject).to match_files('foo', 'bar/foo', 'boofoo', 'bar/boofoo', 'bar/bar/foo/in_dir')
         end
 
         it 'matches files or directories in all directories when also followed by a star within text' do
           gitignore '**/f*o'
 
           expect(subject).not_to match_files('bar/bar/bar')
-          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
+          expect(subject).to match_files('foo', 'bar/foo', 'fo', 'o/fo', 'bar/bar/foo/in_dir')
         end
 
         it 'matches files or directories in all directories when also followed by a star after text' do
           gitignore '**/fo*'
 
-          expect(subject).not_to match_files('bar/bar/bar')
-          expect(subject).to match_files('foo', 'bar/foo')
-          expect(subject).to match_files('bar/bar/foo/in_dir')
+          expect(subject).not_to match_files('bar/bar/bar', 'ofo')
+          expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
         end
 
         it 'matches files or directories in all directories when three stars' do
           gitignore '***/foo'
 
-          expect(subject).not_to match_files('bar/bar/bar')
+          expect(subject).not_to match_files('bar/bar/bar', 'barfoo')
           expect(subject).to match_files('foo', 'bar/foo', 'bar/bar/foo/in_dir')
         end
       end
@@ -879,14 +878,14 @@ RSpec.describe PathList do
         it 'matches multiple intermediate dirs' do
           gitignore 'a/**/b'
 
-          expect(subject).not_to match_files('z/y', 'z/a/b', 'z/a/x/b')
+          expect(subject).not_to match_files('z/y', 'z/a/b', 'z/a/x/b', 'ab')
           expect(subject).to match_files('a/b', 'a/x/b', 'a/x/y/b')
         end
 
         it 'matches multiple intermediate dirs when ***' do
           gitignore 'a/***/b'
 
-          expect(subject).not_to match_files('z/y', 'z/a/b', 'z/a/x/b')
+          expect(subject).not_to match_files('z/y', 'z/a/b', 'z/a/x/b', 'ab')
           expect(subject).to match_files('a/b', 'a/x/b', 'a/x/y/b')
         end
       end
@@ -908,7 +907,7 @@ RSpec.describe PathList do
               expect(subject).to match_files('four', 'favour')
             end
 
-            it 'matches any number of characters in the middle' do
+            it 'matches any number of non-slash characters in the middle' do
               gitignore 'f**r'
 
               expect(subject).not_to match_files('f/our', 'few')
@@ -919,22 +918,18 @@ RSpec.describe PathList do
               gitignore 'few**'
 
               expect(subject).not_to match_files('f/our', 'four', 'favour')
-              expect(subject).to match_files('few', 'fewer')
+              expect(subject).to match_files('few', 'fewer', 'fewest/!')
             end
 
             # not sure if this is a bug but this is git behaviour
-            it 'matches any number of directories including none, when following a character' do
-              gitignore 'f**/our'
-
-              expect(subject).not_to match_files('few', 'fewer', 'favour')
-              expect(subject).to match_files('four', 'f/our')
-            end
-
-            it 'anchors, when following a character' do
+            it 'matches any number of directories including none, when following a character, and anchors' do
               gitignore 'f**/our'
 
               expect(subject).not_to match_files('few', 'fewer', 'favour', 'file/four')
               expect(subject).to match_files('four', 'f/our')
+
+              # TODO: doesn't work sometimes
+              # expect(subject).to match_files('file/f/our')
             end
           end
         end
