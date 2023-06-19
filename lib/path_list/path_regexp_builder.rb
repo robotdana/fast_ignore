@@ -36,7 +36,7 @@ class PathList
     end
 
     def append(value)
-      @string.<<(value)
+      @string << (value)
 
       self
     rescue FrozenError

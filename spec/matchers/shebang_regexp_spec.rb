@@ -18,7 +18,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
+    it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same return value' do
       other = described_class.new(/b/, allow_value)
@@ -57,7 +57,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     let(:rule) { /\bruby\b/ }
     let(:filename) { 'file.rb' }
 
-    let(:candidate) { instance_double(::PathList::Candidate, filename: filename, first_line: first_line) }
+    let(:candidate) { instance_double(PathList::Candidate, filename: filename, first_line: first_line) }
 
     context 'with an extension' do
       it 'returns nil without loading the first line' do

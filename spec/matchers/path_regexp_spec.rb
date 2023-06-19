@@ -19,7 +19,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
+    it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
       other = described_class.build(/b/, allow_value, ['b'])
@@ -54,7 +54,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
     let(:path) { 'my/file.rb' }
     let(:rule) { /\bfile.rb\b/ }
 
-    let(:candidate) { instance_double(::PathList::Candidate, path: path) }
+    let(:candidate) { instance_double(PathList::Candidate, path: path) }
 
     context 'with a matching rule' do
       context 'when allowing' do

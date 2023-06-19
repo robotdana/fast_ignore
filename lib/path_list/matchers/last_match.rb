@@ -3,7 +3,7 @@
 class PathList
   module Matchers
     class LastMatch < List
-      def self.compress(matchers)
+      def self.compress(matchers) # rubocop:disable Metrics/AbcSize
         super(matchers)
           .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
           .flat_map { |chunk| Any.compress(chunk).reverse }

@@ -248,3 +248,6 @@ Lint/MissingSuper:
 
 Metrics/ParameterLists:
   Max: 6
+
+Style/RedundantStringEscape:
+  Enabled: false # it's broken

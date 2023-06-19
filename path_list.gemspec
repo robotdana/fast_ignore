@@ -25,18 +25,5 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob('lib/**/*') + ['CHANGELOG.md', 'LICENSE.txt', 'README.md']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '>= 1.17'
-  spec.add_development_dependency 'leftovers', '>= 0.4.0'
-  spec.add_development_dependency 'pry', '> 0'
-  spec.add_development_dependency 'rake', '>= 12.3.3'
-  spec.add_development_dependency 'rspec', '~> 3.0'
-  spec.add_development_dependency 'rubocop', '>= 0.93.1'
-  spec.add_development_dependency 'rubocop-performance'
-  spec.add_development_dependency 'rubocop-rake'
-  spec.add_development_dependency 'rubocop-rspec', '>= 1.44.1'
-  spec.add_development_dependency 'simplecov', '~> 0.18.5'
-  spec.add_development_dependency 'simplecov-console'
-  spec.add_development_dependency 'spellr', '>= 0.8.3'
-  spec.add_development_dependency 'syntax_suggest'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

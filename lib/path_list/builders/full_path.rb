@@ -3,9 +3,9 @@
 class PathList
   module Builders
     module FullPath
+      # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
       def self.build(path, allow, _root)
         path = path.delete_prefix('/')
-        dir_only = path.end_with?('/')
         path.delete_suffix('/')
         rule = Rule.new([:start_anchor, Regexp.escape(path), :end_anchor], allow)
         rule.dir_only!

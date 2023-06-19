@@ -2,7 +2,7 @@
 
 require_relative 'support/fuzz'
 
-::RSpec.describe Fuzz do
+RSpec.describe Fuzz do
   next if ENV['COVERAGE']
 
   around do |e|
@@ -18,7 +18,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::PathList.ignore(gitignore)
+        PathList.ignore(gitignore)
       end.not_to raise_error
     end
   end
@@ -29,7 +29,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::PathList.only(gitignore)
+        PathList.only(gitignore)
       end.not_to raise_error
     end
   end
@@ -40,7 +40,7 @@ require_relative 'support/fuzz'
       puts gitignore
 
       expect do
-        ::PathList.ignore(gitignore, format: :glob)
+        PathList.ignore(gitignore, format: :glob)
       end.not_to raise_error
     end
   end

@@ -4,7 +4,7 @@ RSpec.describe PathList::Matchers::WithinDir do
   subject { described_class.new(dir, matcher) }
 
   let(:matcher) do
-    instance_double(::PathList::Matchers::Base, squashable_with?: false, weight: 1, polarity: :mixed)
+    instance_double(PathList::Matchers::Base, squashable_with?: false, weight: 1, polarity: :mixed)
   end
   let(:dir) { '/a_dir' }
   let(:other_dir) { '/tmp' }
@@ -98,8 +98,8 @@ RSpec.describe PathList::Matchers::WithinDir do
   end
 
   describe '#match' do
-    let(:candidate) { instance_double(::PathList::Candidate) }
-    let(:inner_candidate) { instance_double(::PathList::Candidate) }
+    let(:candidate) { instance_double(PathList::Candidate) }
+    let(:inner_candidate) { instance_double(PathList::Candidate) }
 
     let(:match_result) { [:allow, :ignore, nil].sample }
 

@@ -38,7 +38,7 @@ class PathList
       end
     end
 
-    def build_child_file_rule
+    def build_child_file_rule # rubocop:disable Metrics/MethodLength
       if @child_rule.end_with?(:end_anchor_for_include)
         @child_rule.remove_end_anchor_for_include
         @child_rule.append_dir

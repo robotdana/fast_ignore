@@ -15,7 +15,7 @@ RSpec.describe PathList::Matchers::Invalid do
 
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(::PathList::Matchers::Allow) }
+    it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
   end
 
   describe '#squash' do
@@ -26,12 +26,12 @@ RSpec.describe PathList::Matchers::Invalid do
 
   describe '#match' do
     it 'returns nil' do
-      expect(subject.match(instance_double(::PathList::Candidate))).to be_nil
+      expect(subject.match(instance_double(PathList::Candidate))).to be_nil
     end
   end
 
   describe '#eql?' do
     it { is_expected.to eq(subject) }
-    it { is_expected.not_to eq(::PathList::Matchers::Allow) }
+    it { is_expected.not_to eq(PathList::Matchers::Allow) }
   end
 end

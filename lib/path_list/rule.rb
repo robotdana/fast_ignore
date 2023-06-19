@@ -2,7 +2,7 @@
 
 class PathList
   class Rule # rubocop:disable Metrics/ClassLength
-    def self.merge_parts_lists(parts_lists)
+    def self.merge_parts_lists(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       return parts_lists.first if parts_lists.length <= 1
 
       merged = []
@@ -19,11 +19,13 @@ class PathList
 
         if grouped_by_first.length == 1
           if grouped_by_first.first.first.nil?
-            merged = []
+            merged
           else
             merged = Array(grouped_by_first.first.first)
+            # rubocop:disable Metrics/BlockNesting
             merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
             merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
+            # rubocop:enable Metrics/BlockNesting
           end
         else
           new_fork = []
@@ -41,9 +43,9 @@ class PathList
 
           merged = merge_parts_lists(new_fork.flatten(1) + start_with_fork.flatten(1)) unless start_with_fork.empty?
         end
-
-        merged
       end
+
+      merged
     end
 
     def initialize(parts = [:dir_or_start_anchor], negated = false)

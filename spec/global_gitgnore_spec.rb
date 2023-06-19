@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-::RSpec.describe(::PathList::GlobalGitignore) do
+RSpec.describe(PathList::GlobalGitignore) do
   subject { described_class.path(root: root) }
 
   let(:default_ignore_path) { "#{home}/.config/git/ignore" }

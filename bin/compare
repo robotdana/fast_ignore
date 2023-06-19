@@ -5,20 +5,20 @@ print "require 'path_list':      "
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 require_relative '../lib/path_list'
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-puts (finish - start).to_s
+puts(finish - start)
 
 print 'fresh PathList.gitignore:  '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 path_list = PathList.gitignore
 new_a = path_list.to_a
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-puts (finish - start).to_s
+puts(finish - start)
 
 print 'git ls-files:               '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 git_a = `git -c "core.quotepath=off" ls-files --recurse-submodules`.split("\n")
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-puts (finish - start).to_s
+puts(finish - start)
 
 # take into account indexed ignored things
 files_in_the_index_that_would_be_ignored = `git ls-files -ic --exclude-standard`.split("\n")

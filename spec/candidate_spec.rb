@@ -41,12 +41,12 @@ RSpec.describe PathList::Candidate do
         before { create_file_list 'foo' }
 
         it 'is memoized when true' do
-          allow(::File).to receive(:exist?).and_call_original
+          allow(File).to receive(:exist?).and_call_original
 
           expect(candidate.exists?).to be true
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
           expect(candidate.exists?).to be true
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
         end
       end
 
@@ -54,21 +54,21 @@ RSpec.describe PathList::Candidate do
         let(:full_path) { './foo' }
 
         it 'is memoized when false' do
-          allow(::File).to receive(:exist?).and_call_original
+          allow(File).to receive(:exist?).and_call_original
 
           expect(candidate.exists?).to be false
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
           expect(candidate.exists?).to be false
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
         end
 
         it 'is false when there is an error' do
-          allow(::File).to receive(:exist?).and_raise(::Errno::EACCES)
+          allow(File).to receive(:exist?).and_raise(Errno::EACCES)
 
           expect(candidate.exists?).to be false
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
           expect(candidate.exists?).to be false
-          expect(::File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).once
         end
       end
     end
@@ -167,7 +167,7 @@ RSpec.describe PathList::Candidate do
       end
 
       it 'returns an empty string if there an error creating the file object' do
-        allow(::File).to receive(:new).and_raise(::SystemCallError, 'error')
+        allow(File).to receive(:new).and_raise(SystemCallError, 'error')
 
         expect(candidate.first_line).to eq ''
       end

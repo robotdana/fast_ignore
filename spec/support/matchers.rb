@@ -79,7 +79,7 @@ end
 RSpec::Matchers.define(:allow_exactly) do |*expected|
   match do |actual|
     @actual = actual.to_a
-    expect(@actual).to contain_exactly(*expected)
+    expect(@actual).to match_array(expected)
     expect(actual).to allow_files(*expected, create: false)
 
     true

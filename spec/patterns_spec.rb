@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe ::PathList::Patterns do
+RSpec.describe PathList::Patterns do
   subject(:matchers) do
     described_class.new(
       *patterns_arg,

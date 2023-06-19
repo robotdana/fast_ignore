@@ -4,22 +4,22 @@ RSpec.describe PathList::Matchers::Appendable do
   subject { described_class.new(label, default, implicit_matcher, explicit_matcher, original_pattern) }
 
   let(:default) { PathList::Matchers::Invalid }
-  let(:original_pattern) { instance_double(::PathList::Patterns) }
+  let(:original_pattern) { instance_double(PathList::Patterns) }
   let(:implicit_matcher) do
     instance_double(
-      ::PathList::Matchers::Base,
+      PathList::Matchers::Base,
       squashable_with?: false, polarity: :mixed, weight: 1
     )
   end
   let(:explicit_matcher) do
     instance_double(
-      ::PathList::Matchers::Base,
+      PathList::Matchers::Base,
       squashable_with?: false, polarity: :mixed, weight: 1
     )
   end
   let(:label) { :false_gitignore }
   let(:random_boolean) { [true, false].sample }
-  let(:candidate) { instance_double(::PathList::Candidate) }
+  let(:candidate) { instance_double(PathList::Candidate) }
 
   it { is_expected.not_to be_frozen }
 
@@ -73,43 +73,43 @@ RSpec.describe PathList::Matchers::Appendable do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(::PathList::Patterns, label: label, content?: true, 'allow=': nil) }
+    let(:patterns) { instance_double(PathList::Patterns, label: label, content?: true, 'allow=': nil) }
 
     it 'appends the patterns to the matcher' do
       subject
 
       appended_implicit_matcher = instance_double(
-        ::PathList::Matchers::Base,
+        PathList::Matchers::Base,
         squashable_with?: false, polarity: :mixed, weight: 1
       )
       appended_explicit_matcher = instance_double(
-        ::PathList::Matchers::Base,
+        PathList::Matchers::Base,
         squashable_with?: false, polarity: :mixed, weight: 1
       )
       allow(patterns).to receive(:build_matchers).and_return([appended_implicit_matcher, appended_explicit_matcher])
 
       new_explicit_matcher = instance_double(
-        ::PathList::Matchers::LastMatch,
+        PathList::Matchers::LastMatch,
         squashable_with?: false, polarity: :mixed, weight: 1
       )
 
       new_implicit_matcher = instance_double(
-        ::PathList::Matchers::Any,
+        PathList::Matchers::Any,
         squashable_with?: false, polarity: :mixed, weight: 1
       )
 
-      new_appended_matcher = instance_double(::PathList::Matchers::LastMatch, match: nil)
+      new_appended_matcher = instance_double(PathList::Matchers::LastMatch, match: nil)
 
-      allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+      allow(PathList::Matchers::LastMatch).to receive(:new).with([
         explicit_matcher,
         appended_explicit_matcher
       ]).and_return(new_explicit_matcher)
-      allow(::PathList::Matchers::Any).to receive(:new).with([
+      allow(PathList::Matchers::Any).to receive(:new).with([
         implicit_matcher,
         appended_implicit_matcher
       ]).and_return(new_implicit_matcher)
 
-      allow(::PathList::Matchers::LastMatch).to receive(:new).with([
+      allow(PathList::Matchers::LastMatch).to receive(:new).with([
         new_implicit_matcher, new_explicit_matcher
       ]).and_return(new_appended_matcher)
 
@@ -120,7 +120,7 @@ RSpec.describe PathList::Matchers::Appendable do
   end
 
   describe '#match' do
-    let(:candidate) { instance_double(::PathList::Candidate) }
+    let(:candidate) { instance_double(PathList::Candidate) }
 
     it 'is explicit_matcher.match when :allow' do
       allow(explicit_matcher).to receive(:match).with(candidate).and_return(:allow)
