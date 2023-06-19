@@ -7,6 +7,8 @@ class PathList
         super(matchers)
           .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
           .flat_map { |chunk| Any.compress(chunk).reverse }
+          .chunk_while { |a, b| a.squashable_with?(b) }
+          .map { |list| list.length == 1 ? list.first : list.first.squash(list) }
       end
 
       def match(candidate)

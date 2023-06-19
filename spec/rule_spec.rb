@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe PathList::Rule do
   describe '.merge_parts_lists' do
     it 'returns the first value if only value' do
@@ -10,6 +12,11 @@ RSpec.describe PathList::Rule do
         .to eq ['a', :dir, 'b']
     end
 
+    it 'returns the correct value for lists that start identical then fork to continue' do
+      expect(described_class.merge_parts_lists([['a', :dir, 'b'], ['a', :dir, 'b', :dir, 'c']]))
+        .to eq ['a', :dir, 'b', [[], [:dir, 'c']]]
+    end
+
     it 'merges into a fork' do
       expect(described_class.merge_parts_lists([[[['a', :dir, 'b'], [:start_anchor]]], ['a', :dir, 'b']]))
         .to eq [[['a', :dir, 'b'], [:start_anchor]]]
@@ -17,9 +24,9 @@ RSpec.describe PathList::Rule do
 
     it 'merges into a fork, complexly' do
       expect(described_class.merge_parts_lists([
-        [[['a', :dir, 'b'], ['a', :dir, [['c', 'e'], ['f']]], [:start_anchor], [:start_anchor]]], ['a', :dir, 'b']
+        [[['a', :dir, 'b'], ['a', :dir, [['c', 'e'], ['f']]], [:start_anchor], [:start_anchor, 'z']]], ['a', :dir, 'b']
       ]))
-        .to eq [[['a', :dir, [['b'], ['c', 'e'], ['f']]], [:start_anchor]]]
+        .to eq [[['a', :dir, [['b'], ['c', 'e'], ['f']]], [:start_anchor, [[], ['z']]]]]
     end
 
     it 'returns the correct value from differing lists with the same size' do

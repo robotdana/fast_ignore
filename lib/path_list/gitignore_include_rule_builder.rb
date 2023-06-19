@@ -17,7 +17,6 @@ class PathList
     end
 
     def emit_end
-      @child_rule = @rule.dup
       @rule.append_end_anchor_for_include
       break!
     end
@@ -40,12 +39,16 @@ class PathList
     end
 
     def build_child_file_rule
-      if @child_rule.end_with?(:dir)
-        if @rule.dir_only?
-          @child_rule.append_many_non_dir
+      if @child_rule.end_with?(:end_anchor_for_include)
+        @child_rule.remove_end_anchor_for_include
+        @child_rule.append_dir
+      elsif @child_rule.end_with?(:dir)
+        if @child_rule.dir_only?
+          @child_rule.append_any_non_dir
           @child_rule.append_dir
         end
       else
+        @child_rule.append_any_non_dir
         @child_rule.append_dir
       end
 
@@ -59,7 +62,6 @@ class PathList
 
       catch :abort_build do
         process_rule
-        @rule.compress
         build_implicit_rule(child_file_rule: false, parent: true)
       end
     end
@@ -71,13 +73,13 @@ class PathList
         negated! if @s.exclamation_mark?
         process_rule
 
-        @rule.compress
         build_implicit_rule
       end
     end
 
     def build_implicit_rule(child_file_rule: true, parent: false)
       @child_rule ||= @rule.dup # in case emit_end wasn't called
+      @rule.compress
 
       Matchers::Any.build([
         (build_rule if parent),

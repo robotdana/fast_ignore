@@ -28,7 +28,7 @@ class PathList
 
       def squash(list)
         new_with_matcher(
-          Any.build(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
+          LastMatch.build(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
         )
       end
 

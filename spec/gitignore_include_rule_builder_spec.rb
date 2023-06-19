@@ -1478,7 +1478,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(/\Aabc\z/i, true)
                 ),
-                PathList::Matchers::PathRegexp.new(%r{\Aabc\/[^\/]*[^\/]\/}i, true)
+                PathList::Matchers::PathRegexp.new(%r{\Aabc\/[^\/]*\/}i, true)
               ])
           end
 
@@ -1543,11 +1543,10 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               end
 
               it 'matches any number of characters at the end' do
-                # TODO: the child pattern for this is is incorrect
                 expect(described_class.new('few**').build_implicit)
                   .to eq PathList::Matchers::Any.new([
                     PathList::Matchers::AllowAnyDir,
-                    PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few\/}i, true)
+                    PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few[^/]*\/}i, true)
                   ])
               end
 

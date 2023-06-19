@@ -12,6 +12,10 @@ class PathList
         freeze
       end
 
+      # def squashable_with?(_)
+      #   false
+      # end
+
       # TODO: avoid this hack to sort things to the front.
       # it's misleading
 

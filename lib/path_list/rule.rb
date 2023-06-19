@@ -7,7 +7,6 @@ class PathList
 
       merged = []
 
-      parts_lists = parts_lists.reject(&:empty?)
       return merged if parts_lists.empty?
 
       start_with_fork, start_with_value = parts_lists
@@ -17,20 +16,27 @@ class PathList
         merged = merge_parts_lists(start_with_fork.flatten(1)) unless start_with_fork.empty?
       else
         grouped_by_first = start_with_value.group_by(&:first)
-        grouped_by_first.delete(nil)
 
         if grouped_by_first.length == 1
-          merged = [grouped_by_first.first.first]
-          merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
-          merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
+          if grouped_by_first.first.first.nil?
+            merged = []
+          else
+            merged = Array(grouped_by_first.first.first)
+            merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
+            merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
+          end
         else
           new_fork = []
           merged = [new_fork]
 
           grouped_by_first.each do |first_item, sub_parts_lists|
-            tail = [first_item]
-            tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
-            new_fork << tail
+            if first_item.nil?
+              new_fork << []
+            else
+              tail = Array(first_item)
+              tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
+              new_fork << tail
+            end
           end
 
           merged = merge_parts_lists(new_fork.flatten(1) + start_with_fork.flatten(1)) unless start_with_fork.empty?
@@ -229,6 +235,10 @@ class PathList
 
     def append_end_anchor_for_include
       @parts << :end_anchor_for_include
+    end
+
+    def remove_end_anchor_for_include
+      @parts.pop if @parts[-1] == :end_anchor_for_include
     end
 
     def append_end_anchor
