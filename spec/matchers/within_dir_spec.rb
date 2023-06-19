@@ -99,14 +99,14 @@ RSpec.describe PathList::Matchers::WithinDir do
 
   describe '#match' do
     let(:candidate) { instance_double(PathList::Candidate) }
-    let(:inner_candidate) { instance_double(PathList::Candidate) }
+    let(:inner_candidate) { instance_double(PathList::RelativeCandidate) }
 
     let(:match_result) { [:allow, :ignore, nil].sample }
 
     context 'when candidate is within dir' do
       before do
-        allow(candidate).to receive(:with_path_relative_to)
-          .with(dir).and_yield(inner_candidate)
+        allow(candidate).to receive(:relative_to)
+          .with(dir).and_return(inner_candidate)
       end
 
       it 'is matcher.match when :allow' do
@@ -136,7 +136,7 @@ RSpec.describe PathList::Matchers::WithinDir do
 
     context 'when candidate is not within dir' do
       before do
-        allow(candidate).to receive(:with_path_relative_to)
+        allow(candidate).to receive(:relative_to)
           .with(dir).and_return(nil)
       end
 

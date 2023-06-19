@@ -38,18 +38,11 @@ class PathList
       @path ||= @full_path.delete_prefix('/')
     end
 
-    # TODO: some kind of case folding
-    def with_path_relative_to(dir)
+    def relative_to(dir)
       return unless @full_path.start_with?(dir)
 
-      begin
-        @path_was << (path)
-        @path = @full_path.delete_prefix(dir)
 
-        yield self
-      ensure
-        @path = @path_was.pop
-      end
+      RelativeCandidate.new(self, @full_path.delete_prefix(dir), dir)
     end
 
     def directory?

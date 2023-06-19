@@ -20,9 +20,11 @@ class PathList
       end
 
       def match(candidate)
-        candidate.with_path_relative_to(@dir) do |relative_candidate|
-          @matcher.match(relative_candidate)
-        end
+        relative_candidate = candidate.relative_to(@dir)
+
+        return unless relative_candidate
+
+        @matcher.match(relative_candidate)
       end
 
       def inspect
