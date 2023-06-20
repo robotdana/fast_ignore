@@ -5,7 +5,7 @@ class PathList
     class List < Base
       include Autoloader
 
-      def self.build(matchers)
+      def self.build(matchers) # rubocop:disable Metrics/MethodLength
         matchers = compress(matchers)
 
         case matchers.length
@@ -21,9 +21,6 @@ class PathList
           else raise 'Oop'
           end
         end
-      rescue StandardError
-        require 'pry'
-        binding.pry
       end
 
       def self.calculate_polarity(matchers)

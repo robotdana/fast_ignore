@@ -27,8 +27,8 @@ class PathList
         "#{self.class}.new(#{@from_file.inspect}, " \
           "format: #{@format.inspect}, " \
           "label: #{@label.inspect}, " \
-          "appendable_matcher: ..." \
-          ")"
+          'appendable_matcher: ...' \
+          ')'
       end
 
       def polarity

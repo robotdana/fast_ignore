@@ -21,18 +21,11 @@ class PathList
       break!
     end
 
-    def build_parent_dir_rules # rubocop:disable Metrics/MethodLength
+    def build_parent_dir_rules
       return Matchers::Blank unless @rule.negated?
 
-      # TODO: unfuck this:
       if @rule.anchored?
-        # @rule.dup.build_parents
-        parent_pattern = @s.string.dup
-        if parent_pattern.sub!(%r{/[^/]+/?\s*\z}, '/')
-          GitignoreIncludeRuleBuilder.new(parent_pattern).build_as_parent
-        else
-          Matchers::Blank
-        end
+        @rule.dup.build_parents
       else
         Matchers::AllowAnyDir
       end
@@ -56,16 +49,6 @@ class PathList
       @child_rule.build_path_matcher
     end
 
-    def build_as_parent
-      @rule.anchored!
-      @rule.dir_only!
-
-      catch :abort_build do
-        process_rule
-        build_implicit_rule(child_file_rule: false, parent: true)
-      end
-    end
-
     def build_implicit
       catch :abort_build do
         blank! if @s.hash?
@@ -77,15 +60,15 @@ class PathList
       end
     end
 
-    def build_implicit_rule(child_file_rule: true, parent: false)
+    def build_implicit_rule
       @child_rule ||= @rule.dup # in case emit_end wasn't called
       @rule.compress
 
-      Matchers::Any.build([
-        (build_rule if parent),
-        *build_parent_dir_rules,
-        (build_child_file_rule if child_file_rule && @rule.negated?)
-      ].compact)
+      if @rule.negated?
+        Matchers::Any.build([build_parent_dir_rules, build_child_file_rule])
+      else
+        build_parent_dir_rules
+      end
     end
   end
 end

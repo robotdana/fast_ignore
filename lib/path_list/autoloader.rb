@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class PathList
   module Autoloader
     # zero dependency zeitwerk

@@ -15,7 +15,8 @@ RSpec.describe PathList::Matchers::WithinDir do
   describe '#inspect' do
     it 'is nicely formatted' do
       expect(subject.inspect).to eq <<~INSPECT.chomp
-        PathList::Matchers::WithinDir.new("/a_dir",
+        PathList::Matchers::WithinDir.new(
+          "/a_dir",
           #{matcher.inspect}
         )
       INSPECT

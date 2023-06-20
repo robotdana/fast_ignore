@@ -11,6 +11,7 @@ class PathList
     end
 
     alias_method :reinitialize, :initialize
+    public :reinitialize
 
     # TODO, link back to parent
     def relative_to(dir, candidate_object = PathList::RelativeCandidate.allocate)

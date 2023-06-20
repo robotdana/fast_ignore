@@ -39,6 +39,8 @@ class PathList
       return unless @full_path.start_with?(dir)
 
       candidate_object.reinitialize(self, @full_path.delete_prefix(dir), dir)
+
+      candidate_object
     end
 
     def directory?

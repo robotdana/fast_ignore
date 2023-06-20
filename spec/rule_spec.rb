@@ -17,6 +17,16 @@ RSpec.describe PathList::Rule do
         .to eq ['a', :dir, 'b', [[], [:dir, 'c']]]
     end
 
+    it 'simplifies a fork with one item' do
+      expect(described_class.merge_parts_lists([[[['a', :dir, 'b']]]]))
+        .to eq ['a', :dir, 'b']
+    end
+
+    it 'simplifies a fork with identical parts' do
+      expect(described_class.merge_parts_lists([[[['a', :dir, 'b'], ['a', :dir, 'b']]]]))
+        .to eq ['a', :dir, 'b']
+    end
+
     it 'merges into a fork' do
       expect(described_class.merge_parts_lists([[[['a', :dir, 'b'], [:start_anchor]]], ['a', :dir, 'b']]))
         .to eq [[['a', :dir, 'b'], [:start_anchor]]]

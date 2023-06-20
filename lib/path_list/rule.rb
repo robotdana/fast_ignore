@@ -3,8 +3,6 @@
 class PathList
   class Rule # rubocop:disable Metrics/ClassLength
     def self.merge_parts_lists(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      return parts_lists.first if parts_lists.length <= 1
-
       merged = []
 
       return merged if parts_lists.empty?
@@ -105,13 +103,16 @@ class PathList
       [:start_anchor, :any] => [],
       [:dir_or_start_anchor, :any] => [],
       [:dir_or_start_anchor, :any_non_dir] => [],
+      [:dir_or_start_anchor, :many_non_dir] => [:one_non_dir],
       [:end_anchor_for_include] => [],
       [:end_anchor] => []
     }.freeze
 
     END_COMPRESSION_RULES = {
       [:any_dir, :end_anchor] => [],
+      [:any, :end_anchor] => [],
       [:dir, :any_non_dir, :end_anchor] => [],
+      [:any_dir, :any_non_dir, :end_anchor] => [],
       [:dir_or_start_anchor, :any_non_dir, :end_anchor] => [],
       [:start_anchor, :any_non_dir, :end_anchor] => [],
       [:start_anchor] => [],
@@ -121,7 +122,11 @@ class PathList
     MID_COMPRESSION_RULES = {
       # needs to be the same length
       [:any_non_dir, :any_non_dir] => [nil, :any_non_dir],
-      [:one_non_dir, :any_non_dir] => [:any_non_dir, :one_non_dir]
+      [:one_non_dir, :any_non_dir] => [nil, :many_non_dir],
+      [:any_non_dir, :one_non_dir] => [nil, :many_non_dir],
+      [:many_non_dir, :any_non_dir] => [nil, :many_non_dir],
+      [:any_non_dir, :many_non_dir] => [nil, :many_non_dir],
+      [:any_non_dir, :any_dir] => [nil, :any]
     }.freeze
 
     def compress # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
@@ -160,7 +165,12 @@ class PathList
       @parts.each do |part|
         if part == :dir || part == :any_dir
           new_tail = []
-          new_fork = [[:end_anchor_for_include], new_tail]
+          new_end = if part == :any_dir
+            [:any_dir, :any_non_dir, :end_anchor]
+          else
+            [:end_anchor]
+          end
+          new_fork = [new_end, new_tail]
           tail << new_fork
           parent = new_fork
           tail = new_tail
@@ -173,6 +183,7 @@ class PathList
 
         @parts = head
         dir_only!
+
         build
       else
         Matchers::Blank
@@ -186,13 +197,18 @@ class PathList
       when :any then '.*'
       when :one_non_dir then '[^/]'
       when :any_non_dir then '[^/]*'
+      when :many_non_dir then '[^/]+'
       when :end_anchor, :end_anchor_for_include then '\\z'
       when :start_anchor then '\\A'
       when :dir_or_start_anchor then '(?:\\A|/)'
       when nil, String then part
       when Array
         if part.length == 1
-          part_to_regexp(part.first)
+          if part.first.is_a?(Array)
+            part.first.map { |sub_part| part_to_regexp(sub_part) }.join
+          else
+            part_to_regexp(part.first)
+          end
         else
           "(?:#{part.map { |sub_parts| sub_parts.map { |sub_part| part_to_regexp(sub_part) }.join }.join('|')})"
         end
@@ -256,8 +272,7 @@ class PathList
     end
 
     def append_many_non_dir
-      @parts << :any_non_dir
-      @parts << :one_non_dir
+      @parts << :many_non_dir
     end
 
     def append_character_class_open

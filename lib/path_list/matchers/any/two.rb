@@ -11,12 +11,13 @@ class PathList
         attr_reader :polarity
         attr_reader :weight
 
-        def initialize(matcher_a, matcher_b)
+        def initialize(matcher_a, matcher_b) # rubocop:disable Lint/MissingSuper
           @matcher_a = matcher_a
           @matcher_b = matcher_b
           @weight = calculate_weight
           @polarity = calculate_polarity
-          # @matchers = [@matcher_a, @matcher_b]
+
+          freeze
         end
 
         def squashable_with?(_)

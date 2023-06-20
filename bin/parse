@@ -6,7 +6,7 @@ sub_gitignore_files = PathList.gitignore.only('*/**/.gitignore').to_a
 
 path_list = PathList.gitignore
 sub_gitignore_files.each do |sub_gitignore|
-  path_list.append!(from_file: sub_gitignore, label: PathList.const_get(:'APPENDABLE_GITIGNORE_LABEL'))
+  path_list.append!(from_file: sub_gitignore, label: :'PathList::APPENDABLE_GITIGNORE_LABEL')
 end
 
 puts path_list.inspect
