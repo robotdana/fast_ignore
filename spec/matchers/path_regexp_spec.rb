@@ -10,7 +10,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<PathList::Matchers::PathRegexp :allow /a/>' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, true)' }
   end
 
   describe '#weight' do

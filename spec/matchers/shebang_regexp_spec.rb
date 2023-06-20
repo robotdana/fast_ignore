@@ -9,7 +9,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<PathList::Matchers::ShebangRegexp :allow /a/>' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::ShebangRegexp.new(/a/, true)' }
   end
 
   describe '#weight' do

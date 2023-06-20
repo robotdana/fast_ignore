@@ -3,9 +3,13 @@
 class PathList
   module Matchers
     class Any < List
+      include Autoloader
+
+      attr_reader :matchers
+
       def self.compress(matchers) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         matchers = super(matchers)
-        return [Allow] if matchers.include?(Allow)
+        return [Matchers::Allow] if matchers.include?(Matchers::Allow)
 
         squashable_sets = []
 
@@ -27,7 +31,7 @@ class PathList
       end
 
       def match(candidate)
-        ignore = false
+        ignore = nil
 
         @matchers.each do |m|
           case m.match(candidate)

@@ -31,19 +31,23 @@ class PathList
       end
 
       def inspect
-        super("@label=#{@label.inspect}")
+        "#{self.class}.new(\n#{
+          [@label, @default_matcher, @implicit_matcher, @explicit_matcher]
+            .map(&:inspect).join(",\n").gsub(/^/, '  ')
+        },\n  PathList::Patterns.new...\n)"
       end
 
       def append(pattern)
         pattern.allow = append_with_allow
-        return unless pattern.content?
         return if @loaded.include?(pattern)
+
+        @loaded << pattern
+        return unless pattern.content?
 
         new_implicit, new_explicit = pattern.build_matchers
 
         @implicit_matcher = Any.build([@implicit_matcher, new_implicit])
         @explicit_matcher = LastMatch.build([@explicit_matcher, new_explicit])
-        @loaded << pattern
 
         build_matcher
       end

@@ -7,10 +7,14 @@ profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 # RubyProf.measure_mode = RubyProf::ALLOCATIONS
 # RubyProf.measure_mode = RubyProf::MEMORY
 
+sub_gitignore_files = `../ls '*/**/.gitignore'`.split("\n")
 profile.profile do
   require_relative '../../lib/path_list'
-  PathList.gitignore.only(ARGV, format: :glob).to_a
+  path_list = PathList.gitignore
+  sub_gitignore_files.each do |sub_gitignore|
+    path_list.append!(from_file: sub_gitignore, label: :'PathList::APPENDABLE_GITIGNORE_LABEL')
+  end
 end
 
 printer = RubyProf::GraphPrinter.new(profile)
-printer.print($stdout, min_percent: 1, sort_method: :self_time)
+printer.print($stdout, min_percent: 2, sort_method: :self_time)

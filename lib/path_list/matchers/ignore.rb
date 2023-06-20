@@ -9,7 +9,7 @@ class PathList
         :ignore
       end
 
-      def name
+      def inspect
         'PathList::Matchers::Ignore'
       end
 

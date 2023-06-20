@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'benchmark/ips'
+require 'tempfile'
+require 'stringio'
+
+# from benchmark/ips readme
+class GCSuite
+  def warming(*) # leftovers:allow
+    run_gc
+  end
+
+  def running(*) # leftovers:allow
+    run_gc
+  end
+
+  def warmup_stats(*); end # leftovers:allow
+
+  def add_report(*); end # leftovers:allow
+
+  private
+
+  def run_gc
+    GC.enable
+    GC.start
+    GC.disable
+  end
+end
+
+GC.disable
+
+config = { suite: GCSuite.new }
+
+def benchmark(label)
+  return unless ARGV.empty? || ARGV.include?(label)
+
+  puts "\n#{label}:"
+
+  yield
+  puts ''
+end
+
+benchmark('or-or-any') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @miss_array = [nil, nil]
+    @second_array = [nil, 1]
+    @first_array = [1, nil]
+    @miss = nil
+    @hit = 1
+
+    x.report(:any_first) { @first_array.any? { |x| x } }
+    x.report(:any_second) { @second_array.any? { |x| x } }
+    x.report(:any_none) { @miss_array.any? { |x| x } }
+    x.report(:or_first) { @hit || @miss }
+    x.report(:or_second) { @miss || @hit }
+    x.report(:or_none) { @miss || @miss }
+    x.compare!
+  end
+end
+
+benchmark('enumerate-array') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @array = (0..1000).to_a
+
+    x.report(:each) { @array.each { |x| x } }
+    x.report(:reverse_each) { @array.reverse_each { |x| x } }
+    x.report(:'each.each') { @array.each.each { |x| x } }
+    x.compare!
+  end
+end
+
+benchmark('enumerate-array-proc') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @array = (0..1000).to_a
+
+    x.report(:each) { @array.each(&:itself) }
+    x.report(:reverse_each) { @array.reverse_each(&:itself) }
+    x.report(:'each.each') { @array.each.each(&:itself) }
+    x.compare!
+  end
+end

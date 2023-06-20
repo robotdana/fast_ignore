@@ -27,13 +27,15 @@ class PathList
       end
 
       def squash(list)
-        new_with_matcher(
-          LastMatch.build(list.map { |l| l.matcher }) # rubocop:disable Style/SymbolProc it breaks with protected methods
-        )
+        new_matchers = list.map { |l| l.matcher } # rubocop:disable Style/SymbolProc it breaks with protected methods
+        first_polarity = new_matchers.first.polarity
+        same_polarity = new_matchers.all? { |l| l.polarity != :mixed && l.polarity == first_polarity }
+        new_matcher_class = same_polarity ? Any : LastMatch
+        new_with_matcher(new_matcher_class.build(new_matchers))
       end
 
-      def inspect(data = '')
-        super("#{data}#{' ' if data}@matcher=(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)")
+      def inspect
+        "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
       protected

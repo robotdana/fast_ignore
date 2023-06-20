@@ -3,10 +3,12 @@
 class PathList
   module Matchers
     class LastMatch < List
+      include Autoloader
+
       def self.compress(matchers) # rubocop:disable Metrics/AbcSize
         super(matchers)
           .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
-          .flat_map { |chunk| Any.compress(chunk).reverse }
+          .flat_map { |chunk| chunk.length == 1 ? chunk : Any.compress(chunk).reverse }
           .chunk_while { |a, b| a.squashable_with?(b) }
           .map { |list| list.length == 1 ? list.first : list.first.squash(list) }
       end

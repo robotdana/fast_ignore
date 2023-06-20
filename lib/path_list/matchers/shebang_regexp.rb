@@ -28,7 +28,7 @@ class PathList
       end
 
       def inspect
-        super("#{@polarity.inspect} #{@rule.inspect}")
+        "#{self.class}.new(#{@rule.inspect}, #{@polarity == :allow})"
       end
 
       def match(candidate)

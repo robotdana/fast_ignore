@@ -7,17 +7,18 @@ class PathList
     def initialize(candidate, relative_path, relative_to)
       @candidate = candidate
       @path = relative_path
+      @relative_to = relative_to
     end
 
+    alias_method :reinitialize, :initialize
+
     # TODO, link back to parent
-    def relative_to(dir)
-      @candidate.relative_to(@relative_to + dir)
+    def relative_to(dir, candidate_object = PathList::RelativeCandidate.allocate)
+      @candidate.relative_to(@relative_to + dir, candidate_object)
     end
 
     def parent
-      return @parent if defined?(@parent)
-
-      @parent = @candidate.parent&.relative_to(@relative_to)
+      @candidate.parent&.relative_to(@relative_to)
     end
 
     def full_path
@@ -40,7 +41,7 @@ class PathList
       @candidate.filename
     end
 
-    def first_line # rubocop:disable Metrics/MethodLength
+    def first_line
       @candidate.first_line
     end
 

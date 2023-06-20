@@ -45,6 +45,7 @@ heredoc
 i've
 includefile
 includeif
+ips
 janky
 jruby
 klass
@@ -59,6 +60,7 @@ nocov
 noninfringement
 nosystem
 ofo
+oop
 params
 pathlist
 pathspec
@@ -103,8 +105,10 @@ unstaged
 upcase
 usr
 utf
+warmup
 webpack
 xconfig
 xdg
 xit
+zeitwerk
 zsh

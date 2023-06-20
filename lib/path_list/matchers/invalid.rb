@@ -5,7 +5,7 @@ class PathList
     Invalid = Base.new
 
     class << Invalid
-      def name
+      def inspect
         'PathList::Matchers::Invalid'
       end
 

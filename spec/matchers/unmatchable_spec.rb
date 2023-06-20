@@ -6,7 +6,7 @@ RSpec.describe PathList::Matchers::Invalid do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value '#<PathList::Matchers::Invalid>' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::Invalid' }
   end
 
   describe '#weight' do

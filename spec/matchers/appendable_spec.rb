@@ -26,12 +26,13 @@ RSpec.describe PathList::Matchers::Appendable do
   describe '#inspect' do
     it 'is nicely formatted' do
       expect(subject.inspect).to eq <<~INSPECT.chomp
-        #<PathList::Matchers::Appendable @label=:false_gitignore @matcher=(
-          #<PathList::Matchers::LastMatch @matchers=[
-            #{implicit_matcher.inspect},
-            #{explicit_matcher.inspect}
-          ]>
-        )>
+        PathList::Matchers::Appendable.new(
+          :false_gitignore,
+          PathList::Matchers::Invalid,
+          #{implicit_matcher.inspect},
+          #{explicit_matcher.inspect},
+          PathList::Patterns.new...
+        )
       INSPECT
     end
   end
@@ -100,18 +101,18 @@ RSpec.describe PathList::Matchers::Appendable do
 
       new_appended_matcher = instance_double(PathList::Matchers::LastMatch, match: nil)
 
-      allow(PathList::Matchers::LastMatch).to receive(:new).with([
+      allow(PathList::Matchers::LastMatch::Two).to receive(:new).with(
         explicit_matcher,
         appended_explicit_matcher
-      ]).and_return(new_explicit_matcher)
-      allow(PathList::Matchers::Any).to receive(:new).with([
+      ).and_return(new_explicit_matcher)
+      allow(PathList::Matchers::Any::Two).to receive(:new).with(
         implicit_matcher,
         appended_implicit_matcher
-      ]).and_return(new_implicit_matcher)
+      ).and_return(new_implicit_matcher)
 
-      allow(PathList::Matchers::LastMatch).to receive(:new).with([
+      allow(PathList::Matchers::LastMatch::Two).to receive(:new).with(
         new_implicit_matcher, new_explicit_matcher
-      ]).and_return(new_appended_matcher)
+      ).and_return(new_appended_matcher)
 
       subject.append(patterns)
       expect(subject.match(candidate)).to be_nil

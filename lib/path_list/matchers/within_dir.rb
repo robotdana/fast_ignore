@@ -11,6 +11,7 @@ class PathList
 
       def initialize(dir, matcher)
         @dir = dir
+        @candidate_object = RelativeCandidate.allocate
 
         super(matcher)
       end
@@ -20,7 +21,7 @@ class PathList
       end
 
       def match(candidate)
-        relative_candidate = candidate.relative_to(@dir)
+        relative_candidate = candidate.relative_to(@dir, @candidate_object)
 
         return unless relative_candidate
 
@@ -28,8 +29,13 @@ class PathList
       end
 
       def inspect
-        super("@dir=#{@dir.inspect}")
+        "#{self.class}.new(\n  #{@dir.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
+
+      def eql?(other)
+        super(other, except: [:@candidate_object])
+      end
+      alias_method :==, :eql?
 
       protected
 

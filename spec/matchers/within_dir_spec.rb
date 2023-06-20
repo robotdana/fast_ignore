@@ -15,9 +15,9 @@ RSpec.describe PathList::Matchers::WithinDir do
   describe '#inspect' do
     it 'is nicely formatted' do
       expect(subject.inspect).to eq <<~INSPECT.chomp
-        #<PathList::Matchers::WithinDir @dir="/a_dir" @matcher=(
+        PathList::Matchers::WithinDir.new("/a_dir",
           #{matcher.inspect}
-        )>
+        )
       INSPECT
     end
   end
@@ -88,7 +88,7 @@ RSpec.describe PathList::Matchers::WithinDir do
         PathList::Matchers::Any,
         squashable_with?: false, weight: 1, polarity: :mixed
       )
-      allow(PathList::Matchers::LastMatch).to receive(:new).with([matcher, other_matcher]).and_return(new_matcher)
+      allow(PathList::Matchers::LastMatch::Two).to receive(:new).with(matcher, other_matcher).and_return(new_matcher)
       allow(described_class).to receive(:new).and_call_original
 
       subject.squash([subject, other])
@@ -106,7 +106,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     context 'when candidate is within dir' do
       before do
         allow(candidate).to receive(:relative_to)
-          .with(dir).and_return(inner_candidate)
+          .with(dir, kind_of(PathList::RelativeCandidate)).and_return(inner_candidate)
       end
 
       it 'is matcher.match when :allow' do
@@ -137,7 +137,7 @@ RSpec.describe PathList::Matchers::WithinDir do
     context 'when candidate is not within dir' do
       before do
         allow(candidate).to receive(:relative_to)
-          .with(dir).and_return(nil)
+          .with(dir, kind_of(PathList::RelativeCandidate)).and_return(nil)
       end
 
       it 'is nil' do

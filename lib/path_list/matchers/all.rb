@@ -3,9 +3,11 @@
 class PathList
   module Matchers
     class All < List
+      include Autoloader
+
       def self.compress(matchers)
-        matchers = super(matchers) - [Allow]
-        return [Allow] if matchers.empty?
+        matchers = super(matchers) - [Matchers::Allow]
+        return [Matchers::Allow] if matchers.empty?
 
         matchers.sort_by!(&:weight)
         matchers.uniq!

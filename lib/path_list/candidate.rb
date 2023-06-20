@@ -8,7 +8,6 @@ class PathList
       end
     end
 
-    attr_reader :path_list
     attr_reader :full_path
 
     def initialize(full_path, filename, directory, exists, content)
@@ -20,8 +19,6 @@ class PathList
         # we only care about the first line that might be a shebang
         (@first_line = content.slice(/\A#!.*/) || '')
       end
-      @path_was = []
-      @path_list = path_list
     end
 
     def parent
@@ -38,11 +35,10 @@ class PathList
       @path ||= @full_path.delete_prefix('/')
     end
 
-    def relative_to(dir)
+    def relative_to(dir, candidate_object = RelativeCandidate.allocate)
       return unless @full_path.start_with?(dir)
 
-
-      RelativeCandidate.new(self, @full_path.delete_prefix(dir), dir)
+      candidate_object.reinitialize(self, @full_path.delete_prefix(dir), dir)
     end
 
     def directory?

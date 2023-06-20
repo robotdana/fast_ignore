@@ -24,7 +24,11 @@ class PathList
       end
 
       def inspect
-        super("#{@from_file} @label=#{@label} @format=#{@format}")
+        "#{self.class}.new(#{@from_file.inspect}, " \
+          "format: #{@format.inspect}, " \
+          "label: #{@label.inspect}, " \
+          "appendable_matcher: ..." \
+          ")"
       end
 
       def polarity

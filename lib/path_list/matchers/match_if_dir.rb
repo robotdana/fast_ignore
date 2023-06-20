@@ -14,7 +14,7 @@ class PathList
       end
 
       def inspect
-        matcher == Allow ? '#<PathList::Matchers::AllowAnyDir>' : super
+        matcher == Allow ? 'PathList::Matchers::AllowAnyDir' : super
       end
 
       private

@@ -3,14 +3,35 @@
 class PathList
   module Matchers
     class List < Base
+      include Autoloader
+
       def self.build(matchers)
         matchers = compress(matchers)
 
         case matchers.length
         when 0 then Blank
         when 1 then matchers.first
-        else new(matchers)
+        when 2 then self::Two.new(matchers[0], matchers[1])
+        else
+          case calculate_polarity(matchers)
+          when :allow then self::Allow.new(matchers)
+          when :ignore then self::Ignore.new(matchers)
+          when :mixed
+            new(matchers)
+          else raise 'Oop'
+          end
         end
+      rescue StandardError
+        require 'pry'
+        binding.pry
+      end
+
+      def self.calculate_polarity(matchers)
+        first_matcher_polarity = matchers.first.polarity
+
+        return :mixed unless matchers.all? { |m| m.polarity == first_matcher_polarity }
+
+        first_matcher_polarity
       end
 
       def self.compress(matchers)
@@ -40,9 +61,7 @@ class PathList
       end
 
       def inspect
-        super("@matchers=[\n#{
-          @matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')
-        }\n]")
+        "#{self.class}.new([\n#{@matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
 
       private
@@ -52,11 +71,7 @@ class PathList
       end
 
       def calculate_polarity
-        first_matcher_polarity = @matchers.first.polarity
-
-        return :mixed unless @matchers.all? { |m| m.polarity == first_matcher_polarity }
-
-        first_matcher_polarity
+        self.class.calculate_polarity(@matchers)
       end
     end
   end

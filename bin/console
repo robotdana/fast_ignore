@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'bundler/setup'
-require 'path_list'
+require_relative '../lib/path_list'
 
 require 'pry'
 Pry.start

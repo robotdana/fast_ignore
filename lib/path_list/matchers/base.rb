@@ -16,8 +16,8 @@ class PathList
       alias_method :original_inspect, :inspect
       alias_method :name, :class
 
-      def inspect(data = nil)
-        "#<#{name}#{' ' if data}#{data}>"
+      def inspect
+        "#{self.class}.new"
       end
 
       def squashable_with?(other)

@@ -5,7 +5,7 @@ class PathList
     Blank = Base.new
 
     class << Blank
-      def name
+      def inspect
         'PathList::Matchers::Blank'
       end
 
