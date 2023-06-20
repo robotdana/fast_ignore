@@ -2,7 +2,7 @@
 
 class PathList
   class Rule
-    def initialize(re_builder = PathRegexpBuilder.new([:dir_or_start_anchor]), negated = false)
+    def initialize(re_builder = RegexpBuilder.new([:dir_or_start_anchor]), negated = false)
       @negated = negated
       @unanchorable = false
       @dir_only = false
@@ -42,7 +42,7 @@ class PathList
     end
 
     def build_path_matcher
-      @re.build_path_matcher(negated?)
+      @re.build_matcher(Matchers::PathRegexp, negated?)
     end
 
     def build

@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::ShebangRegexp do
-  subject { described_class.new(rule, allow_value) }
+  subject { described_class.build(rule, allow_value, parts) }
 
   let(:rule) { /a/ }
+  let(:parts) { ['a'] }
   let(:allow_value) { true }
 
   it { is_expected.to be_frozen }
@@ -21,13 +22,13 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same return value' do
-      other = described_class.new(/b/, allow_value)
+      other = described_class.build(/b/, allow_value, ['b'])
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different return value' do
-      other = described_class.new(/b/, !allow_value)
+      other = described_class.build(/b/, !allow_value, ['b'])
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -36,10 +37,10 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.new(/b/, allow_value)
+      other = described_class.build(/b/, allow_value, ['b'])
 
-      allow(described_class).to receive(:new)
-        .with(/(?-mix:a)|(?-mix:b)/, allow_value)
+      allow(described_class).to receive(:build)
+        .with(/(?:a|b)/i, allow_value, [[['a'], ['b']]])
         .and_call_original
       squashed = subject.squash([subject, other])
 
@@ -47,8 +48,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(described_class).to have_received(:new)
-        .with(/(?-mix:a)|(?-mix:b)/, allow_value)
+      expect(squashed).to eq(described_class.build(/(?:a|b)/i, allow_value, [[['a'], ['b']]]))
     end
   end
 

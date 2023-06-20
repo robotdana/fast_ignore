@@ -837,7 +837,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
             it "matches any number of characters at the beginning if there's a star followed by a slash" do
               expect(described_class.new('*/our').build_implicit)
                 .to eq PathList::Matchers::Any::Two.new(
-                  PathList::Matchers::MatchIfDir.new(PathList::Matchers::PathRegexp.new(%r{\A[^/]*\z}i, true)),
+                  PathList::Matchers::MatchIfDir.new(PathList::Matchers::PathRegexp.new(%r{\A[^/]}i, true)),
                   PathList::Matchers::PathRegexp.new(%r{\A[^/]*/our\/}i, true)
                 )
             end
@@ -912,7 +912,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('*/*/c').build_implicit)
                 .to eq PathList::Matchers::Any::Two.new(
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{\A[^/]*(?:\z|/[^/]*\z)}i, true)
+                    PathList::Matchers::PathRegexp.new(%r{\A(?:[^/]|[^/]*/[^/]*\z)}i, true)
                   ), PathList::Matchers::PathRegexp.new(%r{\A[^/]*/[^/]*/c\/}i, true)
                 )
             end
@@ -921,7 +921,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a/**/*').build_implicit)
                 .to eq PathList::Matchers::Any::Two.new(
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|\/(?:.*/)?[^\/]*\z)}i, true)
+                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|\/)}i, true)
                   ), PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?[^/]+\/}i, true)
                 )
             end
@@ -930,7 +930,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
               expect(described_class.new('a**/*').build_implicit)
                 .to eq PathList::Matchers::Any::Two.new(
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(%r{\Aa(?:.*/)?[^/]*\z}i, true)
+                    PathList::Matchers::PathRegexp.new(/\Aa/i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa(?:.*/)?[^/]+\/}i, true)
                 )
@@ -1494,9 +1494,19 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
             expect(described_class.new('a/**/b').build_implicit)
               .to eq PathList::Matchers::Any::Two.new(
                 PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/(?:.*/)?[^/]*\z)}i, true)
+                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b\/}i, true)
+              )
+          end
+
+          it 'matches multiple intermediate dirs with multiple consecutive-asterisk-slashes' do
+            expect(described_class.new('a/**/b/**/c/**/d').build_implicit)
+              .to eq PathList::Matchers::Any::Two.new(
+                PathList::Matchers::MatchIfDir.new(
+                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
+                ),
+                PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b/(?:.*/)?c/(?:.*/)?d/}i, true)
               )
           end
 
@@ -1504,7 +1514,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
             expect(described_class.new('a/***/b').build_implicit)
               .to eq PathList::Matchers::Any::Two.new(
                 PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/(?:.*/)?[^/]*\z)}i, true)
+                  PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b\/}i, true)
               )
@@ -1551,7 +1561,7 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
                 expect(described_class.new('f**/our').build_implicit)
                   .to eq PathList::Matchers::Any::Two.new(
                     PathList::Matchers::MatchIfDir.new(
-                      PathList::Matchers::PathRegexp.new(%r{\Af(?:.*/)?[^/]*\z}i, true)
+                      PathList::Matchers::PathRegexp.new(/\Af/i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Af(?:.*/)?our\/}i, true)
                   )

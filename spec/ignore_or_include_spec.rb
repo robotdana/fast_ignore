@@ -882,6 +882,13 @@ RSpec.describe PathList do
           expect(subject).to match_files('a/b', 'a/x/b', 'a/x/y/b')
         end
 
+        it 'matches multiple intermediate dirs with multiple consecutive-asterisk-slashes' do
+          gitignore 'a/**/b/**/c/**/d'
+
+          expect(subject).to match_files('a/b/c/d', 'a/x/b/x/c/x/d', 'a/x/y/b/x/y/c/x/y/d')
+          expect(subject).not_to match_files('z/y', 'z/a/b/c/d', 'z/a/x/b', 'abcd')
+        end
+
         it 'matches multiple intermediate dirs when ***' do
           gitignore 'a/***/b'
 
@@ -1056,7 +1063,7 @@ RSpec.describe PathList do
     end
   end
 
-  describe 'git ls-files' do
+  describe 'git ls-files', :gitls do
     subject { ActualGitLSFiles.new }
 
     it_behaves_like 'the gitignore documentation'

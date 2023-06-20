@@ -7,14 +7,14 @@ class PathList
       def self.build(path, allow, _root)
         path = path.delete_prefix('/')
         path.delete_suffix('/')
-        re = PathRegexpBuilder.new([:start_anchor, Regexp.escape(path), :end_anchor])
-        Matchers::MatchIfDir.new(re.build_path_matcher(allow))
+        re = RegexpBuilder.new([:start_anchor, Regexp.escape(path), :end_anchor])
+        Matchers::MatchIfDir.build(re.build_matcher(Matchers::PathRegexp, allow))
       end
 
       # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
       def self.build_implicit(path, allow, _root)
-        Matchers::MatchIfDir.new(
-          PathRegexpBuilder.new(
+        Matchers::MatchIfDir.build(
+          RegexpBuilder.new(
             [:start_anchor] + path
               .delete_prefix('/')
               .split('/')

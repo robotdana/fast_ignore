@@ -39,6 +39,7 @@ github
 gitignore
 gitignored
 gitkeep
+gitls
 gnore
 hashbang
 heredoc

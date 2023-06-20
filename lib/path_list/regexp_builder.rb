@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PathList
-  class PathRegexpBuilder # rubocop:disable Metrics/ClassLength
+  class RegexpBuilder # rubocop:disable Metrics/ClassLength
     def self.merge_parts_lists(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       merged = []
 
@@ -65,16 +65,17 @@ class PathList
       @unanchorable = true
     end
 
-    def build_path_matcher(negated)
+    def build_matcher(matcher_class, negated)
       re_string = @parts.map { |part| part_to_regexp(part) }.join
       return negated ? Matchers::Allow : Matchers::Ignore if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      Matchers::PathRegexp.build(Regexp.new(re_string, 1), negated, @parts.dup.freeze)
+      matcher_class.build(Regexp.new(re_string, 1), negated, @parts.dup.freeze)
     end
 
     START_COMPRESSION_RULES = {
-      [:start_anchor, :any_dir] => [:any_non_dir],
+      [:start_anchor, :any_non_dir, :end_anchor] => [:start_anchor, :one_non_dir], # fixing an issue with compressing this to nothing
+      [:start_anchor, :any_dir] => [:dir_or_start_anchor],
       [:start_anchor, :any] => [],
       [:dir_or_start_anchor, :any] => [],
       [:dir_or_start_anchor, :any_non_dir] => [],
@@ -86,10 +87,7 @@ class PathList
     END_COMPRESSION_RULES = {
       [:any_dir, :end_anchor] => [],
       [:any, :end_anchor] => [],
-      [:dir, :any_non_dir, :end_anchor] => [],
       [:any_dir, :any_non_dir, :end_anchor] => [],
-      [:dir_or_start_anchor, :any_non_dir, :end_anchor] => [],
-      [:start_anchor, :any_non_dir, :end_anchor] => [],
       [:start_anchor] => [],
       [:dir_or_start_anchor] => []
     }.freeze
@@ -133,35 +131,29 @@ class PathList
       compress if changed
     end
 
+    def ancestors
+      prev_rule = []
+      rules = []
+
+      parts = @parts
+
+      any_dir_index = parts.index(:any_dir)
+      parts = parts[0, any_dir_index] + [:any, :dir] if any_dir_index
+
+      parts.slice_before(:dir).to_a[0...-1].each do |chunk|
+        prev_rule.concat(chunk)
+        rules << self.class.new(prev_rule + [:end_anchor])
+      end
+
+      rules
+    end
+
     def build_parents(negated = true) # rubocop:disable Metrics/MethodLength Metrics/AbcSize
-      tail = []
-      parent = nil
-      head = tail
-      @parts.each do |part|
-        if part == :dir || part == :any_dir
-          new_tail = []
-          new_end = if part == :any_dir
-            [:any_dir, :any_non_dir, :end_anchor]
-          else
-            [:end_anchor]
-          end
-          new_fork = [new_end, new_tail]
-          tail << new_fork
-          parent = new_fork
-          tail = new_tail
-        end
-        tail << part
-      end
+      return Matchers::Blank if ancestors.empty?
 
-      if parent
-        parent.pop
-
-        @parts = head
-
-        build_path_matcher(negated)
-      else
-        Matchers::Blank
-      end
+      self.class.new(
+        self.class.merge_parts_lists(ancestors.each(&:compress).map { |p| p.parts }) # rubocop:disable Style/SymbolProc it breaks with protected methods,
+      ).build_matcher(Matchers::PathRegexp, negated)
     end
 
     def part_to_regexp(part) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
@@ -197,7 +189,7 @@ class PathList
       when :character_class_dash then '-'
       when :character_class_close then ']'
       when nil, String then part
-      else raise 'Unknown token'
+      else raise "Unknown token #{token}"
       end
     end
 
@@ -263,5 +255,9 @@ class PathList
         @parts << value
       end
     end
+
+    protected
+
+    attr_reader :parts
   end
 end
