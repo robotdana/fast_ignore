@@ -30,12 +30,11 @@ class PathList
       end
 
       def squash(list)
-        Rule.new(
-          Rule.merge_parts_lists(
+        PathRegexpBuilder.new(
+          PathRegexpBuilder.merge_parts_lists(
             list.map { |l| l.parts } # rubocop:disable Style/SymbolProc it breaks with protected methods,
-          ),
-          @polarity == :allow
-        ).build
+          )
+        ).build_path_matcher(@polarity == :allow)
       end
 
       def inspect

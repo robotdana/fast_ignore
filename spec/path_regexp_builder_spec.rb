@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Rule do
+RSpec.describe PathList::PathRegexpBuilder do
   describe '.merge_parts_lists' do
     it 'returns the first value if only value' do
       expect(described_class.merge_parts_lists([['a', :dir, 'b']]))

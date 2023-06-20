@@ -17,7 +17,7 @@ class PathList
     end
 
     def emit_end
-      @rule.append_end_anchor_for_include
+      @rule.append :end_anchor_for_include
       break!
     end
 
@@ -34,15 +34,15 @@ class PathList
     def build_child_file_rule # rubocop:disable Metrics/MethodLength
       if @child_rule.end_with?(:end_anchor_for_include)
         @child_rule.remove_end_anchor_for_include
-        @child_rule.append_dir
+        @child_rule.append :dir
       elsif @child_rule.end_with?(:dir)
         if @child_rule.dir_only?
-          @child_rule.append_any_non_dir
-          @child_rule.append_dir
+          @child_rule.append :any_non_dir
+          @child_rule.append :dir
         end
       else
-        @child_rule.append_any_non_dir
-        @child_rule.append_dir
+        @child_rule.append :any_non_dir
+        @child_rule.append :dir
       end
 
       @child_rule.compress

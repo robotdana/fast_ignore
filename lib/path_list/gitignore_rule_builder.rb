@@ -31,33 +31,39 @@ class PathList
 
     def emit_dir
       @rule.anchored!
-      @rule.append_dir
+      @rule.append :dir
     end
 
     def emit_any_dir
       @rule.anchored!
-      @rule.append_any_dir
+      @rule.append :any_dir
     end
 
     def emit_end
-      @rule.append_end_anchor
+      @rule.append :end_anchor
       break!
     end
 
     def process_backslash
       return unless @s.backslash?
 
-      @rule.append_escaped(@s.next_character) || unmatchable_rule!
+      @rule.append_string(@s.next_character) || unmatchable_rule!
+    end
+
+    def process_backslash_in_character_class
+      return unless @s.backslash?
+
+      @rule.character_class_append_string(@s.next_character) || unmatchable_rule!
     end
 
     def process_star_end_after_slash # rubocop:disable Metrics/MethodLength
       if @s.star_end?
-        @rule.append_many_non_dir
+        @rule.append :many_non_dir
         emit_end
       elsif @s.two_star_end?
         break!
       elsif @s.star_slash_end?
-        @rule.append_many_non_dir
+        @rule.append :many_non_dir
         @rule.dir_only!
         emit_end
       elsif @s.two_star_slash_end?
@@ -83,7 +89,7 @@ class PathList
 
       if @s.slash?
         if @s.end?
-          @rule.append_any_non_dir
+          @rule.append :any_non_dir
           @rule.dir_only!
         elsif @s.slash?
           unmatchable_rule!
@@ -96,26 +102,26 @@ class PathList
           process_star_end_after_slash
         end
       else
-        @rule.append_any_non_dir
+        @rule.append :any_non_dir
       end
     end
 
     def process_character_class # rubocop:disable Metrics/MethodLength
       return unless @s.character_class_start?
 
-      @rule.append_character_class_open
-      @rule.append_character_class_negation if @s.character_class_negation?
+      @rule.character_class_open
+      @rule.character_class_append :character_class_negation if @s.character_class_negation?
       unmatchable_rule! if @s.character_class_end?
 
       until @s.character_class_end?
         next if process_character_class_range
-        next if process_backslash
-        next if @rule.append_escaped(@s.character_class_literal)
+        next if process_backslash_in_character_class
+        next if @rule.character_class_append_string(@s.character_class_literal)
 
         unmatchable_rule!
       end
 
-      @rule.append_character_class_close
+      @rule.character_class_close
     end
 
     def process_character_class_range
@@ -124,14 +130,14 @@ class PathList
 
       start = start.delete_prefix('\\')
 
-      @rule.append_escaped(start)
+      @rule.character_class_append_string(start)
 
       finish = @s.character_class_range_end.delete_prefix('\\')
 
       return true unless start < finish
 
-      @rule.append_character_class_dash
-      @rule.append_escaped(finish)
+      @rule.character_class_append :character_class_dash
+      @rule.character_class_append_string(finish)
     end
 
     def process_end
@@ -149,11 +155,11 @@ class PathList
           next if process_backslash
           next if process_slash
           next if process_two_stars
-          next @rule.append_any_non_dir if @s.star?
-          next @rule.append_one_non_dir if @s.question_mark?
+          next @rule.append :any_non_dir if @s.star?
+          next @rule.append :one_non_dir if @s.question_mark?
           next if process_character_class
-          next if @rule.append_escaped(@s.literal)
-          next if @rule.append_escaped(@s.significant_whitespace)
+          next if @rule.append_string(@s.literal)
+          next if @rule.append_string(@s.significant_whitespace)
 
           process_end
         end
