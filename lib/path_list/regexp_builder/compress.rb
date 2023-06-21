@@ -10,7 +10,6 @@ class PathList
         [:dir_or_start_anchor, :any] => [],
         [:dir_or_start_anchor, :any_non_dir] => [],
         [:dir_or_start_anchor, :many_non_dir] => [:one_non_dir],
-        [:end_anchor_for_include] => [],
         [:end_anchor] => []
       }.freeze
       private_constant :START_COMPRESSION_RULES

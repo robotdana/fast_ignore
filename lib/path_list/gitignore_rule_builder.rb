@@ -49,7 +49,7 @@ class PathList
     end
 
     def anchored?
-      @re.start == :start_anchor
+      @re.start_with?(:start_anchor)
     end
 
     def never_anchored!

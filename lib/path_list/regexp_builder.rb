@@ -21,8 +21,28 @@ class PathList
       @parts[0] = value
     end
 
-    def start
-      @parts[0]
+    def start_with?(value)
+      @parts[0] == value
+    end
+
+    def end=(value)
+      @parts[-1] = value
+    end
+
+    def empty?
+      @parts.empty? || @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
+    end
+
+    def dup
+      out = super
+
+      @parts = @parts.dup
+
+      out
+    end
+
+    def end_with?(part)
+      @parts[-1] == part
     end
 
     def to_s(builder = Builder)
@@ -52,26 +72,6 @@ class PathList
       end
 
       rules
-    end
-
-    def empty?
-      @parts.empty? || @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
-    end
-
-    def dup
-      out = super
-
-      @parts = @parts.dup
-
-      out
-    end
-
-    def end_with?(part)
-      @parts[-1] == part
-    end
-
-    def remove_end_anchor_for_include
-      @parts.pop if @parts[-1] == :end_anchor_for_include
     end
 
     def append_part(value)

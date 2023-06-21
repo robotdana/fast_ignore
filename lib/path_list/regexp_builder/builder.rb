@@ -26,7 +26,7 @@ class PathList
           when :one_non_dir then '[^/]'
           when :any_non_dir then '[^/]*'
           when :many_non_dir then '[^/]+'
-          when :end_anchor, :end_anchor_for_include then '\\z'
+          when :end_anchor then '\\z'
           when :start_anchor then '\\A'
           when :dir_or_start_anchor then '(?:\\A|/)'
           when nil, String then part

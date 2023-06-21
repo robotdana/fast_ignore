@@ -17,7 +17,7 @@ class PathList
     end
 
     def emit_end
-      @re.append_part :end_anchor_for_include
+      @re.append_part :end_anchor
       break!
     end
 
@@ -37,9 +37,8 @@ class PathList
     end
 
     def build_child_matcher # rubocop:disable Metrics/MethodLength
-      if @child_re.end_with?(:end_anchor_for_include)
-        @child_re.remove_end_anchor_for_include
-        @child_re.append_part :dir
+      if @child_re.end_with?(:end_anchor)
+        @child_re.end = :dir
       elsif @child_re.end_with?(:dir)
         if dir_only?
           @child_re.append_part :any_non_dir
