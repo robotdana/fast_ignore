@@ -63,7 +63,7 @@ class PathList
 
       parts = @parts
 
-      any_dir_index = parts.index(:any_dir)
+      any_dir_index = parts.index(:any) || parts.index(:any_dir)
       parts = parts[0, any_dir_index] + [:any, :dir] if any_dir_index
 
       parts.slice_before(:dir).to_a[0...-1].each do |chunk|

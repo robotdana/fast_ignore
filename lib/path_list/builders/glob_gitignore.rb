@@ -2,18 +2,18 @@
 
 class PathList
   module Builders
-    module GlobGitignore
+    class GlobGitignore
       def self.build(rule, allow, root)
         if allow
-          GitignoreIncludeRuleBuilder.new(rule, expand_path_with: root).build
+          GitignoreRuleBuilder.new(rule, expand_path_with: root, allow: true).build
         else
-          GitignoreRuleBuilder.new(rule, expand_path_with: root).build
+          GitignoreRuleBuilder.new(rule, expand_path_with: root, allow: false).build
         end
       end
 
       def self.build_implicit(rule, allow, root)
         if allow
-          GitignoreIncludeRuleBuilder.new(rule, expand_path_with: root).build_implicit
+          GitignoreRuleBuilder.new(rule, expand_path_with: root, allow: true).build_implicit
         else
           Matchers::Blank
         end

@@ -2,14 +2,15 @@
 
 class PathList
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, expand_path_with: nil)
-      @negated = false
+    def initialize(rule, allow: false, expand_path_with: nil)
+      @s = GitignoreRuleScanner.new(rule)
+      @allow = allow
+      @expand_path_with = expand_path_with
+
+      @negated = @allow
       @unanchorable = false
       @dir_only = false
       @re = RegexpBuilder.new([:dir_or_start_anchor])
-      @s = GitignoreRuleScanner.new(rule)
-
-      @expand_path_with = expand_path_with
     end
 
     def break!
@@ -21,15 +22,11 @@ class PathList
     end
 
     def unmatchable_rule!
-      throw :abort_build, Matchers::Blank
+      throw :abort_build, (@allow ? Matchers::Invalid : Matchers::Blank)
     end
 
     def negated!
-      @negated = true
-    end
-
-    def unnegated!
-      @negated = false
+      @negated = !@allow
     end
 
     def negated?
@@ -209,6 +206,56 @@ class PathList
 
         build_matcher
       end
+    end
+
+    def build_parent_matcher
+      if anchored?
+        ancestors = @re.ancestors.each(&:compress)
+        return Matchers::Blank if ancestors.empty?
+
+        Matchers::MatchIfDir.build(
+          Matchers::PathRegexp.build(RegexpBuilder.union(ancestors), negated?)
+        )
+      else
+        Matchers::AllowAnyDir
+      end
+    end
+
+    def build_child_matcher # rubocop:disable Metrics/MethodLength
+      if @child_re.end_with?(:end_anchor)
+        @child_re.end = :dir
+      elsif @child_re.end_with?(:dir)
+        if dir_only?
+          @child_re.append_part :any_non_dir
+          @child_re.append_part :dir
+        end
+      else
+        @child_re.append_part :any_non_dir
+        @child_re.append_part :dir
+      end
+
+      @child_re.compress
+      Matchers::PathRegexp.build(@child_re, negated?)
+    end
+
+    def build_implicit
+      catch :abort_build do
+        blank! if @s.hash?
+        blank! if @s.exclamation_mark?
+
+        process_rule
+        build_implicit_matcher
+      end
+    end
+
+    def build_implicit_matcher
+      @child_re ||= @re.dup
+      @re.compress
+
+      Matchers::Any.build([
+        build_parent_matcher,
+        build_child_matcher
+      ])
     end
 
     def expand_rule_path!

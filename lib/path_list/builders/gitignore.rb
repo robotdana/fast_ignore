@@ -5,16 +5,16 @@ class PathList
     module Gitignore
       def self.build(rule, allow, _root)
         if allow
-          GitignoreIncludeRuleBuilder.new(rule).build
+          GitignoreRuleBuilder.new(rule, allow: true).build
         else
-          GitignoreRuleBuilder.new(rule).build
+          GitignoreRuleBuilder.new(rule, allow: false).build
         end
       end
 
       def self.build_implicit(rule, allow, _root)
         return Matchers::Blank unless allow
 
-        GitignoreIncludeRuleBuilder.new(rule).build_implicit
+        GitignoreRuleBuilder.new(rule, allow: true).build_implicit
       end
     end
   end
