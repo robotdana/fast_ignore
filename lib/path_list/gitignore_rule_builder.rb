@@ -2,10 +2,10 @@
 
 class PathList
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, root: nil, allow: false, expand_path_with: nil)
+    def initialize(rule, root: nil, allow: false, expand_path: false)
       @s = GitignoreRuleScanner.new(rule)
       @allow = allow
-      @expand_path_with = expand_path_with
+      @expand_path = expand_path
       @root = root
 
       @negated = @allow
@@ -18,7 +18,7 @@ class PathList
       initial_pattern = if @root == '/'
         [:start_anchor, :dir, :any_dir]
       elsif @root
-        [:start_anchor, :dir] + @root.split('/').flat_map { |segment| [segment, :dir] } + [:any_dir]
+        [:start_anchor, :dir] + @root.delete_prefix('/').split('/').flat_map { |segment| [segment, :dir] } + [:any_dir]
       else
         [:dir_or_start_anchor]
       end
@@ -215,8 +215,8 @@ class PathList
 
     def process_rule # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       prepare_regexp_builder
+      expand_rule_path! if @expand_path
 
-      expand_rule_path! if @expand_path_with
       anchored! if @s.slash?
 
       catch :break do
@@ -254,7 +254,7 @@ class PathList
     end
 
     def build_parent_matcher
-      if anchored?
+      if anchored? || @root
         ancestors = @re.ancestors.each(&:compress)
         return Matchers::Blank if ancestors.empty?
 
@@ -306,13 +306,15 @@ class PathList
     end
 
     def expand_rule_path!
-      anchored! unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
-      return unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
+      will_be_anchored = true unless @s.match?(/\*/) # rubocop:disable Performance/StringInclude # it's StringScanner#match?
+      return will_be_anchored && anchored! unless @s.match?(%r{(?:[~/]|\.{1,2}/|.*/\.\./)})
 
       dir_only! if @s.match?(%r{.*/\s*\z})
 
-      new_rule = PathExpander.expand_path(@s.rest, @expand_path_with)
-      new_rule.delete_prefix!(@expand_path_with)
+      new_rule = PathExpander.expand_path(@s.rest, @root).delete_prefix('/')
+      @root = '/'
+      prepare_regexp_builder
+      anchored! if will_be_anchored
       @s = GitignoreRuleScanner.new(new_rule)
     end
   end

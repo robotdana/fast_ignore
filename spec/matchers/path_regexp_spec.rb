@@ -54,7 +54,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
     let(:path) { 'my/file.rb' }
     let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
 
-    let(:candidate) { instance_double(PathList::Candidate, path: path) }
+    let(:candidate) { instance_double(PathList::Candidate, path: path, full_path: "/#{path}") }
 
     context 'with a matching rule' do
       context 'when allowing' do

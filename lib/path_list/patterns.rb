@@ -6,6 +6,7 @@ class PathList
 
     attr_writer :allow
     attr_reader :label
+    attr_reader :from_file
 
     BUILDERS = {
       glob: Builders::GlobGitignore,
@@ -108,24 +109,18 @@ class PathList
     end
 
     def build_implicit_matcher(patterns)
-      Matchers::WithinDir.build(
-        @root,
-        Matchers::Any.build(
-          patterns.map do |pattern|
-            @format.build_implicit(pattern, @allow, @root)
-          end
-        )
+      Matchers::Any.build(
+        patterns.map do |pattern|
+          @format.build_implicit(pattern, @allow, PathExpander.expand_path_pwd(@root))
+        end
       )
     end
 
     def build_explicit_matcher(patterns)
-      Matchers::WithinDir.build(
-        @root,
-        Matchers::LastMatch.build(
-          patterns.map do |pattern|
-            @format.build(pattern, @allow, @root)
-          end
-        )
+      Matchers::LastMatch.build(
+        patterns.map do |pattern|
+          @format.build(pattern, @allow, PathExpander.expand_path_pwd(@root))
+        end
       )
     end
 

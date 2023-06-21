@@ -4,7 +4,7 @@ RSpec.describe PathList::Matchers::Appendable do
   subject { described_class.new(label, default, implicit_matcher, explicit_matcher, original_pattern) }
 
   let(:default) { PathList::Matchers::Invalid }
-  let(:original_pattern) { instance_double(PathList::Patterns) }
+  let(:original_pattern) { instance_double(PathList::Patterns, from_file: './.dockerignore') }
   let(:implicit_matcher) do
     instance_double(
       PathList::Matchers::Base,
@@ -74,7 +74,9 @@ RSpec.describe PathList::Matchers::Appendable do
   end
 
   describe '#append' do
-    let(:patterns) { instance_double(PathList::Patterns, label: label, content?: true, 'allow=': nil) }
+    let(:patterns) do
+      instance_double(PathList::Patterns, label: label, content?: true, from_file: './eslintignore', 'allow=': nil)
+    end
 
     it 'appends the patterns to the matcher' do
       subject

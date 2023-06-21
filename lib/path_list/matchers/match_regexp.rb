@@ -40,11 +40,13 @@ class PathList
         @polarity if @rule.match?(candidate.path)
       end
 
-      def eql?(other)
-        super(other, except: [:@rule, :@re_builder]) &&
-          @rule.inspect == other.instance_variable_get(:@rule).inspect
+      if Invalid.is_a?(ComparableInstance)
+        def eql?(other)
+          super(other, except: [:@rule, :@re_builder]) &&
+            @rule.inspect == other.instance_variable_get(:@rule).inspect
+        end
+        alias_method :==, :eql?
       end
-      alias_method :==, :eql?
 
       protected
 

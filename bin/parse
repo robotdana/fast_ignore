@@ -1,8 +1,8 @@
-#!/usr/bin/env ruby --disable-all
+#!/usr/bin/env ruby
 # frozen_string_literal: true
 
 require_relative '../lib/path_list'
-sub_gitignore_files = PathList.gitignore.only('*/**/.gitignore').to_a
+sub_gitignore_files = `git ls-files '**/.gitignore'`.split("\n")
 
 path_list = PathList.gitignore
 sub_gitignore_files.each do |sub_gitignore|

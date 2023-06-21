@@ -32,10 +32,12 @@ class PathList
         "#{self.class}.new(\n  #{@dir.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
-      def eql?(other)
-        super(other, except: [:@candidate_object])
+      if Invalid.is_a?(ComparableInstance)
+        def eql?(other)
+          super(other, except: [:@candidate_object])
+        end
+        alias_method :==, :eql?
       end
-      alias_method :==, :eql?
 
       protected
 

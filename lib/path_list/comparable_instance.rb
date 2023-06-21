@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# TODO: move this to a matcher.
 class PathList
   module ComparableInstance
     def eql?(other, except: nil)

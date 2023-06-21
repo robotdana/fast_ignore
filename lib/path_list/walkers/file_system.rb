@@ -28,9 +28,8 @@ class PathList
             next unless path_list.matcher.match(candidate) == :allow
 
             relative_path = parent_relative_path + filename
-
             if candidate.directory?
-              each(full_path + '/', relative_path + '/', path_list, &block)
+              each("#{full_path}/", "#{relative_path}/", path_list, &block)
             else
               yield(relative_path)
             end

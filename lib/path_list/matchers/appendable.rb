@@ -12,7 +12,7 @@ class PathList
         @default_matcher = default_matcher
         @implicit_matcher = implicit_matcher
         @explicit_matcher = explicit_matcher
-        @loaded = [pattern]
+        @loaded = [pattern.from_file]
 
         build_matcher
       end
@@ -39,9 +39,9 @@ class PathList
 
       def append(pattern)
         pattern.allow = append_with_allow
-        return if @loaded.include?(pattern)
+        return if @loaded.include?(pattern.from_file)
 
-        @loaded << pattern
+        @loaded << pattern.from_file
         return unless pattern.content?
 
         new_implicit, new_explicit = pattern.build_matchers

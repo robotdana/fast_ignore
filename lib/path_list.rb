@@ -111,7 +111,7 @@ class PathList # rubocop:disable Metrics/ClassLength
     append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: GlobalGitignore.path(root: root), root: root || '.')
     append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: './.git/info/exclude', root: root || '.')
     append!(label: APPENDABLE_GITIGNORE_LABEL, from_file: './.gitignore', recursive: true, root: root)
-    ignore!('.git/', root: '/')
+    ignore!('.git/', root: nil)
 
     self
   end

@@ -2,7 +2,7 @@
 
 class PathList
   class RegexpBuilder
-    include ComparableInstance
+    # include ComparableInstance
     include Autoloader
 
     def self.union(builders)
@@ -72,7 +72,7 @@ class PathList
 
       parts.slice_before(:dir).to_a[0...-1].each do |chunk|
         prev_rule.concat(chunk)
-        rules << self.class.new(prev_rule + [:end_anchor])
+        (rules << self.class.new(prev_rule + [:end_anchor])) unless prev_rule == [:start_anchor]
       end
 
       rules

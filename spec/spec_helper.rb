@@ -25,6 +25,7 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
+PathList::Matchers::Base.include(PathList::ComparableInstance) # todo, don't use it it's bad
 require_relative 'support/actual_git_ls_files'
 require_relative 'support/inspect_helper'
 require_relative 'support/temp_dir_helper'

@@ -50,6 +50,8 @@ class PathList
         private
 
         def compress!(parts) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+          # return parts
+
           changed = false
 
           START_COMPRESSION_RULES.each do |rule, replacement|
