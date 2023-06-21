@@ -6,6 +6,7 @@ class PathList
       @s = GitignoreRuleScanner.new(rule)
       @allow = allow
       @expand_path_with = expand_path_with
+      @root = root
 
       @negated = @allow
       @unanchorable = false
@@ -14,8 +15,16 @@ class PathList
     end
 
     def prepare_regexp_builder
-      @re = RegexpBuilder.new([:dir_or_start_anchor])
-      @start_index = @re.length - 1
+      initial_pattern = if @root == '/'
+        [:start_anchor, :dir, :any_dir]
+      elsif @root
+        [:start_anchor, :dir] + @root.split('/').flat_map { |segment| [segment, :dir] } + [:any_dir]
+      else
+        [:dir_or_start_anchor]
+      end
+
+      @re = RegexpBuilder.new(initial_pattern)
+      @start_index = initial_pattern.length - 1
     end
 
     def break!
@@ -46,16 +55,24 @@ class PathList
       @dir_only
     end
 
+    def start_anchor
+      @root ? nil : :start_anchor
+    end
+
+    def dir_or_start_anchor
+      @root ? :any_dir : :dir_or_start_anchor
+    end
+
     def anchored!
-      @re[@start_index] = :start_anchor unless @unanchorable
+      @re[@start_index] = start_anchor unless @unanchorable
     end
 
     def anchored?
-      @re[@start_index] == :start_anchor
+      @re[@start_index] == start_anchor
     end
 
     def never_anchored!
-      @re[@start_index] = :dir_or_start_anchor
+      @re[@start_index] = dir_or_start_anchor
       @unanchorable = true
     end
 

@@ -6,10 +6,13 @@ class PathList
       START_COMPRESSION_RULES = {
         [:start_anchor, :any_non_dir, :end_anchor] => [:start_anchor, :one_non_dir], # avoid compressing this to nothing
         [:start_anchor, :any_dir] => [:dir_or_start_anchor],
+        [:start_anchor, :dir, :any_dir, :any_non_dir] => [],
+        [:start_anchor, :dir, :any_dir] => [:dir],
         [:start_anchor, :any] => [],
         [:dir_or_start_anchor, :any] => [],
         [:dir_or_start_anchor, :any_non_dir] => [],
         [:dir_or_start_anchor, :many_non_dir] => [:one_non_dir],
+        [:dir, :many_non_dir, :end_anchor] => [:one_non_dir, :end_anchor],
         [:end_anchor] => []
       }.freeze
       private_constant :START_COMPRESSION_RULES
@@ -25,13 +28,16 @@ class PathList
       private_constant :END_COMPRESSION_RULES
 
       MID_COMPRESSION_RULES = {
-        # needs to be the same length
+        # before and after needs to be the same length
         [:any_non_dir, :any_non_dir] => [nil, :any_non_dir],
         [:one_non_dir, :any_non_dir] => [nil, :many_non_dir],
         [:any_non_dir, :one_non_dir] => [nil, :many_non_dir],
         [:many_non_dir, :any_non_dir] => [nil, :many_non_dir],
         [:any_non_dir, :many_non_dir] => [nil, :many_non_dir],
-        [:any_non_dir, :any_dir] => [nil, :any]
+        [:any_non_dir, :any_dir] => [nil, :any],
+        [:any_dir, :any_non_dir] => [nil, :any],
+        [''] => [nil],
+        [:dir, :dir] => [nil, :dir]
       }.freeze
 
       private_constant :MID_COMPRESSION_RULES

@@ -37,10 +37,6 @@ class PathList
       @parts[-1] = value
     end
 
-    def length
-      @parts.length
-    end
-
     def dup
       out = super
 
