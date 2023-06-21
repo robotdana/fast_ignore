@@ -2,7 +2,7 @@
 
 class PathList
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, allow: false, expand_path_with: nil)
+    def initialize(rule, root: nil, allow: false, expand_path_with: nil)
       @s = GitignoreRuleScanner.new(rule)
       @allow = allow
       @expand_path_with = expand_path_with
@@ -10,7 +10,12 @@ class PathList
       @negated = @allow
       @unanchorable = false
       @dir_only = false
+      @emitted = false
+    end
+
+    def prepare_regexp_builder
       @re = RegexpBuilder.new([:dir_or_start_anchor])
+      @start_index = @re.length - 1
     end
 
     def break!
@@ -42,51 +47,72 @@ class PathList
     end
 
     def anchored!
-      @re.start = :start_anchor unless @unanchorable
+      @re[@start_index] = :start_anchor unless @unanchorable
     end
 
     def anchored?
-      @re.start_with?(:start_anchor)
+      @re[@start_index] == :start_anchor
     end
 
     def never_anchored!
-      @re.start = :dir_or_start_anchor
+      @re[@start_index] = :dir_or_start_anchor
       @unanchorable = true
     end
 
     def nothing_emitted?
-      @re.empty?
+      !@emitted
+    end
+
+    def emitted!
+      @emitted = true
+    end
+
+    def append_part(part)
+      emitted!
+      @re.append_part part
+    end
+
+    def append_string(string)
+      emitted! if @re.append_string string
+    end
+
+    def append_unescaped(re_string)
+      emitted! if @re.append_unescaped re_string
     end
 
     def emit_dir
       anchored!
-      @re.append_part :dir
+      append_part :dir
     end
 
     def emit_any_dir
       anchored!
-      @re.append_part :any_dir
+      append_part :any_dir
     end
 
     def emit_end
-      @re.append_part :end_anchor
+      append_part :end_anchor
       break!
     end
 
     def process_backslash(builder = @re)
       return unless @s.backslash?
 
-      builder.append_string(@s.next_character) || unmatchable_rule!
+      if builder.append_string(@s.next_character)
+        emitted!
+      else
+        unmatchable_rule!
+      end
     end
 
     def process_star_end_after_slash # rubocop:disable Metrics/MethodLength
       if @s.star_end?
-        @re.append_part :many_non_dir
+        append_part :many_non_dir
         emit_end
       elsif @s.two_star_end?
         break!
       elsif @s.star_slash_end?
-        @re.append_part :many_non_dir
+        append_part :many_non_dir
         dir_only!
         emit_end
       elsif @s.two_star_slash_end?
@@ -112,7 +138,7 @@ class PathList
 
       if @s.slash?
         if @s.end?
-          @re.append_part :any_non_dir
+          append_part :any_non_dir
           dir_only!
         elsif @s.slash?
           unmatchable_rule!
@@ -125,7 +151,7 @@ class PathList
           process_star_end_after_slash
         end
       else
-        @re.append_part :any_non_dir
+        append_part :any_non_dir
       end
     end
 
@@ -145,7 +171,7 @@ class PathList
       end
 
       @character_class.append_part :character_class_close
-      @re.append_unescaped @character_class.to_s(RegexpBuilder::CharacterClassBuilder)
+      append_unescaped @character_class.to_s(RegexpBuilder::CharacterClassBuilder)
     end
 
     def process_character_class_range
@@ -171,6 +197,8 @@ class PathList
     end
 
     def process_rule # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      prepare_regexp_builder
+
       expand_rule_path! if @expand_path_with
       anchored! if @s.slash?
 
@@ -179,11 +207,11 @@ class PathList
           next if process_backslash
           next if process_slash
           next if process_two_stars
-          next @re.append_part :any_non_dir if @s.star?
-          next @re.append_part :one_non_dir if @s.question_mark?
+          next append_part :any_non_dir if @s.star?
+          next append_part :one_non_dir if @s.question_mark?
           next if process_character_class
-          next if @re.append_string(@s.literal)
-          next if @re.append_string(@s.significant_whitespace)
+          next if append_string(@s.literal)
+          next if append_string(@s.significant_whitespace)
 
           process_end
         end
@@ -240,6 +268,8 @@ class PathList
 
     def build_implicit
       catch :abort_build do
+        blank! unless @allow
+
         blank! if @s.hash?
         blank! if @s.exclamation_mark?
 

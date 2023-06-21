@@ -21,6 +21,14 @@ class PathList
       @parts[0] = value
     end
 
+    def [](index)
+      @parts[index]
+    end
+
+    def []=(index, value)
+      @parts[index] = value
+    end
+
     def start_with?(value)
       @parts[0] == value
     end
@@ -29,8 +37,8 @@ class PathList
       @parts[-1] = value
     end
 
-    def empty?
-      @parts.empty? || @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
+    def length
+      @parts.length
     end
 
     def dup
