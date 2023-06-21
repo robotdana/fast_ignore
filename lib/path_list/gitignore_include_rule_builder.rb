@@ -5,11 +5,11 @@ class PathList
     def initialize(rule, expand_path_with: nil)
       super
 
-      @rule.negated!
+      @negated = true
     end
 
     def negated!
-      @rule.unnegated!
+      unnegated!
     end
 
     def unmatchable_rule!
@@ -17,58 +17,61 @@ class PathList
     end
 
     def emit_end
-      @rule.append :end_anchor_for_include
+      @re.append_part :end_anchor_for_include
       break!
     end
 
-    def build_parent_dir_rules
-      return Matchers::Blank unless @rule.negated?
+    def build_parent_matcher
+      return Matchers::Blank unless negated?
 
-      if @rule.anchored?
-        @rule.dup.build_parents
+      if anchored?
+        ancestors = @re.ancestors.each(&:compress)
+        return Matchers::Blank if ancestors.empty?
+
+        Matchers::MatchIfDir.build(
+          Matchers::PathRegexp.build(RegexpBuilder.union(ancestors), negated?)
+        )
       else
         Matchers::AllowAnyDir
       end
     end
 
-    def build_child_file_rule # rubocop:disable Metrics/MethodLength
-      if @child_rule.end_with?(:end_anchor_for_include)
-        @child_rule.remove_end_anchor_for_include
-        @child_rule.append :dir
-      elsif @child_rule.end_with?(:dir)
-        if @child_rule.dir_only?
-          @child_rule.append :any_non_dir
-          @child_rule.append :dir
+    def build_child_matcher # rubocop:disable Metrics/MethodLength
+      if @child_re.end_with?(:end_anchor_for_include)
+        @child_re.remove_end_anchor_for_include
+        @child_re.append_part :dir
+      elsif @child_re.end_with?(:dir)
+        if dir_only?
+          @child_re.append_part :any_non_dir
+          @child_re.append_part :dir
         end
       else
-        @child_rule.append :any_non_dir
-        @child_rule.append :dir
+        @child_re.append_part :any_non_dir
+        @child_re.append_part :dir
       end
 
-      @child_rule.compress
-      @child_rule.build_path_matcher
+      @child_re.compress
+      Matchers::PathRegexp.build(@child_re, negated?)
     end
 
     def build_implicit
       catch :abort_build do
         blank! if @s.hash?
+        blank! if @s.exclamation_mark?
 
-        negated! if @s.exclamation_mark?
         process_rule
-
-        build_implicit_rule
+        build_implicit_matcher
       end
     end
 
-    def build_implicit_rule
-      @child_rule ||= @rule.dup # in case emit_end wasn't called
-      @rule.compress
+    def build_implicit_matcher
+      @child_re ||= @re.dup
+      @re.compress
 
-      if @rule.negated?
-        Matchers::Any.build([build_parent_dir_rules, build_child_file_rule])
-      else
-        build_parent_dir_rules
-      end
+      Matchers::Any.build([
+        build_parent_matcher,
+        build_child_matcher
+      ])
     end
   end
 end

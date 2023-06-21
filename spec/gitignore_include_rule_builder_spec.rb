@@ -1361,8 +1361,9 @@ RSpec.describe PathList::GitignoreIncludeRuleBuilder do
           end
 
           it 'assumes an unfinished [ matches nothing when negated' do
+            # nothing matches anything for implicit when negated.
             expect(described_class.new('!a[').build_implicit)
-              .to eq PathList::Matchers::Invalid
+              .to eq PathList::Matchers::Blank
           end
 
           it 'assumes an unfinished [bc matches nothing' do
