@@ -42,15 +42,24 @@ class PathList
     end
 
     def build_path_matcher
-      @re.build_matcher(Matchers::PathRegexp, negated?)
+      Matchers::PathRegexp.build(@re, negated?)
     end
 
     def build
-      dir_only? ? Matchers::MatchIfDir.build(build_path_matcher) : build_path_matcher
+      if dir_only?
+        Matchers::MatchIfDir.build(build_path_matcher)
+      else
+        build_path_matcher
+      end
     end
 
-    def build_parents
-      Matchers::MatchIfDir.build(@re.build_parents(negated?))
+    def build_parents(negated = true) # Metrics/AbcSize
+      ancestors = @re.ancestors.each(&:compress)
+      return Matchers::Blank if ancestors.empty?
+
+      Matchers::MatchIfDir.build(
+        Matchers::PathRegexp.build(RegexpBuilder.union(ancestors), negated)
+      )
     end
 
     def empty?

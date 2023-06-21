@@ -1,20 +1,19 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexp do
-  subject { described_class.build(rule, allow_value, parts) }
+  subject { described_class.build(builder, allow_value) }
 
-  let(:rule) { /a/ }
   let(:allow_value) { true }
-  let(:parts) { ['a'] }
+  let(:builder) { PathList::RegexpBuilder.new(['a']) }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, true)' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/i, true)' }
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 2.75) }
+    it { is_expected.to have_attributes(weight: 3.0) }
   end
 
   describe '#squashable_with?' do
@@ -22,13 +21,13 @@ RSpec.describe PathList::Matchers::PathRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
-      other = described_class.build(/b/, allow_value, ['b'])
+      other = described_class.build(PathList::RegexpBuilder.new(['b']), allow_value)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different allow value' do
-      other = described_class.build(/b/, !allow_value, ['b'])
+      other = described_class.build(PathList::RegexpBuilder.new(['b']), !allow_value)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -37,7 +36,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build(/b/, allow_value, ['b'])
+      other = described_class.build(PathList::RegexpBuilder.new(['b']), allow_value)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other])
@@ -46,13 +45,14 @@ RSpec.describe PathList::Matchers::PathRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to eq(described_class.build(/(?:a|b)/i, allow_value, [[['a'], ['b']]]))
+      expect(squashed).to eq(described_class.build(PathList::RegexpBuilder.new([[['a'], ['b']]]), allow_value))
+      expect(squashed).to eq(described_class.new(/(?:a|b)/i, allow_value))
     end
   end
 
   describe '#match' do
     let(:path) { 'my/file.rb' }
-    let(:rule) { /\bfile.rb\b/ }
+    let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
 
     let(:candidate) { instance_double(PathList::Candidate, path: path) }
 
@@ -69,7 +69,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
     end
 
     context 'with a non-matching rule' do
-      let(:rule) { /\bfile.sh\b/ }
+      let(:path) { 'my/file.sh/' }
 
       context 'when allowing' do
         it { expect(subject.match(candidate)).to be_nil }

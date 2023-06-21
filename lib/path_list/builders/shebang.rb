@@ -13,7 +13,7 @@ class PathList
           :start_anchor, '#!', :any,
           "#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}"
         ])
-        Matchers::MatchUnlessDir.build(pattern.build_matcher(Matchers::ShebangRegexp, allow))
+        Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow))
       end
 
       # also allow all directories in case they include a file with the matching shebang file

@@ -5,33 +5,31 @@ class PathList
     class MatchRegexp < Base
       attr_reader :polarity
       attr_reader :weight
-      attr_writer :parts
 
-      def self.build(rule, allow, parts)
-        m = new(rule, allow)
-        m.parts = parts
-        m.freeze
+      def self.build(re_builder, allow)
+        rule = re_builder.to_regexp
+        return allow ? Allow : Ignore unless rule
+
+        new(rule, allow, re_builder)
       end
 
-      def initialize(rule, allow)
+      def initialize(rule, allow, re_builder = nil)
         @rule = rule
         @polarity = allow ? :allow : :ignore
-
+        @re_builder = re_builder
         @weight = calculate_weight
+
+        freeze
       end
 
       def squashable_with?(other)
         other.instance_of?(self.class) &&
           @polarity == other.polarity &&
-          @parts && other.parts
+          @re_builder && other.re_builder
       end
 
       def squash(list)
-        RegexpBuilder.new(
-          RegexpBuilder.merge_parts_lists(
-            list.map { |l| l.parts } # rubocop:disable Style/SymbolProc it breaks with protected methods,
-          )
-        ).build_matcher(self.class, @polarity == :allow)
+        self.class.build(RegexpBuilder.union(list.map { |l| l.re_builder }), @polarity == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods,
       end
 
       def inspect
@@ -43,7 +41,7 @@ class PathList
       end
 
       def eql?(other)
-        super(other, except: [:@rule, :@parts]) &&
+        super(other, except: [:@rule, :@re_builder]) &&
           @rule.inspect == other.instance_variable_get(:@rule).inspect
       end
       alias_method :==, :eql?
@@ -51,7 +49,7 @@ class PathList
       protected
 
       attr_reader :rule
-      attr_reader :parts
+      attr_reader :re_builder
 
       private
 

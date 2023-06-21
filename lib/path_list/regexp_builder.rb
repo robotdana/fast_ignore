@@ -2,49 +2,61 @@
 
 class PathList
   class RegexpBuilder # rubocop:disable Metrics/ClassLength
-    def self.merge_parts_lists(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      merged = []
+    include ComparableInstance
 
-      return merged if parts_lists.empty?
-
-      start_with_fork, start_with_value = parts_lists
-        .partition { |parts_list| parts_list.first.is_a?(Array) }
-
-      if start_with_value.empty?
-        merged = merge_parts_lists(start_with_fork.flatten(1)) unless start_with_fork.empty?
-      else
-        grouped_by_first = start_with_value.group_by(&:first)
-
-        if grouped_by_first.length == 1
-          if grouped_by_first.first.first.nil?
-            merged
-          else
-            merged = Array(grouped_by_first.first.first)
-            # rubocop:disable Metrics/BlockNesting
-            merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
-            merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
-            # rubocop:enable Metrics/BlockNesting
-          end
-        else
-          new_fork = []
-          merged = [new_fork]
-
-          grouped_by_first.each do |first_item, sub_parts_lists|
-            if first_item.nil?
-              new_fork << []
-            else
-              tail = Array(first_item)
-              tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
-              new_fork << tail
-            end
-          end
-
-          merged = merge_parts_lists(new_fork.flatten(1) + start_with_fork.flatten(1)) unless start_with_fork.empty?
-        end
+    class << self
+      def union(builders)
+        new(merge_parts_lists(builders.map(&:parts)))
       end
 
-      merged
+      private
+
+      def merge_parts_lists(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+        merged = []
+
+        return merged if parts_lists.empty?
+
+        start_with_fork, start_with_value = parts_lists
+          .partition { |parts_list| parts_list.first.is_a?(Array) }
+
+        if start_with_value.empty?
+          merged = merge_parts_lists(start_with_fork.flatten(1)) unless start_with_fork.empty?
+        else
+          grouped_by_first = start_with_value.group_by(&:first)
+
+          if grouped_by_first.length == 1
+            if grouped_by_first.first.first.nil?
+              merged
+            else
+              merged = Array(grouped_by_first.first.first)
+              # rubocop:disable Metrics/BlockNesting
+              merged += merge_parts_lists(start_with_value.map { |parts_list| parts_list.drop(1) })
+              merged = merge_parts_lists([merged] + start_with_fork.flatten(1)) unless start_with_fork.empty?
+              # rubocop:enable Metrics/BlockNesting
+            end
+          else
+            new_fork = []
+            merged = [new_fork]
+
+            grouped_by_first.each do |first_item, sub_parts_lists|
+              if first_item.nil?
+                new_fork << []
+              else
+                tail = Array(first_item)
+                tail += merge_parts_lists(sub_parts_lists.map { |parts_list| parts_list.drop(1) })
+                new_fork << tail
+              end
+            end
+
+            merged = merge_parts_lists(new_fork.flatten(1) + start_with_fork.flatten(1)) unless start_with_fork.empty?
+          end
+        end
+
+        merged
+      end
     end
+
+    attr_reader :parts
 
     def initialize(parts = [])
       @parts = parts
@@ -65,16 +77,16 @@ class PathList
       @unanchorable = true
     end
 
-    def build_matcher(matcher_class, negated)
+    def to_regexp
       re_string = @parts.map { |part| part_to_regexp(part) }.join
-      return negated ? Matchers::Allow : Matchers::Ignore if re_string.empty?
+      return if re_string.empty?
 
       # Regexp::IGNORECASE = 1
-      matcher_class.build(Regexp.new(re_string, 1), negated, @parts.dup.freeze)
+      Regexp.new(re_string, 1)
     end
 
     START_COMPRESSION_RULES = {
-      [:start_anchor, :any_non_dir, :end_anchor] => [:start_anchor, :one_non_dir], # fixing an issue with compressing this to nothing
+      [:start_anchor, :any_non_dir, :end_anchor] => [:start_anchor, :one_non_dir], # avoid compressing this to nothing
       [:start_anchor, :any_dir] => [:dir_or_start_anchor],
       [:start_anchor, :any] => [],
       [:dir_or_start_anchor, :any] => [],
@@ -148,14 +160,6 @@ class PathList
       rules
     end
 
-    def build_parents(negated = true) # rubocop:disable Metrics/MethodLength Metrics/AbcSize
-      return Matchers::Blank if ancestors.empty?
-
-      self.class.new(
-        self.class.merge_parts_lists(ancestors.each(&:compress).map { |p| p.parts }) # rubocop:disable Style/SymbolProc it breaks with protected methods,
-      ).build_matcher(Matchers::PathRegexp, negated)
-    end
-
     def part_to_regexp(part) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       case part
       when :dir then '/'
@@ -194,7 +198,7 @@ class PathList
     end
 
     def empty?
-      @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
+      @parts.empty? || @parts == [:dir_or_start_anchor] || @parts == [:start_anchor]
     end
 
     def dup
@@ -255,9 +259,5 @@ class PathList
         @parts << value
       end
     end
-
-    protected
-
-    attr_reader :parts
   end
 end

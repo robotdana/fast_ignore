@@ -8,18 +8,21 @@ class PathList
         path = path.delete_prefix('/')
         path.delete_suffix('/')
         re = RegexpBuilder.new([:start_anchor, Regexp.escape(path), :end_anchor])
-        Matchers::MatchIfDir.build(re.build_matcher(Matchers::PathRegexp, allow))
+        Matchers::MatchIfDir.build(Matchers::PathRegexp.build(re, allow))
       end
 
       # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
       def self.build_implicit(path, allow, _root)
+        ancestors = RegexpBuilder.new(
+          [:start_anchor] + path
+            .delete_prefix('/')
+            .split('/')
+            .flat_map { |x| [Regexp.escape(x), :dir] } + [:any_non_dir]
+        ).ancestors.each(&:compress)
+        return Matchers::Blank if ancestors.empty?
+
         Matchers::MatchIfDir.build(
-          RegexpBuilder.new(
-            [:start_anchor] + path
-              .delete_prefix('/')
-              .split('/')
-              .flat_map { |x| [Regexp.escape(x), :dir] } + [:any_non_dir]
-          ).build_parents(allow)
+          Matchers::PathRegexp.build(RegexpBuilder.union(ancestors), allow)
         )
       end
     end
