@@ -20,7 +20,5 @@ keep:
   - and!
   - any
   - any!
-  - append
-  - append!
   - gitignore
   - gitignore!

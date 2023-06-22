@@ -4,7 +4,6 @@ RSpec.describe PathList::Candidate do
   subject(:candidate) do
     described_class.new(
       full_path,
-      filename,
       directory,
       exists,
       content

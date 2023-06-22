@@ -55,7 +55,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     let(:builder) { PathList::RegexpBuilder.new(['ruby']) }
     let(:filename) { 'file.rb' }
 
-    let(:candidate) { instance_double(PathList::Candidate, filename: filename, first_line: first_line) }
+    let(:candidate) { instance_double(PathList::Candidate, first_line: first_line) }
 
     context 'without an extension' do
       let(:filename) { 'my_script' }

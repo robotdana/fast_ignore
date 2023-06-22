@@ -2,17 +2,10 @@
 
 class PathList
   class Candidate
-    class << self
-      def dir(dir)
-        new(dir, nil, true, true, nil)
-      end
-    end
-
     attr_reader :full_path
 
-    def initialize(full_path, filename, directory, exists, content)
+    def initialize(full_path, directory, exists, content)
       @full_path = full_path
-      @filename = filename
       (@directory = directory) unless directory.nil?
       (@exists = exists) unless exists.nil?
       if content
@@ -22,17 +15,9 @@ class PathList
     end
 
     def parent
-      return @parent if defined?(@parent)
+      return if @full_path == '/'
 
-      @parent = if @full_path == '/'
-        nil
-      else
-        self.class.dir(::File.dirname(@full_path))
-      end
-    end
-
-    def path
-      @path ||= @full_path.delete_prefix('/')
+      self.class.new(::File.dirname(@full_path), true, true, nil)
     end
 
     def directory?
@@ -50,10 +35,6 @@ class PathList
       @exists = ::File.exist?(@full_path)
     rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
       @exists = false
-    end
-
-    def filename
-      @filename ||= ::File.basename(@full_path)
     end
 
     alias_method :original_inspect, :inspect # leftovers:keep
