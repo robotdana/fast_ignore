@@ -124,6 +124,37 @@ RSpec.describe PathList do
       expect(subject).to allow_exactly('foo', 'bar')
     end
 
+    it 'creates a sensible list of matchers' do
+      gitignore 'foo', 'bar'
+
+      expect(subject.matcher).to eq        PathList::Matchers::All.new([
+        PathList::Matchers::LastMatch::Two.new(
+          PathList::Matchers::Allow,
+          PathList::Matchers::All::Two.new(
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::AccumulateFromFile.new("./.gitignore", format: PathList::Builders::Gitignore, label: :"PathList::APPENDABLE_GITIGNORE_LABEL", appendable_matcher: subject.send(:appendable_matchers)[:"PathList::APPENDABLE_GITIGNORE_LABEL"])
+            ),
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\z/i, false)
+            )
+          )
+        ),
+        PathList::Matchers::LastMatch::Two.new(
+          PathList::Matchers::Allow,
+          PathList::Matchers::MatchIfDir.new(
+            PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?\.git\z/i, false)
+          )
+        ),
+        PathList::Matchers::Appendable.new(
+          :"PathList::APPENDABLE_GITIGNORE_LABEL",
+          PathList::Matchers::Allow,
+          PathList::Matchers::Blank,
+          PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?(?:foo\z|bar\z)/i, false),
+          instance_double(PathList::Patterns, from_file: '.')
+        )
+       ])
+    end
+
     it 'can match files with case equality' do
       create_file_list 'foo', 'bar'
       gitignore 'foo'

@@ -35,14 +35,6 @@ class PathList
       @path ||= @full_path.delete_prefix('/')
     end
 
-    def relative_to(dir, candidate_object = RelativeCandidate.allocate)
-      return unless @full_path.start_with?(dir)
-
-      candidate_object.reinitialize(self, @full_path.delete_prefix(dir), dir)
-
-      candidate_object
-    end
-
     def directory?
       return @directory if defined?(@directory)
 

@@ -63,8 +63,8 @@ class PathList
 
       Matchers::LastMatch.build([
         Matchers::Allow,
-        Matchers::WithinDir.build(
-          ::File.dirname(::File.dirname(@from_file)),
+        Matchers::All.build([
+          Builders::FullPath.build(::File.dirname(@from_file), @allow, @root),
           Matchers::MatchIfDir.build(
             Matchers::AccumulateFromFile.build(
               "./#{::File.basename(@from_file)}",
@@ -73,7 +73,7 @@ class PathList
               label: @label
             )
           )
-        )
+        ])
       ])
     end
 

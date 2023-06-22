@@ -18,7 +18,7 @@ class PathList
       initial_pattern = if @root == '/'
         [:start_anchor, :dir, :any_dir]
       elsif @root
-        [:start_anchor, :dir] + @root.delete_prefix('/').split('/').flat_map { |segment| [segment, :dir] } + [:any_dir]
+        [:start_anchor, :dir] + @root.delete_prefix('/').split('/').flat_map { |segment| [Regexp.escape(segment), :dir] } + [:any_dir]
       else
         [:dir_or_start_anchor]
       end

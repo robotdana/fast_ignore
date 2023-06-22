@@ -13,15 +13,16 @@ class PathList
           :start_anchor, '#!', :any,
           "#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}"
         ])
-        Matchers::All.build([
-          (FullPath.build(root, allow, nil) if root),
+
+        Matchers::WithinDir.build(
+          RegexpBuilder.new([:start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)), :dir]),
           Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow))
-        ])
+        )
       end
 
       # also allow all directories in case they include a file with the matching shebang file
       def self.build_implicit(_shebang, allow, root)
-        allow ? (FullPath.build(root, allow, nil) if root) : Matchers::Blank
+        allow ? (Matchers::Any.build([FullPath.build_implicit(root, allow, nil), Matchers::MatchIfDir.build(Matchers::PathRegexp.build(RegexpBuilder.new([:start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)), :dir]), allow))]) if root) : Matchers::Blank
       end
     end
   end

@@ -26,6 +26,13 @@ class PathList
         @matcher.match(candidate)
       end
 
+      if Invalid.is_a?(ComparableInstance)
+        def eql?(other)
+          super(other, except: [:@loaded])
+        end
+        alias_method :==, :eql?
+      end
+
       def weight
         @weight ||= @matcher.weight + 1
       end
