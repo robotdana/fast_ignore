@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+
 # frozen_string_literal: true
 
 require 'ruby-prof'
@@ -18,8 +19,13 @@ profile.profile do
   sub_gitignore_files.each do |sub_gitignore|
     path_list.include?(ARGV[0] + '/' + sub_gitignore)
   end
-  puts path_list.each(ARGV[0]).to_a
+  path_list.each(ARGV[0]).to_a
 end
 printer = RubyProf::FlameGraphPrinter.new(profile)
-printer.print(STDOUT, {})
+printer.print(::File.open('flamegraph.txt', 'w'), {})
 
+# set color palette. choices are: hot (default), mem,
+# io, wakeup, chain, java, js, perl, red, green, blue,
+# aqua, yellow, purple, orange
+
+`flamegraph.pl --cp --colors hot flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`

@@ -4,14 +4,20 @@ class PathList
   class Candidate
     attr_reader :full_path
 
-    def initialize(full_path, directory, exists, content)
+    def self.build(full_path, directory, exists, content)
+      new(
+        full_path,
+        directory,
+        exists,
+        (content && (content.slice(/\A#!.*/) || ''))
+      )
+    end
+
+    def initialize(full_path, directory, exists, first_line)
       @full_path = full_path
-      (@directory = directory) unless directory.nil?
-      (@exists = exists) unless exists.nil?
-      if content
-        # we only care about the first line that might be a shebang
-        (@first_line = content.slice(/\A#!.*/) || '')
-      end
+      @directory = directory
+      @exists = exists
+      @first_line = first_line
     end
 
     def parent
@@ -21,7 +27,7 @@ class PathList
     end
 
     def directory?
-      return @directory if defined?(@directory)
+      return @directory unless @directory.nil?
 
       @directory = ::File.lstat(@full_path).directory?
     rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG, ::Errno::ENOTDIR
@@ -30,7 +36,7 @@ class PathList
     end
 
     def exists?
-      return @exists if defined?(@exists)
+      return @exists unless @exists.nil?
 
       @exists = ::File.exist?(@full_path)
     rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG

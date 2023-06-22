@@ -6,3 +6,5 @@
 *.gem
 Gemfile.lock
 TODO.md
+flamegraph.svg
+flamegraph.txt

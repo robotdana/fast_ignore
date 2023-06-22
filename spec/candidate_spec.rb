@@ -2,7 +2,7 @@
 
 RSpec.describe PathList::Candidate do
   subject(:candidate) do
-    described_class.new(
+    described_class.build(
       full_path,
       directory,
       exists,

@@ -28,6 +28,7 @@ excludesfile
 extensionless
 fancyignore
 filesystem
+flamegraph
 fnmatch
 frotz
 gemfile
@@ -90,6 +91,7 @@ submodule
 submodules
 substring
 sudo
+svg
 symlink
 symlinks
 tmp

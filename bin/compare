@@ -25,6 +25,13 @@ files_in_the_index_that_would_be_ignored = `git ls-files -ic --exclude-standard`
 files_in_the_index_that_are_deleted = `git diff --no-renames --diff-filter=D --name-only`.split("\n")
 untracked_files = `git ls-files --others --exclude-standard`.split("\n")
 
+puts 'files_in_the_index_that_would_be_ignored='
+puts files_in_the_index_that_would_be_ignored
+puts 'files_in_the_index_that_are_deleted='
+puts files_in_the_index_that_are_deleted
+puts 'untracked_files='
+puts untracked_files
+
 ignored_by_path_list_not_by_git = (
   git_a.map(&:downcase) -
   new_a.map(&:downcase) -
