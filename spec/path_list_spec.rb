@@ -127,34 +127,15 @@ RSpec.describe PathList do
     it 'creates a sensible list of matchers' do
       gitignore 'foo', 'bar'
 
-      expect(subject.matcher).to eq PathList::Matchers::All.new([
-        PathList::Matchers::LastMatch::Two.new(
-          PathList::Matchers::Allow,
-          PathList::Matchers::MatchIfDir.new(
-            PathList::Matchers::PathRegexpWrapper.new(
-              %r{\A#{Regexp.escape(Dir.pwd)}(?:\z|/)}i,
-              PathList::Matchers::AccumulateFromFile.new(
-                './.gitignore',
-                format: PathList::Builders::Gitignore,
-                label: :'PathList::APPENDABLE_GITIGNORE_LABEL',
-                appendable_matcher: subject.send(:appendable_matchers)[:'PathList::APPENDABLE_GITIGNORE_LABEL']
-              )
-            )
+      expect(subject.matcher).to eq PathList::Matchers::LastMatch.new([
+        PathList::Matchers::Allow,
+        PathList::Matchers::PathRegexpWrapper.new(
+          %r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i,
+          PathList::Matchers::AppendGitignore.new(
+            PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false)
           )
         ),
-        PathList::Matchers::LastMatch::Two.new(
-          PathList::Matchers::Allow,
-          PathList::Matchers::MatchIfDir.new(
-            PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
-          )
-        ),
-        PathList::Matchers::Appendable.new(
-          :'PathList::APPENDABLE_GITIGNORE_LABEL',
-          PathList::Matchers::Allow,
-          PathList::Matchers::Blank,
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false),
-          instance_double(PathList::Patterns, from_file: '.')
-        )
+        PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
       ])
     end
 
@@ -279,6 +260,24 @@ RSpec.describe PathList do
   end
 
   describe '.only' do
+    context 'with blank only value' do
+      subject(:path_list) { described_class.only([]) }
+
+      it 'returns all files' do
+        create_file_list 'foo', 'bar'
+        expect(subject).to allow_exactly('foo', 'bar')
+      end
+    end
+
+    context 'with missing only from_file value' do
+      subject(:path_list) { described_class.only(from_file: './nonsense') }
+
+      it 'returns all files' do
+        create_file_list 'foo', 'bar'
+        expect(subject).to allow_exactly('foo', 'bar')
+      end
+    end
+
     context 'with subdir includes file' do
       subject(:path_list) { described_class.only(from_file: 'a/.includes_file') }
 

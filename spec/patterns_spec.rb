@@ -2,23 +2,21 @@
 
 RSpec.describe PathList::Patterns do
   subject(:matchers) do
-    described_class.new(
-      *patterns_arg,
+    described_class.build(
+      patterns_arg,
       from_file: from_file,
       format: format_arg,
       root: root,
-      allow: allow_arg,
-      label: label
+      allow: allow_arg
     ).build
   end
 
   let(:patterns) { [] }
-  let(:patterns_arg) { from_file ? [] : patterns }
+  let(:patterns_arg) { from_file ? [] : Array(patterns) }
   let(:from_file) { nil }
   let(:format_arg) { nil }
   let(:root) { nil }
   let(:allow_arg) { false }
-  let(:label) { nil }
 
   around do |e|
     if from_file
