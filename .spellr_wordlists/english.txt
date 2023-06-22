@@ -109,6 +109,7 @@ utf
 warmup
 webpack
 xconfig
+xdescribe
 xdg
 xit
 zeitwerk

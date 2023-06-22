@@ -5,7 +5,7 @@ class PathList
     class All
       class Allow < All
         def match(candidate)
-          return :allow if @matchers.all? { |m| m.match(candidate) }
+          :allow if @matchers.all? { |m| m.match(candidate) }
         end
       end
     end

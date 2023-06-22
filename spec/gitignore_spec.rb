@@ -5,7 +5,7 @@ RSpec.describe PathList do
 
   let(:root) { Dir.pwd }
 
-  shared_examples 'gitignore: true' do
+  shared_examples 'gitignore' do
     describe 'Patterns read from a .gitignore file in the same directory as the path, or in any parent directory' do
       # (up to the toplevel of the work tree) # we consider root the root
 
@@ -70,12 +70,12 @@ RSpec.describe PathList do
   describe '.gitignore' do
     subject { described_class.gitignore }
 
-    it_behaves_like 'gitignore: true'
+    it_behaves_like 'gitignore'
   end
 
   describe 'git ls-files', :gitls do
     subject { ActualGitLSFiles.new }
 
-    it_behaves_like 'gitignore: true'
+    it_behaves_like 'gitignore'
   end
 end

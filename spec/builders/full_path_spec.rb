@@ -13,7 +13,7 @@ RSpec.describe PathList::Builders::FullPath do
 
     it 'builds a regex that matches parent and child somethings' do
       expect(matcher).to eq(PathList::Matchers::MatchIfDir.new(
-        PathList::Matchers::PathRegexp.new(%r{\A/path(?:\z|/to(?:\z|/exact(?:\z|/something\z)))}i, true)
+        PathList::Matchers::PathRegexp.new(%r{\A/(?:\z|path(?:\z|/to(?:\z|/exact(?:\z|/something\z))))}i, true)
       ))
     end
 

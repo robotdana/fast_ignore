@@ -14,11 +14,13 @@ class PathList
       @emitted = false
     end
 
-    def prepare_regexp_builder
+    def prepare_regexp_builder # rubocop:disable Metrics/MethodLength
       initial_pattern = if @root == '/'
         [:start_anchor, :dir, :any_dir]
       elsif @root
-        [:start_anchor, :dir] + @root.delete_prefix('/').split('/').flat_map { |segment| [Regexp.escape(segment), :dir] } + [:any_dir]
+        [:start_anchor, :dir] +
+          @root.delete_prefix('/').split('/').flat_map { |segment| [Regexp.escape(segment), :dir] } +
+          [:any_dir]
       else
         [:dir_or_start_anchor]
       end
@@ -254,7 +256,7 @@ class PathList
     end
 
     def build_parent_matcher
-      if anchored? || @root
+      if anchored? || @root != '/'
         ancestors = @re.ancestors.each(&:compress)
         return Matchers::Blank if ancestors.empty?
 

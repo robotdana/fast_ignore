@@ -31,16 +31,16 @@ class PathList
       end
 
       def match(candidate)
-        ignore = nil
+        default = nil
 
         @matchers.each do |m|
           case m.match(candidate)
           when :allow then return :allow
-          when :ignore then ignore = true
+          when :ignore then default = :ignore
           end
         end
 
-        :ignore if ignore
+        default
       end
 
       private

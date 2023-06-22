@@ -2,32 +2,33 @@
 
 class PathList
   module Matchers
-    class WithinDir < Wrapper
+    class PathRegexpWrapper < Wrapper
+      attr_reader :polarity
+      attr_reader :weight
+
       def self.build(re_builder, matcher)
-        return Blank if matcher == Blank
         rule = re_builder.to_regexp
-        return Blank unless rule
+        return matcher unless rule
 
         new(rule, matcher, re_builder)
       end
 
       def initialize(rule, matcher, re_builder = nil)
         @rule = rule
-        @re_builder = re_builder
         @matcher = matcher
-
+        @re_builder = re_builder
         @weight = calculate_weight
 
         freeze
       end
 
       def squashable_with?(other)
-        super &&
-          @re_builder&.parts == other.re_builder&.parts
+        other.instance_of?(self.class) &&
+          @re_builder.parts == other.re_builder.parts
       end
 
       def inspect
-        "#{self.class}.new(\n  #{@rule.inspect}\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
+        "#{self.class}.new(\n  #{@rule.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
       def match(candidate)
@@ -49,13 +50,13 @@ class PathList
 
       private
 
+      def new_with_matcher(matcher)
+        self.class.new(@rule, matcher, @re_builder)
+      end
+
       def calculate_weight
         # chaos guesses
         (@rule.inspect.length / 4.0) + 2 + @matcher.weight
-      end
-
-      def new_with_matcher(matcher)
-        self.class.new(@rule, matcher, @re_builder)
       end
     end
   end

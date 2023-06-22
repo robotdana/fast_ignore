@@ -5,7 +5,7 @@ class PathList
     class All
       class Ignore < All
         def match(candidate)
-          return :ignore if @matchers.any? { |m| m.match(candidate) }
+          :ignore if @matchers.any? { |m| m.match(candidate) }
         end
       end
     end

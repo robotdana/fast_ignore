@@ -25,7 +25,14 @@ class PathList
         end
 
         def match(candidate)
-          :allow if @matcher_a.match(candidate) == :allow && @matcher_b.match(candidate) == :allow
+          case (result = @matcher_a.match(candidate))
+          when :allow, nil
+            case (result_b = @matcher_b.match(candidate))
+            when :allow, nil then result_b && result
+            when :ignore then :ignore
+            end
+          when :ignore then :ignore
+          end
         end
 
         def inspect

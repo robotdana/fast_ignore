@@ -14,15 +14,40 @@ class PathList
           "#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}"
         ])
 
-        Matchers::WithinDir.build(
-          RegexpBuilder.new([:start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)), :dir]),
-          Matchers::MatchUnlessDir.build(Matchers::ShebangRegexp.build(pattern, allow))
+        Matchers::MatchUnlessDir.build(
+          Matchers::PathRegexpWrapper.build(
+            RegexpBuilder.new([
+              :start_anchor,
+              Regexp.escape(PathExpander.expand_path_pwd(root)),
+              :dir,
+              :any_dir,
+              '[^\.\/]*',
+              :end_anchor
+            ]),
+            Matchers::ShebangRegexp.build(pattern, allow)
+          )
         )
       end
 
       # also allow all directories in case they include a file with the matching shebang file
-      def self.build_implicit(_shebang, allow, root)
-        allow ? (Matchers::Any.build([FullPath.build_implicit(root, allow, nil), Matchers::MatchIfDir.build(Matchers::PathRegexp.build(RegexpBuilder.new([:start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)), :dir]), allow))]) if root) : Matchers::Blank
+      def self.build_implicit(_shebang, allow, root) # rubocop:disable Metrics/MethodLength
+        if allow
+          if root
+            Matchers::Any.build([
+              FullPath.build_implicit(root, allow, nil),
+              Matchers::MatchIfDir.build(Matchers::PathRegexp.build(
+                RegexpBuilder.new([
+                  :start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)),
+                  :dir
+                ]), allow
+              ))
+            ])
+          else
+            Matchers::AllowAnyDir
+          end
+        else
+          Matchers::Blank
+        end
       end
     end
   end

@@ -63,7 +63,7 @@ class PathList
 
     def ancestors
       prev_rule = []
-      rules = []
+      rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
 
       parts = @parts
 

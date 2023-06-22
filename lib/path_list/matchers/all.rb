@@ -15,11 +15,16 @@ class PathList
       end
 
       def match(candidate)
-        if @matchers.all? { |m| m.match(candidate) == :allow }
-          :allow
-        else
-          :ignore
+        default = :allow
+
+        @matchers.each do |m|
+          case m.match(candidate)
+          when :ignore then return :ignore
+          when nil then default = nil
+          end
         end
+
+        default
       end
 
       private

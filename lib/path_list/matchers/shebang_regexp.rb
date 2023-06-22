@@ -4,8 +4,6 @@ class PathList
   module Matchers
     class ShebangRegexp < MatchRegexp
       def match(candidate)
-        return if candidate.filename.include?('.')
-
         @polarity if candidate.first_line.match?(@rule)
       end
 

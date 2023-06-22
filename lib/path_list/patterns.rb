@@ -63,9 +63,12 @@ class PathList
 
       Matchers::LastMatch.build([
         Matchers::Allow,
-        Matchers::All.build([
-          Builders::FullPath.build(::File.dirname(@from_file), @allow, @root),
-          Matchers::MatchIfDir.build(
+        Matchers::MatchIfDir.build(
+          Matchers::PathRegexpWrapper.build(
+            RegexpBuilder.new([
+              :start_anchor, Regexp.escape(PathExpander.expand_path_pwd(@root)),
+              [[:end_anchor], [:dir]]
+            ]),
             Matchers::AccumulateFromFile.build(
               "./#{::File.basename(@from_file)}",
               format: @format,
@@ -73,7 +76,7 @@ class PathList
               label: @label
             )
           )
-        ])
+        )
       ])
     end
 

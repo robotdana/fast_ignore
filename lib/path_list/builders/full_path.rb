@@ -5,7 +5,6 @@ class PathList
     module FullPath
       # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
       def self.build(path, allow, root)
-
         re = RegexpBuilder.new([:start_anchor, Regexp.escape(PathExpander.expand_path(path, root)), :end_anchor])
         Matchers::MatchIfDir.build(Matchers::PathRegexp.build(re, allow))
       end

@@ -48,14 +48,14 @@ RSpec.describe PathList do
     end
 
     context 'when given root as a parent dir' do
-      subject(:to_a) { described_class.gitignore(root: '../').each('../').to_a }
+      subject { described_class.gitignore(root: '../') }
 
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
         gitignore 'baz'
 
         Dir.chdir('bar') do
-          expect(subject).to contain_exactly('bar/foo', 'fez', '.gitignore')
+          expect(subject.each('../').to_a).to contain_exactly('bar/foo', 'fez', '.gitignore')
         end
       end
     end
@@ -127,32 +127,35 @@ RSpec.describe PathList do
     it 'creates a sensible list of matchers' do
       gitignore 'foo', 'bar'
 
-      expect(subject.matcher).to eq        PathList::Matchers::All.new([
+      expect(subject.matcher).to eq PathList::Matchers::All.new([
         PathList::Matchers::LastMatch::Two.new(
           PathList::Matchers::Allow,
-          PathList::Matchers::All::Two.new(
-            PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::AccumulateFromFile.new("./.gitignore", format: PathList::Builders::Gitignore, label: :"PathList::APPENDABLE_GITIGNORE_LABEL", appendable_matcher: subject.send(:appendable_matchers)[:"PathList::APPENDABLE_GITIGNORE_LABEL"])
-            ),
-            PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\z/i, false)
+          PathList::Matchers::MatchIfDir.new(
+            PathList::Matchers::PathRegexpWrapper.new(
+              %r{\A#{Regexp.escape(Dir.pwd)}(?:\z|/)}i,
+              PathList::Matchers::AccumulateFromFile.new(
+                './.gitignore',
+                format: PathList::Builders::Gitignore,
+                label: :'PathList::APPENDABLE_GITIGNORE_LABEL',
+                appendable_matcher: subject.send(:appendable_matchers)[:'PathList::APPENDABLE_GITIGNORE_LABEL']
+              )
             )
           )
         ),
         PathList::Matchers::LastMatch::Two.new(
           PathList::Matchers::Allow,
           PathList::Matchers::MatchIfDir.new(
-            PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?\.git\z/i, false)
+            PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
           )
         ),
         PathList::Matchers::Appendable.new(
-          :"PathList::APPENDABLE_GITIGNORE_LABEL",
+          :'PathList::APPENDABLE_GITIGNORE_LABEL',
           PathList::Matchers::Allow,
           PathList::Matchers::Blank,
-          PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?(?:foo\z|bar\z)/i, false),
+          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false),
           instance_double(PathList::Patterns, from_file: '.')
         )
-       ])
+      ])
     end
 
     it 'can match files with case equality' do

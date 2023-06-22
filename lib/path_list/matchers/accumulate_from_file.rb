@@ -32,7 +32,7 @@ class PathList
       end
 
       def polarity
-        :mixed
+        :allow
       end
 
       def match(candidate)

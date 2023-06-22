@@ -57,13 +57,6 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
 
     let(:candidate) { instance_double(PathList::Candidate, filename: filename, first_line: first_line) }
 
-    context 'with an extension' do
-      it 'returns nil without loading the first line' do
-        expect(subject.match(candidate)).to be_nil
-        expect(candidate).not_to have_received(:first_line)
-      end
-    end
-
     context 'without an extension' do
       let(:filename) { 'my_script' }
 
