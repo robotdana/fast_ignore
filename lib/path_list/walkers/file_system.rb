@@ -6,7 +6,7 @@ class PathList
       class << self
         def include?(
           path,
-          path_list:,
+          matcher:,
           directory: nil,
           content: nil,
           exists: nil,
@@ -17,19 +17,19 @@ class PathList
           return false if !as_parent && candidate.directory?
           return false unless candidate.exists?
 
-          match_recursive?(candidate, path_list)
+          match_recursive?(candidate, matcher)
         end
 
-        def each(parent_full_path, parent_relative_path, path_list, &block) # rubocop:disable Metrics/MethodLength
+        def each(parent_full_path, parent_relative_path, matcher, &block) # rubocop:disable Metrics/MethodLength
           ::Dir.children(parent_full_path).each do |filename|
             full_path = parent_full_path + filename
             candidate = Candidate.new(full_path, filename, nil, true, nil)
 
-            next unless path_list.matcher.match(candidate) == :allow
+            next unless matcher.match(candidate) == :allow
 
             relative_path = parent_relative_path + filename
             if candidate.directory?
-              each("#{full_path}/", "#{relative_path}/", path_list, &block)
+              each("#{full_path}/", "#{relative_path}/", matcher, &block)
             else
               yield(relative_path)
             end
@@ -40,10 +40,10 @@ class PathList
 
         private
 
-        def match_recursive?(candidate, path_list)
+        def match_recursive?(candidate, matcher)
           return true unless candidate.parent
 
-          match_recursive?(candidate.parent, path_list) && path_list.matcher.match(candidate) == :allow
+          match_recursive?(candidate.parent, matcher) && matcher.match(candidate) == :allow
         end
       end
     end
