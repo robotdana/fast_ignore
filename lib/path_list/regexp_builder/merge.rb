@@ -31,11 +31,17 @@ class PathList
         end
 
         def flatten_forks(parts_lists)
-          parts_lists.flat_map do |parts_list|
-            parts_list = [parts_list]
-            parts_list = parts_list.flatten(1) while parts_list.first.first.is_a?(Array)
-            parts_list
+          result = []
+          parts_lists.each do |parts_list|
+            next result << parts_list unless parts_list.first.is_a?(Array)
+
+            depth = -1
+            depth_check_list = parts_list
+            depth += 1 while (depth_check_list = depth_check_list.first) && depth_check_list.is_a?(Array)
+            parts_list = parts_list.flatten(depth)
+            result.concat(parts_list)
           end
+          result
         end
       end
     end

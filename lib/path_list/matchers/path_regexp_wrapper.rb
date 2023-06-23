@@ -42,10 +42,6 @@ class PathList
 
       private
 
-      def new_with_matcher(matcher)
-        self.class.new(@rule, matcher, @re_builder)
-      end
-
       def calculate_weight
         # chaos guesses
         (@rule.inspect.length / 4.0) + 2 + @matcher.weight

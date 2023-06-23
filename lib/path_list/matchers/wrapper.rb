@@ -31,7 +31,9 @@ class PathList
         first_polarity = new_matchers.first.polarity
         same_polarity = new_matchers.all? { |l| l.polarity != :mixed && l.polarity == first_polarity }
         new_matcher_class = same_polarity ? Any : LastMatch
-        new_with_matcher(new_matcher_class.build(new_matchers))
+        new_wrapper = dup
+        new_wrapper.matcher = new_matcher_class.build(new_matchers)
+        new_wrapper.freeze
       end
 
       def inspect
@@ -44,13 +46,9 @@ class PathList
 
       protected
 
-      attr_reader :matcher
+      attr_accessor :matcher
 
       private
-
-      def new_with_matcher(matcher)
-        self.class.new(matcher)
-      end
 
       def calculate_weight
         @matcher.weight

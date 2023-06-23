@@ -16,7 +16,7 @@ class PathList
   end
 
   def dup
-    d = self.class.new
+    d = super
     d.matcher = matcher
     d
   end
