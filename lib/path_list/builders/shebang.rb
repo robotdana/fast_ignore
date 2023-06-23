@@ -16,14 +16,7 @@ class PathList
 
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
-            RegexpBuilder.new([
-              :start_anchor,
-              Regexp.escape(PathExpander.expand_path_pwd(root)),
-              :dir,
-              :any_dir,
-              '[^\.\/]*',
-              :end_anchor
-            ]),
+            RegexpBuilder.new_from_path(PathExpander.expand_path_pwd(root), [:dir, :any_dir, '[^\.\/]*', :end_anchor]),
             Matchers::ShebangRegexp.build(pattern, allow)
           )
         )

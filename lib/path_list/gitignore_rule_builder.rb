@@ -257,12 +257,10 @@ class PathList
 
     def build_parent_matcher
       if anchored? || @root != '/'
-        ancestors = @re.ancestors.each(&:compress)
+        ancestors = @re.ancestors
         return Matchers::Blank if ancestors.empty?
 
-        Matchers::MatchIfDir.build(
-          Matchers::PathRegexp.build(RegexpBuilder.union(ancestors), negated?)
-        )
+        Matchers::MatchIfDir.build(Matchers::PathRegexp.build(ancestors, negated?))
       else
         Matchers::AllowAnyDir
       end

@@ -38,6 +38,10 @@ class PathList
         "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
+      def match(candidate)
+        @matcher.match(candidate)
+      end
+
       protected
 
       attr_reader :matcher

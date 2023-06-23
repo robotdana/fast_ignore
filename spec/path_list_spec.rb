@@ -129,9 +129,9 @@ RSpec.describe PathList do
 
       expect(subject.instance_variable_get(:@matcher)).to eq PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
-        PathList::Matchers::PathRegexpWrapper.new(
+        PathList::Matchers::CollectGitignore.new(
           %r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i,
-          PathList::Matchers::AppendGitignore.new(
+          PathList::Matchers::Mutable.new(
             PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false)
           )
         ),

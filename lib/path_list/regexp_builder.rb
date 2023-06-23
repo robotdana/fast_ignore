@@ -9,6 +9,15 @@ class PathList
       new(Merge.merge(builders.map(&:parts)))
     end
 
+    def self.new_from_path(path, tail = [:end_anchor])
+      new(
+        [:start_anchor] + path
+          .delete_prefix('/')
+          .split('/')
+          .flat_map { |part| [:dir, Regexp.escape(part)] } + tail
+      ).compress
+    end
+
     attr_reader :parts
 
     def initialize(parts = [])
@@ -27,6 +36,10 @@ class PathList
 
     def []=(index, value)
       @parts[index] = value
+    end
+
+    def empty?
+      @parts.empty?
     end
 
     def start_with?(value)
@@ -59,9 +72,11 @@ class PathList
 
     def compress
       @parts = Compress.compress(@parts)
+
+      self
     end
 
-    def ancestors
+    def ancestors # rubocop:disable Metrics/AbcSize
       prev_rule = []
       rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
 
@@ -75,7 +90,7 @@ class PathList
         (rules << self.class.new(prev_rule + [:end_anchor])) unless prev_rule == [:start_anchor]
       end
 
-      rules
+      self.class.union(rules.each(&:compress))
     end
 
     def append_part(value)

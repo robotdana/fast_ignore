@@ -2,16 +2,18 @@
 
 class PathList
   module Matchers
-    class AppendGitignore < Wrapper
-      def self.build(wrapper = Blank)
-        new(wrapper)
+    class CollectGitignore < Wrapper
+      def self.build(re_builder, matcher = Mutable.new(Blank))
+        rule = re_builder.to_regexp
+        return Blank unless rule
+
+        new(rule, matcher)
       end
 
-      def initialize(matcher)
-        @loaded = []
+      def initialize(collect_rule, matcher)
+        @collect_rule = collect_rule
+        @loaded = [] # not frozen
         @matcher = matcher
-
-        # not frozen!
       end
 
       def squashable_with?(_)
@@ -26,11 +28,14 @@ class PathList
       end
 
       def weight
-        @weight ||= @matcher.weight + 1
+        @weight ||= (@matcher.weight * 0.2) + (@collect_rule.inspect.length / 4.0) + 2
       end
 
       def match(candidate)
-        append('./.gitignore', root: candidate.full_path) if candidate.directory?
+        if candidate.directory? && @collect_rule.match?(candidate.full_path)
+          append('./.gitignore',
+                 root: candidate.full_path)
+        end
 
         @matcher.match(candidate)
       end
@@ -46,7 +51,7 @@ class PathList
         _, new_matcher = patterns.build_matchers
         return if new_matcher == Blank
 
-        @matcher = LastMatch.build([@matcher, new_matcher])
+        @matcher.matcher = LastMatch.build([@matcher.matcher, new_matcher])
         @weight = nil
       end
     end

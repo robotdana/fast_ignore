@@ -49,18 +49,15 @@ class PathList
     def gitignore!(root: nil) # rubocop:disable Metrics/MethodLength
       root = PathExpander.expand_path_pwd(root || '.')
 
-      appendable = Matchers::AppendGitignore.build
-      appendable.append(GlobalGitignore.path(root: root), root: root)
-      appendable.append('./.git/info/exclude', root: root)
-      appendable.append('./.gitignore', root: root)
+      collector = Matchers::CollectGitignore.build(RegexpBuilder.new_from_path(root, [[[:dir], [:end_anchor]]]))
+      collector.append(GlobalGitignore.path(root: root), root: root)
+      collector.append('./.git/info/exclude', root: root)
+      collector.append('./.gitignore', root: root)
 
       and_matcher(
         Matchers::LastMatch.build([
           Matchers::Allow,
-          Matchers::PathRegexpWrapper.build(
-            RegexpBuilder.new([:start_anchor, Regexp.escape(root), [[:dir], [:end_anchor]]]),
-            appendable
-          ),
+          collector,
           Matchers::PathRegexp.build(RegexpBuilder.new([:dir, '\.git', :end_anchor]), false)
         ])
       )
