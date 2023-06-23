@@ -20,13 +20,6 @@ class PathList
         false
       end
 
-      if Invalid.is_a?(ComparableInstance)
-        def eql?(other)
-          super(other, except: [:@loaded])
-        end
-        alias_method :==, :eql?
-      end
-
       def weight
         @weight ||= (@matcher.weight * 0.2) + (@collect_rule.inspect.length / 4.0) + 2
       end

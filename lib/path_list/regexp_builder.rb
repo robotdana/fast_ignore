@@ -2,7 +2,6 @@
 
 class PathList
   class RegexpBuilder
-    # include ComparableInstance
     include Autoloader
 
     def self.union(builders)

@@ -127,7 +127,7 @@ RSpec.describe PathList do
     it 'creates a sensible list of matchers' do
       gitignore 'foo', 'bar'
 
-      expect(subject.instance_variable_get(:@matcher)).to eq PathList::Matchers::LastMatch.new([
+      expect(subject.instance_variable_get(:@matcher)).to be_like PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
         PathList::Matchers::CollectGitignore.new(
           %r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i,

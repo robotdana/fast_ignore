@@ -45,8 +45,8 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to eq(described_class.build(PathList::RegexpBuilder.new([[['abc'], ['b']]]), allow_value))
-      expect(squashed).to eq(described_class.new(/(?:abc|b)/i, allow_value))
+      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new([[['abc'], ['b']]]), allow_value))
+      expect(squashed).to be_like(described_class.new(/(?:abc|b)/i, allow_value))
     end
   end
 

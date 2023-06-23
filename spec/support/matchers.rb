@@ -108,3 +108,9 @@ RSpec::Matchers.define(:have_instance_variables) do |expected|
     expect(@actual).to match(expected)
   end
 end
+
+RSpec::Matchers.define(:be_like) do |expected|
+  match do |actual|
+    expect(actual.inspect).to match(expected.inspect)
+  end
+end

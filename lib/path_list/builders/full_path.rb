@@ -3,22 +3,34 @@
 class PathList
   module Builders
     module FullPath
-      # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
-      def self.build(path, allow, root)
-        Matchers::MatchIfDir.build(
+      class << self
+        def build(path, allow, root)
           Matchers::PathRegexp.build(
             RegexpBuilder.new_from_path(PathExpander.expand_path(path, root)),
             allow
           )
-        )
-      end
+        end
 
-      # TODO: currently this assumes dir_only, and maybe shouldn't for the last part but should for my use case
-      def self.build_implicit(path, allow, root)
-        ancestors = RegexpBuilder.new_from_path(PathExpander.expand_path(path, root), [:dir, :any_non_dir]).ancestors
-        return Matchers::Blank if ancestors.empty?
+        def build_implicit(path, _allow, root)
+          path = PathExpander.expand_path(path, root)
+          parent_matcher = build_parent_matcher(path)
+          return build_child_matcher(path) unless parent_matcher
 
-        Matchers::MatchIfDir.build(Matchers::PathRegexp.build(ancestors, allow))
+          Matchers::Any.build([parent_matcher, build_child_matcher(path)])
+        end
+
+        private
+
+        def build_parent_matcher(path)
+          ancestors = RegexpBuilder.new_from_path(path).ancestors
+          return if ancestors.empty?
+
+          Matchers::PathRegexp.build(ancestors, true)
+        end
+
+        def build_child_matcher(path)
+          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(path, [:dir]), true)
+        end
       end
     end
   end

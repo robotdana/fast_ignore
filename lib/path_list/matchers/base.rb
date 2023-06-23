@@ -3,8 +3,6 @@
 class PathList
   module Matchers
     class Base
-      # include ComparableInstance
-
       class << self
         alias_method :build, :new
       end
