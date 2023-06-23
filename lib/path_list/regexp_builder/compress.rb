@@ -2,7 +2,7 @@
 
 class PathList
   class RegexpBuilder
-    module Compress
+    module Compress # rubocop:disable Metrics/ModuleLength
       START_COMPRESSION_RULES = {
         [:start_anchor, :any_non_dir, :end_anchor] => [:start_anchor, :one_non_dir], # avoid compressing this to nothing
         [:start_anchor, :any_dir] => [:dir_or_start_anchor],
@@ -27,21 +27,6 @@ class PathList
 
       private_constant :END_COMPRESSION_RULES
 
-      MID_COMPRESSION_RULES = {
-        # before and after needs to be the same length
-        [:any_non_dir, :any_non_dir] => [nil, :any_non_dir],
-        [:one_non_dir, :any_non_dir] => [nil, :many_non_dir],
-        [:any_non_dir, :one_non_dir] => [nil, :many_non_dir],
-        [:many_non_dir, :any_non_dir] => [nil, :many_non_dir],
-        [:any_non_dir, :many_non_dir] => [nil, :many_non_dir],
-        [:any_non_dir, :any_dir] => [nil, :any],
-        [:any_dir, :any_non_dir] => [nil, :any],
-        [''] => [nil],
-        [:dir, :dir] => [nil, :dir]
-      }.freeze
-
-      private_constant :MID_COMPRESSION_RULES
-
       class << self
         def compress(parts)
           compress!(parts.dup)
@@ -49,36 +34,101 @@ class PathList
 
         private
 
-        def compress!(parts) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-          # return parts
-
-          changed = false
-
+        def compress_start!(parts)
           START_COMPRESSION_RULES.each do |rule, replacement|
-            if rule == parts.take(rule.length)
-              parts[0, rule.length] = replacement
-              changed = true
-            end
+            parts[0, rule.length] = replacement if rule == parts.take(rule.length)
           end
+        end
 
+        def compress_end!(parts)
           END_COMPRESSION_RULES.each do |rule, replacement|
-            if rule == parts.slice(-1 * rule.length, rule.length)
-              parts[-1 * rule.length, rule.length] = replacement
-              changed = true
+            parts[-1 * rule.length, rule.length] = replacement if rule == parts.slice(-1 * rule.length, rule.length)
+          end
+        end
+
+        def index_offset(parts, query, offset)
+          return parts.index(query) if offset.zero?
+
+          # TODO: use index
+          parts.drop(offset).index(query)&.+ offset
+        end
+
+        def compress_any_non_dir!(parts)
+          index = 0
+
+          while (index = index_offset(parts, :any_non_dir, index))
+            case parts[index + 1]
+            when :any_non_dir, :many_non_dir then parts.delete_at(index)
+            when :one_non_dir then parts[index, 2] = [:many_non_dir]
+            when :any_dir then parts[index, 2] = [:any]
+            else index += 1
             end
           end
+        end
 
-          MID_COMPRESSION_RULES.each do |rule, replacement|
-            parts.each_cons(rule.length).with_index do |parts_cons, index|
-              if rule == parts_cons
-                parts[index, rule.length] = replacement
-                changed = true
-              end
+        def compress_many_non_dir!(parts)
+          index = 0
+
+          while (index = index_offset(parts, :many_non_dir, index))
+            case parts[index + 1]
+            when :any_non_dir then parts.delete_at(index)
+            else index += 1
             end
-            parts.compact!
           end
+        end
 
-          compress!(parts) if changed
+        def compress_one_non_dir!(parts)
+          index = 0
+
+          while (index = index_offset(parts, :one_non_dir, index))
+            case parts[index + 1]
+            when :any_non_dir then parts[index, 2] = [:many_non_dir]
+            else index += 1
+            end
+          end
+        end
+
+        def compress_any_dir!(parts)
+          index = 0
+
+          while (index = index_offset(parts, :any_dir, index))
+            case parts[index + 1]
+            when :any_non_dir then parts[index, 2] = [:any]
+            else index += 1
+            end
+          end
+        end
+
+        # would like a squeeze method
+        def compress_dir!(parts)
+          index = 0
+
+          while (index = index_offset(parts, :dir, index))
+            case parts[index + 1]
+            when :dir then parts.delete_at(index)
+            else index += 1
+            end
+          end
+        end
+
+        def compress_mid!(parts)
+          compress_any_non_dir!(parts)
+          compress_many_non_dir!(parts)
+          compress_one_non_dir!(parts)
+          compress_any_dir!(parts)
+          parts.delete('')
+          compress_dir!(parts)
+        end
+
+        def compress!(parts)
+          original_length = parts.length
+          parts.compact!
+
+          compress_start!(parts)
+          compress_mid!(parts)
+          compress_end!(parts)
+
+          compress!(parts) if parts.length < original_length
 
           parts
         end

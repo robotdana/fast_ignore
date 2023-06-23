@@ -2,24 +2,15 @@
 # frozen_string_literal: true
 
 require 'ruby-prof'
-require 'ruby-prof-flamegraph'
 
 profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 # RubyProf.measure_mode = RubyProf::ALLOCATIONS
 # RubyProf.measure_mode = RubyProf::MEMORY
-sub_gitignore_files = []
-Dir.chdir ARGV[0] do
-  sub_gitignore_files = `git ls-files '**/.gitignore'`.split("\n")
-end
 
 profile.profile do
   require_relative '../../lib/path_list'
-  path_list = PathList.gitignore(root: ARGV[0])
-  sub_gitignore_files.each do |sub_gitignore|
-    path_list.include?(ARGV[0] + '/' + sub_gitignore)
-  end
-  puts path_list.each(ARGV[0]).to_a
+  PathList.gitignore.only(ARGV).to_a
 end
-printer = RubyProf::FlameGraphPrinter.new(profile)
-printer.print(STDOUT, {})
 
+printer = RubyProf::GraphPrinter.new(profile)
+printer.print($stdout, {})

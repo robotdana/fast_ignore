@@ -2,10 +2,9 @@
 # frozen_string_literal: true
 
 require_relative '../lib/path_list'
-sub_gitignore_files = `git ls-files '**/.gitignore'`.split("\n")
 
 path_list = PathList.gitignore
-sub_gitignore_files.each do |sub_gitignore|
+PathList.gitignore.only('.gitignore').each do |sub_gitignore|
   path_list.include?(sub_gitignore)
 end
 

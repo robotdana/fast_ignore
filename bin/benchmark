@@ -85,3 +85,28 @@ benchmark('enumerate-array-proc') do
     x.compare!
   end
 end
+
+benchmark('array-index-offset') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @array = (0..1000).to_a
+
+    x.report(:small_index_zero_offset_no_drop) { @array.index(3) }
+    x.report(:small_index_zero_offset_drop) { @array.drop(0).index(3) }
+    x.report(:small_index_zero_offset_with_index) { @array.index.with_index { |item, index| index > 0 && item == 3 } }
+
+    x.report(:large_index_zero_offset_no_drop) { @array.index(900) }
+    x.report(:large_index_zero_offset_drop) { @array.drop(0).index(900) }
+    x.report(:large_index_zero_offset_with_index) { @array.index.with_index { |item, index| index > 0 && item == 900 } }
+
+    x.report(:small_index_small_offset_drop) { @array.drop(2).index(3) + 2 }
+    x.report(:small_index_small_offset_with_index) { @array.index.with_index { |item, index| index > 2 && item == 3 } }
+
+    x.report(:large_index_small_offset_drop) { @array.drop(2).index(990) + 2 }
+    x.report(:large_index_small_offset_with_index) { @array.index.with_index { |item, index| index > 2 && item == 990 } }
+
+    x.report(:large_index_large_offset_drop) { @array.drop(900).index(990) + 900 }
+    x.report(:large_index_large_offset_with_index) { @array.index.with_index { |item, index| index > 900 && item == 990 } }
+    x.compare!
+  end
+end

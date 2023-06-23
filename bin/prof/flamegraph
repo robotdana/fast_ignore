@@ -22,10 +22,10 @@ profile.profile do
   path_list.each(ARGV[0]).to_a
 end
 printer = RubyProf::FlameGraphPrinter.new(profile)
-printer.print(::File.open('flamegraph.txt', 'w'), {})
+printer.print(File.open('flamegraph.txt', 'w'), {})
 
 # set color palette. choices are: hot (default), mem,
 # io, wakeup, chain, java, js, perl, red, green, blue,
 # aqua, yellow, purple, orange
 
-`flamegraph.pl --cp --colors hot flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`
+`flamegraph.pl --colors hot flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`

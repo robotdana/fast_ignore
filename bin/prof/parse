@@ -7,7 +7,8 @@ profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 # RubyProf.measure_mode = RubyProf::ALLOCATIONS
 # RubyProf.measure_mode = RubyProf::MEMORY
 
-sub_gitignore_files = `../ls '*/**/.gitignore'`.split("\n")
+sub_gitignore_files = `#{__dir__}/../ls '**/.gitignore'`.split("\n")
+
 profile.profile do
   require_relative '../../lib/path_list'
   path_list = PathList.gitignore
