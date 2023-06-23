@@ -111,6 +111,10 @@ end
 
 RSpec::Matchers.define(:be_like) do |expected|
   match do |actual|
-    expect(actual.inspect).to match(expected.inspect)
+    expect(actual.inspect).to eq(expected.inspect)
+
+    true
   end
+
+  diffable
 end

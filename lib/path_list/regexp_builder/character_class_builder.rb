@@ -13,7 +13,8 @@ class PathList
           when :character_class_dash then '-'
           when :character_class_close then ']'
           when nil, String then part
-          else raise "Unknown token #{token}"
+          when Hash then to_s(part)
+          else raise "Unknown token #{part.inspect}"
           end
         end
       end

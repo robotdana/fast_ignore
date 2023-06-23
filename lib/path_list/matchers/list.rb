@@ -61,6 +61,18 @@ class PathList
         "#{self.class}.new([\n#{@matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
 
+      def dir_matcher
+        new_matchers = matchers.map(&:dir_matcher)
+        return self unless new_matchers != matchers
+        self.class.build(new_matchers)
+      end
+
+      def file_matcher
+        new_matchers = matchers.map(&:file_matcher)
+        return self unless new_matchers != matchers
+        self.class.build(new_matchers)
+      end
+
       private
 
       def calculate_weight

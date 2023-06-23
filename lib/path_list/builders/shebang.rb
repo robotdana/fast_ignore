@@ -14,9 +14,11 @@ class PathList
           "#{boundary_left}#{::Regexp.escape(shebang)}#{boundary_right}"
         ])
 
+        path_matcher_tail = { :dir => { :any_dir => { '[^\.\/]*' => { end_anchor: nil }}} }
+        path_matcher = RegexpBuilder.new_from_path(PathExpander.expand_path_pwd(root), path_matcher_tail)
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
-            RegexpBuilder.new_from_path(PathExpander.expand_path_pwd(root), [:dir, :any_dir, '[^\.\/]*', :end_anchor]),
+            path_matcher,
             Matchers::ShebangRegexp.build(pattern, allow)
           )
         )

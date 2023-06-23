@@ -21,9 +21,13 @@ class PathList
     end
 
     def parent
-      return if @full_path == '/'
+      return @parent if defined?(@parent)
 
-      self.class.new(::File.dirname(@full_path), true, true, nil)
+      @parent = begin
+        return if @full_path == '/'
+
+        self.class.new(::File.dirname(@full_path), true, true, nil)
+      end
     end
 
     def directory?

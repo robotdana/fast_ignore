@@ -18,4 +18,4 @@ profile.profile do
 end
 
 printer = RubyProf::GraphPrinter.new(profile)
-printer.print($stdout, min_percent: 2, sort_method: :self_time)
+printer.print($stdout, min_percent: 1, sort_method: :self_time)

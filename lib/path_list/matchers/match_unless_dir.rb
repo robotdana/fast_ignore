@@ -13,6 +13,14 @@ class PathList
         @matcher.match(candidate) unless candidate.directory?
       end
 
+      def dir_matcher
+        Blank
+      end
+
+      def file_matcher
+        @matcher
+      end
+
       private
 
       def calculate_weight

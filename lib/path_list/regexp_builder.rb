@@ -8,57 +8,57 @@ class PathList
       new(Merge.merge(builders.map(&:parts)))
     end
 
-    def self.new_from_path(path, tail = [:end_anchor])
-      new(
-        [:start_anchor] + path
-          .delete_prefix('/')
-          .split('/')
-          .flat_map { |part| [:dir, Regexp.escape(part)] } + tail
-      ).compress
+    def self.new_from_path(path, tail = { end_anchor: nil })
+      rb = new
+      rb.append_part(:start_anchor)
+      path.delete_prefix('/').split('/').each do |part|
+        rb.append_part(:dir)
+        rb.append_part(Regexp.escape(part))
+      end
+      rb.append_tail_n(tail)
+      rb
     end
 
     attr_reader :parts
 
-    def initialize(parts = [])
+    def initialize(parts = {})
       @parts = parts
       @unanchorable = false
-      @character_class = nil
+      @character_class
     end
 
-    def start=(value)
-      @parts[0] = value
-    end
+    # NO!
+    # def [](index)
+    #   @parts[index]
+    # end
 
-    def [](index)
-      @parts[index]
-    end
-
-    def []=(index, value)
-      @parts[index] = value
-    end
+    # def []=(index, value)
+    #   @parts[index] = value
+    # end
 
     def empty?
       @parts.empty?
     end
 
     def start_with?(value)
-      @parts[0] == value
+      @parts.key?(value)
     end
 
     def end=(value)
-      @parts[-1] = value
+      @tail.replace(value => nil)
     end
 
     def dup
       out = super
 
       @parts = @parts.dup
+      @tail = @tail.dup if @tail
 
       out
     end
 
     def end_with?(part)
-      @parts[-1] == part
+      @tail.key?(part)
     end
 
     def to_s(builder = Builder)
@@ -75,7 +75,11 @@ class PathList
       self
     end
 
+
+    # NO
     def ancestors # rubocop:disable Metrics/AbcSize
+      raise 'no'
+
       prev_rule = []
       rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
 
@@ -92,8 +96,40 @@ class PathList
       self.class.union(rules.each(&:compress))
     end
 
-    def append_part(value)
-      @parts << value
+    def append_tail_n(new_tail)
+      append_tail_1(new_tail)
+      # we need to find the tail of the tail
+      value = tail = new_tail
+      tail = value while (key, value = tail.first) && !value.nil?
+
+      @tail = tail
+      @tail_part = key
+    end
+
+    def append_tail_1(new_tail)
+      if @tail_part
+        @tail[@tail_part] = new_tail
+      elsif @parts.empty?
+        @parts = new_tail
+      else
+
+        # find tail, ugh.
+        value = tail = @parts
+        tail = value while (key, value = tail.first) && !value.nil?
+        tail[key] = new_tail
+      end
+    end
+
+    def forget_tail
+      @tail = nil
+      @tail_part = nil
+    end
+
+    def append_part(part)
+      new_tail = { part => nil }
+      append_tail_1(new_tail)
+      @tail = new_tail
+      @tail_part = part
     end
 
     def append_string(value)
@@ -105,10 +141,11 @@ class PathList
     def append_unescaped(value)
       return unless value
 
-      if @parts[-1].is_a?(String)
-        @parts[-1] << value
+      if @tail_part.is_a?(String)
+        @tail_part = "#{@tail_part}#{value}"
+        @tail.replace(@tail_part => nil)
       else
-        @parts << value
+        append_part(value)
       end
     end
   end

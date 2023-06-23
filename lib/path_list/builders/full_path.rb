@@ -29,7 +29,7 @@ class PathList
         end
 
         def build_child_matcher(path)
-          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(path, [:dir]), true)
+          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(path, dir: nil), true)
         end
       end
     end

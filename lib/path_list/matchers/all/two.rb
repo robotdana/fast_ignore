@@ -4,8 +4,8 @@ class PathList
   module Matchers
     class All
       class Two < All
-        def self.build(matcher_a, matcher_b)
-          All.build([matcher_a, matcher_b])
+        def self.build(matchers)
+          All.build(matchers)
         end
 
         attr_reader :polarity

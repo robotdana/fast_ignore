@@ -125,15 +125,23 @@ RSpec.describe PathList do
     end
 
     it 'creates a sensible list of matchers' do
-      gitignore 'foo', 'bar'
+      gitignore 'foo', 'bar/'
 
-      expect(subject.instance_variable_get(:@matcher)).to be_like PathList::Matchers::LastMatch.new([
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
         PathList::Matchers::CollectGitignore.new(
-          %r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i,
+          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i, true),
           PathList::Matchers::Mutable.new(
-            PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false)
+            PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?(?:foo\z|bar\z)/i, false)
           )
+        ),
+        PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
+      ])
+
+      expect(subject.send(:file_matcher)).to be_like PathList::Matchers::LastMatch.new([
+        PathList::Matchers::Allow,
+        PathList::Matchers::Mutable.new(
+          PathList::Matchers::PathRegexp.new(/\A#{Regexp.escape(Dir.pwd)}\/(?:.*\/)?foo\z/i, false)
         ),
         PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
       ])

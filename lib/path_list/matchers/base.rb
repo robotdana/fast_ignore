@@ -33,6 +33,14 @@ class PathList
       def match(_)
         nil
       end
+
+      def dir_matcher
+        self
+      end
+
+      def file_matcher
+        self
+      end
     end
   end
 end

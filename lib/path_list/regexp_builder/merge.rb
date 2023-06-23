@@ -4,44 +4,49 @@ class PathList
   class RegexpBuilder
     module Merge
       class << self
-        def merge(parts_lists) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-          return parts_lists if parts_lists.empty?
+        def merge(hashes)
+          first_hash, *other_hashes = hashes
+          return first_hash if other_hashes.empty?
 
-          parts_lists = flatten_forks(parts_lists)
+          first_hash.merge(*other_hashes) do |_, a, b|
+            if a.is_a?(Hash) && b.is_a?(Hash)
+              merge_2(a, b)
+            elsif !a.nil? || !b.nil?
+              a = { nil => nil } if a.nil?
+              b = { nil => nil } if b.nil?
 
-          grouped_by_first = parts_lists.group_by(&:first)
-
-          if grouped_by_first.length == 1
-            if grouped_by_first.first.first.nil?
-              []
-            else
-              Array(grouped_by_first.first.first) + merge(parts_lists.map { |p| p.drop(1) })
+              merge_2(a, b)
             end
-          else
-            [
-              grouped_by_first.map do |first_item, sub_parts_lists|
-                if first_item.nil?
-                  []
-                else
-                  Array(first_item) + merge(sub_parts_lists.map { |p| p.drop(1) })
-                end
-              end
-            ]
           end
         end
 
-        def flatten_forks(parts_lists)
-          result = []
-          parts_lists.each do |parts_list|
-            next result << parts_list unless parts_list.first.is_a?(Array)
+        def merge_2(hash, other_hash)
+          hash.merge(other_hash) do |_, a, b|
+            if a.is_a?(Hash) && b.is_a?(Hash)
+              merge_2(a, b)
+            elsif !a.nil? || !b.nil?
+              a = { nil => nil } if a.nil?
+              b = { nil => nil } if b.nil?
 
-            depth = -1
-            depth_check_list = parts_list
-            depth += 1 while (depth_check_list = depth_check_list.first) && depth_check_list.is_a?(Array)
-            parts_list = parts_list.flatten(depth)
-            result.concat(parts_list)
+              merge_2(a, b)
+            end
           end
-          result
+        end
+
+        def merge_2!(hash, other_hash)
+          hash.merge!(other_hash) do |_, a, b|
+            if a.is_a?(Hash) && b.is_a?(Hash)
+              merge_2(a, b)
+            elsif !a.nil? || !b.nil?
+              a = { nil => nil } if a.nil?
+              b = { nil => nil } if b.nil?
+
+              merge_2(a, b)
+            end
+          end
+        rescue
+          require 'pry'
+          binding.pry
         end
       end
     end

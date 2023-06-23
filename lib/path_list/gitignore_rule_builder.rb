@@ -15,18 +15,14 @@ class PathList
     end
 
     def prepare_regexp_builder # rubocop:disable Metrics/MethodLength
-      initial_pattern = if @root == '/'
-        [:start_anchor, :dir, :any_dir]
-      elsif @root
-        [:start_anchor, :dir] +
-          @root.delete_prefix('/').split('/').flat_map { |segment| [Regexp.escape(segment), :dir] } +
-          [:any_dir]
-      else
-        [:dir_or_start_anchor]
-      end
+      @tail = @start_tail = { dir: { any_dir: nil } }
+      @tail_part = :any_dir
 
-      @re = RegexpBuilder.new(initial_pattern)
-      @start_index = initial_pattern.length - 1
+      @re = if @root && @root != '/'
+        RegexpBuilder.new_from_path(@root, @start_tail)
+      else
+        RegexpBuilder.new(:start_anchor => @start_tail)
+      end
     end
 
     def break!
@@ -57,23 +53,21 @@ class PathList
       @dir_only
     end
 
-    def start_anchor
-      @root ? nil : :start_anchor
-    end
-
-    def dir_or_start_anchor
-      @root ? :any_dir : :dir_or_start_anchor
-    end
-
     def anchored!
-      @re[@start_index] = start_anchor unless @unanchorable
+      @anchored ||= begin
+        @start_tail[:dir] = @start_tail.dig(:dir, :any_dir)
+        @re.forget_tail
+        true
+      end
     end
 
     def anchored?
-      @re[@start_index] == start_anchor
+      @anchored
     end
 
+    # NO
     def never_anchored!
+      raise
       @re[@start_index] = dir_or_start_anchor
       @unanchorable = true
     end
@@ -124,31 +118,12 @@ class PathList
       end
     end
 
-    def process_star_end_after_slash # rubocop:disable Metrics/MethodLength
-      if @s.star_end?
-        append_part :many_non_dir
-        emit_end
-      elsif @s.two_star_end?
-        break!
-      elsif @s.star_slash_end?
-        append_part :many_non_dir
-        dir_only!
-        emit_end
-      elsif @s.two_star_slash_end?
-        dir_only!
-        break!
-      else
-        true
-      end
-    end
-
     def process_slash
       return unless @s.slash?
       return dir_only! if @s.end?
       return unmatchable_rule! if @s.slash?
 
       emit_dir
-      process_star_end_after_slash
     end
 
     def process_two_stars # rubocop:disable Metrics/MethodLength
@@ -156,28 +131,23 @@ class PathList
       return break! if @s.end?
 
       if @s.slash?
-        if @s.end?
-          append_part :any_non_dir
-          dir_only!
-        elsif @s.slash?
+        if @s.slash?
           unmatchable_rule!
         else
-          if nothing_emitted?
-            never_anchored!
-          else
-            emit_any_dir
-          end
-          process_star_end_after_slash
+          emit_any_dir
+          dir_only! if @s.end?
         end
       else
         append_part :any_non_dir
       end
+
+      true
     end
 
     def process_character_class # rubocop:disable Metrics/MethodLength
       return unless @s.character_class_start?
 
-      @character_class = RegexpBuilder.new([:character_class_non_slash_open])
+      @character_class = RegexpBuilder.new({:character_class_non_slash_open => nil})
       @character_class.append_part :character_class_negation if @s.character_class_negation?
       unmatchable_rule! if @s.character_class_end?
 

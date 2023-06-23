@@ -13,7 +13,10 @@ class PathList
         end
 
         def to_s(parts)
-          parts.map { |part| build_part(part) }.join
+          return '' if parts.empty?
+
+          options = parts.map { |key, value| "#{build_part(key)}#{build_part(value)}" }
+          options.length == 1 ? options.first : "(?:#{options.join("|")})"
         end
 
         private
@@ -30,16 +33,7 @@ class PathList
           when :start_anchor then '\\A'
           when :dir_or_start_anchor then '(?:\\A|/)'
           when nil, String then part
-          when Array
-            if part.length == 1
-              if part.first.is_a?(Array)
-                to_s(part.first)
-              else
-                build_part(part.first)
-              end
-            else
-              "(?:#{part.map { |sub_parts| to_s(sub_parts) }.join('|')})"
-            end
+          when Hash then to_s(part)
           else raise "Unknown token #{part.inspect}"
           end
         end

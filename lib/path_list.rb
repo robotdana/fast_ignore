@@ -24,4 +24,12 @@ class PathList
   protected
 
   attr_accessor :matcher
+
+  def dir_matcher
+    @dir_matcher ||= matcher.dir_matcher
+  end
+
+  def file_matcher
+    @file_matcher ||= matcher.file_matcher
+  end
 end
