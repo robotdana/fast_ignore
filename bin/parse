@@ -4,8 +4,6 @@
 require_relative '../lib/path_list'
 
 path_list = PathList.gitignore
-PathList.gitignore.only('.gitignore').each do |sub_gitignore|
-  path_list.include?(sub_gitignore)
-end
+path_list.to_a
 
 puts path_list.inspect

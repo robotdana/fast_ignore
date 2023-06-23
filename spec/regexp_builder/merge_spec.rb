@@ -75,5 +75,40 @@ RSpec.describe PathList::RegexpBuilder::Merge do
       ]))
         .to eq [[['a', :dir, 'b', [['c'], ['d']]], ['b', :dir, 'd']]]
     end
+
+    it 'treats this regression case correctly' do
+      expect(described_class.merge([
+        ['b', :end_anchor],
+        ['bb', :end_anchor],
+        [:any_dir, 'a', :end_anchor],
+        [:any_dir, 'd', :end_anchor],
+        [
+          [
+            ['b', :dir],
+            ['bb', :dir],
+            [
+              :any_dir,
+              [
+                ['a', :dir],
+                ['d', :dir],
+                ['e', :dir]
+              ]
+            ]
+          ]
+        ]
+      ])).to eq [
+        [
+          ['b', [[:end_anchor], [:dir]]],
+          ['bb', [[:end_anchor], [:dir]]],
+          [
+            :any_dir, [
+              ['a', [[:end_anchor], [:dir]]],
+              ['d', [[:end_anchor], [:dir]]],
+              ['e', :dir]
+            ]
+          ]
+        ]
+      ]
+    end
   end
 end

@@ -2,8 +2,6 @@
 
 class PathList
   module BuildMethods
-    # frozen_string_literal: true
-
     module ClassMethods
       def gitignore(root: nil)
         new.gitignore!(root: root)
