@@ -26,15 +26,12 @@ class PathList
       def self.build_implicit(_shebang, allow, root) # rubocop:disable Metrics/MethodLength
         if allow
           if root
-            Matchers::Any.build([
-              FullPath.build_implicit(root, allow, nil),
-              Matchers::MatchIfDir.build(Matchers::PathRegexp.build(
-                RegexpBuilder.new([
-                  :start_anchor, Regexp.escape(PathExpander.expand_path_pwd(root)),
-                  :dir
-                ]), allow
-              ))
-            ])
+            Matchers::MatchIfDir.build(
+              Matchers::Any.build([
+                Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, [:dir, :any_non_dir]).ancestors, allow),
+                Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, [:dir]), allow)
+              ])
+            )
           else
             Matchers::AllowAnyDir
           end
