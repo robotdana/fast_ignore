@@ -4,7 +4,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   subject { described_class.build(builder, allow_value) }
 
   let(:allow_value) { true }
-  let(:builder) { PathList::RegexpBuilder.new(['abc']) }
+  let(:builder) { PathList::RegexpBuilder.new({ 'abc' => nil }) }
 
   it { is_expected.to be_frozen }
 
@@ -21,13 +21,13 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
-      other = described_class.build(PathList::RegexpBuilder.new(['b']), allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), allow_value)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different allow value' do
-      other = described_class.build(PathList::RegexpBuilder.new(['b']), !allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), !allow_value)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -36,7 +36,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build(PathList::RegexpBuilder.new(['b']), allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), allow_value)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other])
@@ -45,7 +45,8 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new([[['abc'], ['b']]]), allow_value))
+      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'abc' => nil, 'b' => nil }),
+                                                        allow_value))
       expect(squashed).to be_like(described_class.new(/(?:abc|b)/i, allow_value))
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PathList
-  class RegexpBuilder
+  class RegexpBuilder # rubocop:disable Metrics/ClassLength
     include Autoloader
 
     def self.union(builders)
@@ -24,17 +24,7 @@ class PathList
     def initialize(parts = {})
       @parts = parts
       @unanchorable = false
-      @character_class
     end
-
-    # NO!
-    # def [](index)
-    #   @parts[index]
-    # end
-
-    # def []=(index, value)
-    #   @parts[index] = value
-    # end
 
     def empty?
       @parts.empty?
@@ -69,41 +59,71 @@ class PathList
       builder.to_regexp(@parts)
     end
 
+    def compressed?
+      @compressed
+    end
+
     def compress
-      @parts = Compress.compress(@parts)
+      @compressed ||= begin
+        @parts = Compress.compress(@parts)
+
+        true
+      end
 
       self
     end
 
+    def ancestors # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      new_builder = self.class.new
 
-    # NO
-    def ancestors # rubocop:disable Metrics/AbcSize
-      raise 'no'
+      last_dir_tail = prev_prev_tail_part = prev_tail_part = nil
+      tail_part = next_tail = nil # rubocop:disable Lint/UselessAssignment
+      tail = @parts
 
-      prev_rule = []
-      rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
+      while (tail_part, next_tail = tail.first) && !next_tail.nil?
+        tail = next_tail
+        if tail_part == :any_dir
+          last_dir_tail = nil
+          break
+        end
 
-      parts = @parts
-
-      any_dir_index = parts.index(:any) || parts.index(:any_dir)
-      parts = parts[0, any_dir_index] + [:any, :dir] if any_dir_index
-
-      parts.slice_before(:dir).to_a[0...-1].each do |chunk|
-        prev_rule.concat(chunk)
-        (rules << self.class.new(prev_rule + [:end_anchor])) unless prev_rule == [:start_anchor]
+        new_builder.append_part(tail_part)
+        if tail_part == :dir && prev_tail_part != :start_anchor
+          new_builder.append_forked_part(:end_anchor)
+          last_dir_tail = new_builder.tail if tail_part == :dir
+        end
+        new_builder.append_forked_part(:end_anchor) if prev_prev_tail_part == :start_anchor
+        prev_prev_tail_part = prev_tail_part
+        prev_tail_part = tail_part
       end
+      last_dir_tail&.replace(end_anchor: nil)
 
-      self.class.union(rules.each(&:compress))
+      new_builder
+    end
+
+    def replace_tail(part)
+      @tail || find_tail
+      @tail.replace(part => nil)
+    end
+
+    def append_forked_part(part)
+      @tail || find_tail
+      @tail.merge!(part => nil)
+    end
+
+    def find_tail(parts = @parts)
+      tail = parts
+      value = parts # rubocop:disable Lint/UselessAssignment
+      tail = value while (key, value = tail.first) && !value.nil?
+
+      @tail = tail
+      @tail_part = key
     end
 
     def append_tail_n(new_tail)
       append_tail_1(new_tail)
       # we need to find the tail of the tail
-      value = tail = new_tail
-      tail = value while (key, value = tail.first) && !value.nil?
-
-      @tail = tail
-      @tail_part = key
+      find_tail(new_tail)
     end
 
     def append_tail_1(new_tail)
@@ -113,8 +133,8 @@ class PathList
         @parts = new_tail
       else
 
-        # find tail, ugh.
-        value = tail = @parts
+        tail = @parts
+        value = @parts # rubocop:disable Lint/UselessAssignment
         tail = value while (key, value = tail.first) && !value.nil?
         tail[key] = new_tail
       end
@@ -148,5 +168,9 @@ class PathList
         append_part(value)
       end
     end
+
+    protected
+
+    attr_reader :tail
   end
 end

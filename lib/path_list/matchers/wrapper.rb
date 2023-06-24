@@ -34,6 +34,11 @@ class PathList
         new_with_matcher(new_matcher_class.build(new_matchers))
       end
 
+      def compress_self
+        new_matcher = @matcher.compress_self
+        new_matcher == @matcher ? self : new_with_matcher(new_matcher)
+      end
+
       def inspect
         "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
@@ -45,12 +50,14 @@ class PathList
       def dir_matcher
         new_matcher = @matcher.dir_matcher
         return self unless new_matcher != @matcher
+
         new_with_matcher(new_matcher)
       end
 
       def file_matcher
         new_matcher = @matcher.file_matcher
         return self unless new_matcher != @matcher
+
         new_with_matcher(new_matcher)
       end
 

@@ -102,7 +102,7 @@ class PathList
       branch_pattern += '**' if branch_pattern.end_with?('/')
       current_branch = ::File.readable?("#{root}/.git/HEAD") &&
         ::File.read("#{root}/.git/HEAD").delete_prefix('ref: refs/heads/')
-      return unless current_branch
+      return false unless current_branch
 
       # goddamit git what does 'a pattern with standard globbing wildcards' mean
       ::File.fnmatch(branch_pattern, current_branch, ::File::FNM_PATHNAME | ::File::FNM_DOTMATCH)

@@ -2,8 +2,8 @@
 
 class PathList
   class RegexpBuilder
-    module Compress # rubocop:disable Metrics/ModuleLength
-      class << self
+    module Compress
+      class << self # rubocop:disable Metrics/ClassLength
         # TODO: have safety around removing dup here
         def compress(parts)
           compress!(parts.dup)
@@ -22,72 +22,103 @@ class PathList
           end
         end
 
-        def compress_replace_tail!(*a, b, parts, new_tail)
-          return unless parts.dig(*a)&.key?(b)
+        def compress_replace_tail!(*path, tail, parts, new_tail)
+          return unless parts.dig(*path)&.key?(tail)
 
-          prune!(*a, b, parts)
+          prune!(*path, tail, parts)
           Merge.merge_2!([parts, new_tail])
         end
 
-        def compress_tail!(a, parts)
-          return unless parts.key?(a)
+        def compress_tail!(part, parts)
+          return unless parts.key?(part)
 
-          if parts[a].nil?
-            parts.delete(a)
+          if parts[part].nil?
+            parts.delete(part)
             true
-          elsif parts[a].key?(nil)
-            prune!(a, nil, parts)
+          elsif parts[part].key?(nil)
+            prune!(part, nil, parts)
             true
           end
         end
 
-        def reject!(val, parts)
-          return unless parts[val]
+        def compress_2_tail!(head, tail, parts)
+          return unless parts[head]&.key?(tail) && (parts.dig(head,
+                                                              tail).nil? || parts.dig(head, tail) == { nil => nil })
 
-          Merge.merge_2!(parts, parts.delete(val) || { nil => nil })
+          prune!(head, tail, parts)
+          true
         end
 
-        def compress_2_keep_first!(a, b, parts)
-          return unless parts[a]&.key?(b)
+        def reject!(part, parts)
+          return unless parts[part]
 
-          Merge.merge_2!(parts[a], parts[a].delete(b) || { nil => nil })
+          Merge.merge_2!(parts, parts.delete(part) || { nil => nil })
         end
 
-        def compress_run!(a, parts)
-          compress_2_keep_first!(a, a, parts)
+        def compress_2_keep_first!(head, tail, parts)
+          return unless parts[head]&.key?(tail)
+
+          Merge.merge_2!(parts[head], parts[head].delete(tail) || { nil => nil })
         end
 
-        def compress_2_keep_last!(a, b, parts)
-          compress_replace_1!(a, b, parts, b)
+        def compress_run!(part, parts)
+          compress_2_keep_first!(part, part, parts)
         end
 
-        def compress_replace_1!(*a, b, parts, replace)
-          return unless parts.dig(*a)&.key?(b)
-
-          tail = { replace => parts.dig(*a, b) }
-          prune!(*a, b, parts)
-          Merge.merge_2!(parts, tail)
+        def compress_keep_last!(*path, tail, parts)
+          compress_replace_1!(*path, tail, parts, tail)
         end
 
-        def compress_replace_0!(*a, b, parts)
-          return unless parts.dig(*a)&.key?(b)
-          tail = parts.dig(*a, b)
-          prune!(*a, b, parts)
-          return true if !tail && parts.empty?
+        def compress_replace_1!(*path, tail, parts, replace)
+          return unless parts.dig(*path)&.key?(tail)
+
+          new_tail = { replace => parts.dig(*path, tail) }
+          prune!(*path, tail, parts)
+          Merge.merge_2!(parts, new_tail)
+        end
+
+        def compress_1_replace_0!(part, parts)
+          return unless parts.key?(part)
+
+          tail = parts[part]
+          parts.delete(part)
+          return parts.replace(nil => nil) if !tail && parts.empty?
+
           Merge.merge_2!(parts, tail || { nil => nil })
         end
 
-        def compress_start!(parts)
+        def compress_replace_0!(*path, tail, parts)
+          return unless parts.dig(*path)&.key?(tail)
+
+          new_tail = parts.dig(*path, tail)
+          prune!(*path, tail, parts)
+          return parts.replace(nil => nil) if !new_tail && parts.empty?
+
+          Merge.merge_2!(parts, new_tail || { nil => nil })
+        end
+
+        def remove_second_option(head, tail, parts)
+          return unless parts.key?(head) && parts.key?(tail)
+
+          parts.delete(tail)
+          true
+        end
+
+        def compress_start!(parts) # rubocop:disable Metrics/MethodLength
           change = false
           compress_replace_0!(:start_anchor, :dir, :any_dir, :any_non_dir, parts) && change = true
           compress_replace_1!(:start_anchor, :dir, :any_dir, parts, :dir) && change = true
+          compress_replace_0!(:start_anchor, :dir, :any, parts) && change = true
+          compress_1_replace_0!(:any_non_dir, parts)
           compress_replace_tail!(:dir, :many_dir, :end_anchor, parts, { any_dir: :end_anchor }) && change = true
           compress_tail!(:start_anchor, parts) && change = true
           compress_tail!(:end_anchor, parts) && change = true
+          compress_tail!(:dir, parts) && change = true
+          compress_2_tail!(:start_anchor, :dir, parts) && change = true
           change
         end
 
-        def compress_mid_once!(parts)
+        def compress_mid_once!(parts) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
           change = false
           reject!('', parts) && change = true
           reject!(nil, parts) && change = true
@@ -95,15 +126,20 @@ class PathList
           compress_run!(:dir, parts) && change = true
           compress_run!(:any_dir, parts) && change = true
           compress_run!(:any_non_dir, parts) && change = true
-          compress_2_keep_last!(:any_non_dir, :many_non_dir, parts) && change = true
+          compress_keep_last!(:any_non_dir, :many_non_dir, parts) && change = true
+          compress_keep_last!(:any_dir, :any, parts) && change = true
+          compress_2_keep_first!(:any, :any_non_dir, parts) && change = true
           compress_replace_1!(:any_non_dir, :one_non_dir, parts, :many_non_dir) && change = true
           compress_replace_1!(:any_non_dir, :any_dir, parts, :any) && change = true
           compress_replace_1!(:one_non_dir, :any_non_dir, parts, :many_non_dir) && change = true
+          # compress_replace_0!(:any_dir, :any_non_dir, :end_anchor, parts) && change = true
           compress_replace_1!(:any_dir, :any_non_dir, parts, :any) && change = true
+
+          remove_second_option(:any_dir, :end_anchor, parts) && change = true
+          remove_second_option(:any, :end_anchor, parts) && change = true
 
           compress_replace_0!(:any_dir, :end_anchor, parts) && change = true
           compress_replace_0!(:any, :end_anchor, parts) && change = true
-          compress_replace_0!(:any_dir, :any_non_dir, :end_anchor, parts) && change = true
 
           change
         end
@@ -112,15 +148,15 @@ class PathList
           change = false
 
           compress_mid_once!(parts) && change = true
-          parts.each { |k, v| compress_mid!(v) && change = true if v }
+          parts.each { |_k, v| compress_mid!(v) && change = true if v }
           change
         end
 
         def compress!(parts)
           change = false
 
-          compress_start!(parts) && change = true
           compress_mid!(parts) && change = true
+          compress_start!(parts) && change = true
           compress!(parts) if change
 
           parts

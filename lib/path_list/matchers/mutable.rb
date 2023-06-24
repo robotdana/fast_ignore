@@ -22,6 +22,12 @@ class PathList
         false
       end
 
+      def compress_self
+        @matcher = @matcher.compress_self
+
+        self
+      end
+
       def weight
         @weight ||= @matcher.weight + 1
       end

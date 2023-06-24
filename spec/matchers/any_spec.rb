@@ -29,7 +29,7 @@ RSpec.describe PathList::Matchers::Any do
             it "returns #{result.inspect} when built from #{list}" do
               list = list.map do |(mock_result, polarity)|
                 instance_double(PathList::Matchers::Base, match: mock_result, polarity: polarity, weight: 0,
-squashable_with?: false)
+squashable_with?: false).tap { |x| allow(x).to receive(:squash).and_return(x) }
               end
               expect(described_class.build(list).match(instance_double(PathList::Candidate))).to eq result
             end

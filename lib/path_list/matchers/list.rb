@@ -11,7 +11,7 @@ class PathList
         case matchers.length
         when 0 then Blank
         when 1 then matchers.first
-        when 2 then self::Two.new(matchers[0], matchers[1])
+        when 2 then self::Two.new(matchers)
         else
           case calculate_polarity(matchers)
           when :allow then self::Allow.new(matchers)
@@ -57,6 +57,11 @@ class PathList
         false
       end
 
+      def compress_self
+        new_matchers = matchers.map(&:compress_self)
+        new_matchers == matchers ? self : self.class.new(new_matchers)
+      end
+
       def inspect
         "#{self.class}.new([\n#{@matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
@@ -64,12 +69,14 @@ class PathList
       def dir_matcher
         new_matchers = matchers.map(&:dir_matcher)
         return self unless new_matchers != matchers
+
         self.class.build(new_matchers)
       end
 
       def file_matcher
         new_matchers = matchers.map(&:file_matcher)
         return self unless new_matchers != matchers
+
         self.class.build(new_matchers)
       end
 

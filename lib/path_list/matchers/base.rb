@@ -22,6 +22,10 @@ class PathList
         equal?(other)
       end
 
+      def compress_self
+        self
+      end
+
       def squash(_)
         self
       end

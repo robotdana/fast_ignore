@@ -7,6 +7,12 @@ class PathList
         @polarity if @rule.match?(candidate.full_path)
       end
 
+      def compress_self
+        return self if @re_builder.compressed?
+
+        self.class.build(@re_builder.compress, @polarity == :allow)
+      end
+
       private
 
       def calculate_weight

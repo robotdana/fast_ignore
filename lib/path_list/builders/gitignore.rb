@@ -4,11 +4,7 @@ class PathList
   module Builders
     module Gitignore
       def self.build(rule, allow, root)
-        if allow
-          GitignoreRuleBuilder.new(rule, root: root, allow: true).build
-        else
-          GitignoreRuleBuilder.new(rule, root: root, allow: false).build
-        end
+        GitignoreRuleBuilder.new(rule, root: root, allow: allow).build
       end
 
       def self.build_implicit(rule, allow, root)

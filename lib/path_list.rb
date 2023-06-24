@@ -15,21 +15,22 @@ class PathList
     @matcher = Matchers::Allow
   end
 
-  def dup
-    d = super
-    d.matcher = matcher
-    d
-  end
-
   protected
 
-  attr_accessor :matcher
+  def matcher
+    @compressed ||= begin
+      @matcher = @matcher.compress_self
+
+      true
+    end
+    @matcher
+  end
 
   def dir_matcher
-    @dir_matcher ||= matcher.dir_matcher
+    @dir_matcher ||= (matcher.compress_self).dir_matcher
   end
 
   def file_matcher
-    @file_matcher ||= matcher.file_matcher
+    @file_matcher ||= (matcher.compress_self).file_matcher
   end
 end

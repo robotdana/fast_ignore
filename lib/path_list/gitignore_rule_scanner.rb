@@ -22,12 +22,32 @@ class PathList
       skip(%r{/})
     end
 
+    def slash_end?
+      skip(%r{/\s*\z})
+    end
+
     def backslash?
       skip(/\\/)
     end
 
-    def two_stars?
-      skip(/\*{2,}/)
+    def star_star_slash_end?
+      skip(%r{\*{2,}/\s*\z})
+    end
+
+    def star_star_slash_slash?
+      skip(%r{\*{2,}//})
+    end
+
+    def slash_slash?
+      skip(%r{/{2}})
+    end
+
+    def star_star_slash?
+      skip(%r{\*{2,}/})
+    end
+
+    def slash_star_star_end?
+      skip(%r{/\*{2,}\s*\z})
     end
 
     def star?

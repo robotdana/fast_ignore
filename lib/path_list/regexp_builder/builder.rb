@@ -16,12 +16,12 @@ class PathList
           return '' if parts.empty?
 
           options = parts.map { |key, value| "#{build_part(key)}#{build_part(value)}" }
-          options.length == 1 ? options.first : "(?:#{options.join("|")})"
+          options.length == 1 ? options.first : "(?:#{options.join('|')})"
         end
 
         private
 
-        def build_part(part) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+        def build_part(part) # rubocop:disable Metrics/MethodLength
           case part
           when :dir then '/'
           when :any_dir then '(?:.*/)?'
@@ -31,6 +31,7 @@ class PathList
           when :many_non_dir then '[^/]+'
           when :end_anchor then '\\z'
           when :start_anchor then '\\A'
+          when :word_boundary then '\\b'
           when :dir_or_start_anchor then '(?:\\A|/)'
           when nil, String then part
           when Hash then to_s(part)

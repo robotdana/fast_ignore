@@ -11,9 +11,9 @@ class PathList
         attr_reader :polarity
         attr_reader :weight
 
-        def initialize(matcher_a, matcher_b) # rubocop:disable Lint/MissingSuper
-          @matcher_a = matcher_a
-          @matcher_b = matcher_b
+        def initialize(matchers) # rubocop:disable Lint/MissingSuper
+          @matcher_a = matchers[0]
+          @matcher_b = matchers[1]
           @weight = calculate_weight
           @polarity = calculate_polarity
 

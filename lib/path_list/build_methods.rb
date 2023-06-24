@@ -60,7 +60,7 @@ class PathList
         Matchers::LastMatch.build([
           Matchers::Allow,
           collector,
-          Matchers::PathRegexp.build(RegexpBuilder.new([:dir, '\.git', :end_anchor]), false)
+          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '\.git' => {:end_anchor => nil } } }), false)
         ])
       )
     end
@@ -87,6 +87,7 @@ class PathList
       @matcher = Matchers::All.build([@matcher, new_matcher])
       @dir_matcher = nil
       @file_matcher = nil
+      @compressed = nil
 
       self
     end

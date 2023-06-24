@@ -56,13 +56,14 @@ RSpec.describe PathList::Candidate do
           allow(File).to receive(:exist?).and_call_original
 
           expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).with('./foo').once
           expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).once
+          expect(File).to have_received(:exist?).with('./foo').once
         end
 
         it 'is false when there is an error' do
-          allow(File).to receive(:exist?).and_raise(Errno::EACCES)
+          allow(File).to receive(:exist?).and_call_original
+          allow(File).to receive(:exist?).with(full_path).and_raise(Errno::EACCES)
 
           expect(candidate.exists?).to be false
           expect(File).to have_received(:exist?).once

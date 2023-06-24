@@ -4,49 +4,46 @@ class PathList
   class RegexpBuilder
     module Merge
       class << self
-        def merge(hashes)
+        def merge(hashes) # rubocop:disable Metrics/MethodLength
           first_hash, *other_hashes = hashes
           return first_hash if other_hashes.empty?
 
-          first_hash.merge(*other_hashes) do |_, a, b|
-            if a.is_a?(Hash) && b.is_a?(Hash)
-              merge_2(a, b)
-            elsif !a.nil? || !b.nil?
-              a = { nil => nil } if a.nil?
-              b = { nil => nil } if b.nil?
+          first_hash.merge(*other_hashes) do |_, left, right|
+            if left.is_a?(Hash) && right.is_a?(Hash)
+              merge_2(left, right)
+            elsif !left.nil? || !right.nil?
+              left = { nil => nil } if left.nil?
+              right = { nil => nil } if right.nil?
 
-              merge_2(a, b)
+              merge_2(left, right)
             end
           end
         end
 
         def merge_2(hash, other_hash)
-          hash.merge(other_hash) do |_, a, b|
-            if a.is_a?(Hash) && b.is_a?(Hash)
-              merge_2(a, b)
-            elsif !a.nil? || !b.nil?
-              a = { nil => nil } if a.nil?
-              b = { nil => nil } if b.nil?
+          hash.merge(other_hash) do |_, left, right|
+            if left.is_a?(Hash) && right.is_a?(Hash)
+              merge_2(left, right)
+            elsif !left.nil? || !right.nil?
+              left = { nil => nil } if left.nil?
+              right = { nil => nil } if right.nil?
 
-              merge_2(a, b)
+              merge_2(left, right)
             end
           end
         end
 
         def merge_2!(hash, other_hash)
-          hash.merge!(other_hash) do |_, a, b|
-            if a.is_a?(Hash) && b.is_a?(Hash)
-              merge_2(a, b)
-            elsif !a.nil? || !b.nil?
-              a = { nil => nil } if a.nil?
-              b = { nil => nil } if b.nil?
+          hash.merge!(other_hash) do |_, left, right|
+            if left.is_a?(Hash) && right.is_a?(Hash)
+              merge_2(left, right)
+            elsif !left.nil? || !right.nil?
+              left = { nil => nil } if left.nil?
+              right = { nil => nil } if right.nil?
 
-              merge_2(a, b)
+              merge_2(left, right)
             end
           end
-        rescue
-          require 'pry'
-          binding.pry
         end
       end
     end

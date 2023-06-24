@@ -255,3 +255,7 @@ Style/RedundantStringEscape:
 
 FactoryBot:
   Enabled: false
+
+
+Naming/VariableNumber:
+  EnforcedStyle: snake_case

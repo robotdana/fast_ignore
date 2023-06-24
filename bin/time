@@ -12,7 +12,7 @@ SCRIPT = ['bash', '-c', Shellwords.join(['time', "#{__dir__}/ls", *ARGV])].freez
 times = Array.new(RUNS).map do
   run_times = Open3.capture3(*SCRIPT)[1].tr("\n", ' ')
     .gsub(/(\b0m|(?<=\d)s)/, '')
-    .gsub("\t", "        ")
+    .gsub("\t", '        ')
   puts run_times.lstrip
   run_times.scan(/(?:\d+(?:.\d+)?)/)
 end

@@ -6,6 +6,7 @@ git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
 gem 'benchmark-ips'
 gem 'bundler', '>= 1.17'
+gem 'debug'
 gem 'leftovers', '>= 0.4.0'
 gem 'pry', '> 0'
 gem 'rake', '>= 12.3.3'

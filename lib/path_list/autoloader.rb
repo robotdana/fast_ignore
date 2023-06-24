@@ -21,7 +21,7 @@ class PathList
     end
 
     def self.dir_path_from_class(klass)
-      klass.name.gsub(/::/, '/')
+      klass.name.gsub('::', '/')
         .gsub(/(?<=[a-z])([A-Z])/, '_\1').downcase
     end
 

@@ -14,14 +14,14 @@ class PathList
       @emitted = false
     end
 
-    def prepare_regexp_builder # rubocop:disable Metrics/MethodLength
+    def prepare_regexp_builder
       @tail = @start_tail = { dir: { any_dir: nil } }
       @tail_part = :any_dir
 
       @re = if @root && @root != '/'
         RegexpBuilder.new_from_path(@root, @start_tail)
       else
-        RegexpBuilder.new(:start_anchor => @start_tail)
+        RegexpBuilder.new(start_anchor: @start_tail)
       end
     end
 
@@ -63,13 +63,6 @@ class PathList
 
     def anchored?
       @anchored
-    end
-
-    # NO
-    def never_anchored!
-      raise
-      @re[@start_index] = dir_or_start_anchor
-      @unanchorable = true
     end
 
     def nothing_emitted?
@@ -126,16 +119,19 @@ class PathList
       emit_dir
     end
 
+    def process_slash_and_stars; end
+
     def process_two_stars # rubocop:disable Metrics/MethodLength
       return unless @s.two_stars?
       return break! if @s.end?
 
       if @s.slash?
-        if @s.slash?
-          unmatchable_rule!
+        return unmatchable_rule! if @s.slash?
+
+        if @s.end?
+          dir_only!
         else
           emit_any_dir
-          dir_only! if @s.end?
         end
       else
         append_part :any_non_dir
@@ -147,7 +143,7 @@ class PathList
     def process_character_class # rubocop:disable Metrics/MethodLength
       return unless @s.character_class_start?
 
-      @character_class = RegexpBuilder.new({:character_class_non_slash_open => nil})
+      @character_class = RegexpBuilder.new({ character_class_non_slash_open: nil })
       @character_class.append_part :character_class_negation if @s.character_class_negation?
       unmatchable_rule! if @s.character_class_end?
 
@@ -194,10 +190,15 @@ class PathList
       catch :break do
         loop do
           next if process_backslash
-          next if process_slash
-          next if process_two_stars
-          next append_part :any_non_dir if @s.star?
-          next append_part :one_non_dir if @s.question_mark?
+          next unmatchable_rule! if @s.star_star_slash_slash?
+          next append_part(:any) && dir_only! if @s.star_star_slash_end?
+          next append_part(:any_dir) && anchored! if @s.star_star_slash?
+          next unmatchable_rule! if @s.slash_slash?
+          next append_part(:dir) && append_part(:any) && anchored! if @s.slash_star_star_end?
+          next append_part(:any_non_dir) if @s.star?
+          next dir_only! if @s.slash_end?
+          next append_part(:dir) && anchored! if @s.slash?
+          next append_part(:one_non_dir) if @s.question_mark?
           next if process_character_class
           next if append_string(@s.literal)
           next if append_string(@s.significant_whitespace)
@@ -208,8 +209,6 @@ class PathList
     end
 
     def build_matcher
-      @re.compress
-
       matcher = Matchers::PathRegexp.build(@re, negated?)
       matcher = Matchers::MatchIfDir.build(matcher) if dir_only?
       matcher
@@ -236,21 +235,9 @@ class PathList
       end
     end
 
-    def build_child_matcher # rubocop:disable Metrics/MethodLength
-      if @child_re.end_with?(:end_anchor)
-        @child_re.end = :dir
-      elsif @child_re.end_with?(:dir)
-        if dir_only?
-          @child_re.append_part :any_non_dir
-          @child_re.append_part :dir
-        end
-      else
-        @child_re.append_part :any_non_dir
-        @child_re.append_part :dir
-      end
-
-      @child_re.compress
-      Matchers::PathRegexp.build(@child_re, negated?)
+    def build_child_matcher
+      @child_re.replace_tail(:dir)
+      Matchers::PathRegexp.build(@child_re, true)
     end
 
     def build_implicit
@@ -259,7 +246,6 @@ class PathList
 
         blank! if @s.hash?
         blank! if @s.exclamation_mark?
-
         process_rule
         build_implicit_matcher
       end
@@ -267,7 +253,6 @@ class PathList
 
     def build_implicit_matcher
       @child_re ||= @re.dup
-      @re.compress
 
       Matchers::Any.build([
         build_parent_matcher,
