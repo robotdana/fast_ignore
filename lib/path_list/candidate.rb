@@ -30,6 +30,10 @@ class PathList
       end
     end
 
+    def children
+      @children ||= ::Dir.children(@full_path)
+    end
+
     def directory?
       return @directory unless @directory.nil?
 

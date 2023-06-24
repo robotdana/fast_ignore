@@ -52,15 +52,17 @@ class PathList
           Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, dir: nil, end_anchor: nil), true)
         )
       )
-      collector.append(GlobalGitignore.path(root: root), root: root)
-      collector.append('./.git/info/exclude', root: root)
-      collector.append('./.gitignore', root: root)
+
+      global_gitignore = GlobalGitignore.path(root: root)
+      collector.append(PathExpander.expand_path(global_gitignore, root), root: root) if global_gitignore
+      collector.append(PathExpander.expand_path('./.git/info/exclude', root), root: root)
+      collector.append(PathExpander.expand_path('./.gitignore', root), root: root)
 
       and_matcher(
         Matchers::LastMatch.build([
           Matchers::Allow,
           collector,
-          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '\.git' => {:end_anchor => nil } } }), false)
+          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '\.git' => { end_anchor: nil } } }), false)
         ])
       )
     end

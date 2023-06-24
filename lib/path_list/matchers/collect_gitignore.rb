@@ -40,7 +40,7 @@ class PathList
       # although that's also a method call to an ivar so its maybe not worth it
       # we'd save the condition?
       def match(candidate)
-        append('./.gitignore', root: candidate.full_path) if @collect_matcher.match(candidate) == :allow
+        collect(candidate) if @collect_matcher.match(candidate) == :allow
 
         @matcher.match(candidate)
       end
@@ -56,12 +56,12 @@ class PathList
         @dir_matcher.compress_self
         @file_matcher.compress_self
         new_collect_matcher = @collect_matcher.compress_self
-        if new_collect_matcher != @collect_matcher
+        if new_collect_matcher == @collect_matcher
+          self
+        else
           new_parent = dup
           new_parent.collect_matcher = @collect_matcher.dir_matcher
           new_parent.freeze
-        else
-          self
         end
       end
 
@@ -69,9 +69,13 @@ class PathList
 
       undef new_with_matcher
 
-      def append(from_file, root: nil)
-        from_file = PathExpander.expand_path(from_file, root)
+      def collect(candidate)
+        if candidate.children.include?('.gitignore')
+          append("#{candidate.full_path}/.gitignore", root: candidate.full_path)
+        end
+      end
 
+      def append(from_file, root: nil)
         return if @loaded.include?(from_file)
 
         @loaded << from_file
