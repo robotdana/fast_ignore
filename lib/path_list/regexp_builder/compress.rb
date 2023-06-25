@@ -22,13 +22,6 @@ class PathList
           end
         end
 
-        def compress_replace_tail!(*path, tail, parts, new_tail)
-          return unless parts.dig(*path)&.key?(tail)
-
-          prune!(*path, tail, parts)
-          Merge.merge_2!([parts, new_tail])
-        end
-
         def compress_tail!(part, parts)
           return unless parts.key?(part)
 

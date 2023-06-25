@@ -9,7 +9,6 @@ class PathList
       @root = root
 
       @negated = @allow
-      @unanchorable = false
       @dir_only = false
       @emitted = false
     end
@@ -86,16 +85,6 @@ class PathList
       emitted! if @re.append_unescaped re_string
     end
 
-    def emit_dir
-      anchored!
-      append_part :dir
-    end
-
-    def emit_any_dir
-      anchored!
-      append_part :any_dir
-    end
-
     def emit_end
       append_part :end_anchor
       break!
@@ -109,35 +98,6 @@ class PathList
       else
         unmatchable_rule!
       end
-    end
-
-    def process_slash
-      return unless @s.slash?
-      return dir_only! if @s.end?
-      return unmatchable_rule! if @s.slash?
-
-      emit_dir
-    end
-
-    def process_slash_and_stars; end
-
-    def process_two_stars # rubocop:disable Metrics/MethodLength
-      return unless @s.two_stars?
-      return break! if @s.end?
-
-      if @s.slash?
-        return unmatchable_rule! if @s.slash?
-
-        if @s.end?
-          dir_only!
-        else
-          emit_any_dir
-        end
-      else
-        append_part :any_non_dir
-      end
-
-      true
     end
 
     def process_character_class # rubocop:disable Metrics/MethodLength

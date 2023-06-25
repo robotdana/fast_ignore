@@ -16,8 +16,8 @@ keep:
   - ignore!
   - only
   - only!
-  - and
-  - and!
+  - all
+  - all!
   - any
   - any!
   - gitignore

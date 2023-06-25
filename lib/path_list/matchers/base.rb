@@ -11,7 +11,7 @@ class PathList
         :mixed
       end
 
-      alias_method :original_inspect, :inspect
+      alias_method :original_inspect, :inspect # leftovers:keep
       alias_method :name, :class
 
       def inspect

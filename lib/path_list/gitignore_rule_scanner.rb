@@ -14,10 +14,6 @@ class PathList
       skip(/\^|!/)
     end
 
-    def end?
-      skip(/\s*\z/)
-    end
-
     def slash?
       skip(%r{/})
     end
@@ -56,22 +52,6 @@ class PathList
 
     def next_character
       matched if scan(/./)
-    end
-
-    def star_end?
-      skip(/\*\s*\z/)
-    end
-
-    def two_star_end?
-      skip(/\*{2,}\s*\z/)
-    end
-
-    def star_slash_end?
-      skip(%r{\*/\s*\z})
-    end
-
-    def two_star_slash_end?
-      skip(%r{\*{2,}/\s*\z})
     end
 
     def question_mark?

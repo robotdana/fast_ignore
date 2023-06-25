@@ -42,7 +42,6 @@ class PathList
 
       protected
 
-      attr_reader :rule
       attr_reader :re_builder
 
       private

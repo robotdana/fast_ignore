@@ -9,14 +9,6 @@ if RUBY_PLATFORM != 'java'
 end
 
 $doing_include = false
-$allow_warning = false
-
-def ignore_warning
-  $allow_warning = true
-  yield
-ensure
-  $allow_warning = false
-end
 
 require 'fileutils'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))

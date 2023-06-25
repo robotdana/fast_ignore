@@ -15,6 +15,7 @@ cov
 cyclomatic
 cygwin
 denylist
+diffable
 dirc
 dircache
 dockerfile

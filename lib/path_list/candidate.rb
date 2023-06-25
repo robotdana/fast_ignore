@@ -55,7 +55,7 @@ class PathList
 
         yield(@full_path.delete_prefix(relative_root))
       end
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
       nil
     end
 
@@ -67,15 +67,11 @@ class PathList
       @children ||= ::Dir.children(@full_path)
     end
 
-    def filename
-      @filename ||= ::File.basename(@full_path)
-    end
-
     def directory?
       return @directory unless @directory.nil?
 
       @directory = ::File.lstat(@full_path).directory?
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG, ::Errno::ENOTDIR
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG, ::Errno::ENOTDIR, ::Errno::EPERM
       @exists ||= false
       @directory = false
     end
@@ -84,7 +80,7 @@ class PathList
       return @exists unless @exists.nil?
 
       @exists = ::File.exist?(@full_path)
-    rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+    rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
       @exists = false
     end
 

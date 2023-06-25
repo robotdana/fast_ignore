@@ -15,12 +15,12 @@ class PathList
         new.ignore!(*patterns, from_file: from_file, format: format, root: root)
       end
 
-      def and(*path_lists)
-        new.and(*path_lists)
+      def all(*path_lists)
+        new.all!(*path_lists)
       end
 
       def any(*path_lists)
-        new.any(*path_lists)
+        new.any!(*path_lists)
       end
     end
 
@@ -86,7 +86,7 @@ class PathList
       and_matcher(Patterns.build(patterns, from_file: from_file, format: format, root: root, allow: true).build)
     end
 
-    def and!(*path_lists)
+    def all!(*path_lists)
       and_matcher(Matchers::All.build(path_lists.flat_map { |l| l.matcher })) # rubocop:disable Style/SymbolProc
     end
 
@@ -95,12 +95,6 @@ class PathList
     end
 
     private
-
-    def any_use_index(new_matcher)
-      @use_index = Matchers::Any.build([@use_index, new_matcher])
-
-      self
-    end
 
     def and_matcher(new_matcher)
       @matcher = Matchers::All.build([@matcher, new_matcher])

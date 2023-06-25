@@ -23,7 +23,6 @@ class PathList
 
     def initialize(parts = {})
       @parts = parts
-      @unanchorable = false
     end
 
     def empty?
@@ -32,10 +31,6 @@ class PathList
 
     def start_with?(value)
       @parts.key?(value)
-    end
-
-    def end=(value)
-      @tail.replace(value => nil)
     end
 
     def dup

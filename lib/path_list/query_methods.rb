@@ -43,8 +43,7 @@ class PathList
       return enum_for(:each, root) unless block
 
       root = PathExpander.expand_path_pwd(root)
-      root_candidate = Candidate.new(root, true, nil, nil)
-      return unless root_candidate.directory?
+      root_candidate = Candidate.new(root, nil, nil, nil)
       return unless recursive_match?(root_candidate.parent, dir_matcher)
 
       relative_root = root == '/' ? root : "#{root}/"
