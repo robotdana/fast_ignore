@@ -5,7 +5,8 @@ class PathList
     BUILDERS = {
       glob: Builders::GlobGitignore,
       gitignore: Builders::Gitignore,
-      shebang: Builders::Shebang
+      shebang: Builders::Shebang,
+      exact: Builders::FullPath
     }.freeze
 
     class << self

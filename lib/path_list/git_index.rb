@@ -7,8 +7,22 @@
 require 'stringio'
 
 class PathList
-  module GitIndex # rubocop:disable Metrics/ModuleLength
+  class GitIndex # rubocop:disable Metrics/ModuleLength
     class Error < PathList::Error; end
+
+    def initialize(root)
+      @root = root
+      @root_re = RegexpBuilder.new_from_path(root).compress.to_regexp
+      @files = nil
+    end
+
+    def files
+      @files ||= self.class.files(@root)
+    end
+
+    def index_root?(candidate)
+      @root_re.match?(candidate.full_path)
+    end
 
     class << self # rubocop:disable Metrics/ClassLength
       def files(path = nil)

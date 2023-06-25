@@ -18,10 +18,8 @@ class PathList
 
   protected
 
-  def use_index
-    matcher # to compress stuff, we're going to anyway
-
-    @use_index
+  def git_indexes
+    @git_indexes ||= []
   end
 
   def matcher

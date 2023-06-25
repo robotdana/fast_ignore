@@ -211,6 +211,19 @@ RSpec.describe PathList do
       expect(subject).to allow_exactly('.gitignore', '.a', '.b/.c')
     end
 
+    context 'with a .git/index' do
+      let(:git_init) { true }
+
+      it 'reads the gitignore' do
+        gitignore 'foo', 'bar'
+
+        create_file_list 'foo', 'bar', 'baz'
+
+        expect(subject).to allow_files('baz')
+        expect(subject).to_not allow_files('foo', 'bar')
+      end
+    end
+
     describe 'with patterns in the higher level files being overridden by those in lower level files.' do
       before do
         create_file_list 'a/b/c', 'a/b/d', 'b/c', 'b/d', 'a/b/e'

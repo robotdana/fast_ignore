@@ -48,19 +48,19 @@ class PathList
       return unless recursive_match?(root_candidate, dir_matcher)
 
       relative_root = root == '/' ? root : "#{root}/"
-      root_candidate.descendants(use_index).each do |candidate|
-        recursive_each(candidate, relative_root, use_index, dir_matcher, file_matcher, &block)
+      root_candidate.descendants(git_indexes).each do |candidate|
+        recursive_each(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
       end
     end
 
     private
 
-    def recursive_each(candidate, relative_root, use_index_matcher, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
+    def recursive_each(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
       if candidate.directory?
         return unless dir_matcher.match(candidate) == :allow
 
-        candidate.descendants(use_index_matcher).each do |child_candidate|
-          recursive_each(child_candidate, relative_root, use_index_matcher, dir_matcher, file_matcher, &block)
+        candidate.descendants(git_indexes).each do |child_candidate|
+          recursive_each(child_candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
         end
       else
         return unless file_matcher.match(candidate) == :allow

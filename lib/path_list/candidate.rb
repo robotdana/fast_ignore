@@ -34,11 +34,13 @@ class PathList
       end
     end
 
-    def descendants(use_index_matcher)
-      @descendants ||= if use_index_matcher.match(self) == :allow
-        GitIndex.files.map { |relative_path| Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil) }
-      else
-        children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
+    def descendants(use_index)
+      @descendants ||= begin
+        if children.include?('.git') && (index = use_index.find { |index| index.index_root?(self) })
+          index.files.map { |relative_path| Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil) }
+        else
+          children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
+        end
       end
     end
 

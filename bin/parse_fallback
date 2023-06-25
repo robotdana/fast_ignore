@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby --disable-all
+# frozen_string_literal: true
+
+require_relative '../lib/path_list'
+
+path_list = PathList.gitignore(index: false)
+path_list.to_a
+
+puts path_list.inspect

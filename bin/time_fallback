@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby --disable-all
+# frozen_string_literal: true
+
+# use mac terminal not vs code terminal
+# ensure nothing else is watching that dir in the filesystem e.g. webpack
+
+require 'open3'
+require 'shellwords'
+RUNS = 30
+SCRIPT = ['bash', '-c', Shellwords.join(['time', "#{__dir__}/ls_fallback", *ARGV])].freeze
+
+times = Array.new(RUNS).map do
+  run_times = Open3.capture3(*SCRIPT)[1].tr("\n", ' ')
+    .gsub(/(\b0m|(?<=\d)s)/, '')
+    .gsub("\t", '        ')
+  puts run_times.lstrip
+  run_times.scan(/(?:\d+(?:.\d+)?)/)
+end
+
+# puts times.inspect
+
+puts format(
+  "\e[1mAverage:\n\e[32mreal%13.3f user%13.3f sys%13.3f \e[0m", # rubocop:disable Style/FormatStringToken
+  *times.transpose.map { |n| (n.sum(&:to_f) / RUNS) }
+)
