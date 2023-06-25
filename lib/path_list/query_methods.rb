@@ -26,7 +26,7 @@ class PathList
       return false unless candidate.exists?
 
       recursive_match?(candidate.parent, dir_matcher) &&
-        (candidate.directory? ? dir_matcher : file_matcher).match(candidate) == :allow
+        matcher.match(candidate) == :allow
     end
 
     def ===(path)

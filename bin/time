@@ -7,7 +7,7 @@
 require 'open3'
 require 'shellwords'
 RUNS = 30
-SCRIPT = ['bash', '-c', Shellwords.join(['time', "#{__dir__}/ls", *ARGV])].freeze
+SCRIPT = ['bash', '-c', Shellwords.join(['time', "#{__dir__}/ls_q", *ARGV])].freeze
 
 times = Array.new(RUNS).map do
   run_times = Open3.capture3(*SCRIPT)[1].tr("\n", ' ')

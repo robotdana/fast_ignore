@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby --disable-all
+# frozen_string_literal: true
+
+require_relative '../lib/path_list'
+
+PathList.gitignore(index: false).only(ARGV).to_a
