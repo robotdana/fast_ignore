@@ -17,4 +17,4 @@ end
 printer = RubyProf::FlameGraphPrinter.new(profile)
 printer.print(File.open('flamegraph.txt', 'w'), {})
 
-`flamegraph.pl --colors hot flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`
+`flamegraph.pl --colors hot --width=1440 flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`
