@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PathList
-  class Candidate
+  class Candidate # rubocop:disable Metrics/ClassLength
     attr_reader :full_path
 
     def self.build(full_path, directory, exists, content)
@@ -39,9 +39,10 @@ class PathList
         return unless dir_matcher.match(self) == :allow
 
         if children.include?('.git') && (index = git_indexes.find { |i| i.index_root?(self) })
-          @child_candidates = index.files.map do |relative_path|
-            Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil)
-          end
+          paths = RegexpBuilder::Merge.merge(
+            index.files.map { |path| path.split('/').reverse_each.reduce(nil) { |a, e| { e => a } } }
+          )
+          @child_candidates = build_candidates(prepend_path, paths)
           dir_matcher = dir_matcher.without_matcher(index)
           file_matcher = file_matcher.without_matcher(index)
         end
@@ -105,12 +106,11 @@ class PathList
         file = ::File.new(@full_path)
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
-          begin
-            first_line += file.readline unless first_line.include?("\n")
-          rescue ::EOFError, ::SystemCallError
-            nil
+          if first_line.include?("\n")
+            first_line
+          else
+            ::File.open(@full_path, &:readline)
           end
-          first_line
         else
           ''
         end
@@ -118,6 +118,27 @@ class PathList
         ''
       ensure
         file&.close
+      end
+    end
+
+    protected
+
+    attr_writer :child_candidates
+    attr_writer :children
+
+    private
+
+    def build_candidates(parent_path, paths) # rubocop:disable Metrics/MethodLength
+      paths.map do |first_part, rest|
+        path = "#{parent_path}/#{first_part}"
+        if rest
+          c = Candidate.new(path, true, true, nil)
+          c.children = rest.keys
+          c.child_candidates = build_candidates(path, rest) if rest
+          c
+        else
+          Candidate.new(path, false, true, nil)
+        end
       end
     end
   end

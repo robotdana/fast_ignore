@@ -12,9 +12,9 @@ profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 profile.profile do
   require_relative '../../lib/path_list'
   path_list = PathList.gitignore(root: ARGV[0])
-  puts path_list.each(ARGV[0]).to_a
+  path_list.each(ARGV[0]).to_a
 end
 printer = RubyProf::FlameGraphPrinter.new(profile)
 printer.print(File.open('flamegraph.txt', 'w'), {})
 
-`flamegraph.pl --colors hot --width=1440 flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app`
+`flamegraph.pl --colors hot --width=1440 flamegraph.txt > flamegraph.svg; open flamegraph.svg -a /Applications/Safari.app` # rubocop:disable Layout/LineLength

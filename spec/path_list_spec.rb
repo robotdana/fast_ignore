@@ -222,6 +222,41 @@ RSpec.describe PathList do
         expect(subject).to allow_files('baz')
         expect(subject).not_to allow_files('foo', 'bar')
       end
+
+      context 'with additional only going on' do
+        subject(:path_list) { described_class.gitignore.only('bar', 'foo') }
+
+        it 'only shows those that pass both gitignore and only' do
+          gitignore 'foo'
+
+          create_file_list 'foo/bar', 'bar/child', 'baz/child'
+
+          expect(subject).to allow_files('bar/child')
+          expect(subject).not_to allow_files('foo/child', 'baz/child')
+        end
+      end
+
+      context 'with additional ignore going on' do
+        subject(:path_list) { described_class.gitignore.ignore('bar') }
+
+        it 'only shows those that pass both gitignore and ignore' do
+          gitignore 'foo'
+
+          create_file_list 'foo/bar', 'bar/child', 'baz/child'
+
+          expect(subject).to allow_files('baz/child')
+          expect(subject).not_to allow_files('foo/child', 'bar/child')
+        end
+
+        it 'can allow untracked files' do # may need to use --untracked-cache ...?
+          gitignore 'foo'
+
+          create_file_list 'foo/bar', 'bar/child', 'baz/child', git_add: false
+
+          expect(subject).to allow_files('baz/child', '.gitignore')
+          expect(subject).not_to allow_files('foo/child', 'bar/child')
+        end
+      end
     end
 
     describe 'with patterns in the higher level files being overridden by those in lower level files.' do
