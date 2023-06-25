@@ -3,7 +3,9 @@
 require 'pathname'
 
 RSpec.describe PathList do
-  around { |e| within_temp_dir { e.run } }
+  let(:git_init) { false }
+
+  around { |e| within_temp_dir(git_init: git_init) { e.run } }
 
   it 'has a version number' do
     expect(PathList::VERSION).not_to be_nil

@@ -3,8 +3,8 @@
 class PathList
   module BuildMethods
     module ClassMethods
-      def gitignore(root: nil)
-        new.gitignore!(root: root)
+      def gitignore(root: nil, index: true, config: true)
+        new.gitignore!(root: root, index: index, config: config)
       end
 
       def only(*patterns, from_file: nil, format: nil, root: nil)
@@ -24,8 +24,8 @@ class PathList
       end
     end
 
-    def gitignore(root: nil)
-      dup.gitignore!(root: root)
+    def gitignore(root: nil, index: true, config: true)
+      dup.gitignore!(root: root, index: index, config: config)
     end
 
     def ignore(*patterns, from_file: nil, format: nil, root: nil)
@@ -44,8 +44,12 @@ class PathList
       dup.all!(*path_lists)
     end
 
-    def gitignore!(root: nil) # rubocop:disable Metrics/MethodLength
+    def gitignore!(root: nil, index: true, config: true) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       root = PathExpander.expand_path_pwd(root || '.')
+
+      if index && ::File.exist?(PathExpander.expand_path('.git/index', root))
+        return any_use_index(Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root), true))
+      end
 
       collector = Matchers::CollectGitignore.build(
         Matchers::MatchIfDir.new(
@@ -53,8 +57,11 @@ class PathList
         )
       )
 
-      global_gitignore = GlobalGitignore.path(root: root)
-      collector.append(PathExpander.expand_path(global_gitignore, root), root: root) if global_gitignore
+      if config
+        global_gitignore = GlobalGitignore.path(root: root)
+        collector.append(PathExpander.expand_path(global_gitignore, root), root: root) if global_gitignore
+      end
+
       collector.append(PathExpander.expand_path('./.git/info/exclude', root), root: root)
       collector.append(PathExpander.expand_path('./.gitignore', root), root: root)
 
@@ -84,6 +91,12 @@ class PathList
     end
 
     private
+
+    def any_use_index(new_matcher)
+      @use_index = Matchers::Any.build([@use_index, new_matcher])
+
+      self
+    end
 
     def and_matcher(new_matcher)
       @matcher = Matchers::All.build([@matcher, new_matcher])

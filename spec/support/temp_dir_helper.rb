@@ -6,12 +6,20 @@ require 'tmpdir'
 module TempDirHelper
   module WithinGitTempDir
     def git_add_files(*files)
-      system('git', 'add', *files)
+      system('git', '-c', "core.excludesfile=''", 'add', *files)
+    end
+
+    def default_git_add
+      true
     end
   end
 
   module WithinTempDir
-    def create_file(*lines, path:, git_add: false)
+    def default_git_add
+      false
+    end
+
+    def create_file(*lines, path:, git_add: default_git_add)
       path = Pathname.pwd.join(path)
       path.parent.mkpath
       if lines.empty?
@@ -32,7 +40,7 @@ module TempDirHelper
       FileUtils.ln_s(Pathname.pwd.join(target), link_path.to_s)
     end
 
-    def create_file_list(*filenames, git_add: false)
+    def create_file_list(*filenames, git_add: default_git_add)
       filenames.each do |filename|
         create_file(path: filename, git_add: false)
       end
@@ -44,13 +52,17 @@ module TempDirHelper
     end
   end
 
-  def within_temp_dir(git_init: false)
+  def within_temp_dir(git_init: false) # rubocop:disable Metrics/MethodLength
     dir = Pathname.new(Dir.mktmpdir)
     original_dir = Dir.pwd
     Dir.chdir(dir)
 
     extend WithinTempDir
-    extend WithinGitTempDir if git_init
+    if git_init
+      `git init && git config user.email rspec@example.com && git config user.name "RSpec runner"`
+      extend WithinGitTempDir
+    end
+
     yield
   ensure
     Dir.chdir(original_dir)

@@ -13,13 +13,21 @@ class PathList
 
   def initialize
     @matcher = Matchers::Allow
+    @use_index = Matchers::Blank
   end
 
   protected
 
+  def use_index
+    matcher # to compress stuff, we're going to anyway
+
+    @use_index
+  end
+
   def matcher
     @compressed ||= begin
       @matcher = @matcher.compress_self
+      @use_index = @use_index.compress_self
 
       true
     end

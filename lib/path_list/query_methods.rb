@@ -47,26 +47,25 @@ class PathList
       return unless root_candidate.directory?
       return unless recursive_match?(root_candidate, dir_matcher)
 
-      root = '' if root == '/'
-      root_candidate.children.each do |filename|
-        recursive_each("#{root}/#{filename}", filename, dir_matcher, file_matcher, &block)
+      relative_root = root == '/' ? root : "#{root}/"
+      root_candidate.descendants(use_index).each do |candidate|
+        recursive_each(candidate, relative_root, use_index, dir_matcher, file_matcher, &block)
       end
     end
 
     private
 
-    def recursive_each(full_path, relative_path, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
-      candidate = Candidate.new(full_path, nil, true, nil)
+    def recursive_each(candidate, relative_root, use_index_matcher, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
       if candidate.directory?
         return unless dir_matcher.match(candidate) == :allow
 
-        candidate.children.each do |filename|
-          recursive_each("#{full_path}/#{filename}", "#{relative_path}/#{filename}", dir_matcher, file_matcher, &block)
+        candidate.descendants(use_index_matcher).each do |child_candidate|
+          recursive_each(child_candidate, relative_root, use_index_matcher, dir_matcher, file_matcher, &block)
         end
       else
         return unless file_matcher.match(candidate) == :allow
 
-        yield(relative_path)
+        yield(candidate.full_path.delete_prefix(relative_root))
       end
     rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
       nil

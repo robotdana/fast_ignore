@@ -15,7 +15,7 @@ end
 
 profile.profile do
   require_relative '../../lib/path_list'
-  path_list = PathList.gitignore(root: ARGV[0])
+  path_list = PathList.gitignore(root: ARGV[0], index: false)
   sub_gitignore_files.each do |sub_gitignore|
     path_list.include?(ARGV[0] + '/' + sub_gitignore)
   end

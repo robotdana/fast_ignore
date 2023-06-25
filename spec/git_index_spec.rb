@@ -5,7 +5,7 @@ RSpec.describe PathList::GitIndex do
   shared_examples 'git ls-files' do
     context 'with basic files' do
       before do
-        create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz', git_add: true
+        create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz'
       end
 
       it 'matches git-ls output' do
@@ -47,7 +47,7 @@ RSpec.describe PathList::GitIndex do
 
     context 'with file with newline in name' do
       before do
-        create_file path: "foo\nbar", git_add: true
+        create_file path: "foo\nbar"
       end
 
       it 'matches git-ls output' do
@@ -58,7 +58,7 @@ RSpec.describe PathList::GitIndex do
 
     context 'with file with space in name' do
       before do
-        create_file path: 'foo bar', git_add: true
+        create_file path: 'foo bar'
       end
 
       it 'matches git-ls output' do
@@ -69,7 +69,7 @@ RSpec.describe PathList::GitIndex do
 
     context 'with a non-ascii file name' do
       before do
-        create_file path: '💖', git_add: true
+        create_file path: '💖'
       end
 
       it 'matches git-ls output' do
@@ -80,7 +80,7 @@ RSpec.describe PathList::GitIndex do
 
     context 'with file with long name' do
       before do
-        create_file_list 'foo/bar', "foo/#{'bar' * 60}", 'foo/baz', git_add: true
+        create_file_list 'foo/bar', "foo/#{'bar' * 60}", 'foo/baz'
       end
 
       it 'matches git-ls output' do
@@ -180,7 +180,7 @@ RSpec.describe PathList::GitIndex do
             context "with #{n} files deleted" do
               it 'matches git-ls output' do
                 filenames = Array.new(n).map.with_index { |_, i| "dir/#{i}" }
-                create_file_list(*filenames, 'foo', git_add: true)
+                create_file_list(*filenames, 'foo')
 
                 `git update-index --split-index`
                 `rm -rf ./dir/*`
@@ -195,7 +195,7 @@ RSpec.describe PathList::GitIndex do
               it 'matches git-ls output' do
                 filenames = Array.new(n).map.with_index { |_, i| "dir/#{i}" }
 
-                create_file_list(*filenames, git_add: true)
+                create_file_list(*filenames)
 
                 `git update-index --split-index`
                 `rm -rf ./dir/*2 ./dir/*4 ./dir/*6 ./dir/*8 ./dir/*0`
@@ -210,7 +210,7 @@ RSpec.describe PathList::GitIndex do
               it 'matches git-ls output' do
                 filenames = Array.new(n).map.with_index { |_, i| "dir/#{i}" }
 
-                create_file_list(*filenames, git_add: true)
+                create_file_list(*filenames)
                 `git commit --no-verify -m COMMIT`
                 `git update-index --split-index`
                 `git mv dir dir2`
@@ -224,7 +224,7 @@ RSpec.describe PathList::GitIndex do
               it 'matches git-ls output' do
                 filenames = Array.new(n).map.with_index { |_, i| "dir/#{i}" }
 
-                create_file_list(*filenames, git_add: true)
+                create_file_list(*filenames)
 
                 `git update-index --split-index`
                 sleep 0.1
@@ -239,7 +239,7 @@ RSpec.describe PathList::GitIndex do
               it 'matches git-ls output' do
                 filenames = Array.new(n).map.with_index { |_, i| "dir/#{i}" }
 
-                create_file_list(*filenames, git_add: true)
+                create_file_list(*filenames)
 
                 `git update-index --split-index`
 
@@ -252,9 +252,9 @@ RSpec.describe PathList::GitIndex do
 
         context 'with a replaced file' do
           it 'matches git-ls output' do
-            create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz', git_add: true
+            create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz'
 
-            create_file 'CONTENT', path: 'bat/zero', git_add: true
+            create_file 'CONTENT', path: 'bat/zero'
 
             `git update-index --split-index`
             # `git commit --no-verify -m COMMIT`
@@ -268,11 +268,11 @@ RSpec.describe PathList::GitIndex do
 
         context 'with an added file' do
           it 'matches git-ls output' do
-            create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz', git_add: true
+            create_file_list 'foo/bar', 'foo/foo', 'bar/foo', 'bar/bar', 'baz'
 
             `git update-index --split-index`
 
-            create_file path: 'bat/zero', git_add: true
+            create_file path: 'bat/zero'
 
             expect(described_class.files).to eq(`git ls-files -z`.split("\0"))
               .and(eq(['bar/bar', 'bar/foo', 'bat/zero', 'baz', 'foo/bar', 'foo/foo']))
@@ -281,17 +281,17 @@ RSpec.describe PathList::GitIndex do
 
         context 'with an invalid unignorable extension' do
           it 'raises an error' do
-            create_file_list 'foo/bar', git_add: true
+            create_file_list 'foo/bar'
 
             File.write('.git/index', File.read('.git/index').gsub!('link', 'beep'))
 
-            expect { described_class.files }.to raise_error(GitLS::Error)
+            expect { described_class.files }.to raise_error(described_class::Error)
           end
         end
 
         context 'with an ignorable extension' do
           it "doesn't raises an error" do
-            create_file_list 'foo/bar', git_add: true
+            create_file_list 'foo/bar'
             `git update-index --force-untracked-cache`
 
             expect(described_class.files).to eq(`git ls-files -z`.split("\0"))
@@ -301,7 +301,7 @@ RSpec.describe PathList::GitIndex do
 
         context 'with an unknown but ignorable extension' do
           it "doesn't raises an error" do
-            create_file_list 'foo/bar', git_add: true
+            create_file_list 'foo/bar'
             `git update-index --force-untracked-cache`
 
             File.write('.git/index', File.read('.git/index').gsub!('UNTR', 'BEEP'))

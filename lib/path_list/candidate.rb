@@ -20,6 +20,10 @@ class PathList
       @first_line = first_line
     end
 
+    def prepend_path
+      @prepend_path ||= @full_path == '/' ? '' : @full_path
+    end
+
     def parent
       return @parent if defined?(@parent)
 
@@ -27,6 +31,14 @@ class PathList
         return if @full_path == '/'
 
         self.class.new(::File.dirname(@full_path), true, true, nil)
+      end
+    end
+
+    def descendants(use_index_matcher)
+      @descendants ||= if use_index_matcher.match(self) == :allow
+        GitIndex.files.map { |relative_path| Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil) }
+      else
+        children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
       end
     end
 

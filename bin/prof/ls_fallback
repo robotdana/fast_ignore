@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'ruby-prof'
+
+profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
+# RubyProf.measure_mode = RubyProf::ALLOCATIONS
+# RubyProf.measure_mode = RubyProf::MEMORY
+
+profile.profile do
+  require_relative '../../lib/path_list'
+  PathList.gitignore(index: false).only(ARGV).to_a
+end
+
+printer = RubyProf::GraphPrinter.new(profile)
+printer.print($stdout, min_percent: 1, sort_method: :self_time)

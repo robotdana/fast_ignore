@@ -3,4 +3,4 @@
 
 require_relative '../lib/path_list'
 
-puts PathList.gitignore.only(ARGV).to_a
+puts PathList.gitignore(index: false).only(ARGV).to_a
