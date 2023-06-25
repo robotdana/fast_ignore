@@ -15,6 +15,8 @@ cov
 cyclomatic
 cygwin
 denylist
+dirc
+dircache
 dockerfile
 dockerignore
 enoent
@@ -24,6 +26,7 @@ eol
 errno
 eslintignore
 esque
+ewah
 excludesfile
 extensionless
 fancyignore
@@ -45,6 +48,7 @@ gnore
 hashbang
 heredoc
 i've
+idx
 includefile
 includeif
 ips
@@ -57,6 +61,7 @@ lookahead
 mascheck
 memoize
 memoized
+msb
 nestedly
 nocov
 noninfringement
@@ -82,6 +87,7 @@ rubygems
 rubyish
 rulesets
 rvm
+sharedindex
 sherson
 simplecov
 stdin
@@ -105,6 +111,7 @@ unfuck
 unnegated
 unrecursive
 unstaged
+untr
 upcase
 usr
 utf

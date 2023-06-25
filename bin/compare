@@ -57,8 +57,6 @@ unless ignored_by_git_not_by_path_list.empty?
   exit_status = 1
 end
 
-unless exit_status == 1
-  puts "\e[32mMatches git within limitations\e[0m"
-end
+puts "\e[32mMatches git within limitations\e[0m" unless exit_status == 1
 
 exit exit_status

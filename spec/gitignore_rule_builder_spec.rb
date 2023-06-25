@@ -15,7 +15,6 @@ RSpec.describe PathList::GitignoreRuleBuilder do
 
   describe '#build' do
     describe 'allow: false, root: nil', skip: 'root: nil is broken' do
-
       let(:options) { { allow: false, root: nil } }
 
       describe 'from the gitignore documentation' do
@@ -106,14 +105,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('foo/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\z}i, false)
-               )
+                )
             end
 
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)Ȋ\z}i, false)
-               )
+                )
             end
           end
         end
@@ -143,14 +142,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('frotz/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz\z}i, false)
-               )
+                )
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
               expect(build('frotz/ '))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz\z}i, false)
-               )
+                )
             end
           end
         end
@@ -410,7 +409,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('a["---]'))
                   .to be_like PathList::Matchers::PathRegexp.new(
                     Regexp.new('(?:\\A|\/)a(?!\/)["-\\-\\-]\\z', 1), false
-                 )
+                  )
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -491,7 +490,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('b[i/a]b'))
                 .to be_like PathList::Matchers::PathRegexp.new(
                   %r{(?:\A|/)b(?!/)[i/a]b\z}i, false
-               )
+                )
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -657,7 +656,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
     end
 
     describe 'allow: false, root: "/a/path"' do
-      let(:options) { { allow: false, root: "/a/path" } }
+      let(:options) { { allow: false, root: '/a/path' } }
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
@@ -747,14 +746,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('foo/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?foo\z}i, false)
-               )
+                )
             end
 
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?Ȋ\z}i, false)
-               )
+                )
             end
           end
         end
@@ -784,14 +783,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('frotz/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?frotz\z}i, false)
-               )
+                )
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
               expect(build('frotz/ '))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?frotz\z}i, false)
-               )
+                )
             end
           end
         end
@@ -1051,7 +1050,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('a["---]'))
                   .to be_like PathList::Matchers::PathRegexp.new(
                     Regexp.new('\\A/a/path/(?:.*/)?a(?!\/)["-\\-\\-]\\z', 1), false
-                 )
+                  )
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -1132,7 +1131,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('b[i/a]b'))
                 .to be_like PathList::Matchers::PathRegexp.new(
                   %r{\A/a/path/(?:.*/)?b(?!/)[i/a]b\z}i, false
-               )
+                )
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -1200,7 +1199,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/}i, false))
+                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/}i, false)
+                )
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -1300,7 +1300,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
     end
 
     describe 'allow: false, root: "/a/path", expand_path: true' do
-      let(:options) { { allow: false, root: "/a/path", expand_path: true } }
+      let(:options) { { allow: false, root: '/a/path', expand_path: true } }
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
@@ -1394,14 +1394,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('foo/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/foo\z}i, false)
-               )
+                )
             end
 
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/Ȋ\z}i, false)
-               )
+                )
             end
           end
         end
@@ -1431,14 +1431,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('frotz/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/frotz\z}i, false)
-               )
+                )
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
               expect(build('frotz/ '))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/frotz\z}i, false)
-               )
+                )
             end
           end
         end
@@ -1698,7 +1698,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('a["---]'))
                   .to be_like PathList::Matchers::PathRegexp.new(
                     Regexp.new('\\A/a/path/a(?!\/)["-\\-\\-]\\z', 1), false
-                 )
+                  )
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -1779,7 +1779,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('b[i/a]b'))
                 .to be_like PathList::Matchers::PathRegexp.new(
                   %r{\A/a/path/b(?!/)[i/a]b\z}i, false
-               )
+                )
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -2037,14 +2037,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('foo/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{/foo\z}i, false)
-               )
+                )
             end
 
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{/Ȋ\z}i, false)
-               )
+                )
             end
           end
         end
@@ -2074,14 +2074,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('frotz/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{/frotz\z}i, false)
-               )
+                )
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
               expect(build('frotz/ '))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{/frotz\z}i, false)
-               )
+                )
             end
           end
         end
@@ -2341,7 +2341,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('a["---]'))
                   .to be_like PathList::Matchers::PathRegexp.new(
                     Regexp.new('/a(?!\/)["-\\-\\-]\\z', 1), false
-                 )
+                  )
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -2422,7 +2422,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('b[i/a]b'))
                 .to be_like PathList::Matchers::PathRegexp.new(
                   %r{/b(?!/)[i/a]b\z}i, false
-               )
+                )
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -2678,14 +2678,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('foo/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\z}i, true)
-               )
+                )
             end
 
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)Ȋ\z}i, true)
-               )
+                )
             end
           end
         end
@@ -2715,14 +2715,14 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('frotz/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz\z}i, true)
-               )
+                )
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
               expect(build('frotz/ '))
                 .to be_like PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz\z}i, true)
-               )
+                )
             end
           end
         end
@@ -2980,7 +2980,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 # for some reason this as a regexp literal triggers the warning raise
                 expect(build('a["---]')).to be_like PathList::Matchers::PathRegexp.new(
                   Regexp.new('(?:\\A|\/)a(?!\/)["-\\-\\-]\\z', 1), true
-               )
+                )
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -3253,7 +3253,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             expect(build('foo')).to be_like PathList::Matchers::Any::Two.new([
               PathList::Matchers::AllowAnyDir,
               PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-           ])
+            ])
           end
         end
 
@@ -3267,7 +3267,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)\ \#foo/}i, true)
-             ])
+              ])
           end
 
           describe 'Put a backslash ("\") in front of the first hash for patterns that begin with a hash' do
@@ -3276,7 +3276,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)\#foo/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -3287,7 +3287,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\\/}i, true)
-             ])
+              ])
           end
 
           it 'never matches a literal backslash at the end of the pattern' do
@@ -3300,7 +3300,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)\\foo/}i, true)
-             ])
+              ])
           end
 
           it 'matches a literal escaped f at the start of the pattern' do
@@ -3308,7 +3308,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-             ])
+              ])
           end
         end
 
@@ -3318,7 +3318,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-             ])
+              ])
           end
 
           it "doesn't ignore trailing spaces if there's a backslash" do
@@ -3326,7 +3326,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\ \ /}i, true)
-             ])
+              ])
           end
 
           it 'considers trailing backslashes to never be matched' do
@@ -3339,7 +3339,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\ \ /}i, true)
-             ])
+              ])
           end
 
           it "doesn't ignore just that trailing spaces if there's a backslash before the non last space" do
@@ -3347,7 +3347,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::AllowAnyDir,
                 PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo\ /}i, true)
-             ])
+              ])
           end
         end
 
@@ -3362,7 +3362,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-               ])
+                ])
             end
 
             it 'handles this specific edge case i stumbled across' do
@@ -3370,7 +3370,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)Ȋ/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -3387,7 +3387,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(PathList::Matchers::PathRegexp.new(/\Adoc\z/i, true)),
                   PathList::Matchers::PathRegexp.new(%r{\Adoc/frotz/}i, true)
-               ])
+                ])
             end
 
             it 'treats a double slash as matching nothing' do
@@ -3404,7 +3404,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz/}i, true)
-               ])
+                ])
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
@@ -3412,7 +3412,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)frotz/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -3433,7 +3433,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)!important!\.txt/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -3446,7 +3446,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{our/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters at the beginning if there's a star followed by a slash" do
@@ -3454,7 +3454,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(PathList::Matchers::PathRegexp.new(%r{\A[^/]}i, true)),
                     PathList::Matchers::PathRegexp.new(%r{\A[^/]*/our/}i, true)
-                 ])
+                  ])
               end
 
               it "doesn't match a slash" do
@@ -3462,7 +3462,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/]*our/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters in the middle if there's a star" do
@@ -3470,7 +3470,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/]*r/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters at the end if there's a star" do
@@ -3478,7 +3478,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few[^/]*/}i, true)
-                 ])
+                  ])
               end
             end
 
@@ -3490,7 +3490,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches an exact partial match at start' do
@@ -3500,7 +3500,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/b[^/]*\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Aa/b[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches an exact partial match at end' do
@@ -3510,7 +3510,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*b\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*b/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when sequential /*/' do
@@ -3520,7 +3520,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/[^/]*\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Aa/[^/]*/[^/]+/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning sequential /*/' do
@@ -3529,7 +3529,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::PathRegexp.new(%r{\A(?:[^/]|[^/]*/[^/]*\z)}i, true)
                     ), PathList::Matchers::PathRegexp.new(%r{\A[^/]*/[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when ending with /**/*' do
@@ -3538,7 +3538,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                     ), PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?[^/]+/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when ending with **/*' do
@@ -3548,7 +3548,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(/\Aa/i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\Aa(?:.*/)?[^/]+/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning with **/*/' do
@@ -3556,7 +3556,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning with **/*' do
@@ -3564,7 +3564,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{c/}i, true)
-                 ])
+                  ])
               end
             end
           end
@@ -3575,7 +3575,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)[^/]our/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash" do
@@ -3583,7 +3583,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)fa[^/]our/}i, true)
-               ])
+                ])
             end
 
             it 'matches per ?' do
@@ -3591,7 +3591,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/][^/]r/}i, true)
-               ])
+                ])
             end
 
             it "matches a single character at the end if there's a ?" do
@@ -3599,7 +3599,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)fou[^/]/}i, true)
-               ])
+                ])
             end
           end
 
@@ -3609,7 +3609,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[ab]/}i, true)
-               ])
+                ])
             end
 
             it 'matches a single character in a character class range' do
@@ -3617,7 +3617,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward character class range as only the first character of the range' do
@@ -3625,7 +3625,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward character class range as only the first character of the range' do
@@ -3633,7 +3633,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a escaped backward character class range as only the first character of the range' do
@@ -3641,7 +3641,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated escaped backward character class range as only the first character of the range' do
@@ -3649,7 +3649,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a escaped character class range as as a range' do
@@ -3657,7 +3657,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\[-\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated escaped character class range as a range' do
@@ -3665,7 +3665,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^\[-\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats an unnecessarily escaped character class range as a range' do
@@ -3673,7 +3673,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated unnecessarily escaped character class range as a range' do
@@ -3681,7 +3681,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward character class range with other options as only the first character of the range' do
@@ -3689,7 +3689,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[da]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward character class range with other chars as the first character of the range' do
@@ -3697,7 +3697,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^da]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward char class range with other initial options as the first char of the range' do
@@ -3705,7 +3705,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[ad]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward char class range with other initial options as the first char of the range' do
@@ -3713,7 +3713,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^ad]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a equal character class range as only the first character of the range' do
@@ -3721,7 +3721,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated equal character class range as only the first character of the range' do
@@ -3729,7 +3729,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^d]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / after a character class range as not there' do
@@ -3737,7 +3737,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[a-c/]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / before a character class range as not there' do
@@ -3745,7 +3745,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[/a-c]/}i, true)
-               ])
+                ])
             end
 
             # TODO: confirm if that matches a slash character
@@ -3754,7 +3754,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\+/-c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / after the dash in a character class range as any character from start to /' do
@@ -3762,7 +3762,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)["-/c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a slash then dash then character to be a character range' do
@@ -3770,7 +3770,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[/-c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a character then dash then slash to be a character range' do
@@ -3778,7 +3778,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)["-/]/}i, true)
-               ])
+                ])
             end
 
             context 'without raising warnings' do
@@ -3791,7 +3791,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\--c]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash as a character range ending with -' do
@@ -3799,7 +3799,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)["-\-]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets dash dash dash as a character range of only with -' do
@@ -3807,7 +3807,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\-]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash dash as a character range of only with " to - with literal -' do
@@ -3816,8 +3816,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(
                       Regexp.new('(?:\\A|\/)a(?!\/)["-\\-\\-]\/', 1), true
-                   )
-                 ])
+                    )
+                  ])
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -3825,7 +3825,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\-c]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash character as a character range ending with - and a literal c' do
@@ -3835,7 +3835,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::AllowAnyDir,
                     PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)["-\-c]/}i, true)
-                 ])
+                  ])
               end
             end
 
@@ -3844,7 +3844,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             # this doesn't appear to be documented anywhere i just stumbled onto it
@@ -3853,7 +3853,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             it '[^/] matches everything' do
@@ -3861,7 +3861,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^/]/}i, true)
-               ])
+                ])
             end
 
             it '[^^] matches everything except literal ^' do
@@ -3869,7 +3869,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^\^]/}i, true)
-               ])
+                ])
             end
 
             it '[^/a] matches everything except a' do
@@ -3877,7 +3877,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[^/a]/}i, true)
-               ])
+                ])
             end
 
             it '[/^a] matches literal ^ and a' do
@@ -3885,7 +3885,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[/\^a]/}i, true)
-               ])
+                ])
             end
 
             it '[/^] matches literal ^' do
@@ -3893,7 +3893,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[/\^]/}i, true)
-               ])
+                ])
             end
 
             it '[\\^] matches literal ^' do
@@ -3901,7 +3901,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\^]/}i, true)
-               ])
+                ])
             end
 
             it 'later ^ is literal' do
@@ -3909,7 +3909,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[a-c\^]/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it last" do
@@ -3917,7 +3917,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)b(?!/)[i/]b/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it alone" do
@@ -3925,7 +3925,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)b(?!/)[/]b/}i, true)
-               ])
+                ])
             end
 
             it 'empty class matches nothing' do
@@ -3938,7 +3938,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)b(?!/)[i/a]b/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -3946,7 +3946,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)b(?!/)[/ai]b/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an unfinished [ matches nothing' do
@@ -3964,7 +3964,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a\[/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an escaped [ is literal inside a group' do
@@ -3972,7 +3972,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)a(?!/)[\[]/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an unfinished [ matches nothing when negated' do
@@ -4008,7 +4008,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches nothing with double slash' do
@@ -4021,7 +4021,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -4029,7 +4029,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories with **/*' do
@@ -4037,7 +4037,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{[^/]/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star before text' do
@@ -4045,7 +4045,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star within text' do
@@ -4053,7 +4053,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/]*o/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star after text' do
@@ -4061,7 +4061,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)fo[^/]*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when three stars' do
@@ -4069,7 +4069,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::AllowAnyDir,
                   PathList::Matchers::PathRegexp.new(%r{(?:\A|/)foo/}i, true)
-               ])
+                ])
             end
           end
 
@@ -4081,7 +4081,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(/\Aabc\z/i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aabc/}i, true)
-               ])
+                ])
             end
 
             it 'matches all directories inside the mentioned directory' do
@@ -4091,7 +4091,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(/\Aabc\z/i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aabc/[^/]*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -4101,7 +4101,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(/\Aabc\z/i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aabc/}i, true)
-               ])
+                ])
             end
           end
 
@@ -4113,7 +4113,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b/}i, true)
-               ])
+                ])
             end
 
             it 'matches multiple intermediate dirs with multiple consecutive-asterisk-slashes' do
@@ -4123,7 +4123,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b/(?:.*/)?c/(?:.*/)?d/}i, true)
-               ])
+                ])
             end
 
             it 'matches multiple intermediate dirs when ***' do
@@ -4133,7 +4133,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\Aa(?:\z|/)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\Aa/(?:.*/)?b/}i, true)
-               ])
+                ])
             end
           end
 
@@ -4145,7 +4145,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::AllowAnyDir,
                       PathList::Matchers::PathRegexp.new(%r{our/}i, true)
-                   ])
+                    ])
                 end
 
                 it "doesn't match a slash" do
@@ -4153,7 +4153,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::AllowAnyDir,
                       PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/]*our/}i, true)
-                   ])
+                    ])
                 end
 
                 it 'matches any number of characters in the middle' do
@@ -4161,7 +4161,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::AllowAnyDir,
                       PathList::Matchers::PathRegexp.new(%r{(?:\A|/)f[^/]*r/}i, true)
-                   ])
+                    ])
                 end
 
                 it 'matches any number of characters at the end' do
@@ -4169,7 +4169,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::AllowAnyDir,
                       PathList::Matchers::PathRegexp.new(%r{(?:\A|/)few[^/]*/}i, true)
-                   ])
+                    ])
                 end
 
                 # not sure if this is a bug but this is git behaviour
@@ -4180,7 +4180,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(/\Af/i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\Af(?:.*/)?our/}i, true)
-                   ])
+                    ])
                 end
               end
             end
@@ -4190,7 +4190,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
     end
 
     describe 'allow: true, root: "/a/path"' do
-      let(:options) { { allow: true, root: "/a/path" } }
+      let(:options) { { allow: true, root: '/a/path' } }
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
@@ -4206,7 +4206,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
               ),
               PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-           ])
+            ])
           end
         end
 
@@ -4222,7 +4222,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?\ \#foo/}i, true)
-             ])
+              ])
           end
 
           describe 'Put a backslash ("\") in front of the first hash for patterns that begin with a hash' do
@@ -4233,7 +4233,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?\#foo/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -4246,7 +4246,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo\\/}i, true)
-             ])
+              ])
           end
 
           it 'never matches a literal backslash at the end of the pattern' do
@@ -4261,7 +4261,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?\\foo/}i, true)
-             ])
+              ])
           end
 
           it 'matches a literal escaped f at the start of the pattern' do
@@ -4271,7 +4271,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-             ])
+              ])
           end
         end
 
@@ -4283,7 +4283,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-             ])
+              ])
           end
 
           it "doesn't ignore trailing spaces if there's a backslash" do
@@ -4293,7 +4293,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo\ \ /}i, true)
-             ])
+              ])
           end
 
           it 'considers trailing backslashes to never be matched' do
@@ -4308,7 +4308,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo\ \ /}i, true)
-             ])
+              ])
           end
 
           it "doesn't ignore just that trailing spaces if there's a backslash before the non last space" do
@@ -4318,7 +4318,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo\ /}i, true)
-             ])
+              ])
           end
         end
 
@@ -4335,7 +4335,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-               ])
+                ])
             end
 
             it 'handles this specific edge case i stumbled across' do
@@ -4345,7 +4345,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?Ȋ/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -4364,7 +4364,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/doc\z|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/doc/frotz/}i, true)
-               ])
+                ])
             end
 
             it 'treats a double slash as matching nothing' do
@@ -4383,7 +4383,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?frotz/}i, true)
-               ])
+                ])
             end
 
             it 'strips trailing space before deciding a rule is dir_only' do
@@ -4393,7 +4393,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?frotz/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -4416,7 +4416,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?!important!\.txt/}i, true)
-               ])
+                ])
             end
           end
         end
@@ -4431,7 +4431,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/.*our/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters at the beginning if there's a star followed by a slash" do
@@ -4441,7 +4441,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/[^/]*\z|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*/our/}i, true)
-                 ])
+                  ])
               end
 
               it "doesn't match a slash" do
@@ -4451,7 +4451,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/]*our/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters in the middle if there's a star" do
@@ -4461,7 +4461,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/]*r/}i, true)
-                 ])
+                  ])
               end
 
               it "matches any number of characters at the end if there's a star" do
@@ -4471,7 +4471,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?few[^/]*/}i, true)
-                 ])
+                  ])
               end
             end
 
@@ -4483,7 +4483,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/[^/]*\z|\z)|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches an exact partial match at start' do
@@ -4493,7 +4493,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/b[^/]*\z|\z)|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/b[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches an exact partial match at end' do
@@ -4503,7 +4503,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/[^/]*b\z|\z)|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*b/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when sequential /*/' do
@@ -4513,7 +4513,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/[^/]*\z|\z)|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*/[^/]*/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning sequential /*/' do
@@ -4522,7 +4522,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/[^/]*(?:/[^/]*\z|\z)|\z)|\z)|\z)}i, true)
                     ), PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*/[^/]*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when ending with /**/*' do
@@ -4531,7 +4531,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/|\z)|\z)|\z)|\z)}i, true)
                     ), PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/.*/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when ending with **/*' do
@@ -4541,7 +4541,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/a.*/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning with **/*/' do
@@ -4551,7 +4551,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*/c/}i, true)
-                 ])
+                  ])
               end
 
               it 'matches multiple directories when beginning with **/*' do
@@ -4561,7 +4561,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*c/}i, true)
-                 ])
+                  ])
               end
             end
           end
@@ -4574,7 +4574,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?[^/]our/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash" do
@@ -4584,7 +4584,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?fa[^/]our/}i, true)
-               ])
+                ])
             end
 
             it 'matches per ?' do
@@ -4594,7 +4594,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/][^/]r/}i, true)
-               ])
+                ])
             end
 
             it "matches a single character at the end if there's a ?" do
@@ -4604,7 +4604,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?fou[^/]/}i, true)
-               ])
+                ])
             end
           end
 
@@ -4616,7 +4616,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[ab]/}i, true)
-               ])
+                ])
             end
 
             it 'matches a single character in a character class range' do
@@ -4626,7 +4626,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward character class range as only the first character of the range' do
@@ -4636,7 +4636,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward character class range as only the first character of the range' do
@@ -4646,7 +4646,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a escaped backward character class range as only the first character of the range' do
@@ -4656,7 +4656,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated escaped backward character class range as only the first character of the range' do
@@ -4666,7 +4666,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a escaped character class range as as a range' do
@@ -4676,7 +4676,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\[-\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated escaped character class range as a range' do
@@ -4686,7 +4686,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^\[-\]]/}i, true)
-               ])
+                ])
             end
 
             it 'treats an unnecessarily escaped character class range as a range' do
@@ -4696,7 +4696,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated unnecessarily escaped character class range as a range' do
@@ -4706,7 +4706,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward character class range with other options as only the first character of the range' do
@@ -4716,7 +4716,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[da]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward character class range with other chars as the first character of the range' do
@@ -4726,7 +4726,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^da]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a backward char class range with other initial options as the first char of the range' do
@@ -4736,7 +4736,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[ad]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated backward char class range with other initial options as the first char of the range' do
@@ -4746,7 +4746,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^ad]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a equal character class range as only the first character of the range' do
@@ -4756,7 +4756,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[d]/}i, true)
-               ])
+                ])
             end
 
             it 'treats a negated equal character class range as only the first character of the range' do
@@ -4766,7 +4766,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^d]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / after a character class range as not there' do
@@ -4776,7 +4776,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[a-c/]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / before a character class range as not there' do
@@ -4786,7 +4786,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[/a-c]/}i, true)
-               ])
+                ])
             end
 
             # TODO: confirm if that matches a slash character
@@ -4797,7 +4797,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\+/-c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a / after the dash in a character class range as any character from start to /' do
@@ -4807,7 +4807,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)["-/c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a slash then dash then character to be a character range' do
@@ -4817,7 +4817,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[/-c]/}i, true)
-               ])
+                ])
             end
 
             it 'interprets a character then dash then slash to be a character range' do
@@ -4827,7 +4827,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)["-/]/}i, true)
-               ])
+                ])
             end
 
             context 'without raising warnings' do
@@ -4842,7 +4842,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\--c]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash as a character range ending with -' do
@@ -4852,7 +4852,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)["-\-]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets dash dash dash as a character range of only with -' do
@@ -4862,7 +4862,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\-]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash dash as a character range of only with " to - with literal -' do
@@ -4873,8 +4873,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     ),
                     PathList::Matchers::PathRegexp.new(
                       Regexp.new('\\A/a/path/(?:.*/)?a(?!/)["-\\-\\-]/', 1), true
-                   )
-                 ])
+                    )
+                  ])
               end
 
               it 'interprets dash dash dash character as a character range of only - with literal c' do
@@ -4884,7 +4884,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\-c]/}i, true)
-                 ])
+                  ])
               end
 
               it 'interprets character dash dash character as a character range ending with - and a literal c' do
@@ -4896,7 +4896,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                       PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                     ),
                     PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)["-\-c]/}i, true)
-                 ])
+                  ])
               end
             end
 
@@ -4907,7 +4907,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             # this doesn't appear to be documented anywhere i just stumbled onto it
@@ -4918,7 +4918,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^a-c]/}i, true)
-               ])
+                ])
             end
 
             it '[^/] matches everything' do
@@ -4928,7 +4928,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^/]/}i, true)
-               ])
+                ])
             end
 
             it '[^^] matches everything except literal ^' do
@@ -4938,7 +4938,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^\^]/}i, true)
-               ])
+                ])
             end
 
             it '[^/a] matches everything except a' do
@@ -4948,7 +4948,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[^/a]/}i, true)
-               ])
+                ])
             end
 
             it '[/^a] matches literal ^ and a' do
@@ -4958,7 +4958,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[/\^a]/}i, true)
-               ])
+                ])
             end
 
             it '[/^] matches literal ^' do
@@ -4968,7 +4968,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[/\^]/}i, true)
-               ])
+                ])
             end
 
             it '[\\^] matches literal ^' do
@@ -4978,7 +4978,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\^]/}i, true)
-               ])
+                ])
             end
 
             it 'later ^ is literal' do
@@ -4988,7 +4988,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[a-c\^]/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it last" do
@@ -4998,7 +4998,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?b(?!/)[i/]b/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it alone" do
@@ -5008,7 +5008,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?b(?!/)[/]b/}i, true)
-               ])
+                ])
             end
 
             it 'empty class matches nothing' do
@@ -5023,7 +5023,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?b(?!/)[i/a]b/}i, true)
-               ])
+                ])
             end
 
             it "doesn't match a slash even if you specify it start" do
@@ -5033,7 +5033,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?b(?!/)[/ai]b/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an unfinished [ matches nothing' do
@@ -5053,7 +5053,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a\[/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an escaped [ is literal inside a group' do
@@ -5063,7 +5063,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?a(?!/)[\[]/}i, true)
-               ])
+                ])
             end
 
             it 'assumes an unfinished [ matches nothing when negated' do
@@ -5090,7 +5090,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                   PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path\z|\z)|\z)}i, true)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*\.c/}i, true)
-             ])
+              ])
           end
         end
 
@@ -5106,7 +5106,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches nothing with double slash' do
@@ -5121,7 +5121,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -5131,7 +5131,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories with **/*' do
@@ -5141,7 +5141,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star before text' do
@@ -5151,7 +5151,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*foo/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star within text' do
@@ -5161,7 +5161,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/]*o/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when also followed by a star after text' do
@@ -5171,7 +5171,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?fo[^/]*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories in all directories when three stars' do
@@ -5181,7 +5181,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?foo/}i, true)
-               ])
+                ])
             end
           end
 
@@ -5193,7 +5193,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/abc\z|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/.*\/}i, true)
-               ])
+                ])
             end
 
             it 'matches all directories inside the mentioned directory' do
@@ -5203,7 +5203,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/abc\z|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/.*/}i, true)
-               ])
+                ])
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -5213,7 +5213,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/abc\z|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/.*/}i, true)
-               ])
+                ])
             end
           end
 
@@ -5225,7 +5225,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/|\z)|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/(?:.*/)?b/}i, true)
-               ])
+                ])
             end
 
             it 'matches multiple intermediate dirs with multiple consecutive-asterisk-slashes' do
@@ -5235,7 +5235,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/|\z)|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/(?:.*/)?b/(?:.*/)?c/(?:.*/)?d/}i, true)
-               ])
+                ])
             end
 
             it 'matches multiple intermediate dirs when ***' do
@@ -5245,7 +5245,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                     PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/a(?:/|\z)|\z)|\z)|\z)}i, true)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/(?:.*/)?b/}i, true)
-               ])
+                ])
             end
           end
 
@@ -5259,7 +5259,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/.*our/}i, true)
-                   ])
+                    ])
                 end
 
                 it "doesn't match a slash" do
@@ -5269,7 +5269,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/]*our/}i, true)
-                   ])
+                    ])
                 end
 
                 it 'matches any number of characters in the middle' do
@@ -5279,7 +5279,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?f[^/]*r/}i, true)
-                   ])
+                    ])
                 end
 
                 it 'matches any number of characters at the end' do
@@ -5289,7 +5289,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/|\z)|\z)|\z)}i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?few[^/]*/}i, true)
-                   ])
+                    ])
                 end
 
                 # not sure if this is a bug but this is git behaviour
@@ -5300,7 +5300,7 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                         PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/f|\z)|\z)|\z)}i, true)
                       ),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/f(?:.*/)?our/}i, true)
-                   ])
+                    ])
                 end
               end
             end
