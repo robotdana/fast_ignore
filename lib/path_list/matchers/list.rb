@@ -62,6 +62,13 @@ class PathList
         new_matchers == matchers ? self : self.class.new(new_matchers)
       end
 
+      def without_matcher(matcher)
+        return Blank if matcher == self
+
+        new_matchers = matchers.map { |m| m.without_matcher(matcher) }
+        new_matchers == matchers ? self : self.class.build(new_matchers)
+      end
+
       def inspect
         "#{self.class}.new([\n#{@matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end

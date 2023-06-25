@@ -45,31 +45,13 @@ class PathList
       root = PathExpander.expand_path_pwd(root)
       root_candidate = Candidate.new(root, true, nil, nil)
       return unless root_candidate.directory?
-      return unless recursive_match?(root_candidate, dir_matcher)
+      return unless recursive_match?(root_candidate.parent, dir_matcher)
 
       relative_root = root == '/' ? root : "#{root}/"
-      root_candidate.descendants(git_indexes).each do |candidate|
-        recursive_each(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
-      end
+      root_candidate.each_leaf(relative_root, git_indexes, dir_matcher, file_matcher, &block)
     end
 
     private
-
-    def recursive_each(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
-      if candidate.directory?
-        return unless dir_matcher.match(candidate) == :allow
-
-        candidate.descendants(git_indexes).each do |child_candidate|
-          recursive_each(child_candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
-        end
-      else
-        return unless file_matcher.match(candidate) == :allow
-
-        yield(candidate.full_path.delete_prefix(relative_root))
-      end
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
-      nil
-    end
 
     def recursive_match?(candidate, matcher)
       return true unless candidate

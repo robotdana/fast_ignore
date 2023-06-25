@@ -220,7 +220,7 @@ RSpec.describe PathList do
         create_file_list 'foo', 'bar', 'baz'
 
         expect(subject).to allow_files('baz')
-        expect(subject).to_not allow_files('foo', 'bar')
+        expect(subject).not_to allow_files('foo', 'bar')
       end
     end
 

@@ -39,6 +39,13 @@ class PathList
         new_matcher == @matcher ? self : new_with_matcher(new_matcher)
       end
 
+      def without_matcher(matcher)
+        return Blank if matcher == self
+
+        new_matcher = @matcher.without_matcher(matcher)
+        new_matcher == @matcher ? self : new_with_matcher(new_matcher)
+      end
+
       def inspect
         "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end

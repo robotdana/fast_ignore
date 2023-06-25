@@ -48,34 +48,9 @@ class PathList
       root = PathExpander.expand_path_pwd(root || '.')
 
       if index && ::File.exist?(PathExpander.expand_path('.git/index', root))
-        # todo add the indexed files somehow so i don't parse the file twice
-        git_index = GitIndex.new(root)
+        git_index = Matchers::GitIndex.new(root)
         git_indexes << git_index
-        root_prefix = root == '/' ? root.downcase : "#{root.downcase}/"
-
-        file_array = git_index.files.map { |relative_path| "#{root_prefix}#{relative_path}".downcase }.sort
-        dir_array = file_array.flat_map { |relative_path| relative_path.sub(/\/[^\/]*\z/, '') }.uniq
-        last_dir_array = dir_array
-
-        loop do
-          new_dir_array = last_dir_array.map { |relative_path| relative_path.sub(/\/[^\/]*\z/, '') }.uniq
-          dir_array += new_dir_array
-          break unless new_dir_array.any? { |dir| dir.include?('/') }
-          last_dir_array = new_dir_array
-        end
-
-        dir_array.delete('')
-        dir_array.push('/')
-        dir_array = dir_array.sort
-
-        and_matcher(
-          Matchers::LastMatch.build([
-            Matchers::Ignore,
-            Matchers::AllowAnyDir,
-            # Matchers::MatchIfDir.new(Matchers::AllowInSortedArray.new(dir_array)),
-            Matchers::MatchUnlessDir.new(Matchers::AllowInSortedArray.new(file_array))
-          ])
-        )
+        and_matcher(Matchers::LastMatch.new([Matchers::Allow, git_index]))
 
         return self
       end

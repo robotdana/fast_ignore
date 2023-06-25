@@ -5,8 +5,18 @@ require 'tmpdir'
 
 module TempDirHelper
   module WithinGitTempDir
-    def git_add_files(*files)
-      system('git', '-c', 'advice.addIgnoredFile=false', '-c', "core.excludesfile=''", 'add', *files, out: File::NULL, err: File::NULL)
+    def git_add_files(*files) # rubocop:disable Metrics/MethodLength
+      system(
+        'git',
+        '-c',
+        'advice.addIgnoredFile=false',
+        '-c',
+        "core.excludesfile=''",
+        'add',
+        *files,
+        out: File::NULL,
+        err: File::NULL
+      )
     end
 
     def default_git_add

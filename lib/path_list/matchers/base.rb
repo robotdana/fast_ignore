@@ -26,6 +26,12 @@ class PathList
         self
       end
 
+      def without_matcher(matcher)
+        return Blank if matcher == self
+
+        self
+      end
+
       def squash(_)
         self
       end

@@ -34,18 +34,40 @@ class PathList
       end
     end
 
-    def descendants(use_index)
-      @descendants ||= begin
-        if children.include?('.git') && (index = use_index.find { |index| index.index_root?(self) })
-          index.files.map { |relative_path| Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil) }
-        else
-          children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
+    def each_leaf(relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      if directory?
+        return unless dir_matcher.match(self) == :allow
+
+        if children.include?('.git') && (index = git_indexes.find { |i| i.index_root?(self) })
+          @child_candidates = index.files.map do |relative_path|
+            Candidate.new("#{prepend_path}/#{relative_path}", false, true, nil)
+          end
+          dir_matcher = dir_matcher.without_matcher(index)
+          file_matcher = file_matcher.without_matcher(index)
         end
+
+        child_candidates.each do |candidate|
+          candidate.each_leaf(relative_root, git_indexes, dir_matcher, file_matcher, &block)
+        end
+      else
+        return unless file_matcher.match(self) == :allow
+
+        yield(@full_path.delete_prefix(relative_root))
       end
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG
+      nil
+    end
+
+    def child_candidates
+      @child_candidates ||= children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
     end
 
     def children
       @children ||= ::Dir.children(@full_path)
+    end
+
+    def filename
+      @filename ||= ::File.basename(@full_path)
     end
 
     def directory?
