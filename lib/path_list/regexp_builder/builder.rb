@@ -28,7 +28,6 @@ class PathList
           when :any then '.*'
           when :one_non_dir then '[^/]'
           when :any_non_dir then '[^/]*'
-          when :many_non_dir then '[^/]+'
           when :end_anchor then '\\z'
           when :start_anchor then '\\A'
           when :word_boundary then '\\b'
