@@ -85,6 +85,7 @@ class PathList
         _, new_matcher = patterns.build_matchers
         return if new_matcher == Blank
 
+        new_matcher = new_matcher.compress_self
         @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher])
         @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher])
       end

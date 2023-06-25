@@ -156,7 +156,7 @@ class PathList
       end
 
       @character_class.append_part :character_class_close
-      append_unescaped @character_class.to_s(RegexpBuilder::CharacterClassBuilder)
+      append_unescaped @character_class.to_s
     end
 
     def process_character_class_range

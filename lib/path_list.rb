@@ -27,10 +27,10 @@ class PathList
   end
 
   def dir_matcher
-    @dir_matcher ||= (matcher.compress_self).dir_matcher
+    @dir_matcher ||= matcher.dir_matcher
   end
 
   def file_matcher
-    @file_matcher ||= (matcher.compress_self).file_matcher
+    @file_matcher ||= matcher.file_matcher
   end
 end

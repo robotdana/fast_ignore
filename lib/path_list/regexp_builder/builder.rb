@@ -13,30 +13,29 @@ class PathList
         end
 
         def to_s(parts)
-          return '' if parts.empty?
+          return '' if parts.nil? || parts.empty?
 
-          options = parts.map { |key, value| "#{build_part(key)}#{build_part(value)}" }
+          options = parts.map { |key, value| "#{PARTS_HASH[key]}#{to_s(value)}" }
           options.length == 1 ? options.first : "(?:#{options.join('|')})"
         end
 
-        private
+        PARTS_HASH = {
+          dir: '/',
+          any_dir: '(?:.*/)?',
+          any: '.*',
+          one_non_dir: '[^/]',
+          any_non_dir: '[^/]*',
+          end_anchor: '\\z',
+          start_anchor: '\\A',
+          word_boundary: '\\b',
+          dir_or_start_anchor: '(?:\\A|/)',
+          character_class_non_slash_open: '(?!/)[',
+          character_class_negation: '^',
+          character_class_dash: '-',
+          character_class_close: ']'
+        }.tap { |h| h.default_proc = ->(_, k) { k } }.freeze
 
-        def build_part(part) # rubocop:disable Metrics/MethodLength
-          case part
-          when :dir then '/'
-          when :any_dir then '(?:.*/)?'
-          when :any then '.*'
-          when :one_non_dir then '[^/]'
-          when :any_non_dir then '[^/]*'
-          when :end_anchor then '\\z'
-          when :start_anchor then '\\A'
-          when :word_boundary then '\\b'
-          when :dir_or_start_anchor then '(?:\\A|/)'
-          when nil, String then part
-          when Hash then to_s(part)
-          else raise "Unknown token #{part.inspect}"
-          end
-        end
+        private_constant :PARTS_HASH
       end
     end
   end

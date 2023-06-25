@@ -51,8 +51,8 @@ class PathList
       @tail.key?(part)
     end
 
-    def to_s(builder = Builder)
-      builder.to_s(@parts)
+    def to_s
+      Builder.to_s(@parts)
     end
 
     def to_regexp(builder = Builder)
