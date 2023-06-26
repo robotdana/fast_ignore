@@ -37,7 +37,7 @@ class PathList
       end
 
       def match(candidate)
-        @polarity if @rule.match?(candidate.path)
+        @polarity if @rule.match?(candidate.full_path_downcase)
       end
 
       protected

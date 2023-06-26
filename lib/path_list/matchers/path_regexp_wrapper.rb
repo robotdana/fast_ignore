@@ -32,7 +32,7 @@ class PathList
       end
 
       def match(candidate)
-        @matcher.match(candidate) if @rule.match?(candidate.full_path)
+        @matcher.match(candidate) if @rule.match?(candidate.full_path_downcase)
       end
 
       protected

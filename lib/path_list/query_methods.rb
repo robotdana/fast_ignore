@@ -10,7 +10,7 @@ class PathList
       return false if candidate.directory?
       return false unless candidate.exists?
 
-      candidate.first_line = content.slice(/\A#!.*$/) || '' if content
+      candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
         file_matcher.match(candidate) == :allow
     end
@@ -26,7 +26,7 @@ class PathList
       candidate = Candidate.build(full_path, directory, exists)
       return false unless candidate.exists?
 
-      candidate.first_line = content.slice(/\A#!.*$/) || '' if content
+      candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
         matcher.match(candidate) == :allow
     end
@@ -59,7 +59,7 @@ class PathList
         return unless dir_matcher.match(candidate) == :allow
 
         if candidate.children.include?('.git') && (index = git_indexes.find { |i| i.index_root?(candidate) })
-          candidate.build_children(index.file_tree)
+          candidate.tree = index.file_tree
           dir_matcher = dir_matcher.without_matcher(index)
           file_matcher = file_matcher.without_matcher(index)
         end

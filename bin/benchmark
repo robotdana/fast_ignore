@@ -110,3 +110,28 @@ benchmark('array-index-offset') do
     x.compare!
   end
 end
+
+
+benchmark('bsearch-or-include') do
+  Benchmark.ips do |x|
+    x.config(config)
+    require_relative '../lib/path_list'
+    @array = ('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'..'aaaaaaaaaaaaaaaaaaaaaaaaaaazzz').to_a[0..8]
+    @re  = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp
+    @reB = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp_b
+      puts @re
+    puts @reB
+    # x.report(:bsearch_hit) { @array.each { |target| target += ''; @array.bsearch {|e| target <=> e } } }
+    # x.report(:bsearch_miss) { @array.each { |target| target += '1'; @array.bsearch {|e| target <=> e } } }
+
+    # x.report(:include_hit) { @array.each { |target| target += ''; @array.include?(target) } }
+    # x.report(:include_miss) { @array.each { |target| target += '1'; @array.include?(target) } }
+    x.report(:reB_hit) { @array.each { |target| target += ''; @reB.match?(target) } }
+    x.report(:reB_miss) { @array.each { |target| target += '1'; @reB.match?(target) } }
+
+    x.report(:re_hit) { @array.each { |target| target += ''; @re.match?(target) } }
+    x.report(:re_miss) { @array.each { |target| target += '1'; @re.match?(target) } }
+
+    x.compare!
+  end
+end

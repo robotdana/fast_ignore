@@ -2,22 +2,41 @@
 
 class PathList
   class RegexpBuilder
-    class Builder
+    module Builder
       class << self
         def to_regexp(parts)
-          re_string = to_s(parts)
+          re_string = to_regexp_s(parts)
           return if re_string.empty?
 
-          # Regexp::IGNORECASE = 1
-          Regexp.new(re_string, 1)
+          Regexp.new(re_string)
         end
 
-        def to_s(parts)
+        def to_regexp_s(parts)
           return '' if parts.nil? || parts.empty?
 
-          options = parts.map { |key, value| "#{PARTS_HASH[key]}#{to_s(value)}" }
-          options.length == 1 ? options.first : "(?:#{options.join('|')})"
+          if parts.length == 1
+            part, tail = parts.first
+            "#{PARTS_HASH[part]}#{to_regexp_s(tail)}"
+          else
+            "(?:#{parts.map { |p, t| "#{PARTS_HASH[p]}#{to_regexp_s(t)}" }.join('|')})"
+          end
         end
+
+        def to_literal_s(parts)
+          return '' if parts.nil? || parts.empty?
+
+          key, value = parts.first
+          "#{LITERAL_PARTS_HASH[key]}#{to_literal_s(value)}"
+        end
+
+        LITERAL_PARTS_HASH = {
+          dir: '/',
+          end_anchor: '',
+          start_anchor: '',
+          nil => ''
+        }.tap { |h| h.default_proc = ->(_, k) { k.downcase } }.freeze
+
+        private_constant :LITERAL_PARTS_HASH
 
         PARTS_HASH = {
           dir: '/',
@@ -35,7 +54,7 @@ class PathList
           character_class_close: ']',
           any_non_dot_non_dir: '[^\/\.]*',
           nil => ''
-        }.tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k) } }.freeze
+        }.tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k).downcase } }.freeze
 
         private_constant :PARTS_HASH
       end

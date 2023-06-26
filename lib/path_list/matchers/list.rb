@@ -16,9 +16,7 @@ class PathList
           case calculate_polarity(matchers)
           when :allow then self::Allow.new(matchers)
           when :ignore then self::Ignore.new(matchers)
-          when :mixed
-            new(matchers)
-          else raise 'Oop'
+          when :mixed then new(matchers)
           end
         end
       end

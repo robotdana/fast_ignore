@@ -9,7 +9,7 @@ profile = RubyProf::Profile.new(measure_mode: RubyProf::WALL_TIME)
 
 profile.profile do
   require_relative '../../lib/path_list'
-  PathList.gitignore(index: false).only(ARGV).to_a
+  PathList.gitignore(index: false).only(ARGV, format: :glob).to_a
 end
 
 printer = RubyProf::GraphPrinter.new(profile)

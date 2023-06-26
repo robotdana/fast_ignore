@@ -68,13 +68,13 @@ end
 
 unless ignored_by_path_list_fallback_not_by_git.empty?
   puts "\e[31mIgnored by PathList.gitignore(index: false), not by git:\e[0m"
-  ignored_by_path_list_not_by_git.map { |f| puts f }
+  ignored_by_path_list_fallback_not_by_git.map { |f| puts f }
   exit_status = 1
 end
 
 unless ignored_by_git_not_by_path_list_fallback.empty?
   puts "\e[31mIgnored by git, not by PathList.gitignore(index: false):\e[0m"
-  ignored_by_git_not_by_path_list.map { |f| puts f }
+  ignored_by_git_not_by_path_list_fallback.map { |f| puts f }
   exit_status = 1
 end
 

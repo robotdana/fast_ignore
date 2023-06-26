@@ -4,7 +4,7 @@ class PathList
   module Matchers
     class PathRegexp < MatchRegexp
       def match(candidate)
-        @polarity if @rule.match?(candidate.full_path)
+        @polarity if @rule.match?(candidate.full_path_downcase)
       end
 
       def compress_self

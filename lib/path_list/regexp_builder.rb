@@ -29,14 +29,17 @@ class PathList
       @parts.empty?
     end
 
-    def exact_string?
+    def exact_string? # rubocop:disable Metrics/MethodLength
       tail_part, tail = @parts.first
 
       return false unless tail_part == :start_anchor
 
       while (tail_part, next_tail = tail.first) && !next_tail.nil?
         return false if tail.length > 1
-        return false unless tail_part.is_a?(String) || tail_part == :dir || tail_part == :end_anchor
+        return false unless tail_part.is_a?(String) ||
+          tail_part == :dir ||
+          tail_part == :end_anchor ||
+          tail_part.nil?
 
         tail = next_tail
       end
@@ -63,11 +66,11 @@ class PathList
     end
 
     def to_s
-      Builder.to_s(@parts)
+      Builder.to_literal_s(@parts)
     end
 
-    def to_regexp(builder = Builder)
-      builder.to_regexp(@parts)
+    def to_regexp
+      Builder.to_regexp(@parts)
     end
 
     def compressed?

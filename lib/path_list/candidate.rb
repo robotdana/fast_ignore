@@ -23,6 +23,10 @@ class PathList
       @children = nil
     end
 
+    def full_path_downcase
+      @full_path_downcase ||= @full_path.downcase
+    end
+
     def prepend_path
       @prepend_path ||= @full_path == '/' ? '' : @full_path
     end
@@ -38,11 +42,13 @@ class PathList
     end
 
     def child_candidates
-      @child_candidates ||= children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true) }
+      @child_candidates ||= build_from_tree || children.map do |filename|
+        Candidate.new("#{prepend_path}/#{filename}", nil, true)
+      end
     end
 
     def children
-      @children ||= ::Dir.children(@full_path)
+      @children ||= @tree&.keys || ::Dir.children(@full_path)
     end
 
     def directory?
@@ -81,9 +87,9 @@ class PathList
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
           if first_line.include?("\n")
-            first_line
+            first_line.downcase
           else
-            ::File.open(@full_path, &:readline)
+            ::File.open(@full_path, &:readline).downcase
           end
         else
           ''
@@ -95,12 +101,15 @@ class PathList
       end
     end
 
-    def build_children(paths)
-      @children = paths.keys
-      @child_candidates = paths.map do |child_name, grandchildren|
+    attr_writer :tree
+
+    private
+
+    def build_from_tree
+      @tree&.map do |child_name, grandchildren|
         if grandchildren
           c = self.class.new("#{prepend_path}/#{child_name}", true, true)
-          c.build_children(grandchildren)
+          c.tree = grandchildren
           c
         else
           self.class.new("#{prepend_path}/#{child_name}", false, true)

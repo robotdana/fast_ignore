@@ -164,7 +164,11 @@ class PathList
     end
 
     def build_matcher
-      matcher = Matchers::PathRegexp.build(@re, negated?)
+      matcher = if @re.exact_string?
+        Matchers::ExactStringList.build([@re.to_s.downcase], negated? ? :allow : :ignore)
+      else
+        Matchers::PathRegexp.build(@re, negated?)
+      end
       matcher = Matchers::MatchIfDir.build(matcher) if dir_only?
       matcher
     end

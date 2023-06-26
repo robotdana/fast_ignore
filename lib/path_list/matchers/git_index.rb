@@ -10,11 +10,11 @@ class PathList
       end
 
       def match(candidate)
-        matcher.match(candidate) if parent_re.match?(candidate.full_path)
+        matcher.match(candidate) if parent_re.match?(candidate.full_path_downcase)
       end
 
       def index_root?(candidate)
-        root_re.match?(candidate.full_path)
+        root_re.match?(candidate.full_path_downcase)
       end
 
       def file_tree
