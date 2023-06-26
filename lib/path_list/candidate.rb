@@ -1,23 +1,26 @@
 # frozen_string_literal: true
 
 class PathList
-  class Candidate # rubocop:disable Metrics/ClassLength
+  class Candidate
     attr_reader :full_path
+    attr_writer :first_line
 
-    def self.build(full_path, directory, exists, content)
+    def self.build(full_path, directory, exists)
       new(
         full_path,
         directory,
-        exists,
-        (content && (content.slice(/\A#!.*/) || ''))
+        exists
       )
     end
 
-    def initialize(full_path, directory, exists, first_line)
+    def initialize(full_path, directory, exists)
       @full_path = full_path
       @directory = directory
       @exists = exists
-      @first_line = first_line
+      @first_line = nil
+      @prepend_path = nil
+      @child_candidates = nil
+      @children = nil
     end
 
     def prepend_path
@@ -30,37 +33,12 @@ class PathList
       @parent = begin
         return if @full_path == '/'
 
-        self.class.new(::File.dirname(@full_path), true, true, nil)
+        self.class.new(::File.dirname(@full_path), true, true)
       end
-    end
-
-    def each_leaf(relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      if directory?
-        return unless dir_matcher.match(self) == :allow
-
-        if children.include?('.git') && (index = git_indexes.find { |i| i.index_root?(self) })
-          paths = RegexpBuilder::Merge.merge(
-            index.files.map { |path| path.split('/').reverse_each.reduce(nil) { |a, e| { e => a } } }
-          )
-          @child_candidates = build_candidates(prepend_path, paths)
-          dir_matcher = dir_matcher.without_matcher(index)
-          file_matcher = file_matcher.without_matcher(index)
-        end
-
-        child_candidates.each do |candidate|
-          candidate.each_leaf(relative_root, git_indexes, dir_matcher, file_matcher, &block)
-        end
-      else
-        return unless file_matcher.match(self) == :allow
-
-        yield(@full_path.delete_prefix(relative_root))
-      end
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
-      nil
     end
 
     def child_candidates
-      @child_candidates ||= children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true, nil) }
+      @child_candidates ||= children.map { |filename| Candidate.new("#{prepend_path}/#{filename}", nil, true) }
     end
 
     def children
@@ -117,23 +95,15 @@ class PathList
       end
     end
 
-    protected
-
-    attr_writer :child_candidates
-    attr_writer :children
-
-    private
-
-    def build_candidates(parent_path, paths) # rubocop:disable Metrics/MethodLength
-      paths.map do |first_part, rest|
-        path = "#{parent_path}/#{first_part}"
-        if rest
-          c = Candidate.new(path, true, true, nil)
-          c.children = rest.keys
-          c.child_candidates = build_candidates(path, rest) if rest
+    def build_children(paths)
+      @children = paths.keys
+      @child_candidates = paths.map do |child_name, grandchildren|
+        if grandchildren
+          c = self.class.new("#{prepend_path}/#{child_name}", true, true)
+          c.build_children(grandchildren)
           c
         else
-          Candidate.new(path, false, true, nil)
+          self.class.new("#{prepend_path}/#{child_name}", false, true)
         end
       end
     end

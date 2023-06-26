@@ -5,8 +5,7 @@ RSpec.describe PathList::Candidate do
     described_class.build(
       full_path,
       directory,
-      exists,
-      content
+      exists
     )
   end
 
@@ -14,7 +13,6 @@ RSpec.describe PathList::Candidate do
   let(:filename) { 'filename' }
   let(:directory) { false }
   let(:exists) { true }
-  let(:content) { '' }
 
   describe '#original_inspect' do
     it 'returns the default inspect' do
@@ -101,7 +99,6 @@ RSpec.describe PathList::Candidate do
       around { |e| within_temp_dir { e.run } }
 
       let(:full_path) { './foo' }
-      let(:content) { nil }
 
       it 'returns the first line if it has a shebang' do
         create_file <<~RUBY, path: full_path
@@ -173,7 +170,7 @@ RSpec.describe PathList::Candidate do
       end
     end
 
-    context 'when not reading from the file system' do
+    context 'when not reading from the file system', skip: 'this moved to query methods' do
       before { hide_const('::File') }
 
       context 'when the first line has a shebang' do

@@ -214,7 +214,6 @@ RSpec.describe PathList::GitIndex do
                 `git commit --no-verify -m COMMIT`
                 `git update-index --split-index`
                 `git mv dir dir2`
-
                 expect(described_class.files).to eq(`git ls-files -z`.split("\0"))
                   .and(match_array(filenames.map { |f| f.sub('dir', 'dir2') }))
               end

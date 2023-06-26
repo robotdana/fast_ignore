@@ -7,7 +7,7 @@ module InspectHelper
 
   def debug_match(matcher, candidate) # rubocop:disable Metrics/MethodLength
     unless candidate.is_a?(PathList::Candidate)
-      candidate = PathList::Candidate.new(PathList::PathExpander.expand_path_pwd(candidate), nil, nil, nil, nil)
+      candidate = PathList::Candidate.new(PathList::PathExpander.expand_path_pwd(candidate), nil, nil)
     end
 
     puts "#{matcher.inspect}\n => #{matcher.match(candidate).inspect}\n---" if matcher.respond_to?(:match)

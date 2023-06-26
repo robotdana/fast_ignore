@@ -8,14 +8,14 @@ class PathList
 
         pattern = RegexpBuilder.new
         pattern.append_part :start_anchor
-        pattern.append_part '#!'
+        pattern.append_string '#!'
         pattern.append_part :any
         # we only want word boundary anchors if we are going from word characters to non-word
         pattern.append_part :word_boundary if shebang.match?(/\A\w/)
         pattern.append_string shebang
         pattern.append_part :word_boundary if shebang.match?(/\w\z/)
 
-        path_matcher_tail = { dir: { any_dir: { '[^\.\/]*' => { end_anchor: nil } } } }
+        path_matcher_tail = { dir: { any_dir: { any_non_dot_non_dir: { end_anchor: nil } } } }
         path_matcher = RegexpBuilder.new_from_path(PathExpander.expand_path_pwd(root), path_matcher_tail)
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(

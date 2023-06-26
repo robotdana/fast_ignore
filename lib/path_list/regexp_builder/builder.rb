@@ -32,8 +32,10 @@ class PathList
           character_class_non_slash_open: '(?!/)[',
           character_class_negation: '^',
           character_class_dash: '-',
-          character_class_close: ']'
-        }.tap { |h| h.default_proc = ->(_, k) { k } }.freeze
+          character_class_close: ']',
+          any_non_dot_non_dir: '[^\/\.]*',
+          nil => ''
+        }.tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k) } }.freeze
 
         private_constant :PARTS_HASH
       end

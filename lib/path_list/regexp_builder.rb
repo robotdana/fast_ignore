@@ -13,7 +13,7 @@ class PathList
       rb.append_part(:start_anchor)
       path.delete_prefix('/').split('/').each do |part|
         rb.append_part(:dir)
-        rb.append_part(Regexp.escape(part))
+        rb.append_part(part)
       end
       rb.append_tail_n(tail)
       rb
@@ -27,6 +27,22 @@ class PathList
 
     def empty?
       @parts.empty?
+    end
+
+    def exact_string?
+      tail_part, tail = @parts.first
+
+      return false unless tail_part == :start_anchor
+
+      while (tail_part, next_tail = tail.first) && !next_tail.nil?
+        return false if tail.length > 1
+        return false unless tail_part.is_a?(String) || tail_part == :dir || tail_part == :end_anchor
+
+        tail = next_tail
+      end
+      return false unless tail_part == :end_anchor
+
+      true
     end
 
     def start_with?(value)
@@ -148,12 +164,6 @@ class PathList
     end
 
     def append_string(value)
-      return unless value
-
-      append_unescaped(::Regexp.escape(value))
-    end
-
-    def append_unescaped(value)
       return unless value
 
       if @tail_part.is_a?(String)

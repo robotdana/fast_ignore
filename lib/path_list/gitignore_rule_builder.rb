@@ -81,10 +81,6 @@ class PathList
       emitted! if @re.append_string string
     end
 
-    def append_unescaped(re_string)
-      emitted! if @re.append_unescaped re_string
-    end
-
     def emit_end
       append_part :end_anchor
       break!
@@ -103,20 +99,19 @@ class PathList
     def process_character_class # rubocop:disable Metrics/MethodLength
       return unless @s.character_class_start?
 
-      @character_class = RegexpBuilder.new({ character_class_non_slash_open: nil })
-      @character_class.append_part :character_class_negation if @s.character_class_negation?
+      append_part :character_class_non_slash_open
+      append_part :character_class_negation if @s.character_class_negation?
       unmatchable_rule! if @s.character_class_end?
 
       until @s.character_class_end?
         next if process_character_class_range
-        next if process_backslash(@character_class)
-        next if @character_class.append_string(@s.character_class_literal)
+        next if process_backslash
+        next if append_string(@s.character_class_literal)
 
         unmatchable_rule!
       end
 
-      @character_class.append_part :character_class_close
-      append_unescaped @character_class.to_s
+      append_part :character_class_close
     end
 
     def process_character_class_range
@@ -125,14 +120,14 @@ class PathList
 
       start = start.delete_prefix('\\')
 
-      @character_class.append_string(start)
+      append_string(start)
 
       finish = @s.character_class_range_end.delete_prefix('\\')
 
       return true unless start < finish
 
-      @character_class.append_part :character_class_dash
-      @character_class.append_string(finish)
+      append_part :character_class_dash
+      append_string(finish)
     end
 
     def process_end

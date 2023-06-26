@@ -73,7 +73,7 @@ class PathList
         Matchers::LastMatch.build([
           Matchers::Allow,
           collector,
-          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '\.git' => { end_anchor: nil } } }), false)
+          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '.git' => { end_anchor: nil } } }), false)
         ])
       )
     end
