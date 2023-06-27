@@ -132,20 +132,20 @@ RSpec.describe PathList do
       expect(subject.send(:dir_matcher)).to be_like PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
         PathList::Matchers::CollectGitignore.new(
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}(?:/|\z)}i, true),
+          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:/|\z)}, true),
           PathList::Matchers::Mutable.new(
-            PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}i, false)
+            PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, false)
           )
         ),
-        PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
+        PathList::Matchers::PathRegexp.new(%r{/\.git\z}, false)
       ])
 
       expect(subject.send(:file_matcher)).to be_like PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
         PathList::Matchers::Mutable.new(
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?foo\z}i, false)
+          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, false)
         ),
-        PathList::Matchers::PathRegexp.new(%r{/\.git\z}i, false)
+        PathList::Matchers::PathRegexp.new(%r{/\.git\z}, false)
       ])
     end
 

@@ -9,11 +9,11 @@ RSpec.describe PathList::Matchers::PathRegexp do
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/i, true)' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, true)' }
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 3.0) }
+    it { is_expected.to have_attributes(weight: 2.75) }
   end
 
   describe '#squashable_with?' do
@@ -47,7 +47,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
 
       expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'a' => nil, 'b' => nil }),
                                                         allow_value))
-      expect(squashed).to be_like(described_class.new(/(?:a|b)/i, allow_value))
+      expect(squashed).to be_like(described_class.new(/(?:a|b)/, allow_value))
     end
   end
 
@@ -55,7 +55,9 @@ RSpec.describe PathList::Matchers::PathRegexp do
     let(:path) { 'my/file.rb' }
     let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
 
-    let(:candidate) { instance_double(PathList::Candidate, full_path: "/#{path}") }
+    let(:candidate) do
+      instance_double(PathList::Candidate, full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
+    end
 
     context 'with a matching rule' do
       context 'when allowing' do

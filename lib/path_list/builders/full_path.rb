@@ -5,10 +5,7 @@ class PathList
     module FullPath
       class << self
         def build(path, allow, root)
-          Matchers::PathRegexp.build(
-            RegexpBuilder.new_from_path(PathExpander.expand_path(path, root)),
-            allow
-          )
+          Matchers::ExactString.new(PathExpander.expand_path(path, root), allow ? :allow : :ignore)
         end
 
         def build_implicit(path, _allow, root)

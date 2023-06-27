@@ -4,12 +4,12 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   subject { described_class.build(builder, allow_value) }
 
   let(:allow_value) { true }
-  let(:builder) { PathList::RegexpBuilder.new({ 'abc' => nil }) }
+  let(:builder) { PathList::RegexpBuilder.new({ 'abcd' => nil }) }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::ShebangRegexp.new(/abc/i, true)' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::ShebangRegexp.new(/abcd/, true)' }
   end
 
   describe '#weight' do
@@ -45,9 +45,9 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'abc' => nil, 'b' => nil }),
+      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'abcd' => nil, 'b' => nil }),
                                                         allow_value))
-      expect(squashed).to be_like(described_class.new(/(?:abc|b)/i, allow_value))
+      expect(squashed).to be_like(described_class.new(/(?:abcd|b)/, allow_value))
     end
   end
 

@@ -58,7 +58,7 @@ RSpec.describe PathList::Patterns do
       it 'ignores a' do
         expect(matchers).to be_like PathList::Matchers::LastMatch::Two.new([
           PathList::Matchers::Allow,
-          PathList::Matchers::PathRegexp.new(%r{/a\z}i, false)
+          PathList::Matchers::PathRegexp.new(%r{/a\z}, false)
         ])
       end
     end
@@ -69,7 +69,7 @@ RSpec.describe PathList::Patterns do
       it 'allows a, and implicitly any parents and children of a' do
         expect(matchers).to be_like PathList::Matchers::LastMatch.new([
           PathList::Matchers::Ignore,
-          PathList::Matchers::PathRegexp.new(%r{/a(?:/|\z)}i, true),
+          PathList::Matchers::PathRegexp.new(%r{/a(?:/|\z)}, true),
           PathList::Matchers::AllowAnyDir
         ])
       end
@@ -84,7 +84,7 @@ RSpec.describe PathList::Patterns do
         it 'ignores a' do
           expect(matchers).to be_like PathList::Matchers::LastMatch::Two.new([
             PathList::Matchers::Allow,
-            PathList::Matchers::PathRegexp.new(%r{\A/b/(?:.*/)?a\z}i, false)
+            PathList::Matchers::PathRegexp.new(%r{\A/b/(?:.*/)?a\z}, false)
           ])
         end
       end
@@ -95,9 +95,9 @@ RSpec.describe PathList::Patterns do
         it 'allows a, and implicitly any children of a' do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
-            PathList::Matchers::PathRegexp.new(%r{\A/b/(?:.*/)?a(?:/|\z)}i, true),
+            PathList::Matchers::PathRegexp.new(%r{\A/b/(?:.*/)?a(?:/|\z)}, true),
             PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::PathRegexp.new(%r{\A/(?:b(?:/|\z)|\z)}i, true)
+              PathList::Matchers::PathRegexp.new(%r{\A/(?:b(?:/|\z)|\z)}, true)
             )
           ])
         end
@@ -117,8 +117,11 @@ RSpec.describe PathList::Patterns do
         it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Allow,
-            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}i, false),
-            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/(?:foo\z|baz\z)}i, true)
+            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}, false),
+            PathList::Matchers::ExactStringList.new([
+              '/a/b/c/foo',
+              '/a/b/c/baz'
+            ], :allow)
           ])
         end
       end
@@ -129,18 +132,21 @@ RSpec.describe PathList::Patterns do
         it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
-            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/(?:.*/|)}i, true),
+            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/(?:.*/|)}, true),
             PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/b(?:/c(?:/|\z)|\z)|\z)|\z)}i, true)
+              PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/b(?:/c(?:/|\z)|\z)|\z)|\z)}, true)
             ),
-            PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/(?:foo\z|baz\z)}i, false)
+            PathList::Matchers::ExactStringList.new([
+              '/a/b/c/foo',
+              '/a/b/c/baz'
+            ], :ignore)
           ])
         end
       end
     end
 
     describe 'with more complex patterns' do
-      let(:patterns) { ['a', '/b', 'd', '/bb', '!c/d', '**/e', '# comment'] }
+      let(:patterns) { ['a*', '/b*', 'd*', '/bb*', '!c/d*', '**/e*', '# comment'] }
       let(:root) { '/f/g/' }
 
       context 'when ignore' do
@@ -149,9 +155,10 @@ RSpec.describe PathList::Patterns do
         it 'builds correct matchers (correctness verified by other tests, i just want visibility)' do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Allow,
-            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:b\z|bb\z|(?:.*/)?(?:a\z|d\z))}i, false),
-            PathList::Matchers::PathRegexp.new(%r{\A/f/g/c/d\z}i, true),
-            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:.*/)?e\z}i, false)
+            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:b[^\/]*\z|bb[^\/]*\z|(?:.*/)?(?:a[^\/]*\z|d[^\/]*\z))},
+                                               false),
+            PathList::Matchers::PathRegexp.new(%r{\A/f/g/c/d[^\/]*\z}, true),
+            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:.*/)?e[^\/]*\z}, false)
           ])
         end
       end
@@ -163,13 +170,13 @@ RSpec.describe PathList::Patterns do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
             PathList::Matchers::PathRegexp.new(
-              %r{\A/f/g/(?:b(?:\z|/)|bb(?:\z|/)|(?:.*/)?(?:a(?:\z|/)|d(?:\z|/)|e/))}i, true
+              %r{\A/f/g/(?:b[^\/]*(?:\z|/)|bb[^\/]*(?:\z|/)|(?:.*/)?(?:a[^\/]*(?:\z|/)|d[^\/]*(?:\z|/)|e[^\/]*/))}, true
             ),
             PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::PathRegexp.new(%r{\A/(?:f(?:/g(?:\z|/)|\z)|\z)}i, true)
+              PathList::Matchers::PathRegexp.new(%r{\A/(?:f(?:/g(?:\z|/)|\z)|\z)}, true)
             ),
-            PathList::Matchers::PathRegexp.new(%r{\A/f/g/c/d\z}i, false),
-            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:.*/)?e\z}i, true)
+            PathList::Matchers::PathRegexp.new(%r{\A/f/g/c/d[^\/]*\z}, false),
+            PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:.*/)?e[^\/]*\z}, true)
           ])
         end
       end

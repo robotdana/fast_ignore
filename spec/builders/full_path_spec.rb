@@ -13,7 +13,7 @@ RSpec.describe PathList::Builders::FullPath do
 
     it 'builds a regex that matches parent and child somethings' do
       expect(matcher).to be_like(
-        PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}i, true)
+        PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}, true)
       )
     end
 
@@ -22,7 +22,7 @@ RSpec.describe PathList::Builders::FullPath do
 
       it 'builds a regex that matches parent and child somethings' do
         expect(matcher).to be_like(
-          PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}i, true)
+          PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}, true)
         )
       end
     end
@@ -81,9 +81,9 @@ RSpec.describe PathList::Builders::FullPath do
 
     let(:allow_arg) { false }
 
-    it 'builds a regex that matches exact something' do
+    it 'builds a matcher that matches exact something' do
       expect(matcher).to be_like(
-        PathList::Matchers::PathRegexp.new(%r{\A/path/to/exact/something\z}i, false)
+        PathList::Matchers::ExactString.new('/path/to/exact/something', :ignore)
       )
     end
 

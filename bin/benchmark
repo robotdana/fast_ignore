@@ -62,7 +62,49 @@ benchmark('or-or-any') do
   end
 end
 
-benchmark('enumerate-array') do
+benchmark('hash-merge') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @hash = {}
+
+    def merge_2(hash, other_hash)
+      hash.merge(other_hash) do |_, left, right|
+        if left || right
+          merge_2(left || { nil => nil }, right || { nil => nil })
+        end
+      end
+    end
+
+    def merge_2b(hash, other_hash)
+      hash.merge(other_hash) do |_, left, right|
+        if left && right
+          merge_2b(left, right)
+        elsif left || right
+          merge_2b(left || { nil => nil }, right || { nil => nil })
+        end
+      end
+    end
+
+    @hash1 = {
+      'b' => { dir: nil },
+      'bb' => { dir: nil },
+      :any_dir => {
+        'a' => { dir: nil },
+        'd' => { dir: nil },
+        'e' => { dir: nil }
+      }
+    }
+
+    @hash2 = { any_dir: { 'd' => { end_anchor: nil }, 'e' => nil } }
+
+
+    x.report(:merge_2) { merge_2(@hash1, @hash2) }
+    x.report(:merge_2b) { merge_2b(@hash1, @hash2) }
+    x.compare!
+  end
+end
+
+benchmark('is_a_hash_nil') do
   Benchmark.ips do |x|
     x.config(config)
     @array = (0..1000).to_a
@@ -131,6 +173,229 @@ benchmark('bsearch-or-include') do
 
     x.report(:re_hit) { @array.each { |target| target += ''; @re.match?(target) } }
     x.report(:re_miss) { @array.each { |target| target += '1'; @re.match?(target) } }
+
+    x.compare!
+  end
+end
+
+benchmark('build-filetree-hash') do
+  Benchmark.ips do |x|
+    files = %w[
+      Gemfile
+      railties/lib/info.rb
+      railties/lib/info_controller.rb
+      railties/lib/rails/initializable.rb
+      railties/lib/rails/mailers_controller.rb
+      railties/lib/rails/paths.rb
+      railties/lib/rails/plugin/test.rb
+      railties/lib/rails/rack.rb
+      railties/lib/rails/rack/logger.rb
+      railties/lib/rails/railtie.rb
+      railties/lib/rails/railtie/configurable.rb
+      railties/lib/rails/railtie/configuration.rb
+      railties/lib/rails/ruby_version_check.rb
+      railties/lib/rails/secrets.rb
+      railties/lib/rails/source_annotation_extractor.rb
+      railties/lib/rails/tasks.rb
+      railties/lib/rails/tasks/annotations.rake
+      railties/lib/rails/tasks/dev.rake
+      railties/lib/rails/tasks/engine.rake
+      railties/lib/rails/tasks/framework.rake
+      railties/lib/rails/tasks/initializers.rake
+      railties/lib/rails/tasks/log.rake
+      railties/lib/rails/tasks/middleware.rake
+      railties/lib/rails/tasks/misc.rake
+      railties/lib/rails/tasks/restart.rake
+      railties/lib/rails/tasks/routes.rake
+      railties/lib/rails/tasks/statistics.rake
+      railties/lib/rails/tasks/tmp.rake
+      railties/lib/rails/tasks/yarn.rake
+      railties/lib/rails/tasks/zeitwerk.rake
+      railties/lib/rails/templates/layouts/application.html.erb
+      railties/lib/rails/templates/rails/info/properties.html.erb
+      railties/lib/rails/templates/rails/info/routes.html.erb
+      railties/lib/rails/templates/rails/mailers/email.html.erb
+      railties/lib/rails/templates/rails/mailers/index.html.erb
+      railties/lib/rails/templates/rails/mailers/mailer.html.erb
+      railties/lib/rails/templates/rails/welcome/index.html.erb
+      railties/lib/rails/test_help.rb
+      railties/lib/rails/test_unit/line_filtering.rb
+      railties/lib/rails/test_unit/railtie.rb
+      railties/lib/rails/test_unit/reporter.rb
+      railties/lib/rails/test_unit/runner.rb
+      railties/lib/rails/test_unit/testing.rake
+      railties/lib/rails/version.rb
+      railties/lib/rails/welcome_controller.rb
+      railties/railties.gemspec
+      railties/test/abstract_unit.rb
+      railties/test/app_loader_test.rb
+      railties/test/application/asset_debugging_test.rb
+      railties/test/application/assets_test.rb
+      railties/test/application/bin_setup_test.rb
+      railties/test/application/configuration/custom_test.rb
+      railties/test/application/configuration_test.rb
+      railties/test/application/console_test.rb
+      railties/test/application/content_security_policy_test.rb
+      railties/test/application/credentials_test.rb
+      railties/test/application/current_attributes_integration_test.rb
+      railties/test/application/dbconsole_test.rb
+      railties/test/application/feature_policy_test.rb
+      railties/test/application/generators_test.rb
+      railties/test/application/help_test.rb
+      railties/test/application/initializers/frameworks_test.rb
+      railties/test/application/initializers/hooks_test.rb
+      railties/test/application/initializers/i18n_test.rb
+      railties/test/application/initializers/load_path_test.rb
+      railties/test/application/initializers/notifications_test.rb
+      railties/test/application/integration_test_case_test.rb
+      railties/test/application/loading_test.rb
+      railties/test/application/mailer_previews_test.rb
+      railties/test/application/middleware/cache_test.rb
+      railties/test/application/middleware/cookies_test.rb
+      railties/test/application/middleware/exceptions_test.rb
+      railties/test/application/middleware/remote_ip_test.rb
+      railties/test/application/middleware/sendfile_test.rb
+      railties/test/application/middleware/session_test.rb
+      railties/test/application/middleware/static_test.rb
+      railties/test/application/middleware_test.rb
+      railties/test/application/multiple_applications_test.rb
+      railties/test/application/paths_test.rb
+      railties/test/application/per_request_digest_cache_test.rb
+      railties/test/application/rack/logger_test.rb
+      railties/test/application/rackup_test.rb
+      railties/test/application/rake/dbs_test.rb
+      railties/test/application/rake/dev_test.rb
+    ]
+
+    tree_hash_proc = -> (h,k) {
+      new_hash = {}
+      new_hash.default_proc = tree_hash_proc
+      h[k] = new_hash
+    }
+
+    require_relative '../lib/path_list/regexp_builder/merge'
+
+    x.report(:default_proc) do
+      tree = {}
+      tree.default_proc = tree_hash_proc
+      files.each do |path|
+        *dirs, filename = path.split('/')
+        if dirs.empty?
+          tree[filename] = nil
+        else
+          tree.dig(*dirs, filename)
+          tree.dig(*dirs)[filename] = nil
+        end
+      end
+      tree
+    end
+
+    x.report(:default_proc_2) do
+      tree_2 = {}
+      tree_2.default_proc = tree_hash_proc
+      files.each do |path|
+        if path.include?('/')
+          *dirs, filename = path.split('/')
+          tree_2.dig(*dirs, filename)
+          tree_2.dig(*dirs)[filename] = nil
+        else
+          tree_2[path] = nil
+        end
+      end
+      tree_2
+    end
+
+    tree = {}
+    tree.default_proc = tree_hash_proc
+    files.each do |path|
+      *dirs, filename = path.split('/')
+      if dirs.empty?
+        tree[filename] = nil
+      else
+        tree.dig(*dirs, filename)
+        tree.dig(*dirs)[filename] = nil
+      end
+    end
+    tree
+
+    tree_2 = {}
+    tree_2.default_proc = tree_hash_proc
+    files.each do |path|
+      if path.include?('/')
+        *dirs, filename = path.split('/')
+        tree_2.dig(*dirs, filename)
+        tree_2.dig(*dirs)[filename] = nil
+      else
+        tree_2[path] = nil
+      end
+    end
+    tree_2
+
+    tree_hash_proc_2 = -> (h,k) {
+      h[k] = Hash.new(&tree_hash_proc_2)
+    }
+
+    tree_3 = Hash.new(&tree_hash_proc_2)
+    files.each do |path|
+      if path.include?('/')
+        *dirs, filename = path.split('/')
+        tree_3.dig(*dirs, filename)
+        tree_3.dig(*dirs)[filename] = nil
+      else
+        tree_3[path] = nil
+      end
+    end
+    tree_3
+
+    x.report(:default_proc_3) do
+      tree_3 = Hash.new(&tree_hash_proc_2)
+      files.each do |path|
+        if path.include?('/')
+          *dirs, filename = path.split('/')
+          tree_3.dig(*dirs, filename)
+          tree_3.dig(*dirs)[filename] = nil
+        else
+          tree_3[path] = nil
+        end
+      end
+      tree_3
+    end
+
+    tree_4 = {}
+    tree_4.default_proc = tree_hash_proc
+    files.each do |path|
+      if path.include?('/')
+        *dirs, filename = path.split('/')
+        tree_4.dig(*dirs).merge!(filename => nil)
+      else
+        tree_4[path] = nil
+      end
+    end
+    tree_4
+
+    x.report(:default_proc_4) do
+      tree_4 = {}
+      tree_4.default_proc = tree_hash_proc
+      files.each do |path|
+        if path.include?('/')
+          *dirs, filename = path.split('/')
+          tree_4.dig(*dirs).merge!(filename => nil)
+        else
+          tree_4[path] = nil
+        end
+      end
+      tree_4
+    end
+
+    raise unless tree_3 == tree_2 && tree == tree_4 && tree == tree_2 && tree_2 == PathList::RegexpBuilder::Merge.merge(
+      files.map { |path| path.split('/').reverse_each.reduce(nil) { |a, e| { e => a } } }
+    )
+
+    x.report(:Merge_merge) {
+      PathList::RegexpBuilder::Merge.merge(
+        files.map { |path| path.split('/').reverse_each.reduce(nil) { |a, e| { e => a } } }
+      )
+    }
 
     x.compare!
   end

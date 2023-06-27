@@ -15,6 +15,8 @@ config
 cov
 cyclomatic
 cygwin
+dbconsole
+dbs
 denylist
 diffable
 dirc
@@ -33,6 +35,7 @@ excludesfile
 extensionless
 fancyignore
 filesystem
+filetree
 flamegraph
 fnmatch
 frotz
@@ -49,10 +52,12 @@ gitls
 gnore
 hashbang
 heredoc
+i'm
 i've
 idx
 includefile
 includeif
+initializable
 ips
 janky
 jruby
@@ -63,6 +68,7 @@ lookahead
 mascheck
 memoize
 memoized
+middleware
 msb
 nestedly
 nocov
@@ -77,6 +83,9 @@ performant
 prettierignore
 pwd
 quotepath
+rackup
+railtie
+railties
 rdoc
 readme
 recurse
@@ -89,6 +98,7 @@ rubygems
 rubyish
 rulesets
 rvm
+sendfile
 sharedindex
 sherson
 simplecov

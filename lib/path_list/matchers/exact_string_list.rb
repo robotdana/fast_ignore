@@ -8,10 +8,12 @@ class PathList
       def self.build(array, polarity)
         case array.length
         when 0 then Blank
-        when 1 then self::One.new(array, polarity)
-        when 2..8 then self::Some.new(array, polarity)
+        when 1 then ExactString.new(array.first, polarity)
+        # i'm not sure where the crossover is where bsearch's overhead becomes worth it
+        # but it might be somewhere around here
+        when 2...16 then new(array, polarity)
         else
-          new(array.sort, polarity)
+          ExactStringBsearch.new(array.sort, polarity)
         end
       end
 
@@ -39,9 +41,7 @@ class PathList
       attr_reader :array
 
       def match(candidate)
-        full_path = candidate.full_path_downcase
-
-        return @polarity if @array.bsearch { |element| full_path <=> element }
+        return @polarity if @array.include?(candidate.full_path_downcase)
       end
     end
   end
