@@ -3,7 +3,7 @@
 class PathList
   module Builders
     module Shebang
-      def self.build(shebang, allow, root) # rubocop:disable Metrics/MethodLength
+      def self.build(shebang, polarity, root) # rubocop:disable Metrics/MethodLength
         shebang = shebang.delete_prefix('#!').strip
 
         pattern = RegexpBuilder.new
@@ -20,30 +20,24 @@ class PathList
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
             path_matcher,
-            Matchers::ShebangRegexp.build(pattern, allow)
+            Matchers::ShebangRegexp.build(pattern, polarity)
           )
         )
       end
 
       # also allow all directories in case they include a file with the matching shebang file
-      def self.build_implicit(_shebang, allow, root) # rubocop:disable Metrics/MethodLength
-        if allow
-          if root
-            Matchers::MatchIfDir.build(
-              Matchers::Any.build([
-                Matchers::PathRegexp.build(
-                  RegexpBuilder.new_from_path(root, { dir: { any_non_dir: nil } }).ancestors,
-                  allow
-                ),
-                Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, { dir: nil }), allow)
-              ])
-            )
-          else
-            Matchers::AllowAnyDir
-          end
-        else
-          Matchers::Blank
-        end
+      def self.build_implicit(_shebang, root) # rubocop:disable Metrics/MethodLength
+        return Matchers::AllowAnyDir unless root
+
+        Matchers::MatchIfDir.build(
+          Matchers::Any.build([
+            Matchers::PathRegexp.build(
+              RegexpBuilder.new_from_path(root, { dir: { any_non_dir: nil } }).ancestors,
+              :allow
+            ),
+            Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, { dir: nil }), :allow)
+          ])
+        )
       end
     end
   end

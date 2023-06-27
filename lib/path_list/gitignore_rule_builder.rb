@@ -2,13 +2,13 @@
 
 class PathList
   class GitignoreRuleBuilder # rubocop:disable Metrics/ClassLength
-    def initialize(rule, root: nil, allow: false, expand_path: false)
+    def initialize(rule, root: nil, polarity: :ignore, expand_path: false)
       @s = GitignoreRuleScanner.new(rule)
-      @allow = allow
+      @default_polarity = polarity
+      @rule_polarity = polarity
       @expand_path = expand_path
       @root = root
 
-      @negated = @allow
       @dir_only = false
       @emitted = false
     end
@@ -33,15 +33,11 @@ class PathList
     end
 
     def unmatchable_rule!
-      throw :abort_build, (@allow ? Matchers::Invalid : Matchers::Blank)
+      throw :abort_build, (@default_polarity == :allow ? Matchers::Invalid : Matchers::Blank)
     end
 
     def negated!
-      @negated = !@allow
-    end
-
-    def negated?
-      @negated
+      @rule_polarity = @default_polarity == :allow ? :ignore : :allow
     end
 
     def dir_only!
@@ -165,9 +161,9 @@ class PathList
 
     def build_matcher
       matcher = if @re.exact_string?
-        Matchers::ExactStringList.build([@re.to_s.downcase], negated? ? :allow : :ignore)
+        Matchers::ExactStringList.build([@re.to_s.downcase], @rule_polarity)
       else
-        Matchers::PathRegexp.build(@re, negated?)
+        Matchers::PathRegexp.build(@re, @rule_polarity)
       end
       matcher = Matchers::MatchIfDir.build(matcher) if dir_only?
       matcher
@@ -188,7 +184,7 @@ class PathList
         ancestors = @re.ancestors
         return Matchers::Blank if ancestors.empty?
 
-        Matchers::MatchIfDir.build(Matchers::PathRegexp.build(ancestors, negated?))
+        Matchers::MatchIfDir.build(Matchers::PathRegexp.build(ancestors, :allow))
       else
         Matchers::AllowAnyDir
       end
@@ -196,13 +192,11 @@ class PathList
 
     def build_child_matcher
       @child_re.replace_tail(:dir)
-      Matchers::PathRegexp.build(@child_re, true)
+      Matchers::PathRegexp.build(@child_re, :allow)
     end
 
     def build_implicit
       catch :abort_build do
-        blank! unless @allow
-
         blank! if @s.hash?
         blank! if @s.exclamation_mark?
         process_rule

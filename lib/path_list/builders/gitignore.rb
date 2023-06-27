@@ -3,14 +3,12 @@
 class PathList
   module Builders
     module Gitignore
-      def self.build(rule, allow, root)
-        GitignoreRuleBuilder.new(rule, root: root, allow: allow).build
+      def self.build(rule, polarity, root)
+        GitignoreRuleBuilder.new(rule, root: root, polarity: polarity).build
       end
 
-      def self.build_implicit(rule, allow, root)
-        return Matchers::Blank unless allow
-
-        GitignoreRuleBuilder.new(rule, root: root, allow: true).build_implicit
+      def self.build_implicit(rule, root)
+        GitignoreRuleBuilder.new(rule, root: root, polarity: :allow).build_implicit
       end
     end
   end

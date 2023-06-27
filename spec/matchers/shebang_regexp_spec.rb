@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::ShebangRegexp do
-  subject { described_class.build(builder, allow_value) }
+  subject { described_class.build(builder, polarity) }
 
-  let(:allow_value) { true }
+  let(:polarity) { :allow }
   let(:builder) { PathList::RegexpBuilder.new({ 'abcd' => nil }) }
 
   it { is_expected.to be_frozen }
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::ShebangRegexp.new(/abcd/, true)' }
+    it { is_expected.to have_inspect_value 'PathList::Matchers::ShebangRegexp.new(/abcd/, :allow)' }
   end
 
   describe '#weight' do
@@ -21,13 +21,13 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same property values' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different allow value' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), !allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :ignore)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -36,7 +36,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), allow_value)
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other])
@@ -46,8 +46,8 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be other
 
       expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'abcd' => nil, 'b' => nil }),
-                                                        allow_value))
-      expect(squashed).to be_like(described_class.new(/(?:abcd|b)/, allow_value))
+                                                        polarity))
+      expect(squashed).to be_like(described_class.new(/(?:abcd|b)/, polarity))
     end
   end
 
@@ -67,7 +67,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
         end
 
         context 'when not allowing' do
-          let(:allow_value) { false }
+          let(:polarity) { :ignore }
 
           it { expect(subject.match(candidate)).to be :ignore }
         end
@@ -81,7 +81,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
         end
 
         context 'when not allowing' do
-          let(:allow_value) { false }
+          let(:polarity) { :ignore }
 
           it { expect(subject.match(candidate)).to be_nil }
         end

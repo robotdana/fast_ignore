@@ -5,6 +5,7 @@ class PathList
     class GitIndex < Base
       def initialize(root)
         @root = root
+        @root_downcase = root.downcase
         @root_re = nil
         @files = nil
       end
@@ -13,8 +14,12 @@ class PathList
         matcher.match(candidate) if parent_re.match?(candidate.full_path_downcase)
       end
 
+      def inspect
+        "#{self.class}.new(#{@root.inspect})"
+      end
+
       def index_root?(candidate)
-        @root == candidate.full_path_downcase
+        @root_downcase == candidate.full_path_downcase
       end
 
       def file_tree # rubocop:disable Metrics/MethodLength
@@ -47,8 +52,8 @@ class PathList
 
           Matchers::LastMatch.build([
             Matchers::Ignore,
-            Matchers::MatchIfDir.new(Matchers::ExactStringList.new(dir_array.sort, :allow)),
-            Matchers::MatchUnlessDir.new(Matchers::ExactStringList.new(file_array.sort, :allow))
+            Matchers::MatchIfDir.new(Matchers::ExactStringList.build(dir_array.sort, :allow)),
+            Matchers::MatchUnlessDir.new(Matchers::ExactStringList.build(file_array.sort, :allow))
           ])
         end
       end

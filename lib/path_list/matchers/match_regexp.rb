@@ -6,16 +6,16 @@ class PathList
       attr_reader :polarity
       attr_reader :weight
 
-      def self.build(re_builder, allow)
+      def self.build(re_builder, polarity)
         rule = re_builder.to_regexp
-        return allow ? Allow : Ignore unless rule
+        return polarity == :allow ? Allow : Ignore unless rule
 
-        new(rule, allow, re_builder)
+        new(rule, polarity, re_builder)
       end
 
-      def initialize(rule, allow, re_builder = nil)
+      def initialize(rule, polarity, re_builder = nil)
         @rule = rule
-        @polarity = allow ? :allow : :ignore
+        @polarity = polarity
         @re_builder = re_builder
         @weight = calculate_weight
 
@@ -29,11 +29,11 @@ class PathList
       end
 
       def squash(list)
-        self.class.build(RegexpBuilder.union(list.map { |l| l.re_builder }), @polarity == :allow) # rubocop:disable Style/SymbolProc it breaks with protected methods,
+        self.class.build(RegexpBuilder.union(list.map { |l| l.re_builder }), @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
       end
 
       def inspect
-        "#{self.class}.new(#{@rule.inspect}, #{@polarity == :allow})"
+        "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
       end
 
       def match(candidate)

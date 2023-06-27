@@ -4,11 +4,11 @@ class PathList
   module Builders
     module FullPath
       class << self
-        def build(path, allow, root)
-          Matchers::ExactString.new(PathExpander.expand_path(path, root), allow ? :allow : :ignore)
+        def build(path, polarity, root)
+          Matchers::ExactString.new(PathExpander.expand_path(path, root), polarity)
         end
 
-        def build_implicit(path, _allow, root)
+        def build_implicit(path, root)
           path = PathExpander.expand_path(path, root)
           parent_matcher = build_parent_matcher(path)
           return build_child_matcher(path) unless parent_matcher
@@ -22,11 +22,11 @@ class PathList
           ancestors = RegexpBuilder.new_from_path(path).ancestors
           return if ancestors.empty?
 
-          Matchers::PathRegexp.build(ancestors, true)
+          Matchers::PathRegexp.build(ancestors, :allow)
         end
 
         def build_child_matcher(path)
-          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(path, dir: nil), true)
+          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(path, dir: nil), :allow)
         end
       end
     end

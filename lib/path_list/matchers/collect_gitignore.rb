@@ -80,8 +80,11 @@ class PathList
 
         @loaded << from_file
 
-        patterns = Patterns.new(from_file: from_file, root: (root || PathExpander.expand_path_pwd('.')), allow: false,
-                                format: Builders::Gitignore)
+        patterns = Patterns.new(
+          from_file: from_file,
+          root: (root || PathExpander.expand_path_pwd('.')),
+          format: Builders::Gitignore
+        )
         _, new_matcher = patterns.build_matchers
         return if new_matcher == Blank
 

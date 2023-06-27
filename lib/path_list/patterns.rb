@@ -10,7 +10,7 @@ class PathList
     }.freeze
 
     class << self
-      def build(patterns, from_file: nil, format: nil, root: nil, allow: false) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def build(patterns, from_file: nil, format: nil, root: nil, polarity: :ignore) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
         raise Error, 'Only use one of *patterns, from_file:' if (patterns && !patterns.empty?) && from_file
 
         format = BUILDERS.fetch(format || :gitignore, format)
@@ -29,16 +29,16 @@ class PathList
 
         root ||= PathExpander.expand_path_pwd(root)
 
-        new(patterns: patterns, from_file: from_file, format: format, root: root, allow: allow)
+        new(patterns: patterns, from_file: from_file, format: format, root: root, polarity: polarity)
       end
     end
 
-    def initialize(patterns: nil, from_file: nil, format: nil, root: nil, allow: false)
+    def initialize(patterns: nil, from_file: nil, format: nil, root: nil, polarity: :ignore)
       @patterns = patterns
       @from_file = from_file
       @format = format
       @root = root
-      @allow = allow
+      @polarity = polarity
     end
 
     def build
@@ -52,7 +52,7 @@ class PathList
     end
 
     def default
-      @allow ? Matchers::Ignore : Matchers::Allow
+      @polarity == :allow ? Matchers::Ignore : Matchers::Allow
     end
 
     def build_matchers
@@ -64,13 +64,13 @@ class PathList
     private
 
     def build_implicit_matcher(patterns)
-      return Matchers::Blank unless @allow
+      return Matchers::Blank unless @polarity == :allow
 
-      Matchers::Any.build(patterns.map { |pattern| @format.build_implicit(pattern, @allow, @root) })
+      Matchers::Any.build(patterns.map { |pattern| @format.build_implicit(pattern, @root) })
     end
 
     def build_explicit_matcher(patterns)
-      Matchers::LastMatch.build(patterns.map { |pattern| @format.build(pattern, @allow, @root) })
+      Matchers::LastMatch.build(patterns.map { |pattern| @format.build(pattern, @polarity, @root) })
     end
 
     def read_patterns

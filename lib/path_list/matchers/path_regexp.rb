@@ -10,7 +10,7 @@ class PathList
       def compress_self
         return self if @re_builder.compressed?
 
-        self.class.build(@re_builder.compress, @polarity == :allow)
+        self.class.build(@re_builder.compress, @polarity)
       end
 
       private

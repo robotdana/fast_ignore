@@ -57,7 +57,7 @@ class PathList
 
       collector = Matchers::CollectGitignore.build(
         Matchers::MatchIfDir.new(
-          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, dir: nil, end_anchor: nil), true)
+          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, dir: nil, end_anchor: nil), :allow)
         )
       )
 
@@ -73,7 +73,7 @@ class PathList
         Matchers::LastMatch.build([
           Matchers::Allow,
           collector,
-          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '.git' => { end_anchor: nil } } }), false)
+          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '.git' => { end_anchor: nil } } }), :ignore)
         ])
       )
     end
@@ -83,7 +83,7 @@ class PathList
     end
 
     def only!(*patterns, from_file: nil, format: nil, root: nil)
-      and_matcher(Patterns.build(patterns, from_file: from_file, format: format, root: root, allow: true).build)
+      and_matcher(Patterns.build(patterns, from_file: from_file, format: format, root: root, polarity: :allow).build)
     end
 
     def all!(*path_lists)
