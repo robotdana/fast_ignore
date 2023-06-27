@@ -156,7 +156,8 @@ RSpec.describe PathList::Patterns do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Allow,
             PathList::Matchers::PathRegexp.new(
-              %r{\A/f/g/(?:b[^\/]*\z|bb[^\/]*\z|(?:.*/)?(?:a[^\/]*\z|d[^\/]*\z))}, :ignore),
+              %r{\A/f/g/(?:b[^\/]*\z|bb[^\/]*\z|(?:.*/)?(?:a[^\/]*\z|d[^\/]*\z))}, :ignore
+            ),
             PathList::Matchers::PathRegexp.new(%r{\A/f/g/c/d[^\/]*\z}, :allow),
             PathList::Matchers::PathRegexp.new(%r{\A/f/g/(?:.*/)?e[^\/]*\z}, :ignore)
           ])
@@ -170,7 +171,8 @@ RSpec.describe PathList::Patterns do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Ignore,
             PathList::Matchers::PathRegexp.new(
-              %r{\A/f/g/(?:b[^\/]*(?:\z|/)|bb[^\/]*(?:\z|/)|(?:.*/)?(?:a[^\/]*(?:\z|/)|d[^\/]*(?:\z|/)|e[^\/]*/))}, :allow
+              %r{\A/f/g/(?:b[^\/]*(?:\z|/)|bb[^\/]*(?:\z|/)|(?:.*/)?(?:a[^\/]*(?:\z|/)|d[^\/]*(?:\z|/)|e[^\/]*/))},
+              :allow
             ),
             PathList::Matchers::MatchIfDir.new(
               PathList::Matchers::PathRegexp.new(%r{\A/(?:f(?:/g(?:\z|/)|\z)|\z)}, :allow)

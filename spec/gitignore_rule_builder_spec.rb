@@ -558,7 +558,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::Ignore)
+                  PathList::Matchers::Ignore
+                )
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -601,7 +602,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories inside the mentioned directory' do
               expect(build('abc/**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\Aabc/}, :ignore))
+                  PathList::Matchers::PathRegexp.new(%r{\Aabc/}, :ignore)
+                )
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -668,7 +670,9 @@ RSpec.describe PathList::GitignoreRuleBuilder do
         end
 
         describe 'The simple case' do
-          it { expect(build('foo')).to be_like PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?foo\z}, :ignore) }
+          it {
+            expect(build('foo')).to be_like PathList::Matchers::PathRegexp.new(%r{\A/a/path/(?:.*/)?foo\z}, :ignore)
+          }
         end
 
         describe 'A line starting with # serves as a comment.' do
@@ -1245,7 +1249,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories inside the mentioned directory' do
               expect(build('abc/**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :ignore))
+                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :ignore)
+                )
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -1849,7 +1854,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :ignore))
+                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :ignore)
+                )
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -1892,7 +1898,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories inside the mentioned directory' do
               expect(build('abc/**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :ignore))
+                  PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :ignore)
+                )
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -2492,7 +2499,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::Ignore)
+                  PathList::Matchers::Ignore
+                )
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -2535,7 +2543,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories inside the mentioned directory' do
               expect(build('abc/**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\A/abc/}, :ignore))
+                  PathList::Matchers::PathRegexp.new(%r{\A/abc/}, :ignore)
+                )
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -3131,7 +3140,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::Allow)
+                  PathList::Matchers::Allow
+                )
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -3174,7 +3184,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
             it 'matches all directories inside the mentioned directory' do
               expect(build('abc/**/'))
                 .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::PathRegexp.new(%r{\Aabc/}, :allow))
+                  PathList::Matchers::PathRegexp.new(%r{\Aabc/}, :allow)
+                )
             end
 
             it 'matches files or directories inside the mentioned directory when ***' do
@@ -3392,7 +3403,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
               expect(build('doc/frotz'))
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::PathRegexp.new(/\Adoc\z/, :allow)),
+                    PathList::Matchers::PathRegexp.new(/\Adoc\z/, :allow)
+                  ),
                   PathList::Matchers::PathRegexp.new(%r{\Adoc/frotz/}, :allow)
                 ])
             end
@@ -3460,7 +3472,8 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('*/our'))
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
-                      PathList::Matchers::PathRegexp.new(%r{\A[^/]}, :allow)),
+                      PathList::Matchers::PathRegexp.new(%r{\A[^/]}, :allow)
+                    ),
                     PathList::Matchers::PathRegexp.new(%r{\A[^/]*/our/}, :allow)
                   ])
               end
@@ -4528,7 +4541,9 @@ RSpec.describe PathList::GitignoreRuleBuilder do
                 expect(build('*/*/c'))
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
-                      PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/path(?:/[^/]*(?:/[^/]*\z|\z)|\z)|\z)|\z)}, :allow)
+                      PathList::Matchers::PathRegexp.new(
+                        %r{\A/(?:a(?:/path(?:/[^/]*(?:/[^/]*\z|\z)|\z)|\z)|\z)}, :allow
+                      )
                     ), PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*/[^/]*/c/}, :allow)
                   ])
               end

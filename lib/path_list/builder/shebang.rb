@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class PathList
-  module Builders
-    module Shebang
-      def self.build(shebang, polarity, root) # rubocop:disable Metrics/MethodLength
-        shebang = shebang.delete_prefix('#!').strip
+  class Builder
+    class Shebang < Builder
+      def build # rubocop:disable Metrics/MethodLength
+        shebang = @rule.delete_prefix('#!').strip
 
         pattern = RegexpBuilder.new
         pattern.append_part :start_anchor
@@ -16,26 +16,26 @@ class PathList
         pattern.append_part :word_boundary if shebang.match?(/\w\z/)
 
         path_matcher_tail = { dir: { any_dir: { any_non_dot_non_dir: { end_anchor: nil } } } }
-        path_matcher = RegexpBuilder.new_from_path(PathExpander.expand_path_pwd(root), path_matcher_tail)
+        path_matcher = RegexpBuilder.new_from_path(@root, path_matcher_tail)
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
             path_matcher,
-            Matchers::ShebangRegexp.build(pattern, polarity)
+            Matchers::ShebangRegexp.build(pattern, @polarity)
           )
         )
       end
 
       # also allow all directories in case they include a file with the matching shebang file
-      def self.build_implicit(_shebang, root) # rubocop:disable Metrics/MethodLength
-        return Matchers::AllowAnyDir unless root
+      def build_implicit
+        return Matchers::AllowAnyDir unless @root
 
         Matchers::MatchIfDir.build(
           Matchers::Any.build([
             Matchers::PathRegexp.build(
-              RegexpBuilder.new_from_path(root, { dir: { any_non_dir: nil } }).ancestors,
+              RegexpBuilder.new_from_path(@root, { dir: { any_non_dir: nil } }).ancestors,
               :allow
             ),
-            Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, { dir: nil }), :allow)
+            Matchers::PathRegexp.build(RegexpBuilder.new_from_path(@root, { dir: nil }), :allow)
           ])
         )
       end

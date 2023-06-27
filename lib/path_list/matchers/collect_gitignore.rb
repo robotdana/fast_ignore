@@ -75,7 +75,7 @@ class PathList
         end
       end
 
-      def append(from_file, root: nil)
+      def append(from_file, root: nil) # rubocop:disable Metrics/MethodLength
         return if @loaded.include?(from_file)
 
         @loaded << from_file
@@ -83,9 +83,10 @@ class PathList
         patterns = Patterns.new(
           from_file: from_file,
           root: (root || PathExpander.expand_path_pwd('.')),
-          format: Builders::Gitignore
+          format: Builder::Gitignore
         )
-        _, new_matcher = patterns.build_matchers
+        new_matcher = patterns.build_ignore_matcher(Blank)
+
         return if new_matcher == Blank
 
         new_matcher = new_matcher.compress_self

@@ -13,19 +13,13 @@ class PathList
 
   def initialize
     @matcher = Matchers::Allow
-    @use_index = Matchers::Blank
   end
 
   protected
 
-  def git_indexes
-    @git_indexes ||= []
-  end
-
   def matcher
     @compressed ||= begin
       @matcher = @matcher.compress_self
-      @use_index = @use_index.compress_self
 
       true
     end

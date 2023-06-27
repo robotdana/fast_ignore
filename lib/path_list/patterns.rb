@@ -3,10 +3,10 @@
 class PathList
   class Patterns
     BUILDERS = {
-      glob: Builders::GlobGitignore,
-      gitignore: Builders::Gitignore,
-      shebang: Builders::Shebang,
-      exact: Builders::FullPath
+      glob: Builder::GlobGitignore,
+      gitignore: Builder::Gitignore,
+      shebang: Builder::Shebang,
+      exact: Builder::ExactPath
     }.freeze
 
     class << self
@@ -14,8 +14,10 @@ class PathList
         raise Error, 'Only use one of *patterns, from_file:' if (patterns && !patterns.empty?) && from_file
 
         format = BUILDERS.fetch(format || :gitignore, format)
-        unless format.respond_to?(:build)
-          raise Error, "format: is not a recognized format. use one of #{BUILDERS.keys} or a custom class"
+        unless format < Builder
+          puts format.inspect
+          raise Error,
+                "format: is not a recognized format. use one of #{BUILDERS.keys} or a class inheriting from #{Builder}"
         end
 
         root = PathExpander.expand_path_pwd(root) if root
@@ -24,7 +26,7 @@ class PathList
           from_file = PathExpander.expand_path(from_file, root)
           root ||= ::File.dirname(from_file)
         else
-          patterns = patterns.flatten.flat_map { |string| string.to_s.lines }.freeze
+          patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
         end
 
         root ||= PathExpander.expand_path_pwd(root)
@@ -42,36 +44,32 @@ class PathList
     end
 
     def build
-      implicit_matcher, explicit_matcher = build_matchers
-
-      if implicit_matcher == Matchers::Blank && explicit_matcher == Matchers::Blank
-        Matchers::Allow
+      if @polarity == :allow
+        build_allow_matcher
       else
-        Matchers::LastMatch.build([default, implicit_matcher, explicit_matcher])
+        build_ignore_matcher
       end
     end
 
-    def default
-      @polarity == :allow ? Matchers::Ignore : Matchers::Allow
+    def build_allow_matcher
+      pattern_builders = read_patterns.map { |rule| @format.new(rule, @polarity, @root) }
+
+      implicit = Matchers::Any.build(pattern_builders.map(&:build_implicit))
+      explicit = Matchers::LastMatch.build(pattern_builders.map(&:build))
+
+      return Matchers::Allow if implicit == Matchers::Blank && explicit == Matchers::Blank
+
+      Matchers::LastMatch.build([Matchers::Ignore, implicit, explicit])
     end
 
-    def build_matchers
-      patterns = read_patterns
-
-      [build_implicit_matcher(patterns), build_explicit_matcher(patterns)]
+    def build_ignore_matcher(default = Matchers::Allow)
+      matchers = read_patterns
+      matchers.map! { |rule| @format.new(rule, @polarity, @root).build }
+      matchers.unshift(default)
+      Matchers::LastMatch.build(matchers)
     end
 
     private
-
-    def build_implicit_matcher(patterns)
-      return Matchers::Blank unless @polarity == :allow
-
-      Matchers::Any.build(patterns.map { |pattern| @format.build_implicit(pattern, @root) })
-    end
-
-    def build_explicit_matcher(patterns)
-      Matchers::LastMatch.build(patterns.map { |pattern| @format.build(pattern, @polarity, @root) })
-    end
 
     def read_patterns
       if @from_file

@@ -49,7 +49,8 @@ class PathList
 
       if index && ::File.exist?(PathExpander.expand_path('.git/index', root))
         git_index = Matchers::GitIndex.new(root)
-        git_indexes << git_index
+        @git_indexes ||= []
+        @git_indexes << git_index
         and_matcher(Matchers::LastMatch.new([Matchers::Allow, git_index]))
 
         return self

@@ -49,12 +49,33 @@ class PathList
       return unless recursive_match?(root_candidate.parent, dir_matcher)
 
       relative_root = root == '/' ? root : "#{root}/"
-      recursive_each(root_candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
+
+      if @git_indexes
+        recursive_each_git_indexes(root_candidate, relative_root, @git_indexes, dir_matcher, file_matcher, &block)
+      else
+        recursive_each(root_candidate, relative_root, dir_matcher, file_matcher, &block)
+      end
     end
 
     private
 
-    def recursive_each(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def recursive_each(candidate, relative_root, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
+      if candidate.directory?
+        return unless dir_matcher.match(candidate) == :allow
+
+        candidate.child_candidates.each do |child|
+          recursive_each(child, relative_root, dir_matcher, file_matcher, &block)
+        end
+      else
+        return unless file_matcher.match(candidate) == :allow
+
+        yield(candidate.full_path.delete_prefix(relative_root))
+      end
+    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
+      nil
+    end
+
+    def recursive_each_git_indexes(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       if candidate.directory?
         return unless dir_matcher.match(candidate) == :allow
 
@@ -65,7 +86,7 @@ class PathList
         end
 
         candidate.child_candidates.each do |child|
-          recursive_each(child, relative_root, git_indexes, dir_matcher, file_matcher, &block)
+          recursive_each_git_indexes(child, relative_root, git_indexes, dir_matcher, file_matcher, &block)
         end
       else
         return unless file_matcher.match(candidate) == :allow

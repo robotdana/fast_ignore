@@ -11,8 +11,8 @@ module StubFileHelper
     stub_file_original
 
     stub_file_attributes(lines.join("\n")).each do |method, value|
-      stub = allow(::File).to receive(method).with(path).at_least(:once)
-      value.is_a?(Exception) ? stub.and_raise(value) : stub.and_return(value)
+      stub = allow(::File).to receive(method).with(path)
+      value.is_a?(Exception) ? stub.and_raise(value) : stub.at_least(:once) { value.dup }
     end
 
     path
@@ -25,7 +25,7 @@ module StubFileHelper
       readable?: exist,
       exist?: exist,
       read: content || Errno::ENOENT,
-      readlines: content&.split("\n") || Errno::ENOENT
+      readlines: content&.split("\n").freeze || Errno::ENOENT
     }
   end
 end

@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Builders::FullPath do
-  subject(:matcher) { described_class.build(path, polarity, nil) }
+RSpec.describe PathList::Builder::ExactPath do
+  subject(:matcher) { described_class.new(path, polarity, nil).build }
 
   let(:path) { '/path/to/exact/something' }
   let(:candidate_path) { path }
   let(:candidate) { PathList::Candidate.new(candidate_path, true, nil) }
   let(:polarity) { :allow }
 
-  describe '.build_implicit' do
-    subject(:matcher) { described_class.build_implicit(path, nil) }
+  describe '#build_implicit' do
+    subject(:matcher) { described_class.new(path, polarity, nil).build_implicit }
 
     it 'builds a regex that matches parent and child somethings' do
       expect(matcher).to be_like(
@@ -18,7 +18,7 @@ RSpec.describe PathList::Builders::FullPath do
     end
 
     describe 'with root and relative path' do
-      subject(:matcher) { described_class.build_implicit('./exact/something', '/path/to') }
+      subject(:matcher) { described_class.new('./exact/something', polarity, '/path/to').build_implicit }
 
       it 'builds a regex that matches parent and child somethings' do
         expect(matcher).to be_like(
@@ -76,8 +76,8 @@ RSpec.describe PathList::Builders::FullPath do
     end
   end
 
-  describe '.build' do
-    subject(:matcher) { described_class.build(path, polarity, nil) }
+  describe '#build' do
+    subject(:matcher) { described_class.new(path, polarity, nil).build }
 
     let(:polarity) { :ignore }
 

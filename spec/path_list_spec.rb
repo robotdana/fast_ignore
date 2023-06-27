@@ -134,7 +134,9 @@ RSpec.describe PathList do
         PathList::Matchers::CollectGitignore.new(
           PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:/|\z)}, :allow),
           PathList::Matchers::Mutable.new(
-            PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore)
+            PathList::Matchers::PathRegexp.new(
+              %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
+            )
           )
         ),
         PathList::Matchers::PathRegexp.new(%r{/\.git\z}, :ignore)
