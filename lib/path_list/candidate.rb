@@ -41,9 +41,23 @@ class PathList
       end
     end
 
-    def child_candidates
-      @child_candidates ||= build_from_tree || children.map do |filename|
-        Candidate.new("#{prepend_path}/#{filename}", nil, true)
+    def child_candidates # rubocop:disable Metrics/MethodLength
+      @child_candidates ||= begin
+        prepend_path = self.prepend_path
+
+        @tree&.map do |child_name, grandchildren|
+          if grandchildren
+            c = self.class.new("#{prepend_path}/#{child_name}", true, true)
+            c.tree = grandchildren
+            c
+          else
+            self.class.new("#{prepend_path}/#{child_name}", false, true)
+          end
+        end ||
+
+          children.map do |filename|
+            Candidate.new("#{prepend_path}/#{filename}", nil, true)
+          end
       end
     end
 
@@ -102,19 +116,5 @@ class PathList
     end
 
     attr_writer :tree
-
-    private
-
-    def build_from_tree
-      @tree&.map do |child_name, grandchildren|
-        if grandchildren
-          c = self.class.new("#{prepend_path}/#{child_name}", true, true)
-          c.tree = grandchildren
-          c
-        else
-          self.class.new("#{prepend_path}/#{child_name}", false, true)
-        end
-      end
-    end
   end
 end

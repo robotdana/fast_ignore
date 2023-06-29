@@ -45,13 +45,13 @@ class PathList
 
     def build
       if @polarity == :allow
-        build_allow_matcher
+        build_only_matcher
       else
         build_ignore_matcher
       end
     end
 
-    def build_allow_matcher
+    def build_only_matcher
       pattern_builders = read_patterns.map { |rule| @format.new(rule, @polarity, @root) }
 
       implicit = Matchers::Any.build(pattern_builders.map(&:build_implicit))

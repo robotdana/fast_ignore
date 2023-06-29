@@ -173,7 +173,7 @@ class PathList
 
       def build_matcher
         matcher = if @re.exact_string?
-          Matchers::ExactStringList.build([@re.to_s.downcase], @rule_polarity)
+          Matchers::ExactString.build([@re.to_s.downcase], @rule_polarity)
         else
           Matchers::PathRegexp.build(@re, @rule_polarity)
         end

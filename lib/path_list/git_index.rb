@@ -14,12 +14,12 @@ class PathList
       def files(path = nil)
         path = path ? ::File.join(path, '.git/index') : '.git/index'
 
-        read(path, false)
+        read(path)
       end
 
       private
 
-      def read(path, _return_headers_only) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def read(path) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         begin
           # reading the whole file into memory is faster than lots of ::File#read
           # the biggest it's going to be is 10s of megabytes, well within ram.
@@ -75,7 +75,7 @@ class PathList
 
         sha = file.read(20, buf)
 
-        split_files = read("#{::File.dirname(path)}/sharedindex.#{sha.unpack1('H*')}", false)
+        split_files = read("#{::File.dirname(path)}/sharedindex.#{sha.unpack1('H*')}")
 
         ewah_each_value(file, buf) do |pos|
           split_files[pos] = nil
@@ -103,7 +103,7 @@ class PathList
         uncompressed_pos = 0
 
         file.seek(4, 1) # skip 4 byte uncompressed_bits_count.
-        compressed_bytes = file.read(4, buf).unpack1('N') * 8
+        compressed_bytes = file.read(4, buf).unpack1('N') << 3
 
         final_file_pos = file.pos + compressed_bytes
 
@@ -112,9 +112,9 @@ class PathList
           # 1st bit
           run_bit = run_length_word & 1
           # the next 32 bits, masked, multiplied by 64
-          run_length = ((run_length_word / 0b1_0) & 0xFFFF_FFFF) * 64
+          run_length = ((run_length_word >> 1) & 0xFFFF_FFFF) << 6
           # the next 31 bits
-          literal_length = (run_length_word / 0b100000000_00000000_00000000_00000000_0)
+          literal_length = (run_length_word >> 33)
 
           if run_bit == 1
             run_length.times do
@@ -127,7 +127,7 @@ class PathList
 
           next unless literal_length.positive?
 
-          file.read(8 * literal_length, buf)
+          file.read(literal_length << 3, buf)
           words = buf.unpack('B64' * literal_length)
           words.each do |word|
             word.each_char.reverse_each do |char|
@@ -144,8 +144,7 @@ class PathList
       def files_2(files, file) # rubocop:disable Metrics/MethodLength
         files.map! do
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)
-
-          length = ((file.getbyte & 0xF) * 256) + file.getbyte # find the 12 byte length
+          length = ((file.getbyte & 0xF) << 8) + file.getbyte # find the 12 byte length
           if length < 0xFFF
             path = file.read(length)
             # :nocov:
@@ -168,7 +167,7 @@ class PathList
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)
           flags = file.getbyte
           extended_flag = (flags & 0b0100_0000).positive?
-          length = ((flags & 0xF) * 256) + file.getbyte # find the 12 byte length
+          length = ((flags & 0xF) << 8) + file.getbyte # find the 12 byte length
           file.seek(2, 1) if extended_flag
 
           if length < 0xFFF
@@ -194,7 +193,7 @@ class PathList
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)
           flags = file.getbyte
           extended_flag = (flags & 0b0100_0000).positive?
-          length = ((flags & 0xF) * 256) + file.getbyte # find the 12 byte length
+          length = ((flags & 0xF) << 3) + file.getbyte # find the 12 byte length
           file.seek(2, 1) if extended_flag
 
           # documentation for this number from

@@ -18,9 +18,10 @@ class PathList
         default = :allow
 
         @matchers.each do |m|
-          case m.match(candidate)
-          when :ignore then return :ignore
-          when nil then default = nil
+          if (result = m.match(candidate)) == :ignore
+            return :ignore
+          elsif result.nil?
+            default = nil
           end
         end
 

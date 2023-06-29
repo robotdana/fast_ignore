@@ -118,7 +118,7 @@ RSpec.describe PathList::Patterns do
           expect(matchers).to be_like PathList::Matchers::LastMatch.new([
             PathList::Matchers::Allow,
             PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}, :ignore),
-            PathList::Matchers::ExactStringList.new([
+            PathList::Matchers::ExactString::Include.new([
               '/a/b/c/foo',
               '/a/b/c/baz'
             ], :allow)
@@ -136,7 +136,7 @@ RSpec.describe PathList::Patterns do
             PathList::Matchers::MatchIfDir.new(
               PathList::Matchers::PathRegexp.new(%r{\A/(?:a(?:/b(?:/c(?:/|\z)|\z)|\z)|\z)}, :allow)
             ),
-            PathList::Matchers::ExactStringList.new([
+            PathList::Matchers::ExactString::Include.new([
               '/a/b/c/foo',
               '/a/b/c/baz'
             ], :ignore)

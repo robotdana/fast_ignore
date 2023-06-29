@@ -52,8 +52,8 @@ class PathList
 
           Matchers::LastMatch.build([
             Matchers::Ignore,
-            Matchers::MatchIfDir.new(Matchers::ExactStringList.build(dir_array.sort, :allow)),
-            Matchers::MatchUnlessDir.new(Matchers::ExactStringList.build(file_array.sort, :allow))
+            Matchers::MatchIfDir.new(Matchers::ExactString.build(dir_array.sort, :allow)),
+            Matchers::MatchUnlessDir.new(Matchers::ExactString.build(file_array.sort, :allow))
           ])
         end
       end

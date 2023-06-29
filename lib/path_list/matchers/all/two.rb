@@ -25,13 +25,11 @@ class PathList
         end
 
         def match(candidate)
-          case (result = @matcher_a.match(candidate))
-          when :allow, nil
-            case (result_b = @matcher_b.match(candidate))
-            when :allow, nil then result_b && result
-            when :ignore then :ignore
-            end
-          when :ignore then :ignore
+          if ((result_a = @matcher_a.match(candidate)) == :allow || result_a.nil?) &&
+              ((result_b = @matcher_b.match(candidate)) == :allow || result_b.nil?)
+            result_a && result_b
+          else
+            :ignore
           end
         end
 
