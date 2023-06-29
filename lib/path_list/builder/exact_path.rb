@@ -13,6 +13,7 @@ class PathList
       end
 
       def build_implicit
+        @path_re = RegexpBuilder.new_from_path(@path)
         parent_matcher = build_parent_matcher
         return build_child_matcher unless parent_matcher
 
@@ -22,14 +23,16 @@ class PathList
       private
 
       def build_parent_matcher
-        ancestors = RegexpBuilder.new_from_path(@path).ancestors
+        ancestors = @path_re.ancestors
         return if ancestors.empty?
 
         Matchers::PathRegexp.build(ancestors, :allow)
       end
 
       def build_child_matcher
-        Matchers::PathRegexp.build(RegexpBuilder.new_from_path(@path, dir: nil), :allow)
+        @child_re = @path_re.dup
+        @child_re.replace_tail(:dir)
+        Matchers::PathRegexp.build(@child_re, :allow)
       end
     end
   end

@@ -31,10 +31,6 @@ class PathList
           @matcher_b.match(candidate) || first_result
         end
 
-        def inspect
-          "#{self.class}.new(\n#{matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n)"
-        end
-
         def matchers
           [@matcher_a, @matcher_b]
         end

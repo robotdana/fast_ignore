@@ -188,7 +188,7 @@ class PathList
       end
 
       def build_parent_matcher
-        if anchored? || @root != '/'
+        if anchored? || @root
           ancestors = @re.ancestors
           return Matchers::Blank if ancestors.empty?
 

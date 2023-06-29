@@ -68,7 +68,7 @@ class PathList
       end
 
       def inspect
-        "#{self.class}.new([\n#{@matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
+        "#{self.class}.new([\n#{matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
 
       def dir_matcher
