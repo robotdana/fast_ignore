@@ -52,13 +52,18 @@ class PathList
       @parts.key?(value)
     end
 
-    def dup
-      out = super
-
-      @parts = @parts.dup
-      @tail = @tail.dup if @tail
-
-      out
+    def dup # rubocop:disable Metrics/MethodLength
+      d = super
+      d.parts = {}
+      d.forget_tail
+      tail_part = next_tail = nil # rubocop:disable Lint/UselessAssignment
+      tail = @parts
+      while (tail_part, next_tail = tail.first) && !next_tail.nil?
+        d.append_part tail_part
+        tail = next_tail
+      end
+      d.append_part(tail_part) unless tail_part.nil?
+      d
     end
 
     def end_with?(part)
@@ -180,5 +185,6 @@ class PathList
     protected
 
     attr_reader :tail
+    attr_writer :parts
   end
 end
