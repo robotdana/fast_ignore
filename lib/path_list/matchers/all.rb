@@ -8,6 +8,7 @@ class PathList
       def self.compress(matchers)
         matchers = super(matchers) - [Matchers::Allow]
         return [Matchers::Allow] if matchers.empty?
+        return [Matchers::Ignore] if matchers.include?(Matchers::Ignore)
 
         matchers.sort_by!(&:weight)
         matchers.uniq!
@@ -26,6 +27,10 @@ class PathList
         end
 
         default
+      end
+
+      def polarity
+        :mixed
       end
 
       private

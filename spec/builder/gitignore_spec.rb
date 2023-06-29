@@ -2499,9 +2499,7 @@ RSpec.describe PathList::Builder::Gitignore do
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
-                .to be_like PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::Allow
-                )
+                .to be_like PathList::Matchers::AllowAnyDir
             end
 
             it 'matches files or directories in all directories when repeated' do

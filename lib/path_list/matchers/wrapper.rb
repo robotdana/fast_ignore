@@ -3,8 +3,6 @@
 class PathList
   module Matchers
     class Wrapper < Base
-      attr_reader :weight
-
       def self.build(matcher)
         return Blank if matcher == Blank
 
@@ -17,6 +15,16 @@ class PathList
 
         freeze
       end
+
+      def match(candidate)
+        @matcher.match(candidate)
+      end
+
+      def inspect
+        "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
+      end
+
+      attr_reader :weight
 
       def polarity
         @matcher.polarity
@@ -44,14 +52,6 @@ class PathList
 
         new_matcher = @matcher.without_matcher(matcher)
         new_matcher == @matcher ? self : new_with_matcher(new_matcher)
-      end
-
-      def inspect
-        "#{self.class}.new(\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
-      end
-
-      def match(candidate)
-        @matcher.match(candidate)
       end
 
       def dir_matcher

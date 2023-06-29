@@ -11,6 +11,10 @@ class PathList
         matchers = super(matchers)
         return [Matchers::Allow] if matchers.include?(Matchers::Allow)
 
+        invalid = matchers.include?(Invalid)
+        matchers -= [Invalid]
+        return [Invalid] if matchers.empty? && invalid
+
         squashable_sets = []
 
         matchers.each do |a_matcher|

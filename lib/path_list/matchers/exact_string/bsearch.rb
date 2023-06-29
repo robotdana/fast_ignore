@@ -14,17 +14,17 @@ class PathList
           @weight = (array.length / 100.0) + 1
         end
 
-        def inspect
-          "#{self.class}.new([\n  #{@array.map(&:inspect).join(",\n  ")}\n], #{@polarity.inspect})"
-        end
-
-        attr_reader :array
-
         def match(candidate)
           full_path = candidate.full_path_downcase
 
           return @polarity if @array.bsearch { |element| full_path <=> element }
         end
+
+        def inspect
+          "#{self.class}.new([\n  #{@array.map(&:inspect).join(",\n  ")}\n], #{@polarity.inspect})"
+        end
+
+        attr_reader :array
       end
     end
   end

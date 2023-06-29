@@ -142,12 +142,11 @@ RSpec.describe PathList do
         PathList::Matchers::PathRegexp.new(%r{/\.git\z}, :ignore)
       ])
 
-      expect(subject.send(:file_matcher)).to be_like PathList::Matchers::LastMatch.new([
+      expect(subject.send(:file_matcher)).to be_like PathList::Matchers::LastMatch::Two.new([
         PathList::Matchers::Allow,
         PathList::Matchers::Mutable.new(
           PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore)
-        ),
-        PathList::Matchers::PathRegexp.new(%r{/\.git\z}, :ignore)
+        )
       ])
     end
 

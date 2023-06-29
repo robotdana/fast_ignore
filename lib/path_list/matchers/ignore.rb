@@ -5,7 +5,7 @@ class PathList
     Ignore = Base.new
 
     class << Ignore
-      def polarity
+      def match(_)
         :ignore
       end
 
@@ -13,12 +13,9 @@ class PathList
         'PathList::Matchers::Ignore'
       end
 
-      def match(_)
+      def polarity
         :ignore
       end
-
-      alias_method :eql?, :equal?
-      alias_method :==, :eql?
     end
 
     Ignore.freeze

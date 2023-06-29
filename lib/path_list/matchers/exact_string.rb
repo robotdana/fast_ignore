@@ -5,9 +5,6 @@ class PathList
     class ExactString < Base
       include Autoloader
 
-      attr_reader :polarity
-      attr_reader :weight
-
       def self.build(array, polarity)
         case array.length
         when 0 then Blank
@@ -23,7 +20,6 @@ class PathList
       def initialize(item, polarity)
         @polarity = polarity
         @item = item
-        @weight = 1
       end
 
       def match(candidate)
@@ -33,6 +29,8 @@ class PathList
       def inspect
         "#{self.class}.new(#{@item.inspect}, #{@polarity.inspect})"
       end
+
+      attr_reader :polarity
 
       def squashable_with?(other)
         other.is_a?(ExactString) &&

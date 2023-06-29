@@ -14,10 +14,6 @@ class PathList
         matcher.match(candidate) if parent_re.match?(candidate.full_path_downcase)
       end
 
-      def inspect
-        "#{self.class}.new(#{@root.inspect})"
-      end
-
       def index_root?(candidate)
         @root_downcase == candidate.full_path_downcase
       end
@@ -37,6 +33,10 @@ class PathList
           tree.default = nil
           tree
         end
+      end
+
+      def inspect
+        "#{self.class}.new(#{@root.inspect})"
       end
 
       private

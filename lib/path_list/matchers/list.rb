@@ -31,17 +31,10 @@ class PathList
 
       def self.compress(matchers)
         matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
-
-        invalid = matchers.include?(Invalid)
-        matchers -= [Invalid, Blank]
-        return [Invalid] if matchers.empty? && invalid
+        matchers -= [Blank]
 
         matchers
       end
-
-      attr_reader :matchers
-      attr_reader :polarity
-      attr_reader :weight
 
       def initialize(matchers)
         @matchers = matchers
@@ -51,9 +44,12 @@ class PathList
         freeze
       end
 
-      def squashable_with?(_)
-        false
+      def inspect
+        "#{self.class}.new([\n#{matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
+
+      attr_reader :weight
+      attr_reader :polarity
 
       def compress_self
         new_matchers = matchers.map(&:compress_self)
@@ -65,10 +61,6 @@ class PathList
 
         new_matchers = matchers.map { |m| m.without_matcher(matcher) }
         new_matchers == matchers ? self : self.class.build(new_matchers)
-      end
-
-      def inspect
-        "#{self.class}.new([\n#{matchers.map(&:inspect).join(",\n").gsub(/^/, '  ')}\n])"
       end
 
       def dir_matcher
@@ -85,14 +77,16 @@ class PathList
         self.class.build(new_matchers)
       end
 
+      attr_reader :matchers
+
       private
 
       def calculate_weight
-        @matchers.sum(&:weight)
+        matchers.sum(&:weight)
       end
 
       def calculate_polarity
-        self.class.calculate_polarity(@matchers)
+        self.class.calculate_polarity(matchers)
       end
     end
   end

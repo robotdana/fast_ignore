@@ -104,8 +104,6 @@ RSpec.describe PathList::Patterns do
       end
     end
 
-    # f38b597
-
     describe 'with glob format' do
       let(:patterns) { ['*', '!./foo', '!/a/b/c/baz'] }
       let(:root) { '/a/b/c' }

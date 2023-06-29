@@ -18,18 +18,25 @@ class PathList
         @weight = nil
       end
 
-      def squashable_with?(_)
-        false
+      def weight
+        @weight ||= @matcher.weight + 1
       end
 
-      def compress_self
-        @matcher = @matcher.compress_self
+      def squashable_with?(_)
+        equal?(self)
+      end
 
+      def squash(_)
         self
       end
 
-      def weight
-        @weight ||= @matcher.weight + 1
+      private
+
+      def new_with_matcher(matcher)
+        @matcher = matcher
+        @weight = nil
+
+        self
       end
     end
   end

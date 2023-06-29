@@ -3,8 +3,8 @@
 class PathList
   module Matchers
     class MatchIfDir < Wrapper
-      def build(matcher)
-        return matcher if matcher.is_a?(self.class)
+      def self.build(matcher)
+        return AllowAnyDir if matcher == Allow
 
         super
       end
@@ -13,8 +13,14 @@ class PathList
         @matcher.match(candidate) if candidate.directory?
       end
 
-      def inspect
-        matcher == Allow ? 'PathList::Matchers::AllowAnyDir' : super
+      def squashable_with?(other)
+        (@polarity == :allow && other == AllowAnyDir) || super
+      end
+
+      def squash(list)
+        return AllowAnyDir if list.include?(AllowAnyDir)
+
+        super
       end
 
       def dir_matcher

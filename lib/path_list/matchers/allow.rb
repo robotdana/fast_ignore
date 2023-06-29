@@ -5,7 +5,7 @@ class PathList
     Allow = Base.new
 
     class << Allow
-      def polarity
+      def match(_)
         :allow
       end
 
@@ -13,12 +13,9 @@ class PathList
         'PathList::Matchers::Allow'
       end
 
-      def match(_)
+      def polarity
         :allow
       end
-
-      alias_method :eql?, :equal?
-      alias_method :==, :eql?
     end
 
     Allow.freeze

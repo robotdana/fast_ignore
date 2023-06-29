@@ -3,9 +3,6 @@
 class PathList
   module Matchers
     class MatchRegexp < Base
-      attr_reader :polarity
-      attr_reader :weight
-
       def self.build(re_builder, polarity)
         rule = re_builder.to_regexp
         return polarity == :allow ? Allow : Ignore unless rule
@@ -22,6 +19,17 @@ class PathList
         freeze
       end
 
+      def match(candidate)
+        @polarity if @rule.match?(candidate.full_path_downcase)
+      end
+
+      def inspect
+        "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
+      end
+
+      attr_reader :weight
+      attr_reader :polarity
+
       def squashable_with?(other)
         other.instance_of?(self.class) &&
           @polarity == other.polarity &&
@@ -30,14 +38,6 @@ class PathList
 
       def squash(list)
         self.class.build(RegexpBuilder.union(list.map { |l| l.re_builder }), @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
-      end
-
-      def inspect
-        "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
-      end
-
-      def match(candidate)
-        @polarity if @rule.match?(candidate.full_path_downcase)
       end
 
       protected

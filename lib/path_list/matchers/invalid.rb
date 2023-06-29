@@ -5,16 +5,13 @@ class PathList
     Invalid = Base.new
 
     class << Invalid
-      def inspect
-        'PathList::Matchers::Invalid'
-      end
-
       def match(_)
         nil
       end
 
-      alias_method :eql?, :equal?
-      alias_method :==, :eql?
+      def inspect
+        'PathList::Matchers::Invalid'
+      end
     end
 
     Invalid.freeze

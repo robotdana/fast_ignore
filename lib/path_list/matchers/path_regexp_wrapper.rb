@@ -3,9 +3,6 @@
 class PathList
   module Matchers
     class PathRegexpWrapper < Wrapper
-      attr_reader :polarity
-      attr_reader :weight
-
       def self.build(re_builder, matcher)
         rule = re_builder.to_regexp
         return matcher unless rule
@@ -22,17 +19,19 @@ class PathList
         freeze
       end
 
-      def squashable_with?(other)
-        other.instance_of?(self.class) &&
-          @re_builder.parts == other.re_builder.parts
+      def match(candidate)
+        @matcher.match(candidate) if @rule.match?(candidate.full_path_downcase)
       end
 
       def inspect
         "#{self.class}.new(\n  #{@rule.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
-      def match(candidate)
-        @matcher.match(candidate) if @rule.match?(candidate.full_path_downcase)
+      attr_reader :weight
+      attr_reader :polarity
+
+      def squashable_with?(other)
+        other.instance_of?(self.class)
       end
 
       protected

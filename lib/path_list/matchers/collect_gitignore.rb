@@ -19,60 +19,10 @@ class PathList
         freeze
       end
 
-      def inspect
-        "#{self.class}.new(\n#{
-          @collect_matcher.inspect.gsub(/^/, '  ')
-        },\n#{
-          @matcher.inspect.gsub(/^/, '  ')
-        }\n)"
-      end
-
-      def squashable_with?(_)
-        false
-      end
-
-      def weight
-        @collect_matcher.weight + @matcher.weight
-      end
-
-      # TODO: how can i remove this candidate.directory? check
-      # maybe move it to a matcher of its own?
-      # although that's also a method call to an ivar so its maybe not worth it
-      # we'd save the condition?
       def match(candidate)
         collect(candidate) if @collect_matcher.match(candidate) == :allow
 
         @matcher.match(candidate)
-      end
-
-      def dir_matcher
-        new_parent = dup
-        new_parent.matcher = @dir_matcher
-        new_parent.collect_matcher = @collect_matcher.dir_matcher
-        new_parent.freeze
-      end
-
-      def compress_self
-        @dir_matcher.compress_self
-        @file_matcher.compress_self
-        new_collect_matcher = @collect_matcher.compress_self
-        if new_collect_matcher == @collect_matcher
-          self
-        else
-          new_parent = dup
-          new_parent.collect_matcher = @collect_matcher.dir_matcher
-          new_parent.freeze
-        end
-      end
-
-      attr_reader :file_matcher
-
-      undef new_with_matcher
-
-      def collect(candidate)
-        if candidate.children.include?('.gitignore')
-          append("#{candidate.full_path}/.gitignore", root: candidate.full_path)
-        end
       end
 
       def append(from_file, root: nil) # rubocop:disable Metrics/MethodLength
@@ -94,10 +44,58 @@ class PathList
         @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher])
       end
 
+      def inspect
+        "#{self.class}.new(\n#{
+          @collect_matcher.inspect.gsub(/^/, '  ')
+        },\n#{
+          @matcher.inspect.gsub(/^/, '  ')
+        }\n)"
+      end
+
+      def weight
+        @collect_matcher.weight + @matcher.weight
+      end
+
+      def squashable_with?(_)
+        false
+      end
+
+      def compress_self
+        @dir_matcher.compress_self
+        @file_matcher.compress_self
+        new_collect_matcher = @collect_matcher.compress_self
+        if new_collect_matcher == @collect_matcher
+          self
+        else
+          new_parent = dup
+          new_parent.collect_matcher = @collect_matcher.dir_matcher
+          new_parent.freeze
+        end
+      end
+
+      def dir_matcher
+        new_parent = dup
+        new_parent.matcher = @dir_matcher
+        new_parent.collect_matcher = @collect_matcher.dir_matcher
+        new_parent.freeze
+      end
+
+      attr_reader :file_matcher
+
       protected
 
       attr_writer :matcher
       attr_writer :collect_matcher
+
+      private
+
+      def collect(candidate)
+        if candidate.children.include?('.gitignore')
+          append("#{candidate.full_path}/.gitignore", root: candidate.full_path)
+        end
+      end
+
+      undef new_with_matcher
     end
   end
 end

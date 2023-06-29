@@ -7,6 +7,10 @@ class PathList
         def match(candidate)
           :allow if @matchers.all? { |m| m.match(candidate) }
         end
+
+        def polarity
+          :allow
+        end
       end
     end
   end

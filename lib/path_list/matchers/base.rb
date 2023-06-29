@@ -3,45 +3,51 @@
 class PathList
   module Matchers
     class Base
+      # build
       class << self
         alias_method :build, :new
       end
 
-      def polarity
-        :mixed
+      # match
+      def match(_)
+        nil
       end
 
+      # inspect
       alias_method :original_inspect, :inspect # leftovers:keep
-      alias_method :name, :class
-
       def inspect
         "#{self.class}.new"
       end
 
+      # sort
+      def weight
+        1
+      end
+
+      # merge
+      def polarity
+        :mixed
+      end
+
+      # squash
       def squashable_with?(other)
         equal?(other)
-      end
-
-      def compress_self
-        self
-      end
-
-      def without_matcher(matcher)
-        return Blank if matcher == self
-
-        self
       end
 
       def squash(_)
         self
       end
 
-      def weight
-        1
+      # compress
+      def compress_self
+        self
       end
 
-      def match(_)
-        nil
+      # filter matchers
+      def without_matcher(matcher)
+        return Blank if matcher == self
+
+        self
       end
 
       def dir_matcher

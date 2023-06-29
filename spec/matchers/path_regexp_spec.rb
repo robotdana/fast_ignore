@@ -8,49 +8,6 @@ RSpec.describe PathList::Matchers::PathRegexp do
 
   it { is_expected.to be_frozen }
 
-  describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, :allow)' }
-  end
-
-  describe '#weight' do
-    it { is_expected.to have_attributes(weight: 2.75) }
-  end
-
-  describe '#squashable_with?' do
-    it { is_expected.to be_squashable_with(subject) }
-    it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
-
-    it 'is squashable with the same property values' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :allow)
-
-      expect(subject).to be_squashable_with(other)
-    end
-
-    it 'is not squashable with a different allow value' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :ignore)
-
-      expect(subject).not_to be_squashable_with(other)
-    end
-  end
-
-  describe '#squash' do
-    it 'squashes the regexps together' do
-      subject
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
-
-      allow(described_class).to receive(:new).and_call_original
-      squashed = subject.squash([subject, other])
-
-      expect(squashed).to be_a(described_class)
-      expect(squashed).not_to be subject
-      expect(squashed).not_to be other
-
-      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'a' => nil, 'b' => nil }),
-                                                        polarity))
-      expect(squashed).to be_like(described_class.new(/(?:a|b)/, polarity))
-    end
-  end
-
   describe '#match' do
     let(:path) { 'my/file.rb' }
     let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
@@ -83,6 +40,99 @@ RSpec.describe PathList::Matchers::PathRegexp do
 
         it { expect(subject.match(candidate)).to be_nil }
       end
+    end
+  end
+
+  describe '#inspect' do
+    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, :allow)' }
+  end
+
+  describe '#weight' do
+    it { is_expected.to have_attributes(weight: 2.75) }
+  end
+
+  describe '#polarity' do
+    context 'when polarity is ignore' do
+      let(:polarity) { :ignore }
+
+      it { is_expected.to have_attributes(polarity: :ignore) }
+    end
+
+    context 'when polarity is allow' do
+      let(:polarity) { :allow }
+
+      it { is_expected.to have_attributes(polarity: :allow) }
+    end
+  end
+
+  describe '#squashable_with?' do
+    it { is_expected.to be_squashable_with(subject) }
+    it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
+
+    it 'is squashable with the same polarity values' do
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :allow)
+
+      expect(subject).to be_squashable_with(other)
+    end
+
+    it 'is not squashable with a different polarity value' do
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :ignore)
+
+      expect(subject).not_to be_squashable_with(other)
+    end
+  end
+
+  describe '#squash' do
+    it 'squashes the regexps together' do
+      subject
+      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
+
+      allow(described_class).to receive(:new).and_call_original
+      squashed = subject.squash([subject, other])
+
+      expect(squashed).to be_a(described_class)
+      expect(squashed).not_to be subject
+      expect(squashed).not_to be other
+
+      expect(squashed).to be_like(
+        described_class.build(PathList::RegexpBuilder.new({ 'a' => nil, 'b' => nil }), polarity)
+      )
+      expect(squashed).to be_like(described_class.new(/(?:a|b)/, polarity))
+    end
+  end
+
+  describe '#compress_self' do
+    let(:builder) { PathList::RegexpBuilder.new({ 'a' => { any: { end_anchor: nil } } }) }
+
+    it 'compresses the regexp but only once' do
+      new_matcher = subject.compress_self
+      expect(new_matcher).to be_like(
+        described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), polarity)
+      )
+      expect(new_matcher).not_to be subject
+      expect(new_matcher.compress_self).to be new_matcher
+    end
+  end
+
+  describe '#without_matcher' do
+    it 'returns Blank if matcher is self' do
+      expect(subject.without_matcher(subject)).to be PathList::Matchers::Blank
+    end
+
+    it 'returns self otherwise' do
+      expect(subject.without_matcher(PathList::Matchers::Blank)).to be subject
+    end
+  end
+
+  describe '#dir_matcher' do
+    it 'returns self' do
+      expect(subject.dir_matcher).to be subject
+    end
+  end
+
+  describe '#file_matcher' do
+    it 'returns self' do
+      expect(subject.file_matcher).to be subject
     end
   end
 end
