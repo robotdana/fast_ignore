@@ -16,7 +16,8 @@ class PathList
           case calculate_polarity(matchers)
           when :allow then self::Allow.new(matchers)
           when :ignore then self::Ignore.new(matchers)
-          when :mixed then new(matchers)
+          else
+            new(matchers)
           end
         end
       end
@@ -53,7 +54,7 @@ class PathList
 
       def compress_self
         new_matchers = matchers.map(&:compress_self)
-        new_matchers == matchers ? self : self.class.new(new_matchers)
+        new_matchers == matchers ? self : self.class.build(new_matchers)
       end
 
       def without_matcher(matcher)

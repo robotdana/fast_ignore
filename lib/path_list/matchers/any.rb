@@ -30,7 +30,7 @@ class PathList
         squashable_sets.each.map do |matcher_set|
           next matcher_set.first if matcher_set.length == 1
 
-          matcher_set.first.squash(matcher_set.uniq.sort_by(&:weight))
+          matcher_set.first.squash(matcher_set.uniq.sort_by(&:weight), false)
         end.sort_by(&:weight)
       end
 

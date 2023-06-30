@@ -3,17 +3,17 @@
 RSpec.describe PathList::Matchers::All do
   subject { described_class.new(matchers) }
 
-  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow) }
-  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow) }
-  let(:matcher_allow_c) { instance_double(PathList::Matchers::Base, weight: 3, polarity: :allow) }
+  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow) }
+  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow) }
+  let(:matcher_allow_c) { instance_double(PathList::Matchers::Base, 'matcher_allow_c', weight: 3, polarity: :allow) }
 
-  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore) }
-  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore) }
-  let(:matcher_ignore_c) { instance_double(PathList::Matchers::Base, weight: 3, polarity: :ignore) }
+  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore) }
+  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore) }
+  let(:matcher_ignore_c) { instance_double(PathList::Matchers::Base, 'matcher_ignore_c', weight: 3, polarity: :ignore) }
 
-  let(:matcher_mixed_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :mixed) }
-  let(:matcher_mixed_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :mixed) }
-  let(:matcher_mixed_c) { instance_double(PathList::Matchers::Base, weight: 3, polarity: :mixed) }
+  let(:matcher_mixed_a) { instance_double(PathList::Matchers::Base, 'matcher_mixed_a', weight: 1, polarity: :mixed) }
+  let(:matcher_mixed_b) { instance_double(PathList::Matchers::Base, 'matcher_mixed_b', weight: 2, polarity: :mixed) }
+  let(:matcher_mixed_c) { instance_double(PathList::Matchers::Base, 'matcher_mixed_c', weight: 3, polarity: :mixed) }
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b, matcher_mixed_c] }
 
@@ -45,10 +45,12 @@ RSpec.describe PathList::Matchers::All do
             # rubocop:enable Lint/DuplicateBranch
 
             it "returns #{result.inspect} when built from #{list}" do
-              list = list.map do |(mock_result, polarity)|
-                instance_double(PathList::Matchers::Base, match: mock_result, polarity: polarity, weight: 0)
+              list = list.map.with_index do |(mock_result, polarity), index|
+                instance_double(
+                  PathList::Matchers::Base, "matcher_#{index}", match: mock_result, polarity: polarity, weight: 0
+                )
               end
-              expect(described_class.build(list).match(instance_double(PathList::Candidate))).to eq result
+              expect(described_class.build(list).match(instance_double(PathList::Candidate, 'candidate'))).to eq result
             end
           end
       end

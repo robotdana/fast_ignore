@@ -6,8 +6,15 @@ class PathList
       def self.build(re_builder, matcher)
         rule = re_builder.to_regexp
         return matcher unless rule
+        return Blank if matcher == Blank
 
         new(rule, matcher, re_builder)
+      end
+
+      def compress_self
+        return self.class.build(@re_builder.compress, matcher.compress_self) unless @re_builder.compressed?
+
+        super
       end
 
       def initialize(rule, matcher, re_builder = nil)
@@ -28,10 +35,10 @@ class PathList
       end
 
       attr_reader :weight
-      attr_reader :polarity
 
       def squashable_with?(other)
-        other.instance_of?(self.class)
+        other.instance_of?(self.class) &&
+          @re_builder.parts == other.re_builder.parts
       end
 
       protected
@@ -46,6 +53,8 @@ class PathList
       end
 
       def new_with_matcher(matcher)
+        return Blank if matcher == Blank
+
         self.class.new(@rule, matcher, @re_builder)
       end
     end

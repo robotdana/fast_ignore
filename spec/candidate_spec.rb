@@ -26,6 +26,52 @@ RSpec.describe PathList::Candidate do
     end
   end
 
+  describe '#prepend_path' do
+    it 'returns the path' do
+      expect(candidate.prepend_path).to eq '/path/from/root/filename'
+    end
+
+    it 'is memoized' do
+      expect(candidate.prepend_path).to be candidate.prepend_path # rubocop:disable RSpec/IdenticalEqualityAssertion
+    end
+
+    context 'when the path is /' do
+      let(:full_path) { '/' }
+
+      it 'returns an empty string' do
+        expect(candidate.prepend_path).to eq ''
+      end
+    end
+  end
+
+  describe '#parent' do
+    before { allow(File).to receive_messages(exists?: nil, lstat: nil, directory?: nil) }
+
+    it 'returns a candidate for the parent with preset values' do
+      expect(candidate.parent).to be_like described_class.new('/path/from/root', true, true)
+      expect(candidate.parent).to have_attributes(
+        directory?: true,
+        exists?: true
+      )
+      expect(File).not_to have_received(:exists?)
+      expect(File).not_to have_received(:directory?)
+      expect(File).not_to have_received(:lstat)
+    end
+
+    it 'is memoized' do
+      expect(candidate.parent).to be_like described_class.new('/path/from/root', true, true)
+      expect(candidate.parent).to be(candidate.parent) # rubocop:disable RSpec/IdenticalEqualityAssertion
+    end
+
+    context 'when the path is /' do
+      let(:full_path) { '/' }
+
+      it 'returns nil' do
+        expect(candidate.parent).to be_nil
+      end
+    end
+  end
+
   describe '#exists?' do
     context 'when reading from the file system' do
       around { |e| within_temp_dir { e.run } }
@@ -167,110 +213,6 @@ RSpec.describe PathList::Candidate do
         allow(File).to receive(:new).and_raise(SystemCallError, 'error')
 
         expect(candidate.first_line).to eq ''
-      end
-    end
-
-    context 'when not reading from the file system', skip: 'this moved to query methods' do
-      before { hide_const('::File') }
-
-      context 'when the first line has a shebang' do
-        let(:content) do
-          <<~RUBY
-            #!/usr/bin/env ruby
-
-            puts('yes')
-          RUBY
-        end
-
-        it 'returns the first line' do
-          expect(candidate.first_line).to eq '#!/usr/bin/env ruby'
-        end
-
-        it 'stores the first line' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq '#!/usr/bin/env ruby'
-        end
-      end
-
-      context 'when the first line of one line has a shebang' do
-        let(:content) do
-          <<~RUBY
-            #!/usr/bin/env ruby
-          RUBY
-        end
-
-        it 'returns the first line' do
-          expect(candidate.first_line).to eq '#!/usr/bin/env ruby'
-        end
-
-        it 'stores the first line' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq '#!/usr/bin/env ruby'
-        end
-      end
-
-      context 'when the first line of one line has a shebang with no trailing newline' do
-        let(:content) do
-          <<~RUBY.chomp
-            #!/usr/bin/env ruby
-          RUBY
-        end
-
-        it 'returns the first line' do
-          expect(candidate.first_line).to eq '#!/usr/bin/env ruby'
-        end
-
-        it 'stores the first line' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq '#!/usr/bin/env ruby'
-        end
-      end
-
-      context "when the first line hasn't a shebang" do
-        let(:content) do
-          <<~RUBY
-            # frozen_string_literal: true
-
-            puts('no')
-          RUBY
-        end
-
-        it 'returns an empty string' do
-          expect(candidate.first_line).to eq ''
-        end
-
-        it 'stores an empty string' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq ''
-        end
-      end
-
-      context "when the first line of one line hasn't a shebang" do
-        let(:content) do
-          <<~RUBY
-            # frozen_string_literal: true
-          RUBY
-        end
-
-        it 'returns an empty string' do
-          expect(candidate.first_line).to eq ''
-        end
-
-        it 'stores an empty string' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq ''
-        end
-      end
-
-      context "when the first line of one line with no trailing newline hasn't a shebang" do
-        let(:content) do
-          <<~RUBY.chomp
-            puts('no')
-          RUBY
-        end
-
-        it 'returns an empty string' do
-          expect(candidate.first_line).to eq ''
-        end
-
-        it 'stores an empty string' do
-          expect(candidate.instance_variable_get(:@first_line)).to eq ''
-        end
       end
     end
   end

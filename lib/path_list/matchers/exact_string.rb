@@ -20,6 +20,8 @@ class PathList
       def initialize(item, polarity)
         @polarity = polarity
         @item = item
+
+        freeze
       end
 
       def match(candidate)
@@ -33,11 +35,10 @@ class PathList
       attr_reader :polarity
 
       def squashable_with?(other)
-        other.is_a?(ExactString) &&
-          other.polarity == @polarity
+        other.is_a?(ExactString) && other.polarity == @polarity
       end
 
-      def squash(list)
+      def squash(list, _)
         self.class.build(list.flat_map { |l| l.array }, @polarity) # rubocop:disable Style/SymbolProc protected
       end
 

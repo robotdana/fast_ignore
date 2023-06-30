@@ -4,16 +4,16 @@ RSpec.describe PathList::Matchers::LastMatch::Ignore do
   subject { described_class.new(matchers) }
 
   let(:matcher_ignore_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_c', weight: 3, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_d) do
-    instance_double(PathList::Matchers::Base, weight: 4, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_d', weight: 4, polarity: :ignore, squashable_with?: false)
   end
 
   let(:matchers) { [matcher_ignore_a, matcher_ignore_b, matcher_ignore_c] }
@@ -32,7 +32,7 @@ RSpec.describe PathList::Matchers::LastMatch::Ignore do
         matcher_ignore_c
       ])).to be_like(
         described_class.new([
-          matcher_ignore_a, matcher_ignore_b, matcher_ignore_c
+          matcher_ignore_c, matcher_ignore_b, matcher_ignore_a
         ])
       )
       expect(PathList::Matchers::LastMatch).to have_received(:build)
@@ -85,9 +85,9 @@ RSpec.describe PathList::Matchers::LastMatch::Ignore do
       new_matcher = subject.compress_self
       expect(new_matcher).not_to be subject
       expect(new_matcher).to be_like(described_class.new([
-        matcher_ignore_a,
+        matcher_ignore_d,
         matcher_ignore_c,
-        matcher_ignore_d
+        matcher_ignore_a
       ]))
       expect(matcher_ignore_a).to have_received(:compress_self)
       expect(matcher_ignore_b).to have_received(:compress_self)
@@ -113,9 +113,9 @@ RSpec.describe PathList::Matchers::LastMatch::Ignore do
       new_matcher = subject.dir_matcher
       expect(new_matcher).not_to be subject
       expect(new_matcher).to be_like(described_class.new([
-        matcher_ignore_a,
+        matcher_ignore_d,
         matcher_ignore_c,
-        matcher_ignore_d
+        matcher_ignore_a
       ]))
       expect(matcher_ignore_a).to have_received(:dir_matcher)
       expect(matcher_ignore_b).to have_received(:dir_matcher)
@@ -141,9 +141,9 @@ RSpec.describe PathList::Matchers::LastMatch::Ignore do
       new_matcher = subject.file_matcher
       expect(new_matcher).not_to be subject
       expect(new_matcher).to be_like(described_class.new([
-        matcher_ignore_a,
+        matcher_ignore_d,
         matcher_ignore_c,
-        matcher_ignore_d
+        matcher_ignore_a
       ]))
       expect(matcher_ignore_a).to have_received(:file_matcher)
       expect(matcher_ignore_b).to have_received(:file_matcher)

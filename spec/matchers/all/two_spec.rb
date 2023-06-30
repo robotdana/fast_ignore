@@ -3,14 +3,14 @@
 RSpec.describe PathList::Matchers::All::Two do
   subject { described_class.new(matchers) }
 
-  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow) }
-  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow) }
+  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow) }
+  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow) }
 
-  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore) }
-  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore) }
+  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore) }
+  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore) }
 
-  let(:matcher_mixed_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :mixed) }
-  let(:matcher_mixed_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :mixed) }
+  let(:matcher_mixed_a) { instance_double(PathList::Matchers::Base, 'matcher_mixed_a', weight: 1, polarity: :mixed) }
+  let(:matcher_mixed_b) { instance_double(PathList::Matchers::Base, 'matcher_mixed_b', weight: 2, polarity: :mixed) }
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b] }
 

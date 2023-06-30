@@ -22,6 +22,7 @@ class PathList
         @file_tree ||= begin
           tree_hash_proc = ->(h, k) { h[k] = Hash.new(&tree_hash_proc) }
           tree = Hash.new(&tree_hash_proc)
+
           PathList::GitIndex.files(@root).each do |path|
             if path.include?('/')
               *dirs, filename = path.split('/')
@@ -50,10 +51,10 @@ class PathList
           root_prefix = @root == '/' ? '' : @root.downcase
           dir_array, file_array = create_paths(file_tree, root_prefix)
 
-          Matchers::LastMatch.build([
-            Matchers::Ignore,
-            Matchers::MatchIfDir.new(Matchers::ExactString.build(dir_array.sort, :allow)),
-            Matchers::MatchUnlessDir.new(Matchers::ExactString.build(file_array.sort, :allow))
+          LastMatch.build([
+            Ignore,
+            MatchIfDir.new(ExactString.build(dir_array, :allow)),
+            MatchUnlessDir.new(ExactString.build(file_array, :allow))
           ])
         end
       end

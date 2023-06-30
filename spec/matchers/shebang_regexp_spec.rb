@@ -13,7 +13,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     let(:builder) { PathList::RegexpBuilder.new(['ruby']) }
     let(:filename) { 'file.rb' }
 
-    let(:candidate) { instance_double(PathList::Candidate, first_line: first_line) }
+    let(:candidate) { instance_double(PathList::Candidate, 'candidate', first_line: first_line) }
 
     context 'without an extension' do
       let(:filename) { 'my_script' }
@@ -91,14 +91,17 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
 
       allow(described_class).to receive(:new).and_call_original
-      squashed = subject.squash([subject, other])
+      squashed = subject.squash([subject, other], false)
 
       expect(squashed).to be_a(described_class)
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(described_class.build(PathList::RegexpBuilder.new({ 'abcd' => nil, 'b' => nil }),
-                                                        polarity))
+      expect(squashed).to be_like(
+        described_class.build(
+          PathList::RegexpBuilder.new({ 'abcd' => nil, 'b' => nil }), polarity
+        )
+      )
       expect(squashed).to be_like(described_class.new(/(?:abcd|b)/, polarity))
     end
   end

@@ -3,10 +3,10 @@
 RSpec.describe PathList::Matchers::All::Ignore do
   subject { described_class.new(matchers) }
 
-  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore) }
-  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore) }
-  let(:matcher_ignore_c) { instance_double(PathList::Matchers::Base, weight: 3, polarity: :ignore) }
-  let(:matcher_ignore_d) { instance_double(PathList::Matchers::Base, weight: 4, polarity: :ignore) }
+  let(:matcher_ignore_a) { instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore) }
+  let(:matcher_ignore_b) { instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore) }
+  let(:matcher_ignore_c) { instance_double(PathList::Matchers::Base, 'matcher_ignore_c', weight: 3, polarity: :ignore) }
+  let(:matcher_ignore_d) { instance_double(PathList::Matchers::Base, 'matcher_ignore_d', weight: 4, polarity: :ignore) }
 
   let(:matchers) { [matcher_ignore_a, matcher_ignore_b, matcher_ignore_c] }
 

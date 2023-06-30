@@ -26,7 +26,7 @@ class PathList
         equal?(self)
       end
 
-      def squash(_)
+      def squash(_, _)
         self
       end
 

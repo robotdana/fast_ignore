@@ -4,33 +4,33 @@ RSpec.describe PathList::Matchers::LastMatch do
   subject { described_class.new(matchers) }
 
   let(:matcher_allow_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_c', weight: 3, polarity: :allow, squashable_with?: false)
   end
 
   let(:matcher_ignore_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_c', weight: 3, polarity: :ignore, squashable_with?: false)
   end
 
   let(:matcher_mixed_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_a', weight: 1, polarity: :mixed, squashable_with?: false)
   end
   let(:matcher_mixed_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_b', weight: 2, polarity: :mixed, squashable_with?: false)
   end
   let(:matcher_mixed_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_c', weight: 3, polarity: :mixed, squashable_with?: false)
   end
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b, matcher_mixed_c] }
@@ -53,9 +53,15 @@ RSpec.describe PathList::Matchers::LastMatch do
 
             it "returns #{result.inspect} when built from #{list}" do
               list = list.map do |(mock_result, polarity)|
-                instance_double(PathList::Matchers::Base, match: mock_result, polarity: polarity, weight: 0,
-squashable_with?: false).tap { |x| allow(x).to receive(:squash).and_return(x) }
+                instance_double(
+                  PathList::Matchers::Base,
+                  match: mock_result,
+                  polarity: polarity,
+                  weight: 0,
+                  squashable_with?: false
+                ).tap { |x| allow(x).to receive(:squash).and_return(x) }
               end
+
               expect(described_class.build(list).match(instance_double(PathList::Candidate))).to eq result
             end
           end
@@ -254,9 +260,9 @@ squashable_with?: false).tap { |x| allow(x).to receive(:squash).and_return(x) }
         matcher_ignore_a,
         matcher_ignore_c
       ])).to be_like(PathList::Matchers::LastMatch::Ignore.new([
-        matcher_ignore_a,
+        matcher_ignore_c,
         matcher_ignore_b,
-        matcher_ignore_c
+        matcher_ignore_a
       ]))
     end
 
@@ -266,9 +272,9 @@ squashable_with?: false).tap { |x| allow(x).to receive(:squash).and_return(x) }
         matcher_allow_a,
         matcher_allow_c
       ])).to be_like(PathList::Matchers::LastMatch::Allow.new([
-        matcher_allow_a,
+        matcher_allow_c,
         matcher_allow_b,
-        matcher_allow_c
+        matcher_allow_a
       ]))
     end
 

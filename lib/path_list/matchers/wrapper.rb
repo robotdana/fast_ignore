@@ -34,12 +34,9 @@ class PathList
         other.instance_of?(self.class)
       end
 
-      def squash(list)
-        new_matchers = list.map { |l| l.matcher } # rubocop:disable Style/SymbolProc it breaks with protected methods
-        first_polarity = new_matchers.first.polarity
-        same_polarity = new_matchers.all? { |l| l.polarity != :mixed && l.polarity == first_polarity }
-        new_matcher_class = same_polarity ? Any : LastMatch
-        new_with_matcher(new_matcher_class.build(new_matchers))
+      def squash(list, preserve_order)
+        new_matcher_class = preserve_order ? LastMatch : Any
+        new_with_matcher(new_matcher_class.build(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc protected
       end
 
       def compress_self

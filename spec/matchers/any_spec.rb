@@ -4,33 +4,33 @@ RSpec.describe PathList::Matchers::Any do
   subject { described_class.new(matchers) }
 
   let(:matcher_allow_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_c', weight: 3, polarity: :allow, squashable_with?: false)
   end
 
   let(:matcher_ignore_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_a', weight: 1, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_b', weight: 2, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_ignore_c', weight: 3, polarity: :ignore, squashable_with?: false)
   end
 
   let(:matcher_mixed_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_a', weight: 1, polarity: :mixed, squashable_with?: false)
   end
   let(:matcher_mixed_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_b', weight: 2, polarity: :mixed, squashable_with?: false)
   end
   let(:matcher_mixed_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_mixed_c', weight: 3, polarity: :mixed, squashable_with?: false)
   end
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b, matcher_mixed_c] }
@@ -173,11 +173,8 @@ RSpec.describe PathList::Matchers::Any do
         matcher_mixed_a,
         matcher_mixed_c
       ])).to be_like(described_class.new([
-        matcher_mixed_a,
         matcher_ignore_a,
-        matcher_mixed_b,
-        matcher_allow_c,
-        matcher_mixed_c,
+        matcher_mixed_a,
         PathList::Matchers::MatchIfDir.new(
           described_class.new([
             matcher_allow_a,
@@ -185,7 +182,10 @@ RSpec.describe PathList::Matchers::Any do
             matcher_ignore_b,
             matcher_ignore_c
           ])
-        )
+        ),
+        matcher_mixed_b,
+        matcher_allow_c,
+        matcher_mixed_c
       ]))
     end
 

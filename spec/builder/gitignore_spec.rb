@@ -6074,10 +6074,7 @@ RSpec.describe PathList::Builder::Gitignore do
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
               expect(build('**/'))
-                .to be_like PathList::Matchers::Any::Two.new([
-                  PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::Allow
-                ])
+                .to be_like PathList::Matchers::Allow
             end
 
             it 'matches files or directories in all directories when repeated' do
@@ -6090,10 +6087,7 @@ RSpec.describe PathList::Builder::Gitignore do
 
             it 'matches files or directories in all directories with **/*' do
               expect(build('**/*'))
-                .to be_like PathList::Matchers::Any::Two.new([
-                  PathList::Matchers::AllowAnyDir,
-                  PathList::Matchers::Allow
-                ])
+                .to be_like PathList::Matchers::Allow
             end
 
             it 'matches files or directories in all directories when also followed by a star before text' do

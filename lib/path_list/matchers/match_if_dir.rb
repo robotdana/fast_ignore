@@ -14,22 +14,28 @@ class PathList
       end
 
       def squashable_with?(other)
-        (@polarity == :allow && other == AllowAnyDir) || super
+        (other == AllowAnyDir) || super
       end
 
-      def squash(list)
-        return AllowAnyDir if list.include?(AllowAnyDir)
-
-        super
+      def squash(list, preserve_order)
+        if preserve_order
+          self.class.build(LastMatch.build(list.map { |l| l == AllowAnyDir ? Allow : l.matcher }))
+        elsif list.include?(AllowAnyDir)
+          AllowAnyDir
+        else
+          self.class.build(Any.build(list.map(&:matcher)))
+        end
       end
 
       def dir_matcher
-        @matcher
+        @matcher.dir_matcher
       end
 
       def file_matcher
         Blank
       end
+
+      attr_reader :matcher
 
       private
 

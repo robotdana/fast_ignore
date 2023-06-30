@@ -13,7 +13,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
     let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
 
     let(:candidate) do
-      instance_double(PathList::Candidate, full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
+      instance_double(PathList::Candidate, 'candidate', full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
     end
 
     context 'with a matching rule' do
@@ -88,7 +88,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
       other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
 
       allow(described_class).to receive(:new).and_call_original
-      squashed = subject.squash([subject, other])
+      squashed = subject.squash([subject, other], true)
 
       expect(squashed).to be_a(described_class)
       expect(squashed).not_to be subject

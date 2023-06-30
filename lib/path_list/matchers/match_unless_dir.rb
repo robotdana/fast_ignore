@@ -12,7 +12,7 @@ class PathList
       end
 
       def file_matcher
-        @matcher
+        @matcher.file_matcher
       end
 
       private

@@ -3,10 +3,10 @@
 RSpec.describe PathList::Matchers::All::Allow do
   subject { described_class.new(matchers) }
 
-  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow) }
-  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow) }
-  let(:matcher_allow_c) { instance_double(PathList::Matchers::Base, weight: 3, polarity: :allow) }
-  let(:matcher_allow_d) { instance_double(PathList::Matchers::Base, weight: 4, polarity: :allow) }
+  let(:matcher_allow_a) { instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow) }
+  let(:matcher_allow_b) { instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow) }
+  let(:matcher_allow_c) { instance_double(PathList::Matchers::Base, 'matcher_allow_c', weight: 3, polarity: :allow) }
+  let(:matcher_allow_d) { instance_double(PathList::Matchers::Base, 'matcher_allow_d', weight: 4, polarity: :allow) }
 
   let(:matchers) { [matcher_allow_a, matcher_allow_b, matcher_allow_c] }
 

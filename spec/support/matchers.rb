@@ -88,6 +88,10 @@ end
 
 RSpec::Matchers.define(:have_inspect_value) do |expected|
   match do |actual|
+    if actual.inspect.include?('anonymous') || expected.include?('anonymous')
+      raise "Can't compare inspect values of anonymous instance doubles"
+    end
+
     @actual = actual.inspect
     expect(@actual).to eq(expected)
 
@@ -95,15 +99,19 @@ RSpec::Matchers.define(:have_inspect_value) do |expected|
   end
 end
 
-# RSpec::Matchers.define(:have_instance_variables) do |expected|
-#   match do |actual|
-#     @actual = actual.instance_variables.to_h { |ivar| [ivar, actual.instance_variable_get(ivar)] }
-#     expect(@actual).to match(expected)
-#   end
-# end
+RSpec::Matchers.define(:have_instance_variables) do |expected|
+  match do |actual|
+    @actual = actual.instance_variables.to_h { |ivar| [ivar, actual.instance_variable_get(ivar)] }
+    expect(@actual).to match(expected)
+  end
+end
 
 RSpec::Matchers.define(:be_like) do |expected|
   match do |actual|
+    if actual.inspect.include?('anonymous') || expected.inspect.include?('anonymous')
+      raise "Can't compare inspect values of anonymous instance doubles"
+    end
+
     expect(actual.inspect).to eq(expected.inspect)
 
     true

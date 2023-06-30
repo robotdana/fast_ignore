@@ -19,10 +19,6 @@ class PathList
         freeze
       end
 
-      def match(candidate)
-        @polarity if @rule.match?(candidate.full_path_downcase)
-      end
-
       def inspect
         "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
       end
@@ -32,24 +28,16 @@ class PathList
 
       def squashable_with?(other)
         other.instance_of?(self.class) &&
-          @polarity == other.polarity &&
-          @re_builder && other.re_builder
+          @polarity == other.polarity
       end
 
-      def squash(list)
+      def squash(list, _)
         self.class.build(RegexpBuilder.union(list.map { |l| l.re_builder }), @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
       end
 
       protected
 
       attr_reader :re_builder
-
-      private
-
-      def calculate_weight
-        # chaos guesses
-        (@rule.inspect.length / 4.0) + 2
-      end
     end
   end
 end

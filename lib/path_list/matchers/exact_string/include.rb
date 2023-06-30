@@ -12,6 +12,8 @@ class PathList
           @polarity = polarity
           @array = array
           @weight = (array.length / 20.0) + 1
+
+          freeze
         end
 
         def match(candidate)

@@ -4,16 +4,16 @@ RSpec.describe PathList::Matchers::Any::Allow do
   subject { described_class.new(matchers) }
 
   let(:matcher_allow_a) do
-    instance_double(PathList::Matchers::Base, weight: 1, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_a', weight: 1, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_b) do
-    instance_double(PathList::Matchers::Base, weight: 2, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_b', weight: 2, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_c) do
-    instance_double(PathList::Matchers::Base, weight: 3, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_c', weight: 3, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_d) do
-    instance_double(PathList::Matchers::Base, weight: 4, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matchers::Base, 'matcher_allow_d', weight: 4, polarity: :allow, squashable_with?: false)
   end
 
   let(:matchers) { [matcher_allow_a, matcher_allow_b, matcher_allow_c] }

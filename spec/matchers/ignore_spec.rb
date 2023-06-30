@@ -30,7 +30,7 @@ RSpec.describe PathList::Matchers::Ignore do
 
   describe '#squash' do
     it 'returns self' do
-      expect(subject.squash([subject, subject])).to be subject
+      expect(subject.squash([subject, subject], true)).to be subject
     end
   end
 
