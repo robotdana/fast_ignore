@@ -21,7 +21,12 @@ class PathList
         end
 
         def inspect
-          "#{self.class}.new([\n  #{@array.map(&:inspect).join(",\n  ")}\n], #{@polarity.inspect})"
+          array_inspect = if @array.sum(&:length) > 40
+            "[\n  #{@array.map(&:inspect).join(",\n  ")}\n]"
+          else
+            "[#{@array.map(&:inspect).join(', ')}]"
+          end
+          "#{self.class}.new(#{array_inspect}, #{@polarity.inspect})"
         end
 
         attr_reader :array

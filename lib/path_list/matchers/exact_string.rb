@@ -39,7 +39,7 @@ class PathList
       end
 
       def squash(list, _)
-        self.class.build(list.flat_map { |l| l.array }, @polarity) # rubocop:disable Style/SymbolProc protected
+        self.class.build(list.flat_map { |l| l.array }.uniq, @polarity) # rubocop:disable Style/SymbolProc protected
       end
 
       def array

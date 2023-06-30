@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::ShebangRegexp do
-  subject { described_class.build(builder, polarity) }
+  subject { described_class.build(regexp_tokens, polarity).prepare }
 
   let(:polarity) { :allow }
-  let(:builder) { PathList::RegexpBuilder.new({ 'abcd' => nil }) }
+  let(:regexp_tokens) { [['abcd']] }
 
   it { is_expected.to be_frozen }
 
   describe '#match' do
     let(:first_line) { "#!/usr/bin/env ruby\n" }
-    let(:builder) { PathList::RegexpBuilder.new(['ruby']) }
+    let(:regexp_tokens) { [['ruby']] }
     let(:filename) { 'file.rb' }
 
     let(:candidate) { instance_double(PathList::Candidate, 'candidate', first_line: first_line) }
@@ -31,7 +31,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       end
 
       context 'with a non-matching rule' do
-        let(:builder) { PathList::RegexpBuilder.new(['bash']) }
+        let(:regexp_tokens) { [['bash']] }
 
         context 'when allowing' do
           it { expect(subject.match(candidate)).to be_nil }
@@ -51,7 +51,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 4.0) }
+    it { is_expected.to have_attributes(weight: 5.333333333333334) }
   end
 
   describe '#polarity' do
@@ -73,13 +73,13 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same polarity' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :allow)
+      other = described_class.build([['b']], :allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different polarity' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :ignore)
+      other = described_class.build([['b']], :ignore)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -88,7 +88,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
+      other = described_class.build([['b']], polarity)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other], false)
@@ -97,18 +97,11 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(
-        described_class.build(
-          PathList::RegexpBuilder.new({ 'abcd' => nil, 'b' => nil }), polarity
-        )
+      expect(squashed.prepare).to be_like(
+        described_class.new(
+          [['abcd'], ['b']], polarity
+        ).prepare
       )
-      expect(squashed).to be_like(described_class.new(/(?:abcd|b)/, polarity))
-    end
-  end
-
-  describe '#compress_self' do
-    it 'returns self' do
-      expect(subject.compress_self).to be subject
     end
   end
 

@@ -67,31 +67,15 @@ RSpec.describe PathList::Matchers::Any::Allow do
     it { is_expected.not_to be_squashable_with(subject.dup) }
   end
 
-  describe '#compress_self' do
-    it 'passes to its matchers, returns self if all are unchanged' do
-      allow(matcher_allow_a).to receive(:compress_self).and_return(matcher_allow_a)
-      allow(matcher_allow_b).to receive(:compress_self).and_return(matcher_allow_b)
-      allow(matcher_allow_c).to receive(:compress_self).and_return(matcher_allow_c)
-      expect(subject.compress_self).to be subject
-      expect(matcher_allow_a).to have_received(:compress_self)
-      expect(matcher_allow_b).to have_received(:compress_self)
-      expect(matcher_allow_c).to have_received(:compress_self)
-    end
-
-    it 'passes to its matchers, returns a new matcher if any are changed' do
-      allow(matcher_allow_a).to receive(:compress_self).and_return(matcher_allow_a)
-      allow(matcher_allow_b).to receive(:compress_self).and_return(matcher_allow_d)
-      allow(matcher_allow_c).to receive(:compress_self).and_return(matcher_allow_c)
-      new_matcher = subject.compress_self
-      expect(new_matcher).not_to be subject
-      expect(new_matcher).to be_like(described_class.new([
-        matcher_allow_a,
-        matcher_allow_c,
-        matcher_allow_d
-      ]))
-      expect(matcher_allow_a).to have_received(:compress_self)
-      expect(matcher_allow_b).to have_received(:compress_self)
-      expect(matcher_allow_c).to have_received(:compress_self)
+  describe '#prepare' do
+    it 'passes to its matchers, returns self' do
+      allow(matcher_allow_a).to receive(:prepare)
+      allow(matcher_allow_b).to receive(:prepare)
+      allow(matcher_allow_c).to receive(:prepare)
+      expect(subject.prepare).to be subject
+      expect(matcher_allow_a).to have_received(:prepare)
+      expect(matcher_allow_b).to have_received(:prepare)
+      expect(matcher_allow_c).to have_received(:prepare)
     end
   end
 

@@ -17,20 +17,25 @@ class PathList
 
   protected
 
-  def matcher
-    @compressed ||= begin
-      @matcher = @matcher.compress_self
+  attr_reader :matcher
+
+  private
+
+  def prepared_matcher
+    @prepared ||= begin
+      @matcher = @matcher.prepare
 
       true
     end
+
     @matcher
   end
 
   def dir_matcher
-    @dir_matcher ||= matcher.dir_matcher
+    @dir_matcher ||= @matcher.dir_matcher.prepare
   end
 
   def file_matcher
-    @file_matcher ||= matcher.file_matcher
+    @file_matcher ||= @matcher.file_matcher.prepare
   end
 end

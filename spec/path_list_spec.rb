@@ -132,7 +132,7 @@ RSpec.describe PathList do
       expect(subject.send(:dir_matcher)).to be_like PathList::Matchers::LastMatch.new([
         PathList::Matchers::Allow,
         PathList::Matchers::CollectGitignore.new(
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:/|\z)}, :allow),
+          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
           PathList::Matchers::Mutable.new(
             PathList::Matchers::PathRegexp.new(
               %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore

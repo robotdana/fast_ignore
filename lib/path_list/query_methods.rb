@@ -28,7 +28,7 @@ class PathList
 
       candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
-        matcher.match(candidate) == :allow
+        prepared_matcher.match(candidate) == :allow
     end
 
     def ===(path)

@@ -39,7 +39,7 @@ class PathList
       end
 
       # compress
-      def compress_self
+      def prepare
         self
       end
 

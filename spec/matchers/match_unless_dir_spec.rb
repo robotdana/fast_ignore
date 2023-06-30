@@ -125,24 +125,11 @@ RSpec.describe PathList::Matchers::MatchUnlessDir do
     end
   end
 
-  describe '#compress_self' do
-    it 'passes to the matcher and returns self if the matcher is unchanged' do
-      allow(matcher).to receive(:compress_self).and_return(matcher)
-      expect(subject.compress_self).to be subject
-      expect(matcher).to have_received(:compress_self)
-    end
-
-    it 'passes to the matcher and returns Blank if the matcher does' do
-      allow(matcher).to receive(:compress_self).and_return(PathList::Matchers::Blank)
-      expect(subject.compress_self).to be PathList::Matchers::Blank
-      expect(matcher).to have_received(:compress_self)
-    end
-
-    it 'passes to the matcher and returns a new wrapper with the new matcher' do
-      new_matcher = instance_double(PathList::Matchers::Base, 'new_matcher', polarity: polarity, weight: 1)
-      allow(matcher).to receive(:compress_self).and_return(new_matcher)
-      expect(subject.compress_self).to be_like(described_class.new(new_matcher))
-      expect(matcher).to have_received(:compress_self)
+  describe '#prepare' do
+    it 'passes to the matcher' do
+      allow(matcher).to receive(:prepare)
+      expect(subject.prepare).to be subject
+      expect(matcher).to have_received(:prepare)
     end
   end
 

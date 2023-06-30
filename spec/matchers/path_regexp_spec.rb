@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexp do
-  subject { described_class.build(builder, polarity) }
+  subject { described_class.build(regexp_tokens, polarity).prepare }
 
   let(:polarity) { :allow }
-  let(:builder) { PathList::RegexpBuilder.new({ 'a' => nil }) }
+  let(:regexp_tokens) { [['a']] }
 
   it { is_expected.to be_frozen }
 
   describe '#match' do
     let(:path) { 'my/file.rb' }
-    let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
+    let(:regexp_tokens) { [['file.rb']] }
 
     let(:candidate) do
       instance_double(PathList::Candidate, 'candidate', full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
@@ -44,11 +44,11 @@ RSpec.describe PathList::Matchers::PathRegexp do
   end
 
   describe '#inspect' do
-    it { is_expected.to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, :allow)' }
+    it { expect(subject).to have_inspect_value 'PathList::Matchers::PathRegexp.new(/a/, :allow)' }
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 2.75) }
+    it { is_expected.to have_attributes(weight: 3.75) }
   end
 
   describe '#polarity' do
@@ -70,13 +70,13 @@ RSpec.describe PathList::Matchers::PathRegexp do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the same polarity values' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :allow)
+      other = described_class.build([['b']], :allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different polarity value' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), :ignore)
+      other = described_class.build([['b']], :ignore)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -85,7 +85,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), polarity)
+      other = described_class.build([['b']], polarity)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other], true)
@@ -94,23 +94,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(
-        described_class.build(PathList::RegexpBuilder.new({ 'a' => nil, 'b' => nil }), polarity)
-      )
       expect(squashed).to be_like(described_class.new(/(?:a|b)/, polarity))
-    end
-  end
-
-  describe '#compress_self' do
-    let(:builder) { PathList::RegexpBuilder.new({ 'a' => { any: { end_anchor: nil } } }) }
-
-    it 'compresses the regexp but only once' do
-      new_matcher = subject.compress_self
-      expect(new_matcher).to be_like(
-        described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), polarity)
-      )
-      expect(new_matcher).not_to be subject
-      expect(new_matcher.compress_self).to be new_matcher
     end
   end
 

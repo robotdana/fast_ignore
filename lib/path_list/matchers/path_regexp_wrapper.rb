@@ -3,24 +3,15 @@
 class PathList
   module Matchers
     class PathRegexpWrapper < Wrapper
-      def self.build(re_builder, matcher)
-        rule = re_builder.to_regexp
-        return matcher unless rule
+      def self.build(token_regexps, matcher)
         return Blank if matcher == Blank
 
-        new(rule, matcher, re_builder)
+        new(PathList::TokenRegexp::Build.build(token_regexps), matcher)
       end
 
-      def compress_self
-        return self.class.build(@re_builder.compress, matcher.compress_self) unless @re_builder.compressed?
-
-        super
-      end
-
-      def initialize(rule, matcher, re_builder = nil)
+      def initialize(rule, matcher)
         @rule = rule
         @matcher = matcher
-        @re_builder = re_builder
         @weight = calculate_weight
 
         freeze
@@ -38,12 +29,12 @@ class PathList
 
       def squashable_with?(other)
         other.instance_of?(self.class) &&
-          @re_builder.parts == other.re_builder.parts
+          @rule == other.rule
       end
 
       protected
 
-      attr_reader :re_builder
+      attr_reader :rule
 
       private
 
@@ -55,7 +46,7 @@ class PathList
       def new_with_matcher(matcher)
         return Blank if matcher == Blank
 
-        self.class.new(@rule, matcher, @re_builder)
+        self.class.new(@rule, matcher)
       end
     end
   end

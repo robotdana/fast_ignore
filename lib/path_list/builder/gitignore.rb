@@ -14,14 +14,13 @@ class PathList
       end
 
       def prepare_regexp_builder
-        @tail = @start_tail = { dir: { any_dir: nil } }
-        @tail_part = :any_dir
-
         @re = if @root && @root != '/'
-          RegexpBuilder.new_from_path(@root, @start_tail)
+          PathRegexp.new_from_path(@root, [:dir, :any_dir])
         else
-          RegexpBuilder.new(start_anchor: @start_tail)
+          PathRegexp.new([:start_anchor, :dir, :any_dir])
         end
+
+        @start_any_dir_position = @re.length - 1
       end
 
       def break!
@@ -56,8 +55,7 @@ class PathList
 
       def anchored!
         @anchored ||= begin
-          @start_tail[:dir] = @start_tail.dig(:dir, :any_dir)
-          @re.forget_tail
+          @re.delete_at(@start_any_dir_position)
           true
         end
       end
@@ -172,11 +170,16 @@ class PathList
       end
 
       def build_matcher
-        matcher = if @re.exact_string?
-          Matchers::ExactString.build([@re.to_s.downcase], @rule_polarity)
+        @main_re ||= @re.dup.compress
+
+        matcher = if @main_re.empty?
+          @rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow
+        elsif @re.exact_path?
+          Matchers::ExactString.build([@main_re.to_s.downcase], @rule_polarity)
         else
-          Matchers::PathRegexp.build(@re, @rule_polarity)
+          Matchers::PathRegexp.build([@main_re.parts], @rule_polarity)
         end
+
         matcher = Matchers::MatchIfDir.build(matcher) if dir_only?
         matcher
       end
@@ -187,12 +190,20 @@ class PathList
         @return || build_matcher
       end
 
-      def build_parent_matcher
+      def build_parent_matcher # rubocop:disable Metrics/MethodLength
         if anchored? || @root
           ancestors = @re.ancestors
-          return Matchers::Blank if ancestors.empty?
 
-          Matchers::MatchIfDir.build(Matchers::PathRegexp.build(ancestors, :allow))
+          if ancestors.any?(&:empty?)
+            return Matchers::MatchIfDir.build(@rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow)
+          end
+
+          exact, regexp = ancestors.partition(&:exact_path?)
+
+          exact = Matchers::ExactString.build(exact.map(&:to_s), :allow)
+          regexp = Matchers::PathRegexp.build(regexp.map(&:parts), :allow)
+
+          Matchers::MatchIfDir.build(Matchers::Any.build([exact, regexp]))
         else
           Matchers::AllowAnyDir
         end
@@ -200,8 +211,11 @@ class PathList
 
       def build_child_matcher
         @child_re = @re.dup
-        @child_re.replace_tail(:dir)
-        Matchers::PathRegexp.build(@child_re, :allow)
+        @child_re.replace_end(:dir)
+        child = @child_re.compress.parts
+        return @rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow if child.empty?
+
+        Matchers::PathRegexp.build([child], :allow)
       end
 
       def build_implicit

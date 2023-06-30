@@ -39,9 +39,9 @@ class PathList
 
         return if new_matcher == Blank
 
-        new_matcher = new_matcher.compress_self
-        @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher])
-        @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher])
+        # new_matcher = new_matcher.prepare
+        @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher.prepare])
+        @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher.prepare])
       end
 
       def inspect
@@ -60,17 +60,21 @@ class PathList
         false
       end
 
-      def compress_self
-        @dir_matcher.compress_self
-        @file_matcher.compress_self
-        new_collect_matcher = @collect_matcher.compress_self
-        if new_collect_matcher == @collect_matcher
-          self
-        else
-          new_parent = dup
-          new_parent.collect_matcher = @collect_matcher.dir_matcher
-          new_parent.freeze
-        end
+      def prepare
+        @dir_matcher.prepare
+        @file_matcher.prepare
+        @collect_matcher.prepare
+
+        self
+
+        # new_collect_matcher = @collect_matcher.prepare
+        # if new_collect_matcher == @collect_matcher
+        #   self
+        # else
+        #   new_parent = dup
+        #   new_parent.collect_matcher = @collect_matcher.dir_matcher
+        #   new_parent.freeze
+        # end
       end
 
       def dir_matcher

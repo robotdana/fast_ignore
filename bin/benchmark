@@ -43,6 +43,43 @@ def benchmark(label)
   puts ''
 end
 
+benchmark('any-dir') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @any_q_re = /\Aa(?:.*\/)?z\z/
+    @any_non_dir_dir_re = /\Aa(?:[^\/]*\/)*z\z/
+    @non_greedy_any_q_re = /\Aa(?:.*?\/)??z\z/
+    @non_greedy_any_non_dir_dir_re = /\Aa(?:[^\/]*?\/)*?z\z/
+    @non_greedy_outer_any_q_re = /\Aa(?:.*\/)??z\z/
+    @non_greedy_outer_any_non_dir_dir_re = /\Aa(?:[^\/]*\/)*?z\z/
+    @non_greedy_inner_any_q_re = /\Aa(?:.*?\/)?z\z/
+    @non_greedy_inner_any_non_dir_dir_re = /\Aa(?:[^\/]*?\/)*z\z/
+
+    @string_hit = "abcd/efgh/ijkl/mnop/qrst/uvwx/y/z" # spellr:disable-line
+    @string_miss_end = "abcd/efgh/ijkl/mnop/qrst/uvwx/y" # spellr:disable-line
+
+    x.report(:hit_any_q_re) { @any_q_re.match?(@string_hit) }
+    x.report(:hit_any_non_dir_dir_re) { @any_non_dir_dir_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_any_q_re) { @non_greedy_any_q_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_any_non_dir_dir_re) { @non_greedy_any_non_dir_dir_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_outer_any_q_re) { @non_greedy_outer_any_q_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_outer_any_non_dir_dir_re) { @non_greedy_outer_any_non_dir_dir_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_inner_any_q_re) { @non_greedy_inner_any_q_re.match?(@string_hit) }
+    x.report(:hit_non_greedy_inner_any_non_dir_dir_re) { @non_greedy_inner_any_non_dir_dir_re.match?(@string_hit) }
+
+    x.report(:miss_end_any_q_re) { @any_q_re.match?(@string_miss_end) }
+    x.report(:miss_end_any_non_dir_dir_re) { @any_non_dir_dir_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_any_q_re) { @non_greedy_any_q_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_any_non_dir_dir_re) { @non_greedy_any_non_dir_dir_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_outer_any_q_re) { @non_greedy_outer_any_q_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_outer_any_non_dir_dir_re) { @non_greedy_outer_any_non_dir_dir_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_inner_any_q_re) { @non_greedy_inner_any_q_re.match?(@string_miss_end) }
+    x.report(:miss_end_non_greedy_inner_any_non_dir_dir_re) { @non_greedy_inner_any_non_dir_dir_re.match?(@string_miss_end) }
+
+    x.compare!
+  end
+end
+
 benchmark('or-or-any') do
   Benchmark.ips do |x|
     x.config(config)

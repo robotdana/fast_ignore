@@ -9,20 +9,30 @@ RSpec.describe PathList::Builder::ExactPath do
   let(:polarity) { :allow }
 
   describe '#build_implicit' do
-    subject(:matcher) { described_class.new(path, polarity, nil).build_implicit }
+    subject(:matcher) { described_class.new(path, polarity, nil).build_implicit.prepare }
 
     it 'builds a regex that matches parent and child somethings' do
       expect(matcher).to be_like(
-        PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}, :allow)
+        PathList::Matchers::Any::Two.new([
+          PathList::Matchers::MatchIfDir.new(
+            PathList::Matchers::ExactString::Include.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+          ),
+          PathList::Matchers::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+        ])
       )
     end
 
     describe 'with root and relative path' do
-      subject(:matcher) { described_class.new('./exact/something', polarity, '/path/to').build_implicit }
+      subject(:matcher) { described_class.new('./exact/something', polarity, '/path/to').build_implicit.prepare }
 
       it 'builds a regex that matches parent and child somethings' do
         expect(matcher).to be_like(
-          PathList::Matchers::PathRegexp.new(%r{\A/(?:path(?:/to(?:/exact(?:/something/|\z)|\z)|\z)|\z)}, :allow)
+          PathList::Matchers::Any::Two.new([
+            PathList::Matchers::MatchIfDir.new(
+              PathList::Matchers::ExactString::Include.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+            ),
+            PathList::Matchers::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+          ])
         )
       end
     end

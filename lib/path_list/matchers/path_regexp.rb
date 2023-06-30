@@ -7,12 +7,6 @@ class PathList
         @polarity if @rule.match?(candidate.full_path_downcase)
       end
 
-      def compress_self
-        return self if @re_builder.compressed?
-
-        self.class.build(@re_builder.compress, @polarity)
-      end
-
       private
 
       def calculate_weight

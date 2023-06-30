@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexpWrapper do
-  subject { described_class.build(builder, matcher) }
+  subject { described_class.build(regexp_tokens, matcher) }
 
   let(:polarity) { :allow }
   let(:matcher) do
@@ -14,13 +14,13 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     )
   end
 
-  let(:builder) { PathList::RegexpBuilder.new({ 'a' => nil }) }
+  let(:regexp_tokens) { [['a']] }
 
   it { is_expected.to be_frozen }
 
   describe '#match' do
     let(:path) { 'my/file.rb' }
-    let(:builder) { PathList::RegexpBuilder.new(['file.rb']) }
+    let(:regexp_tokens) { [['file.rb']] }
 
     let(:candidate) do
       instance_double(PathList::Candidate, 'candidate', full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
@@ -95,13 +95,13 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the other matchers with the same regexp' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), PathList::Matchers::Allow)
+      other = described_class.build([['a']], PathList::Matchers::Allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with the other matchers with different regexp' do
-      other = described_class.build(PathList::RegexpBuilder.new({ 'b' => nil }), PathList::Matchers::Allow)
+      other = described_class.build([['b']], PathList::Matchers::Allow)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -113,7 +113,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
       other_matcher = instance_double(
         PathList::Matchers::Base, 'other_matcher', weight: 2, polarity: polarity, squashable_with?: false
       )
-      other = described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), other_matcher)
+      other = described_class.build([['a']], other_matcher)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other], false)
@@ -129,7 +129,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
 
       expect(squashed).to be_like(
         described_class.build(
-          PathList::RegexpBuilder.new({ 'a' => nil }),
+          [['a']],
           squashed_matcher
         )
       )
@@ -137,64 +137,11 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     end
   end
 
-  describe '#compress_self' do
-    context 'with an uncompressed regexp' do
-      let(:builder) { PathList::RegexpBuilder.new({ 'a' => { any: { end_anchor: nil } } }) }
-
-      it 'compresses the regexp but only once' do
-        allow(matcher).to receive(:compress_self).and_return(matcher)
-
-        new_matcher = subject.compress_self
-        expect(new_matcher).to be_like(
-          described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), matcher)
-        )
-        expect(new_matcher).not_to be subject
-        expect(new_matcher.compress_self).to be new_matcher
-        expect(matcher).to have_received(:compress_self).at_least(:once)
-      end
-
-      it 'also compresses matcher' do
-        other_matcher = instance_double(PathList::Matchers::Base, 'other_matcher', polarity: polarity, weight: 1)
-        allow(matcher).to receive(:compress_self).and_return(other_matcher)
-        allow(other_matcher).to receive(:compress_self).and_return(other_matcher).at_least(:once)
-
-        new_matcher = subject.compress_self
-        expect(new_matcher).to be_like(
-          described_class.build(PathList::RegexpBuilder.new({ 'a' => nil }), other_matcher)
-        )
-        expect(matcher).to have_received(:compress_self)
-        expect(new_matcher).not_to be subject
-        expect(new_matcher.compress_self).to be new_matcher
-      end
-    end
-
-    context 'with a compressed regexp' do
-      let(:builder) { PathList::RegexpBuilder.new({ 'a' => nil }).compress }
-
-      it 'passes to the matcher and returns self if the matcher is unchanged' do
-        allow(matcher).to receive(:compress_self).and_return(matcher)
-        expect(subject.compress_self).to be subject
-        expect(matcher).to have_received(:compress_self)
-      end
-
-      it 'passes to the matcher and returns Blank if the matcher does' do
-        allow(matcher).to receive(:compress_self).and_return(PathList::Matchers::Blank)
-        expect(subject.compress_self).to be PathList::Matchers::Blank
-        expect(matcher).to have_received(:compress_self)
-      end
-
-      it 'passes to the matcher and returns a new wrapper with the new matcher' do
-        new_matcher = instance_double(PathList::Matchers::Base, 'new_matcher', polarity: polarity, weight: 1)
-        allow(matcher).to receive(:compress_self).and_return(new_matcher)
-        expect(subject.compress_self).to be_like(
-          described_class.new(
-            /a/,
-            new_matcher,
-            PathList::RegexpBuilder.new({ 'a' => nil })
-          )
-        )
-        expect(matcher).to have_received(:compress_self)
-      end
+  describe '#prepare' do
+    it 'passes to the matcher and returns self' do
+      allow(matcher).to receive(:prepare)
+      expect(subject.prepare).to be subject
+      expect(matcher).to have_received(:prepare)
     end
   end
 
@@ -221,8 +168,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
       expect(subject.without_matcher(matcher)).to be_like(
         described_class.new(
           /a/,
-          new_matcher,
-          PathList::RegexpBuilder.new({ 'a' => nil })
+          new_matcher
         )
       )
       expect(matcher).to have_received(:without_matcher).with(matcher)
@@ -248,8 +194,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
       expect(subject.dir_matcher).to be_like(
         described_class.new(
           /a/,
-          new_matcher,
-          PathList::RegexpBuilder.new({ 'a' => nil })
+          new_matcher
         )
       )
       expect(matcher).to have_received(:dir_matcher)
@@ -275,8 +220,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
       expect(subject.file_matcher).to be_like(
         described_class.new(
           /a/,
-          new_matcher,
-          PathList::RegexpBuilder.new({ 'a' => nil })
+          new_matcher
         )
       )
       expect(matcher).to have_received(:file_matcher)

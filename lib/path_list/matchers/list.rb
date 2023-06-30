@@ -52,9 +52,12 @@ class PathList
       attr_reader :weight
       attr_reader :polarity
 
-      def compress_self
-        new_matchers = matchers.map(&:compress_self)
-        new_matchers == matchers ? self : self.class.build(new_matchers)
+      def prepare
+        matchers.each(&:prepare)
+
+        self
+        # new_matchers = matchers.map(&:prepare)
+        # new_matchers == matchers ? self : self.class.build(new_matchers)
       end
 
       def without_matcher(matcher)

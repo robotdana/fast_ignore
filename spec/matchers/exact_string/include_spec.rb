@@ -42,12 +42,8 @@ RSpec.describe PathList::Matchers::ExactString::Include do
 
   describe '#inspect' do
     it do
-      expect(subject).to have_inspect_value <<~INSPECT.chomp
-        PathList::Matchers::ExactString::Include.new([
-          "/one/path",
-          "/two/path"
-        ], :allow)
-      INSPECT
+      expect(subject)
+        .to have_inspect_value 'PathList::Matchers::ExactString::Include.new(["/one/path", "/two/path"], :allow)'
     end
   end
 
@@ -102,9 +98,9 @@ RSpec.describe PathList::Matchers::ExactString::Include do
     end
   end
 
-  describe '#compress_self' do
+  describe '#prepare' do
     it 'returns self' do
-      expect(subject.compress_self).to be subject
+      expect(subject.prepare).to be subject
     end
   end
 

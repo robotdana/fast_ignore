@@ -74,9 +74,9 @@ RSpec.describe PathList::Matchers::AllowAnyDir do
     end
   end
 
-  describe '#compress_self' do
+  describe '#prepare' do
     it 'returns self' do
-      expect(subject.compress_self).to be subject
+      expect(subject.prepare).to be subject
     end
   end
 

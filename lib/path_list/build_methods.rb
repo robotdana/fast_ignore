@@ -56,9 +56,13 @@ class PathList
         return self
       end
 
+      root_re = PathRegexp.new_from_path(root)
+      root_re_children = root_re.dup
+      root_re_children.replace_end :dir
+
       collector = Matchers::CollectGitignore.build(
         Matchers::MatchIfDir.new(
-          Matchers::PathRegexp.build(RegexpBuilder.new_from_path(root, dir: nil, end_anchor: nil), :allow)
+          Matchers::PathRegexp.build([root_re_children.parts, root_re.parts], :allow)
         )
       )
 
@@ -74,7 +78,7 @@ class PathList
         Matchers::LastMatch.build([
           Matchers::Allow,
           collector,
-          Matchers::PathRegexp.build(RegexpBuilder.new({ dir: { '.git' => { end_anchor: nil } } }), :ignore)
+          Matchers::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
         ])
       )
     end
@@ -101,7 +105,7 @@ class PathList
       @matcher = Matchers::All.build([@matcher, new_matcher])
       @dir_matcher = nil
       @file_matcher = nil
-      @compressed = nil
+      @prepared = nil
 
       self
     end

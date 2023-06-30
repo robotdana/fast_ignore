@@ -43,7 +43,7 @@ class PathList
       private
 
       def parent_re
-        @parent_re ||= RegexpBuilder.new_from_path(@root, dir: nil).compress.to_regexp
+        @parent_re ||= %r{\A#{Regexp.escape(@root.downcase)}/}
       end
 
       def matcher
