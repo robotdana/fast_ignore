@@ -18,35 +18,30 @@ class PathList
 
         def build(parts_arrays)
           if parts_arrays.length == 1
-            build_from_array(parts_arrays.first)
+            Regexp.new(parts_arrays.first.map { |p| PARTS_HASH[p] }.join)
           else
-            build_from_hash(Merge.merge(parts_arrays))
+            Regexp.new(build_regexp_string_from_hash(Merge.merge(parts_arrays)))
           end
         end
 
-        def build_from_array(parts_array)
-          Regexp.new(parts_array.map { |p| PARTS_HASH[p] }.join)
-        end
-
-        def build_from_hash(parts_hash)
-          Regexp.new(build_regexp_string_from_hash(parts_hash))
-        end
-
         def build_literal_s(parts_array)
-          return '' if parts_array.nil? || parts_array.empty?
-
           parts_array.map { |p| LITERAL_PARTS_HASH[p] }.join
         end
 
-        def build_regexp_string_from_hash(parts_hash)
-          return '' if parts_hash.nil? || parts_hash.empty?
+        def build_character_class(parts_array)
+          EscapedString.new(parts_array.map { |p| CHARACTER_CLASS_PARTS_HASH[p] }.join)
+        end
 
+        def build_regexp_string_from_hash(parts_hash)
           if parts_hash.length == 1
-            part, tail = parts_hash.first
-            "#{PARTS_HASH[part]}#{build_regexp_string_from_hash(tail)}"
+            part = parts_hash.keys.first
+            tail = parts_hash[part]
+            "#{PARTS_HASH[part]}#{tail && build_regexp_string_from_hash(tail)}"
           else
-            parts = parts_hash.map { |k, v| [SORT_KEY[k], k, v] }.sort_by(&:first)
-            "(?:#{parts.map { |(_, p, t)| "#{PARTS_HASH[p]}#{build_regexp_string_from_hash(t)}" }.join('|')})"
+            parts = parts_hash.map { |k, v| [SORT_KEY[k], k, v] }
+            parts.sort_by!(&:first)
+            parts.map! { |(_, p, t)| "#{PARTS_HASH[p]}#{t && build_regexp_string_from_hash(t)}" }
+            "(?:#{parts.join('|')})"
           end
         end
 
@@ -55,9 +50,24 @@ class PathList
           end_anchor: '',
           start_anchor: '',
           nil => ''
-        }.tap { |h| h.default_proc = ->(_, k) { k.downcase } }.freeze
+        }
+          .compare_by_identity
+          .tap { |h| h.default_proc = ->(_, k) { k.downcase } }
+          .freeze
 
         private_constant :LITERAL_PARTS_HASH
+
+        CHARACTER_CLASS_PARTS_HASH = {
+          character_class_non_slash_open: '(?!/)[',
+          character_class_negation: '^',
+          character_class_dash: '-',
+          character_class_close: ']'
+        }
+          .compare_by_identity
+          .tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k).downcase } }
+          .freeze
+
+        private_constant :CHARACTER_CLASS_PARTS_HASH
 
         PARTS_HASH = {
           dir: '/',
@@ -74,7 +84,18 @@ class PathList
           character_class_close: ']',
           any_non_dot_non_dir: '[^\/\.]*',
           nil => ''
-        }.tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k).downcase } }.freeze
+        }
+          .compare_by_identity
+          .tap do |h|
+            h.default_proc = lambda { |_, k|
+              if k.is_a?(EscapedString)
+                k
+              else
+                ::Regexp.escape(k).downcase
+              end
+            }
+          end
+          .freeze
 
         private_constant :PARTS_HASH
 
@@ -87,13 +108,12 @@ class PathList
           end_anchor: -2,
           start_anchor: -2,
           word_boundary: -1,
-          character_class_non_slash_open: 2,
-          character_class_negation: 0,
-          character_class_dash: 0,
-          character_class_close: 0,
           any_non_dot_non_dir: 9998,
           nil => 0
-        }.tap { |h| h.default_proc = ->(_, k) { k.length } }.freeze
+        }
+          .compare_by_identity
+          .tap { |h| h.default_proc = ->(_, k) { k.is_a?(Regexp) ? 2 : k.length } }
+          .freeze
 
         private_constant :SORT_KEY
       end

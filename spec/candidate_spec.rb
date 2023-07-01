@@ -2,7 +2,7 @@
 
 RSpec.describe PathList::Candidate do
   subject(:candidate) do
-    described_class.build(
+    described_class.new(
       full_path,
       directory,
       exists
@@ -26,24 +26,6 @@ RSpec.describe PathList::Candidate do
     end
   end
 
-  describe '#prepend_path' do
-    it 'returns the path' do
-      expect(candidate.prepend_path).to eq '/path/from/root/filename'
-    end
-
-    it 'is memoized' do
-      expect(candidate.prepend_path).to be candidate.prepend_path # rubocop:disable RSpec/IdenticalEqualityAssertion
-    end
-
-    context 'when the path is /' do
-      let(:full_path) { '/' }
-
-      it 'returns an empty string' do
-        expect(candidate.prepend_path).to eq ''
-      end
-    end
-  end
-
   describe '#parent' do
     before { allow(File).to receive_messages(exists?: nil, lstat: nil, directory?: nil) }
 
@@ -56,11 +38,6 @@ RSpec.describe PathList::Candidate do
       expect(File).not_to have_received(:exists?)
       expect(File).not_to have_received(:directory?)
       expect(File).not_to have_received(:lstat)
-    end
-
-    it 'is memoized' do
-      expect(candidate.parent).to be_like described_class.new('/path/from/root', true, true)
-      expect(candidate.parent).to be(candidate.parent) # rubocop:disable RSpec/IdenticalEqualityAssertion
     end
 
     context 'when the path is /' do

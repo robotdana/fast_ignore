@@ -44,43 +44,12 @@ class PathList
       dup.all!(*path_lists)
     end
 
-    def gitignore!(root: nil, index: true, config: true) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      root = PathExpander.expand_path_pwd(root || '.')
+    def gitignore!(root: nil, index: true, config: true)
+      indexes_array = @git_indexes || []
+      and_matcher(Gitignore.build(root: root, index: index, config: config, indexes_array: indexes_array))
+      @git_indexes = indexes_array unless indexes_array.empty?
 
-      if index && ::File.exist?(PathExpander.expand_path('.git/index', root))
-        git_index = Matchers::GitIndex.new(root)
-        @git_indexes ||= []
-        @git_indexes << git_index
-        and_matcher(Matchers::LastMatch.new([Matchers::Allow, git_index]))
-
-        return self
-      end
-
-      root_re = PathRegexp.new_from_path(root)
-      root_re_children = root_re.dup
-      root_re_children.replace_end :dir
-
-      collector = Matchers::CollectGitignore.build(
-        Matchers::MatchIfDir.new(
-          Matchers::PathRegexp.build([root_re_children.parts, root_re.parts], :allow)
-        )
-      )
-
-      if config
-        global_gitignore = GlobalGitignore.path(root: root)
-        collector.append(PathExpander.expand_path(global_gitignore, root), root: root) if global_gitignore
-      end
-
-      collector.append(PathExpander.expand_path('./.git/info/exclude', root), root: root)
-      collector.append(PathExpander.expand_path('./.gitignore', root), root: root)
-
-      and_matcher(
-        Matchers::LastMatch.build([
-          Matchers::Allow,
-          collector,
-          Matchers::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
-        ])
-      )
+      self
     end
 
     def ignore!(*patterns, from_file: nil, format: nil, root: nil)

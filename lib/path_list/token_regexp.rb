@@ -2,6 +2,8 @@
 
 class PathList
   class TokenRegexp
+    class EscapedString < ::String; end
+
     include Autoloader
 
     attr_reader :parts
@@ -57,11 +59,7 @@ class PathList
     def append_string(value)
       return unless value
 
-      if @parts[-1].is_a?(String)
-        @parts[-1] += value
-      else
-        append_part(value)
-      end
+      append_part(value)
     end
 
     protected

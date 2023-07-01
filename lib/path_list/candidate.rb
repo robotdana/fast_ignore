@@ -4,60 +4,42 @@ class PathList
   class Candidate
     attr_reader :full_path
     attr_writer :first_line
+    attr_writer :tree
 
-    def self.build(full_path, directory, exists)
-      new(
-        full_path,
-        directory,
-        exists
-      )
-    end
-
-    def initialize(full_path, directory, exists)
+    def initialize(full_path, directory, exists, tree = nil)
       @full_path = full_path
+      @full_path_downcase = nil
       @directory = directory
       @exists = exists
       @first_line = nil
-      @prepend_path = nil
+
       @child_candidates = nil
       @children = nil
+      @tree = tree
     end
 
     def full_path_downcase
       @full_path_downcase ||= @full_path.downcase
     end
 
-    def prepend_path
-      @prepend_path ||= @full_path == '/' ? '' : @full_path
-    end
-
     def parent
-      return @parent if defined?(@parent)
+      return if @full_path == '/'
 
-      @parent = begin
-        return if @full_path == '/'
-
-        self.class.new(::File.dirname(@full_path), true, true)
-      end
+      self.class.new(::File.dirname(@full_path), true, true)
     end
 
     def child_candidates # rubocop:disable Metrics/MethodLength
       @child_candidates ||= begin
-        prepend_path = self.prepend_path
+        prepend_path = @full_path == '/' ? '' : @full_path
 
         @tree&.map do |child_name, grandchildren|
           if grandchildren
-            c = self.class.new("#{prepend_path}/#{child_name}", true, true)
-            c.tree = grandchildren
-            c
+            self.class.new("#{prepend_path}/#{child_name}", true, true, grandchildren)
           else
             self.class.new("#{prepend_path}/#{child_name}", false, true)
           end
         end ||
-
-          children.map do |filename|
-            Candidate.new("#{prepend_path}/#{filename}", nil, true)
-          end
+          children.map { |filename| self.class.new("#{prepend_path}/#{filename}", nil, true) }
       end
     end
 
@@ -114,7 +96,5 @@ class PathList
         file&.close
       end
     end
-
-    attr_writer :tree
   end
 end

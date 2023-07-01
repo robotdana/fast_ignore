@@ -215,6 +215,71 @@ benchmark('bsearch-or-include') do
   end
 end
 
+benchmark('one-element-hash') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @hash = { 'a' => 'b' }
+    x.report(:first) { key, value = @hash.first }
+    x.report(:each_key_first) { key = @hash.each_key.first; value = @hash[key] }
+    x.report(:keys_first) { key = @hash.keys.first; value = @hash[key] }
+    x.report(:map) { @hash.map { |key, value| next key, value } }
+
+    x.compare!
+  end
+end
+
+benchmark('casecmp-downcase') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @string = "PathList::Matchers::CollectGitignore#file_matcher"
+    @string_downcase = "pathlist::matchers::collectgitignore#file_matcher"
+    x.report(:casecmp_2) { string = @string; 2.times { (string <=> @string_downcase).zero? } }
+    x.report(:downcase_equal_2) { string = @string.downcase; 2.times { string == @string_downcase } }
+
+    x.report(:casecmp_5) { string = @string; 5.times { (string <=> @string_downcase).zero? } }
+    x.report(:downcase_equal_5) { string = @string.downcase; 5.times { string == @string_downcase } }
+
+    x.report(:casecmp_10) { string = @string; 10.times { (string <=> @string_downcase).zero? } }
+    x.report(:downcase_equal_10) { string = @string.downcase; 10.times { string == @string_downcase } }
+
+    # x.report(:casecmp_20) { string = @string; 20.times { (string <=> @string_downcase).zero? } }
+    # x.report(:downcase_equal_20) { string = @string.downcase; 20.times { string == @string_downcase } }
+
+    # x.report(:casecmp_2000) { string = @string; 2000.times { (string <=> @string_downcase).zero? } }
+    # x.report(:downcase_equal_2000) { string = @string.downcase; 2000.times { string == @string_downcase } }
+
+    # x.report(:casecmp_200) { string = @string; 200.times { (string <=> @string_downcase).zero? } }
+    # x.report(:downcase_equal_200) { string = @string.downcase; 200.times { string == @string_downcase } }
+
+    x.compare!
+  end
+end
+
+benchmark('regexp-i-downcase') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @string = "PathList::Matchers::CollectGitignore#file_matcher"
+    @string_downcase = "pathlist::matchers::collectgitignore#file_matcher"
+    @re_i = /\Apathlist::Matchers::collectGitignore#file_matcher\z/i
+    @re = /\Apathlist::matchers::collectgitignore#file_matcher\z/
+
+    raise unless @re_i.match?(@string)
+    raise unless @re.match?(@string_downcase)
+
+
+    x.report(:re_i_2) { string = @string; 2.times { @re_i.match?(string) } }
+    x.report(:re_downcased_2) { string = @string.downcase; 2.times { @re.match?(string) } }
+
+    x.report(:re_i_20) { string = @string; 20.times { @re_i.match?(string) } }
+    x.report(:re_downcased_20) { string = @string.downcase; 20.times { @re.match?(string) } }
+
+    x.report(:re_i_200) { string = @string; 200.times { @re_i.match?(string) } }
+    x.report(:re_downcased_200) { string = @string.downcase; 200.times { @re.match?(string) } }
+
+    x.compare!
+  end
+end
+
 benchmark('build-filetree-hash') do
   Benchmark.ips do |x|
     files = %w[

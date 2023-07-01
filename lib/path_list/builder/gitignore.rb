@@ -96,9 +96,11 @@ class PathList
         end
       end
 
-      def process_character_class # rubocop:disable Metrics/MethodLength
+      def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         return unless @s.character_class_start?
 
+        outer = @re
+        @re = TokenRegexp.new
         append_part :character_class_non_slash_open
         append_part :character_class_negation if @s.character_class_negation?
         unmatchable_rule! if @s.character_class_end?
@@ -112,6 +114,9 @@ class PathList
         end
 
         append_part :character_class_close
+        character_class = TokenRegexp::Build.build_character_class(@re.parts)
+        @re = outer
+        append_part character_class
       end
 
       def process_character_class_range

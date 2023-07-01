@@ -20,7 +20,7 @@ class PathList
 
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
-            [@root_re.dup.concat([:dir, :any_dir, :any_non_dot_non_dir, :end_anchor]).parts], # rubocop:disable Style/ConcatArrayLiterals
+            %r{\A#{Regexp.escape(@root.downcase)}/(?:.*/)?[^/\.]*\z},
             Matchers::ShebangRegexp.new([pattern.parts], @polarity)
           )
         )

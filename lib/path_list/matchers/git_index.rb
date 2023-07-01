@@ -6,12 +6,16 @@ class PathList
       def initialize(root)
         @root = root
         @root_downcase = root.downcase
-        @root_re = nil
         @files = nil
+        @parent_re = %r{\A#{Regexp.escape(root.downcase)}/}
       end
 
       def match(candidate)
-        matcher.match(candidate) if parent_re.match?(candidate.full_path_downcase)
+        if @parent_re.match?(candidate.full_path_downcase)
+          matcher.match(candidate)
+        else
+          :allow
+        end
       end
 
       def index_root?(candidate)
@@ -40,11 +44,13 @@ class PathList
         "#{self.class}.new(#{@root.inspect})"
       end
 
-      private
+      def without_matcher(matcher)
+        return Allow if matcher == self
 
-      def parent_re
-        @parent_re ||= %r{\A#{Regexp.escape(@root.downcase)}/}
+        self
       end
+
+      private
 
       def matcher
         @matcher ||= begin

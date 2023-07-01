@@ -6,7 +6,7 @@ class PathList
 
     def include?(path, directory: nil, content: nil, exists: nil)
       full_path = PathExpander.expand_path_pwd(path)
-      candidate = Candidate.build(full_path, directory, exists)
+      candidate = Candidate.new(full_path, directory, exists)
       return false if candidate.directory?
       return false unless candidate.exists?
 
@@ -23,7 +23,7 @@ class PathList
 
     def match?(path, directory: nil, content: nil, exists: nil)
       full_path = PathExpander.expand_path_pwd(path)
-      candidate = Candidate.build(full_path, directory, exists)
+      candidate = Candidate.new(full_path, directory, exists)
       return false unless candidate.exists?
 
       candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content

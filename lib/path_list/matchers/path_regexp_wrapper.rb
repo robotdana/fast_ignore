@@ -3,18 +3,16 @@
 class PathList
   module Matchers
     class PathRegexpWrapper < Wrapper
-      def self.build(token_regexps, matcher)
+      def self.build(rule, matcher)
         return Blank if matcher == Blank
 
-        new(PathList::TokenRegexp::Build.build(token_regexps), matcher)
+        new(rule, matcher)
       end
 
       def initialize(rule, matcher)
         @rule = rule
-        @matcher = matcher
-        @weight = calculate_weight
 
-        freeze
+        super(matcher)
       end
 
       def match(candidate)

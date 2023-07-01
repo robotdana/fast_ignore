@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexpWrapper do
-  subject { described_class.build(regexp_tokens, matcher) }
+  subject { described_class.build(regexp, matcher) }
 
   let(:polarity) { :allow }
   let(:matcher) do
@@ -14,13 +14,13 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     )
   end
 
-  let(:regexp_tokens) { [['a']] }
+  let(:regexp) { /a/ }
 
   it { is_expected.to be_frozen }
 
   describe '#match' do
     let(:path) { 'my/file.rb' }
-    let(:regexp_tokens) { [['file.rb']] }
+    let(:regexp) { /file.rb\z/ }
 
     let(:candidate) do
       instance_double(PathList::Candidate, 'candidate', full_path: "/#{path}", full_path_downcase: "/#{path.downcase}")
@@ -45,7 +45,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     end
 
     context 'with a non-matching rule' do
-      let(:path) { 'my/file.sh/' }
+      let(:path) { 'my/file.sh' }
 
       it do
         expect(subject.match(candidate)).to be_nil
@@ -95,13 +95,13 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::Allow) }
 
     it 'is squashable with the other matchers with the same regexp' do
-      other = described_class.build([['a']], PathList::Matchers::Allow)
+      other = described_class.build(/a/, PathList::Matchers::Allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with the other matchers with different regexp' do
-      other = described_class.build([['b']], PathList::Matchers::Allow)
+      other = described_class.build(/b/, PathList::Matchers::Allow)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -113,7 +113,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
       other_matcher = instance_double(
         PathList::Matchers::Base, 'other_matcher', weight: 2, polarity: polarity, squashable_with?: false
       )
-      other = described_class.build([['a']], other_matcher)
+      other = described_class.build(/a/, other_matcher)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other], false)
@@ -129,7 +129,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
 
       expect(squashed).to be_like(
         described_class.build(
-          [['a']],
+          /a/,
           squashed_matcher
         )
       )
@@ -165,12 +165,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     it 'passes to the matcher and returns a new wrapper with the new matcher' do
       new_matcher = instance_double(PathList::Matchers::Base, 'new_matcher', polarity: polarity, weight: 1)
       allow(matcher).to receive(:without_matcher).with(matcher).and_return(new_matcher)
-      expect(subject.without_matcher(matcher)).to be_like(
-        described_class.new(
-          /a/,
-          new_matcher
-        )
-      )
+      expect(subject.without_matcher(matcher)).to be_like(described_class.new(/a/, new_matcher))
       expect(matcher).to have_received(:without_matcher).with(matcher)
     end
   end
@@ -191,12 +186,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     it 'passes to the matcher and returns a new wrapper with the new matcher' do
       new_matcher = instance_double(PathList::Matchers::Base, 'new_matcher', polarity: polarity, weight: 1)
       allow(matcher).to receive(:dir_matcher).and_return(new_matcher)
-      expect(subject.dir_matcher).to be_like(
-        described_class.new(
-          /a/,
-          new_matcher
-        )
-      )
+      expect(subject.dir_matcher).to be_like(described_class.new(/a/, new_matcher))
       expect(matcher).to have_received(:dir_matcher)
     end
   end
@@ -217,12 +207,7 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
     it 'passes to the matcher and returns a new wrapper with the new matcher' do
       new_matcher = instance_double(PathList::Matchers::Base, 'new_matcher', polarity: polarity, weight: 1)
       allow(matcher).to receive(:file_matcher).and_return(new_matcher)
-      expect(subject.file_matcher).to be_like(
-        described_class.new(
-          /a/,
-          new_matcher
-        )
-      )
+      expect(subject.file_matcher).to be_like(described_class.new(/a/, new_matcher))
       expect(matcher).to have_received(:file_matcher)
     end
   end
