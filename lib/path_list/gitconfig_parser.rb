@@ -2,7 +2,7 @@
 
 require 'strscan'
 class PathList
-  class GitconfigParser # rubocop:disable Metrics/ClassLength
+  class GitconfigParser
     def self.parse(file, root: Dir.pwd, nesting: 1)
       new(file, root: root, nesting: nesting).parse
     end
@@ -31,7 +31,7 @@ class PathList
     attr_accessor :within_quotes
     attr_accessor :section
 
-    def read_file(path) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def read_file(path)
       return unless ::File.readable?(path)
 
       file = StringScanner.new(::File.read(path))
@@ -118,7 +118,7 @@ class PathList
       ::File.fnmatch(gitdir, ::File.join(root, '.git'), options)
     end
 
-    def scan_value(file) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def scan_value(file)
       value = +''
       until file.eos?
         if file.skip(/\\\n/)
@@ -163,7 +163,7 @@ class PathList
       value
     end
 
-    def skip_value(file) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def skip_value(file)
       until file.eos?
         if file.skip(/\\(?:\n|\\|n|t|b|")/)
           nil

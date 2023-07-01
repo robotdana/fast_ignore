@@ -129,6 +129,15 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Enabled: false
 
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
 RSpec:
   Enabled: true
   Include:
@@ -259,3 +268,6 @@ FactoryBot:
 
 Naming/VariableNumber:
   EnforcedStyle: snake_case
+
+Style/YodaCondition:
+  Enabled: false # symbol == string is significantly faster than string == symbol

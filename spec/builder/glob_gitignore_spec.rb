@@ -11,7 +11,6 @@ RSpec.describe PathList::Builder::GlobGitignore do
     described_class
       .new(+rule, polarity, root)
       .send(method_name)
-      .prepare
   end
 
   describe '#build' do

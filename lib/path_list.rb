@@ -21,21 +21,11 @@ class PathList
 
   private
 
-  def prepared_matcher
-    @prepared ||= begin
-      @matcher = @matcher.prepare
-
-      true
-    end
-
-    @matcher
-  end
-
   def dir_matcher
-    @dir_matcher ||= @matcher.dir_matcher.prepare
+    @dir_matcher ||= @matcher.dir_matcher
   end
 
   def file_matcher
-    @file_matcher ||= @matcher.file_matcher.prepare
+    @file_matcher ||= @matcher.file_matcher
   end
 end

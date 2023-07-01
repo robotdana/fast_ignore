@@ -94,16 +94,6 @@ RSpec.describe PathList::Matchers::Any::Two do
     it { is_expected.not_to be_squashable_with(subject.dup) }
   end
 
-  describe '#prepare' do
-    it 'passes to its matchers, returns self' do
-      allow(matcher_allow_a).to receive(:prepare)
-      allow(matcher_ignore_b).to receive(:prepare)
-      expect(subject.prepare).to be subject
-      expect(matcher_allow_a).to have_received(:prepare)
-      expect(matcher_ignore_b).to have_received(:prepare)
-    end
-  end
-
   describe '#dir_matcher' do
     it 'passes to its matchers, returns self if all are unchanged' do
       allow(matcher_allow_a).to receive(:dir_matcher).and_return(matcher_allow_a)

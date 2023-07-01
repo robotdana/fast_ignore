@@ -34,12 +34,6 @@ RSpec.describe PathList::Matchers::Blank do
     end
   end
 
-  describe '#prepare' do
-    it 'returns self' do
-      expect(subject.prepare).to be subject
-    end
-  end
-
   describe '#without_matcher' do
     it 'returns self' do
       expect(subject.without_matcher(subject)).to be subject

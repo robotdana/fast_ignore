@@ -13,8 +13,8 @@ class PathList
     end
 
     def exact_path?
-      @parts[0].equal?(:start_anchor) && @parts[-1].equal?(:end_anchor) &&
-        @parts[1...-1].all? { |part| part.equal?(:dir) || part.instance_of?(String) }
+      :start_anchor == @parts[0] && :end_anchor == @parts[-1] &&
+        @parts[1...-1].all? { |part| :dir == part || part.instance_of?(String) }
     end
 
     def compress
@@ -25,7 +25,7 @@ class PathList
       self
     end
 
-    def ancestors # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    def ancestors
       prev_rule = [:start_anchor]
       rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
       parts = @parts

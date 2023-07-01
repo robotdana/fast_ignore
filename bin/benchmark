@@ -195,21 +195,27 @@ benchmark('bsearch-or-include') do
   Benchmark.ips do |x|
     x.config(config)
     require_relative '../lib/path_list'
-    @array = ('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'..'aaaaaaaaaaaaaaaaaaaaaaaaaaazzz').to_a[0..8]
-    @re  = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp
-    @reB = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp_b
-      puts @re
-    puts @reB
-    # x.report(:bsearch_hit) { @array.each { |target| target += ''; @array.bsearch {|e| target <=> e } } }
-    # x.report(:bsearch_miss) { @array.each { |target| target += '1'; @array.bsearch {|e| target <=> e } } }
+    require 'set'
 
-    # x.report(:include_hit) { @array.each { |target| target += ''; @array.include?(target) } }
-    # x.report(:include_miss) { @array.each { |target| target += '1'; @array.include?(target) } }
-    x.report(:reB_hit) { @array.each { |target| target += ''; @reB.match?(target) } }
-    x.report(:reB_miss) { @array.each { |target| target += '1'; @reB.match?(target) } }
+    @array = ('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'..'aaaaaaaaaaaaaaaaaaaaaaaaaaazzz').to_a[0..4000]
+    @set = @array.to_set
+    # @re  = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp
+    # @reB = PathList::RegexpBuilder.new({ start_anchor: PathList::RegexpBuilder::Merge.merge(@array.map { |item| item.split('').reverse_each.reduce({ end_anchor: nil }) { |a, e| { e => a } } })}).to_regexp_b
+    #   puts @re
+    # puts @reB
+    x.report(:bsearch_hit) { @array.each { |target| target += ''; @array.bsearch {|e| target <=> e } } }
+    x.report(:bsearch_miss) { @array.each { |target| target += '1'; @array.bsearch {|e| target <=> e } } }
 
-    x.report(:re_hit) { @array.each { |target| target += ''; @re.match?(target) } }
-    x.report(:re_miss) { @array.each { |target| target += '1'; @re.match?(target) } }
+    x.report(:include_hit) { @array.each { |target| target += ''; @array.include?(target) } }
+    x.report(:include_miss) { @array.each { |target| target += '1'; @array.include?(target) } }
+
+    x.report(:set_include_hit) { @set.each { |target| target += ''; @set.include?(target) } }
+    x.report(:set_include_miss) { @set.each { |target| target += '1'; @set.include?(target) } }
+    # x.report(:reB_hit) { @array.each { |target| target += ''; @reB.match?(target) } }
+#     x.report(:reB_miss) { @array.each { |target| target += '1'; @reB.match?(target) } }
+
+    # x.report(:re_hit) { @array.each { |target| target += ''; @re.match?(target) } }
+    # x.report(:re_miss) { @array.each { |target| target += '1'; @re.match?(target) } }
 
     x.compare!
   end
@@ -275,6 +281,146 @@ benchmark('regexp-i-downcase') do
 
     x.report(:re_i_200) { string = @string; 200.times { @re_i.match?(string) } }
     x.report(:re_downcased_200) { string = @string.downcase; 200.times { @re.match?(string) } }
+
+    x.compare!
+  end
+end
+
+benchmark('nil') do
+  Benchmark.ips do |x|
+    x.config(config)
+
+    x.report(:nil_nil_q, 'if nil.nil?; true; else; false; end')
+    x.report(:nil_not, 'if !nil; true; else; false; end')
+    x.report(:nil_unless, 'unless nil; true; else; false; end')
+    x.report(:nil_else, 'if nil; false; else; true; end')
+
+    x.report(:one_nil_q, 'if 1.nil?; true; else; false; end')
+    x.report(:one_not, 'if !1; true; else; false; end')
+    x.report(:one_unless, 'unless 1; true; else; false; end')
+    x.report(:one_else, 'if 1; false; else; true; end')
+
+    x.compare!
+  end
+end
+
+benchmark('compare-array') do
+  Benchmark.ips do |x|
+    x.config(config)
+
+    require 'set'
+
+    @array = [1,2,4,3]
+    @array_same = [4,3,1,2]
+    @array_superset = [4,3,1,2,5]
+    @array_subset = [3,1,2]
+    @array_diff_first = [0,2,4,3]
+    @array_diff_last = [4,2,1,5]
+
+    x.report(:minus_same) { @array.size == @array_same.size && (@array - @array_same).empty? }
+    # x.report(:set_same) { Set.new(@array) == Set.new(@array_same) }
+    # x.report(:sort_same) { @array.sort == @array_same.sort }
+    x.report(:all_include_same) { @array.size == @array_same.size && @array.all? { |x| @array_same.include?(x) } }
+    x.report(:all_delete_same) { @array.size == @array_same.size && array_same = @array_same.dup; @array.all? { |x| array_same.delete(x) } }
+
+    x.report(:minus_diff_first) { @array.size == @array_diff_first.size && (@array - @array_diff_first).empty? }
+    # x.report(:set_diff_first) { Set.new(@array) == Set.new(@array_diff_first) }
+    # x.report(:sort_diff_first) { @array.sort == @array_diff_first.sort }
+    x.report(:all_include_diff_first) { @array.size == @array_diff_first.size && @array.all? { |x| @array_diff_first.include?(x) } }
+    x.report(:all_delete_diff_first) { @array.size == @array_diff_first.size && array_diff_first = @array_diff_first.dup; @array.all? { |x| array_diff_first.delete(x) } }
+
+    x.report(:minus_diff_last) { @array.size == @array_diff_last.size && (@array - @array_diff_last).empty? }
+    # x.report(:set_diff_last) { Set.new(@array) == Set.new(@array_diff_last) }
+    # x.report(:sort_diff_last) { @array.sort == @array_diff_last.sort }
+    x.report(:all_include_diff_last) { @array.size == @array_diff_last.size && @array.all? { |x| @array_diff_last.include?(x) } }
+    x.report(:all_delete_diff_last) { @array.size == @array_diff_last.size && array_diff_last = @array_diff_last.dup; @array.all? { |x| array_diff_last.delete(x) } }
+
+    # x.report(:minus_superset) { @array.size == @array_superset.size && (@array - @array_superset).empty? }
+    # # x.report(:set_superset) { Set.new(@array) == Set.new(@array_superset) }
+    # # x.report(:sort_superset) { @array.sort == @array_superset.sort }
+    # x.report(:all_include_superset) { @array.size == @array_superset.size && @array.all? { |x| @array_superset.include?(x) } }
+    # x.report(:all_delete_superset) { @array.size == @array_superset.size && array_superset = @array_superset.dup; @array.all? { |x| array_superset.delete(x) } }
+
+    # x.report(:minus_subset) { @array.size == @array_subset.size && (@array - @array_subset).empty? }
+    # # x.report(:set_subset) { Set.new(@array) == Set.new(@array_subset) }
+    # # x.report(:sort_subset) { @array.sort == @array_subset.sort }
+    # x.report(:all_include_subset) { @array.size == @array_subset.size && @array.all? { |x| @array_subset.include?(x) } }
+    # x.report(:all_delete_subset) { @array.size == @array_subset.size && array_subset = @array_subset.dup; @array.all? { |x| array_subset.delete(x) } }
+
+    x.compare!
+  end
+end
+
+benchmark('symbol-equality') do
+  Benchmark.ips do |x|
+    x.config(config)
+
+    x.report(:string_eql_sym, '"my_symbol".eql?(:my_symbol)')
+    x.report(:sym_eql_string, ':my_symbol.eql?("my_symbol")')
+    x.report(:string_double_eq_sym, '"my_symbol" == :my_symbol')
+    x.report(:sym_double_eq_string, ':my_symbol == "my_symbol"')
+    x.report(:string_equal_sym, '"my_symbol".equal?(:my_symbol)')
+    x.report(:sym_equal_string, ':my_symbol.equal?("my_symbol")')
+
+    x.report(:nil_eql_sym, 'nil.eql?(:my_symbol)')
+    x.report(:sym_eql_nil, ':my_symbol.eql?(nil)')
+    x.report(:nil_double_eq_sym, 'nil == :my_symbol')
+    x.report(:sym_double_eq_nil, ':my_symbol == nil')
+    x.report(:nil_equal_sym, 'nil.equal?(:my_symbol)')
+    x.report(:sym_equal_nil, ':my_symbol.equal?(nil)')
+
+    x.report(:sym_eql_same_sym, ':my_symbol.eql?(:my_symbol)')
+    x.report(:sym_double_eq_same_sym, ':my_symbol == :my_symbol')
+    x.report(:sym_equal_same_sym, ':my_symbol.equal?(:my_symbol)')
+
+    x.report(:sym_eql_diff_sym, ':my_symbol.eql?(:other_symbol)')
+    x.report(:sym_double_eq_diff_sym, ':my_symbol == :other_symbol')
+    x.report(:sym_equal_diff_sym, ':my_symbol.equal?(:other_symbol)')
+
+
+    x.compare!
+  end
+end
+
+benchmark('if-case') do
+  Benchmark.ips do |x|
+    x.config(config)
+    x.report(
+      :case,
+      <<~RUBY
+        case rand(3)
+        when 0 then true
+        when Numeric then false
+        else true
+        end
+      RUBY
+    )
+
+    x.report(
+      :if,
+      <<~RUBY
+        if (val = rand(2)) == 0
+          true
+        elsif val.is_a?(Numeric)
+          false
+        else
+          true
+        end
+      RUBY
+    )
+
+    x.report(
+      :if_with_equal?,
+      <<~RUBY
+        if (val = rand(2)).equal?(0)
+          true
+        elsif val.is_a?(Numeric)
+          false
+        else
+          true
+        end
+      RUBY
+    )
 
     x.compare!
   end

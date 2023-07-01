@@ -4,7 +4,7 @@ class PathList
   class TokenRegexp
     module Merge
       class << self
-        def merge(arrays) # rubocop:disable Metrics/MethodLength
+        def merge(arrays)
           tree_hash_proc = ->(h, k) { h[k] = Hash.new(&tree_hash_proc) }
           tree = Hash.new(&tree_hash_proc)
 

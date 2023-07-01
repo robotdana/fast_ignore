@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::ShebangRegexp do
-  subject { described_class.build(regexp_tokens, polarity).prepare }
+  subject { described_class.build(regexp_tokens, polarity) }
 
   let(:polarity) { :allow }
   let(:regexp_tokens) { [['abcd']] }
@@ -51,7 +51,7 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 5.333333333333334) }
+    it { is_expected.to have_attributes(weight: 4) }
   end
 
   describe '#polarity' do
@@ -97,11 +97,8 @@ RSpec.describe PathList::Matchers::ShebangRegexp do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed.prepare).to be_like(
-        described_class.new(
-          [['abcd'], ['b']], polarity
-        ).prepare
-      )
+      expect(squashed).to be_like(described_class.build([['abcd'], ['b']], polarity))
+      expect(squashed).to be_like(described_class.new(/(?:b|abcd)/, polarity))
     end
   end
 

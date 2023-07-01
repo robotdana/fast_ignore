@@ -28,7 +28,7 @@ class PathList
 
       candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
-        prepared_matcher.match(candidate) == :allow
+        @matcher.match(candidate) == :allow
     end
 
     def ===(path)
@@ -59,7 +59,7 @@ class PathList
 
     private
 
-    def recursive_each(candidate, relative_root, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength
+    def recursive_each(candidate, relative_root, dir_matcher, file_matcher, &block)
       if candidate.directory?
         return unless dir_matcher.match(candidate) == :allow
 
@@ -75,7 +75,7 @@ class PathList
       nil
     end
 
-    def recursive_each_git_indexes(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def recursive_each_git_indexes(candidate, relative_root, git_indexes, dir_matcher, file_matcher, &block)
       if candidate.directory?
         return unless dir_matcher.match(candidate) == :allow
 

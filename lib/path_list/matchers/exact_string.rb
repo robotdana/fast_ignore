@@ -5,15 +5,12 @@ class PathList
     class ExactString < Base
       include Autoloader
 
-      def self.build(array, polarity)
-        case array.length
+      def self.build(set, polarity)
+        case set.length
         when 0 then Blank
-        when 1 then new(array.first, polarity)
-        # i'm not sure where the crossover is where bsearch's overhead becomes worth it
-        # but it might be somewhere around here
-        when 2...16 then self::Include.new(array, polarity)
+        when 1 then new(set.first, polarity)
         else
-          self::Bsearch.new(array.sort, polarity)
+          self::Set.new(set, polarity)
         end
       end
 
@@ -39,12 +36,22 @@ class PathList
       end
 
       def squash(list, _)
-        self.class.build(list.flat_map { |l| l.array }.uniq, @polarity) # rubocop:disable Style/SymbolProc protected
+        self.class.build(list.each_with_object(::Set.new) { |l, s| s.merge(l.set) }, @polarity) # protected
       end
 
-      def array
-        [@item]
+      def set
+        ::Set[@item]
       end
+
+      def ==(other)
+        other.instance_of?(self.class) &&
+          @polarity == other.polarity &&
+          @item == other.item
+      end
+
+      protected
+
+      attr_reader :item
     end
   end
 end

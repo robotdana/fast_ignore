@@ -39,14 +39,6 @@ class PathList
         new_with_matcher(new_matcher_class.build(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc protected
       end
 
-      def prepare
-        @matcher.prepare
-
-        self
-        # new_matcher = @matcher.prepare
-        # new_matcher == @matcher ? self : new_with_matcher(new_matcher)
-      end
-
       def without_matcher(matcher)
         return Blank if matcher == self
 
@@ -66,6 +58,11 @@ class PathList
         return self unless new_matcher != @matcher
 
         new_with_matcher(new_matcher)
+      end
+
+      def ==(other)
+        other.instance_of?(self.class) &&
+          @matcher == other.matcher
       end
 
       protected

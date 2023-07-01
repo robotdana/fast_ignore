@@ -5,7 +5,7 @@ class PathList
     class List < Base
       include Autoloader
 
-      def self.build(matchers) # rubocop:disable Metrics/MethodLength
+      def self.build(matchers)
         matchers = compress(matchers)
 
         case matchers.length
@@ -32,7 +32,7 @@ class PathList
 
       def self.compress(matchers)
         matchers = matchers.flat_map { |m| m.is_a?(self) ? m.matchers : m }
-        matchers -= [Blank]
+        matchers.delete(Blank)
 
         matchers
       end
@@ -51,14 +51,6 @@ class PathList
 
       attr_reader :weight
       attr_reader :polarity
-
-      def prepare
-        matchers.each(&:prepare)
-
-        self
-        # new_matchers = matchers.map(&:prepare)
-        # new_matchers == matchers ? self : self.class.build(new_matchers)
-      end
 
       def without_matcher(matcher)
         return Blank if matcher == self
@@ -82,6 +74,11 @@ class PathList
       end
 
       attr_reader :matchers
+
+      def ==(other)
+        other.instance_of?(self.class) &&
+          @matchers == other.matchers
+      end
 
       private
 

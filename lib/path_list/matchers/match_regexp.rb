@@ -6,26 +6,20 @@ class PathList
       def self.build(regexp_tokens, polarity)
         return Blank if regexp_tokens.all?(&:empty?)
 
-        new(regexp_tokens, polarity)
+        new(TokenRegexp::Build.build(regexp_tokens), polarity, regexp_tokens)
       end
 
-      def initialize(regexp_tokens, polarity)
+      def initialize(rule, polarity, regexp_tokens = nil)
         @polarity = polarity
-        # @rule = here is just to make the tests nice
-        @rule = @regexp_tokens = regexp_tokens
+        @regexp_tokens = regexp_tokens
+        @rule = rule
         @weight = calculate_weight
-      end
-
-      def prepare
-        return self if frozen?
-
-        @rule = TokenRegexp::Build.build(@regexp_tokens)
 
         freeze
       end
 
       def inspect
-        "#{self.class}.new(#{@rule&.inspect || RegexpBuilder.build(@regexp_tokens).inspect}, #{@polarity.inspect})"
+        "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
       end
 
       attr_reader :weight
@@ -37,14 +31,19 @@ class PathList
       end
 
       def squash(list, _)
-        s = self.class.build(list.flat_map { |l| l.regexp_tokens }, @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
-        s.prepare if frozen?
-        s
+        self.class.build(list.flat_map { |l| l.regexp_tokens }, @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
+      end
+
+      def ==(other)
+        other.instance_of?(self.class) &&
+          @polarity == other.polarity &&
+          @rule == other.rule
       end
 
       protected
 
       attr_reader :regexp_tokens
+      attr_reader :rule
     end
   end
 end

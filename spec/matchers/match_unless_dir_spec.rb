@@ -125,14 +125,6 @@ RSpec.describe PathList::Matchers::MatchUnlessDir do
     end
   end
 
-  describe '#prepare' do
-    it 'passes to the matcher' do
-      allow(matcher).to receive(:prepare)
-      expect(subject.prepare).to be subject
-      expect(matcher).to have_received(:prepare)
-    end
-  end
-
   describe '#without_matcher' do
     it 'returns Blank if matcher is self' do
       expect(subject.without_matcher(subject)).to be PathList::Matchers::Blank

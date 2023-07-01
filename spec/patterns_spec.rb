@@ -8,7 +8,7 @@ RSpec.describe PathList::Patterns do
       format: format_arg,
       root: root,
       polarity: polarity
-    ).build.prepare
+    ).build
   end
 
   let(:patterns) { [] }
@@ -100,7 +100,7 @@ RSpec.describe PathList::Patterns do
           PathList::Matchers::PathRegexp.new(%r{\A/b/(?:.*/)?a(?:\z|/)}, :allow),
           PathList::Matchers::MatchIfDir.new(
             PathList::Matchers::Any::Two.new([
-              PathList::Matchers::ExactString::Include.new(['/', '/b'], :allow),
+              PathList::Matchers::ExactString::Set.new(['/', '/b'], :allow),
               PathList::Matchers::PathRegexp.new(%r{\A/b/}, :allow)
             ])
           )
@@ -149,7 +149,7 @@ RSpec.describe PathList::Patterns do
         expect(matchers).to be_like PathList::Matchers::LastMatch.new([
           PathList::Matchers::Allow,
           PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}, :ignore),
-          PathList::Matchers::ExactString::Include.new([
+          PathList::Matchers::ExactString::Set.new([
             '/a/b/c/foo',
             '/a/b/c/baz'
           ], :allow)
@@ -166,11 +166,11 @@ RSpec.describe PathList::Patterns do
           PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}, :allow),
           PathList::Matchers::MatchIfDir.new(
             PathList::Matchers::Any::Two.new([
-              PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/b', '/a/b/c'], :allow),
+              PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/b', '/a/b/c'], :allow),
               PathList::Matchers::PathRegexp.new(%r{\A/a/b/c/}, :allow)
             ])
           ),
-          PathList::Matchers::ExactString::Include.new([
+          PathList::Matchers::ExactString::Set.new([
             '/a/b/c/foo',
             '/a/b/c/baz'
           ], :ignore)
@@ -210,7 +210,7 @@ RSpec.describe PathList::Patterns do
           ),
           PathList::Matchers::MatchIfDir.new(
             PathList::Matchers::Any::Two.new([
-              PathList::Matchers::ExactString::Include.new(['/', '/f', '/f/g'], :allow),
+              PathList::Matchers::ExactString::Set.new(['/', '/f', '/f/g'], :allow),
               PathList::Matchers::PathRegexp.new(%r{\A/f/g/}, :allow)
             ])
           ),

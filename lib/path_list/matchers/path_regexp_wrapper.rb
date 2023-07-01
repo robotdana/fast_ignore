@@ -30,6 +30,12 @@ class PathList
           @rule == other.rule
       end
 
+      def ==(other)
+        other.instance_of?(self.class) &&
+          @rule == other.rule &&
+          @matcher == other.matcher
+      end
+
       protected
 
       attr_reader :rule

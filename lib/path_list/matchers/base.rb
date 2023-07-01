@@ -30,16 +30,9 @@ class PathList
       end
 
       # squash
-      def squashable_with?(other)
-        equal?(other)
-      end
+      alias_method :squashable_with?, :equal?
 
       def squash(_, _)
-        self
-      end
-
-      # compress
-      def prepare
         self
       end
 
@@ -50,13 +43,8 @@ class PathList
         self
       end
 
-      def dir_matcher
-        self
-      end
-
-      def file_matcher
-        self
-      end
+      alias_method :dir_matcher, :itself
+      alias_method :file_matcher, :itself
     end
   end
 end

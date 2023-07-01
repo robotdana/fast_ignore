@@ -9,7 +9,7 @@ class PathList
       super(message)
     end
 
-    def message # rubocop:disable Metrics/AbcSize
+    def message
       return super unless @scanner && @path
 
       lineno = @scanner.string[0...@scanner.pos].count("\n") + 1

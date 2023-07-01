@@ -3,7 +3,7 @@
 class PathList
   class Builder
     class GlobGitignore < Gitignore
-      def initialize(rule, polarity, root) # rubocop:disable Metrics/MethodLength
+      def initialize(rule, polarity, root)
         rule = +'' if rule.start_with?('#')
         negated_sigil = '!' if rule.delete_prefix!('!')
         if rule.start_with?('*')

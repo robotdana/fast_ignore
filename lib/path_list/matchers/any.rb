@@ -7,12 +7,11 @@ class PathList
 
       attr_reader :matchers
 
-      def self.compress(matchers) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def self.compress(matchers)
         matchers = super(matchers)
         return [Matchers::Allow] if matchers.include?(Matchers::Allow)
 
-        invalid = matchers.include?(Invalid)
-        matchers -= [Invalid]
+        invalid = matchers.delete(Invalid)
         return [Invalid] if matchers.empty? && invalid
 
         squashable_sets = []

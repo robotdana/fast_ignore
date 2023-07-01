@@ -3,8 +3,8 @@
 class PathList
   module Matchers
     class CollectGitignore < Wrapper
-      def self.build(collect_matcher, matcher = nil)
-        new(collect_matcher, matcher)
+      def self.build(collect_matcher)
+        new(collect_matcher)
       end
 
       def initialize(collect_matcher, matcher = nil)
@@ -25,7 +25,7 @@ class PathList
         @matcher.match(candidate)
       end
 
-      def append(from_file, root: nil) # rubocop:disable Metrics/MethodLength
+      def append(from_file, root: nil)
         return if @loaded.include?(from_file)
 
         @loaded << from_file
@@ -39,9 +39,8 @@ class PathList
 
         return if new_matcher == Blank
 
-        # new_matcher = new_matcher.prepare
-        @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher.prepare])
-        @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher.prepare])
+        @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher])
+        @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher])
       end
 
       def inspect
@@ -60,23 +59,6 @@ class PathList
         false
       end
 
-      def prepare
-        @dir_matcher.prepare
-        @file_matcher.prepare
-        @collect_matcher.prepare
-
-        self
-
-        # new_collect_matcher = @collect_matcher.prepare
-        # if new_collect_matcher == @collect_matcher
-        #   self
-        # else
-        #   new_parent = dup
-        #   new_parent.collect_matcher = @collect_matcher.dir_matcher
-        #   new_parent.freeze
-        # end
-      end
-
       def dir_matcher
         new_parent = dup
         new_parent.matcher = @dir_matcher
@@ -86,10 +68,16 @@ class PathList
 
       attr_reader :file_matcher
 
+      def ==(other)
+        other.instance_of?(self.class) &&
+          other.collect_matcher == @collect_matcher
+      end
+
       protected
 
       attr_writer :matcher
-      attr_writer :collect_matcher
+      attr_accessor :collect_matcher
+      attr_reader :root_downcase
 
       private
 

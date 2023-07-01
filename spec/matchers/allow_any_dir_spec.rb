@@ -47,7 +47,9 @@ RSpec.describe PathList::Matchers::AllowAnyDir do
   end
 
   describe '#squash' do
-    let(:matcher) { instance_double(PathList::Matchers::Base, 'matcher', weight: 1, polarity: :ignore) }
+    let(:matcher) do
+      instance_double(PathList::Matchers::Base, 'matcher', weight: 1, polarity: :ignore, squashable_with?: false)
+    end
     let(:dir_matcher) { PathList::Matchers::MatchIfDir.new(matcher) }
 
     it 'returns self when self is not last and preserve order is false' do
@@ -71,12 +73,6 @@ RSpec.describe PathList::Matchers::AllowAnyDir do
 
     it 'returns self when self is last and preserve order is true' do
       expect(subject.squash([dir_matcher, subject], true)).to be subject
-    end
-  end
-
-  describe '#prepare' do
-    it 'returns self' do
-      expect(subject.prepare).to be subject
     end
   end
 

@@ -28,7 +28,7 @@ class PathList
       self.class.new(::File.dirname(@full_path), true, true)
     end
 
-    def child_candidates # rubocop:disable Metrics/MethodLength
+    def child_candidates
       @child_candidates ||= begin
         prepend_path = @full_path == '/' ? '' : @full_path
 
@@ -77,7 +77,7 @@ class PathList
     # but will grab the whole first line if it starts with hashbang chars.
     # we don't want to always just grab the first line regardless of length,
     # in case it's a binary or minified file
-    def first_line # rubocop:disable Metrics/MethodLength
+    def first_line
       @first_line ||= begin
         file = ::File.new(@full_path)
         first_line = file.sysread(64)

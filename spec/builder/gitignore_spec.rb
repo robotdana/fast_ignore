@@ -11,7 +11,6 @@ RSpec.describe PathList::Builder::Gitignore do
     described_class
       .new(rule, polarity, root)
       .send(method_name)
-      .prepare
   end
 
   describe '#build' do
@@ -1973,7 +1972,7 @@ RSpec.describe PathList::Builder::Gitignore do
             expect(build('foo')).to be_like PathList::Matchers::Any::Two.new([
               PathList::Matchers::MatchIfDir.new(
                 PathList::Matchers::Any::Two.new([
-                  PathList::Matchers::ExactString::Include.new([
+                  PathList::Matchers::ExactString::Set.new([
                     '/',
                     '/a',
                     '/a/path'
@@ -1996,7 +1995,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2010,7 +2009,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2026,7 +2025,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2044,7 +2043,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2057,7 +2056,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2072,7 +2071,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2085,7 +2084,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2103,7 +2102,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2116,7 +2115,7 @@ RSpec.describe PathList::Builder::Gitignore do
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
                   PathList::Matchers::Any::Two.new([
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                     PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                   ])
                 ),
@@ -2136,7 +2135,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2149,7 +2148,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2170,7 +2169,7 @@ RSpec.describe PathList::Builder::Gitignore do
               expect(build('doc/frotz'))
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/doc'], :allow)
+                    PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/doc'], :allow)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/a/path/doc/frotz/}, :allow)
                 ])
@@ -2190,7 +2189,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2203,7 +2202,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2229,7 +2228,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2247,7 +2246,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2260,7 +2259,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*\z}, :allow)
                       ])
                     ),
@@ -2273,7 +2272,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2286,7 +2285,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2299,7 +2298,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2314,7 +2313,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*\z}, :allow)
                       ])
                     ),
@@ -2327,7 +2326,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/b[^/]*\z}, :allow)
                       ])
                     ),
@@ -2340,7 +2339,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*b\z}, :allow)
                       ])
                     ),
@@ -2353,7 +2352,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/[^/]*\z}, :allow)
                       ])
                     ),
@@ -2366,7 +2365,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*(?:\z|/[^/]*\z)}, :allow)
                       ])
                     ),
@@ -2379,7 +2378,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/}, :allow)
                       ])
                     ), PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/.*/}, :allow)
@@ -2391,7 +2390,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/a}, :allow)
                       ])
                     ),
@@ -2404,7 +2403,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2417,7 +2416,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2433,7 +2432,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2446,7 +2445,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2459,7 +2458,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2472,7 +2471,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2487,7 +2486,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2500,7 +2499,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2513,7 +2512,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2526,7 +2525,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2539,7 +2538,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2552,7 +2551,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2565,7 +2564,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2578,7 +2577,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2591,7 +2590,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2604,7 +2603,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2617,7 +2616,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2630,7 +2629,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2643,7 +2642,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2656,7 +2655,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2669,7 +2668,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2682,7 +2681,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2695,7 +2694,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2708,7 +2707,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2722,7 +2721,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2735,7 +2734,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2748,7 +2747,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2761,7 +2760,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2779,7 +2778,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2792,7 +2791,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2805,7 +2804,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2818,7 +2817,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2833,7 +2832,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2848,7 +2847,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                       ])
                     ),
@@ -2862,7 +2861,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2876,7 +2875,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2889,7 +2888,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2902,7 +2901,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2915,7 +2914,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2928,7 +2927,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2941,7 +2940,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2954,7 +2953,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2967,7 +2966,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2980,7 +2979,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -2993,7 +2992,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3011,7 +3010,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3024,7 +3023,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3047,7 +3046,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3060,7 +3059,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3089,7 +3088,7 @@ RSpec.describe PathList::Builder::Gitignore do
             expect(build('/*.c'))
               .to be_like PathList::Matchers::Any::Two.new([
                 PathList::Matchers::MatchIfDir.new(
-                  PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow)
+                  PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow)
                 ),
                 PathList::Matchers::PathRegexp.new(%r{\A/a/path/[^/]*\.c/}, :allow)
               ])
@@ -3106,7 +3105,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3124,7 +3123,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3137,7 +3136,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3150,7 +3149,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3163,7 +3162,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3176,7 +3175,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3189,7 +3188,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3202,7 +3201,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
@@ -3217,7 +3216,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :allow)
                     ])
                   ),
@@ -3230,7 +3229,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :allow)
                     ])
                   ),
@@ -3243,7 +3242,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/abc/}, :allow)
                     ])
                   ),
@@ -3258,7 +3257,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/}, :allow)
                     ])
                   ),
@@ -3271,7 +3270,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/}, :allow)
                     ])
                   ),
@@ -3284,7 +3283,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path', '/a/path/a'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/path/a/}, :allow)
                     ])
                   ),
@@ -3301,7 +3300,7 @@ RSpec.describe PathList::Builder::Gitignore do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::MatchIfDir.new(
                         PathList::Matchers::Any::Two.new([
-                          PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                          PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                           PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                         ])
                       ),
@@ -3314,7 +3313,7 @@ RSpec.describe PathList::Builder::Gitignore do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::MatchIfDir.new(
                         PathList::Matchers::Any::Two.new([
-                          PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                          PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                           PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                         ])
                       ),
@@ -3327,7 +3326,7 @@ RSpec.describe PathList::Builder::Gitignore do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::MatchIfDir.new(
                         PathList::Matchers::Any::Two.new([
-                          PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                          PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                           PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                         ])
                       ),
@@ -3340,7 +3339,7 @@ RSpec.describe PathList::Builder::Gitignore do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::MatchIfDir.new(
                         PathList::Matchers::Any::Two.new([
-                          PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                          PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                           PathList::Matchers::PathRegexp.new(%r{\A/a/path/}, :allow)
                         ])
                       ),
@@ -3354,7 +3353,7 @@ RSpec.describe PathList::Builder::Gitignore do
                     .to be_like PathList::Matchers::Any::Two.new([
                       PathList::Matchers::MatchIfDir.new(
                         PathList::Matchers::Any::Two.new([
-                          PathList::Matchers::ExactString::Include.new(['/', '/a', '/a/path'], :allow),
+                          PathList::Matchers::ExactString::Set.new(['/', '/a', '/a/path'], :allow),
                           PathList::Matchers::PathRegexp.new(%r{\A/a/path/f}, :allow)
                         ])
                       ),
@@ -3517,7 +3516,7 @@ RSpec.describe PathList::Builder::Gitignore do
               expect(build('doc/frotz'))
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
-                    PathList::Matchers::ExactString::Include.new(['/', '/doc'], :allow)
+                    PathList::Matchers::ExactString::Set.new(['/', '/doc'], :allow)
                   ),
                   PathList::Matchers::PathRegexp.new(%r{\A/doc/frotz/}, :allow)
                 ])
@@ -3626,7 +3625,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/[^/]*\z}, :allow)
                       ])
                     ),
@@ -3639,7 +3638,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/b[^/]*\z}, :allow)
                       ])
                     ),
@@ -3652,7 +3651,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/[^/]*b\z}, :allow)
                       ])
                     ),
@@ -3665,7 +3664,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/[^/]*\z}, :allow)
                       ])
                     ),
@@ -3691,7 +3690,7 @@ RSpec.describe PathList::Builder::Gitignore do
                   .to be_like PathList::Matchers::Any::Two.new([
                     PathList::Matchers::MatchIfDir.new(
                       PathList::Matchers::Any::Two.new([
-                        PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                        PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                         PathList::Matchers::PathRegexp.new(%r{\A/a/}, :allow)
                       ])
                     ),
@@ -4197,7 +4196,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/abc/}, :allow)
                     ])
                   ),
@@ -4210,7 +4209,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/abc/}, :allow)
                     ])
                   ),
@@ -4223,7 +4222,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/abc'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/abc'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/abc/}, :allow)
                     ])
                   ),
@@ -4238,7 +4237,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/}, :allow)
                     ])
                   ),
@@ -4251,7 +4250,7 @@ RSpec.describe PathList::Builder::Gitignore do
                 .to be_like PathList::Matchers::Any::Two.new([
                   PathList::Matchers::MatchIfDir.new(
                     PathList::Matchers::Any::Two.new([
-                      PathList::Matchers::ExactString::Include.new(['/', '/a'], :allow),
+                      PathList::Matchers::ExactString::Set.new(['/', '/a'], :allow),
                       PathList::Matchers::PathRegexp.new(%r{\A/a/}, :allow)
                     ])
                   ),

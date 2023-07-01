@@ -9,7 +9,7 @@ class PathList
         @root_re = PathRegexp.new_from_path(root, [])
       end
 
-      def build # rubocop:disable Metrics/MethodLength
+      def build
         shebang = @rule.delete_prefix('#!').strip
 
         pattern = TokenRegexp.new([:start_anchor, '#!', :any])
@@ -21,7 +21,7 @@ class PathList
         Matchers::MatchUnlessDir.build(
           Matchers::PathRegexpWrapper.build(
             %r{\A#{Regexp.escape(@root.downcase)}/(?:.*/)?[^/\.]*\z},
-            Matchers::ShebangRegexp.new([pattern.parts], @polarity)
+            Matchers::ShebangRegexp.build([pattern.parts], @polarity)
           )
         )
       end

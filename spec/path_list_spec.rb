@@ -318,6 +318,192 @@ RSpec.describe PathList do
     end
   end
 
+  describe 'query interface combinations' do
+    it 'works for .gitignore and #only' do
+      gitignore 'bar'
+
+      gitignore_path_list = described_class.gitignore
+      gitignore_only_path_list = gitignore_path_list.only(['bar', 'baz'])
+
+      expect(gitignore_path_list).not_to allow_files('bar')
+      expect(gitignore_path_list).to allow_files('baz', 'foo')
+      expect(gitignore_path_list).not_to be gitignore_only_path_list
+
+      expect(gitignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .gitignore and #only!' do
+      gitignore 'bar'
+
+      gitignore_path_list = described_class.gitignore
+
+      expect(gitignore_path_list).not_to allow_files('bar')
+      expect(gitignore_path_list).to allow_files('baz', 'foo')
+
+      gitignore_only_path_list = gitignore_path_list.only!(['bar', 'baz'])
+      expect(gitignore_path_list).to be gitignore_only_path_list
+
+      expect(gitignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_path_list).to allow_files('baz', create: false)
+
+      expect(gitignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .only and #gitignore' do
+      gitignore 'bar'
+
+      only_path_list = described_class.only(['bar', 'baz'])
+      gitignore_only_path_list = only_path_list.gitignore
+
+      expect(only_path_list).not_to allow_files('foo')
+      expect(only_path_list).to allow_files('baz', 'bar')
+      expect(only_path_list).not_to be gitignore_only_path_list
+
+      expect(gitignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .only and #gitignore!' do
+      gitignore 'bar'
+
+      only_path_list = described_class.only(['bar', 'baz'])
+
+      expect(only_path_list).not_to allow_files('foo')
+      expect(only_path_list).to allow_files('baz', 'bar')
+
+      gitignore_only_path_list = only_path_list.gitignore!
+      expect(only_path_list).to be gitignore_only_path_list
+
+      expect(only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(only_path_list).to allow_files('baz', create: false)
+
+      expect(gitignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .ignore and #only' do
+      ignore_path_list = described_class.ignore('bar')
+      ignore_only_path_list = ignore_path_list.only(['bar', 'baz'])
+
+      expect(ignore_path_list).not_to allow_files('bar')
+      expect(ignore_path_list).to allow_files('baz', 'foo')
+      expect(ignore_path_list).not_to be ignore_only_path_list
+
+      expect(ignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .ignore and #only!' do
+      ignore_path_list = described_class.ignore('bar')
+
+      expect(ignore_path_list).not_to allow_files('bar')
+      expect(ignore_path_list).to allow_files('baz', 'foo')
+
+      ignore_only_path_list = ignore_path_list.only!(['bar', 'baz'])
+      expect(ignore_path_list).to be ignore_only_path_list
+
+      expect(ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_path_list).to allow_files('baz', create: false)
+
+      expect(ignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .only and #ignore' do
+      only_path_list = described_class.only(['bar', 'baz'])
+      ignore_only_path_list = only_path_list.ignore('bar')
+
+      expect(only_path_list).not_to allow_files('foo')
+      expect(only_path_list).to allow_files('baz', 'bar')
+      expect(only_path_list).not_to be ignore_only_path_list
+
+      expect(ignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .only and #ignore!' do
+      only_path_list = described_class.only(['bar', 'baz'])
+
+      expect(only_path_list).not_to allow_files('foo')
+      expect(only_path_list).to allow_files('baz', 'bar')
+
+      ignore_only_path_list = only_path_list.ignore!('bar')
+      expect(only_path_list).to be ignore_only_path_list
+
+      expect(only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(only_path_list).to allow_files('baz', create: false)
+
+      expect(ignore_only_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_only_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .gitignore and #ignore' do
+      gitignore 'bar'
+
+      gitignore_path_list = described_class.gitignore
+      gitignore_ignore_path_list = gitignore_path_list.ignore(['foo'])
+
+      expect(gitignore_path_list).not_to allow_files('bar')
+      expect(gitignore_path_list).to allow_files('baz', 'foo')
+      expect(gitignore_path_list).not_to be gitignore_ignore_path_list
+
+      expect(gitignore_ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_ignore_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .gitignore and #ignore!' do
+      gitignore 'bar'
+
+      gitignore_path_list = described_class.gitignore
+
+      expect(gitignore_path_list).not_to allow_files('bar')
+      expect(gitignore_path_list).to allow_files('baz', 'foo')
+
+      gitignore_ignore_path_list = gitignore_path_list.ignore!(['foo'])
+      expect(gitignore_path_list).to be gitignore_ignore_path_list
+
+      expect(gitignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_path_list).to allow_files('baz', create: false)
+
+      expect(gitignore_ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_ignore_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .ignore and #gitignore' do
+      gitignore 'bar'
+
+      ignore_path_list = described_class.ignore(['foo'])
+      gitignore_ignore_path_list = ignore_path_list.gitignore
+
+      expect(ignore_path_list).not_to allow_files('foo')
+      expect(ignore_path_list).to allow_files('baz', 'bar')
+      expect(ignore_path_list).not_to be gitignore_ignore_path_list
+
+      expect(gitignore_ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_ignore_path_list).to allow_files('baz', create: false)
+    end
+
+    it 'works for .ignore and #gitignore!' do
+      gitignore 'bar'
+
+      ignore_path_list = described_class.ignore(['foo'])
+
+      expect(ignore_path_list).not_to allow_files('foo')
+      expect(ignore_path_list).to allow_files('baz', 'bar')
+
+      gitignore_ignore_path_list = ignore_path_list.gitignore!
+      expect(ignore_path_list).to be gitignore_ignore_path_list
+
+      expect(ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(ignore_path_list).to allow_files('baz', create: false)
+
+      expect(gitignore_ignore_path_list).not_to allow_files('foo', 'bar', create: false)
+      expect(gitignore_ignore_path_list).to allow_files('baz', create: false)
+    end
+  end
+
   describe '.only' do
     context 'with blank only value' do
       subject(:path_list) { described_class.only([]) }

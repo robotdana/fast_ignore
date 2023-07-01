@@ -4,18 +4,6 @@ class PathList
   class TokenRegexp
     module Build
       class << self
-        def build_child_matcher(token_regexp); end
-
-        def build_parent_matcher(token_regexp); end
-
-        def build_path_matcher(token_regexp)
-          if token_regexp.exact_path?
-            Matchers::ExactString.build([token_regexp.to_s.downcase], @rule_polarity)
-          else
-            Matchers::PathRegexp.build([token_regexp.dup.compress.parts], @rule_polarity)
-          end
-        end
-
         def build(parts_arrays)
           if parts_arrays.length == 1
             Regexp.new(parts_arrays.first.map { |p| PARTS_HASH[p] }.join)
@@ -112,7 +100,7 @@ class PathList
           nil => 0
         }
           .compare_by_identity
-          .tap { |h| h.default_proc = ->(_, k) { k.is_a?(Regexp) ? 2 : k.length } }
+          .tap { |h| h.default_proc = ->(_, k) { k.length } }
           .freeze
 
         private_constant :SORT_KEY

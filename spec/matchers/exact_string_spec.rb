@@ -38,23 +38,13 @@ RSpec.describe PathList::Matchers::ExactString do
         .to be_like(PathList::Matchers::Blank)
     end
 
-    it 'is ExactString::Include when there is more' do
+    it 'is ExactString::Set when there is more' do
       expect(described_class.build(['/one/path', '/two/path', '/three/path'], polarity))
         .to be_like(
-          described_class::Include.new(
+          described_class::Set.new(
             ['/one/path', '/two/path', '/three/path'], polarity
           )
         )
-    end
-
-    it 'is ExactString::Include when there is even more <16' do
-      expect(described_class.build(('a'..'o').to_a.reverse, polarity))
-        .to be_like(described_class::Include.new(('a'..'o').to_a.reverse, polarity))
-    end
-
-    it 'is ExactString::Bsearch when there is even more >16 (also sorted)' do
-      expect(described_class.build(('a'..'p').to_a.reverse, polarity))
-        .to be_like(described_class::Bsearch.new(('a'..'p').to_a, polarity))
     end
   end
 
@@ -87,10 +77,8 @@ RSpec.describe PathList::Matchers::ExactString do
   describe '#squashable_with?' do
     it { is_expected.to be_squashable_with(described_class.new('/other/path', :allow)) }
     it { is_expected.not_to be_squashable_with(described_class.new('/other/path', :ignore)) }
-    it { is_expected.to be_squashable_with(described_class::Include.new(['a', 'b'], :allow)) }
-    it { is_expected.not_to be_squashable_with(described_class::Include.new(['a', 'b'], :ignore)) }
-    it { is_expected.to be_squashable_with(described_class::Bsearch.new(('a'..'z').to_a, :allow)) }
-    it { is_expected.not_to be_squashable_with(described_class::Bsearch.new(('a'..'z').to_a, :ignore)) }
+    it { is_expected.to be_squashable_with(described_class::Set.new(['a', 'b'], :allow)) }
+    it { is_expected.not_to be_squashable_with(described_class::Set.new(['a', 'b'], :ignore)) }
   end
 
   describe '#squash' do
@@ -100,16 +88,10 @@ RSpec.describe PathList::Matchers::ExactString do
       squashed = subject.squash([subject, other], true)
 
       expect(squashed).to be_like(
-        described_class::Include.new(
+        described_class::Set.new(
           ['/exact/path', '/other/path'], polarity
         )
       )
-    end
-  end
-
-  describe '#prepare' do
-    it 'returns self' do
-      expect(subject.prepare).to be subject
     end
   end
 

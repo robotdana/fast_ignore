@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module StubGlobalGitignoreHelper
-  def stub_blank_global_config # rubocop:disable Metrics/MethodLength
+  def stub_blank_global_config
     stub_env(
       XDG_CONFIG_HOME: nil,
       GIT_CONFIG_GLOBAL: nil,

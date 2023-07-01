@@ -10,8 +10,8 @@ class PathList
         return [Matchers::Allow] if matchers.empty?
         return [Matchers::Ignore] if matchers.include?(Matchers::Ignore)
 
-        matchers.sort_by!(&:weight)
         matchers.uniq!
+        matchers.sort_by!(&:weight)
         matchers.freeze
       end
 
@@ -21,7 +21,9 @@ class PathList
         @matchers.each do |m|
           if (result = m.match(candidate)) == :ignore
             return :ignore
-          elsif result.nil?
+          elsif result
+            nil
+          else
             default = nil
           end
         end

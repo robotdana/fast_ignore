@@ -10,7 +10,7 @@ class PathList
   module GitIndex # rubocop:disable Metrics/ModuleLength
     class Error < PathList::Error; end
 
-    class << self # rubocop:disable Metrics/ClassLength
+    class << self
       def files(path = nil)
         path = path ? ::File.join(path, '.git/index') : '.git/index'
 
@@ -19,7 +19,7 @@ class PathList
 
       private
 
-      def read(path) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def read(path)
         begin
           # reading the whole file into memory is faster than lots of ::File#read
           # the biggest it's going to be is 10s of megabytes, well within ram.
@@ -55,7 +55,7 @@ class PathList
         read_extensions(files, file, path, buf)
       end
 
-      def read_extensions(files, file, path, buf) # rubocop:disable Metrics/MethodLength
+      def read_extensions(files, file, path, buf)
         extension = file.read(4, buf)
         if extension == 'link'
           read_link_extension(files, file, path, buf)
@@ -70,7 +70,7 @@ class PathList
         end
       end
 
-      def read_link_extension(files, file, path, buf) # rubocop:disable Metrics/MethodLength
+      def read_link_extension(files, file, path, buf)
         file.seek(4, 1) # skip size
 
         sha = file.read(20, buf)
@@ -99,7 +99,7 @@ class PathList
 
       # format is defined here:
       # https://git-scm.com/docs/bitmap-format#_appendix_a_serialization_format_for_an_ewah_bitmap
-      def ewah_each_value(file, buf) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def ewah_each_value(file, buf)
         uncompressed_pos = 0
 
         file.seek(4, 1) # skip 4 byte uncompressed_bits_count.
@@ -141,7 +141,7 @@ class PathList
         file.seek(4, 1) # bitmap metadata for adding to bitmaps
       end
 
-      def files_2(files, file) # rubocop:disable Metrics/MethodLength
+      def files_2(files, file)
         files.map! do
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)
           length = ((file.getbyte & 0xF) << 8) + file.getbyte # find the 12 byte length
@@ -162,7 +162,7 @@ class PathList
         end
       end
 
-      def files_3(files, file) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def files_3(files, file)
         files.map! do
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)
           flags = file.getbyte
@@ -187,7 +187,7 @@ class PathList
         end
       end
 
-      def files_4(files, file) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def files_4(files, file)
         prev_entry_path = ''
         files.map! do # rubocop:disable Metrics/BlockLength
           file.seek(60, 1) # skip 60 bytes (40 bytes of stat, 20 bytes of sha)

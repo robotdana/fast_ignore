@@ -14,7 +14,7 @@ class PathList
       end
 
       def squashable_with?(other)
-        (other == AllowAnyDir) || super
+        other.equal?(AllowAnyDir) || super
       end
 
       def squash(list, preserve_order)

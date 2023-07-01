@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::Matchers::PathRegexp do
-  subject { described_class.build(regexp_tokens, polarity).prepare }
+  subject { described_class.build(regexp_tokens, polarity) }
 
   let(:polarity) { :allow }
   let(:regexp_tokens) { [['a']] }
@@ -48,7 +48,7 @@ RSpec.describe PathList::Matchers::PathRegexp do
   end
 
   describe '#weight' do
-    it { is_expected.to have_attributes(weight: 3.75) }
+    it { is_expected.to have_attributes(weight: 2.75) }
   end
 
   describe '#polarity' do

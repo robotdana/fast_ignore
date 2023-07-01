@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'set'
+
 class PathList
   module Matchers
     class GitIndex < Base
@@ -7,7 +9,8 @@ class PathList
         @root = root
         @root_downcase = root.downcase
         @files = nil
-        @parent_re = %r{\A#{Regexp.escape(root.downcase)}/}
+        @parent_re = %r{\A#{Regexp.escape(@root_downcase)}/}
+        @matcher = nil
       end
 
       def match(candidate)
@@ -22,7 +25,7 @@ class PathList
         @root_downcase == candidate.full_path_downcase
       end
 
-      def file_tree # rubocop:disable Metrics/MethodLength
+      def file_tree
         @file_tree ||= begin
           tree_hash_proc = ->(h, k) { h[k] = Hash.new(&tree_hash_proc) }
           tree = Hash.new(&tree_hash_proc)
@@ -41,7 +44,7 @@ class PathList
       end
 
       def inspect
-        "#{self.class}.new(#{@root.inspect})"
+        "#{self.class}.new(#{@root.inspect}, #{matcher.inspect})"
       end
 
       def without_matcher(matcher)
@@ -50,36 +53,43 @@ class PathList
         self
       end
 
+      def ==(other)
+        other.instance_of?(self.class) &&
+          other.root_downcase == @root_downcase
+      end
+
+      protected
+
+      attr_reader :root_downcase
+
       private
 
       def matcher
         @matcher ||= begin
           root_prefix = @root == '/' ? '' : @root.downcase
-          dir_array, file_array = create_paths(file_tree, root_prefix)
+          dir_set = Set.new
+          file_set = Set.new
+
+          create_paths(file_tree, root_prefix, dir_set, file_set)
 
           LastMatch.build([
             Ignore,
-            MatchIfDir.new(ExactString.build(dir_array, :allow)),
-            MatchUnlessDir.new(ExactString.build(file_array, :allow))
+            MatchIfDir.new(ExactString.build(dir_set, :allow)),
+            MatchUnlessDir.new(ExactString.build(file_set, :allow))
           ])
         end
       end
 
-      def create_paths(file_tree, prefix) # rubocop:disable Metrics/MethodLength
-        dir_array = []
-        file_array = []
+      def create_paths(file_tree, prefix, dir_set, file_set)
         file_tree.each do |filename, children|
           path = "#{prefix}/#{filename.downcase}"
           if children
-            dir_array << path
-            child_dir_array, child_file_array = create_paths(children, path)
-            dir_array.concat(child_dir_array)
-            file_array.concat(child_file_array)
+            dir_set << path
+            create_paths(children, path, dir_set, file_set)
           else
-            file_array << path
+            file_set << path
           end
         end
-        [dir_array, file_array]
       end
     end
   end

@@ -22,15 +22,14 @@ class PathList
         @weight ||= @matcher.weight + 1
       end
 
-      def squashable_with?(other)
-        other.equal?(self)
-      end
-
-      attr_reader :matcher
+      alias_method :squashable_with?, :equal?
 
       def squash(_, _)
         self
       end
+
+      alias_method :==, :equal?
+      attr_reader :matcher
 
       private
 

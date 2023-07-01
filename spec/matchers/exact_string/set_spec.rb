@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Matchers::ExactString::Include do
+RSpec.describe PathList::Matchers::ExactString::Set do
   subject { described_class.new(strings, polarity) }
 
   let(:polarity) { :allow }
@@ -43,7 +43,7 @@ RSpec.describe PathList::Matchers::ExactString::Include do
   describe '#inspect' do
     it do
       expect(subject)
-        .to have_inspect_value 'PathList::Matchers::ExactString::Include.new(["/one/path", "/two/path"], :allow)'
+        .to have_inspect_value 'PathList::Matchers::ExactString::Set.new(["/one/path", "/two/path"], :allow)'
     end
   end
 
@@ -70,18 +70,6 @@ RSpec.describe PathList::Matchers::ExactString::Include do
     it { is_expected.not_to be_squashable_with(PathList::Matchers::ExactString.new('/other/path', :ignore)) }
     it { is_expected.to be_squashable_with(described_class.new(['a', 'b'], :allow)) }
     it { is_expected.not_to be_squashable_with(described_class.new(['a', 'b'], :ignore)) }
-
-    it do
-      expect(subject).to be_squashable_with(
-        PathList::Matchers::ExactString::Bsearch.new(('a'..'z').to_a, :allow)
-      )
-    end
-
-    it do
-      expect(subject).not_to be_squashable_with(
-        PathList::Matchers::ExactString::Bsearch.new(('a'..'z').to_a, :ignore)
-      )
-    end
   end
 
   describe '#squash' do
@@ -95,12 +83,6 @@ RSpec.describe PathList::Matchers::ExactString::Include do
           ['/one/path', '/two/path', '/other/path'], polarity
         )
       )
-    end
-  end
-
-  describe '#prepare' do
-    it 'returns self' do
-      expect(subject.prepare).to be subject
     end
   end
 

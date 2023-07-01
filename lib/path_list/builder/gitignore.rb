@@ -2,7 +2,7 @@
 
 class PathList
   class Builder
-    class Gitignore < Builder # rubocop:disable Metrics/ClassLength
+    class Gitignore < Builder
       def initialize(rule, polarity, root) # rubocop:disable Lint/MissingSuper
         @s = GitignoreRuleScanner.new(rule)
         @default_polarity = polarity
@@ -96,7 +96,7 @@ class PathList
         end
       end
 
-      def process_character_class # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def process_character_class
         return unless @s.character_class_start?
 
         outer = @re
@@ -141,7 +141,7 @@ class PathList
         emit_end
       end
 
-      def process_rule # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      def process_rule
         return if @rule_processed
 
         @rule_processed = true
@@ -195,30 +195,24 @@ class PathList
         @return || build_matcher
       end
 
-      def build_parent_matcher # rubocop:disable Metrics/MethodLength
-        if anchored? || @root
-          ancestors = @re.ancestors
+      def build_parent_matcher
+        return AllowAnyDir unless anchored? || @root
 
-          if ancestors.any?(&:empty?)
-            return Matchers::MatchIfDir.build(@rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow)
-          end
+        ancestors = @re.ancestors
+        return Matchers::AllowAnyDir if ancestors.any?(&:empty?)
 
-          exact, regexp = ancestors.partition(&:exact_path?)
+        exact, regexp = ancestors.partition(&:exact_path?)
+        exact = Matchers::ExactString.build(exact.map(&:to_s), :allow)
+        regexp = Matchers::PathRegexp.build(regexp.map(&:parts), :allow)
 
-          exact = Matchers::ExactString.build(exact.map(&:to_s), :allow)
-          regexp = Matchers::PathRegexp.build(regexp.map(&:parts), :allow)
-
-          Matchers::MatchIfDir.build(Matchers::Any.build([exact, regexp]))
-        else
-          Matchers::AllowAnyDir
-        end
+        Matchers::MatchIfDir.build(Matchers::Any.build([exact, regexp]))
       end
 
       def build_child_matcher
         @child_re = @re.dup
         @child_re.replace_end(:dir)
         child = @child_re.compress.parts
-        return @rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow if child.empty?
+        return Matchers::Allow if child.empty?
 
         Matchers::PathRegexp.build([child], :allow)
       end

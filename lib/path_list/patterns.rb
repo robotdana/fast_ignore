@@ -10,7 +10,7 @@ class PathList
     }.freeze
 
     class << self
-      def build(patterns, from_file: nil, format: nil, root: nil, polarity: :ignore) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      def build(patterns, from_file: nil, format: nil, root: nil, polarity: :ignore)
         raise Error, 'Only use one of *patterns, from_file:' if (patterns && !patterns.empty?) && from_file
 
         format = BUILDERS.fetch(format || :gitignore, format)

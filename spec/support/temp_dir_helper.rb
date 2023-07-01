@@ -5,7 +5,7 @@ require 'tmpdir'
 
 module TempDirHelper
   module WithinGitTempDir
-    def git_add_files(*files) # rubocop:disable Metrics/MethodLength
+    def git_add_files(*files)
       system(
         'git',
         '-c',
@@ -62,7 +62,7 @@ module TempDirHelper
     end
   end
 
-  def within_temp_dir(git_init: false) # rubocop:disable Metrics/MethodLength
+  def within_temp_dir(git_init: false)
     dir = Pathname.new(Dir.mktmpdir)
     original_dir = Dir.pwd
     Dir.chdir(dir)

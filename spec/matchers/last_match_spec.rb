@@ -313,18 +313,6 @@ RSpec.describe PathList::Matchers::LastMatch do
     it { is_expected.not_to be_squashable_with(subject.dup) }
   end
 
-  describe '#prepare' do
-    it 'passes to its matchers, returns self' do
-      allow(matcher_allow_a).to receive(:prepare)
-      allow(matcher_ignore_b).to receive(:prepare)
-      allow(matcher_mixed_c).to receive(:prepare)
-      expect(subject.prepare).to be subject
-      expect(matcher_allow_a).to have_received(:prepare)
-      expect(matcher_ignore_b).to have_received(:prepare)
-      expect(matcher_mixed_c).to have_received(:prepare)
-    end
-  end
-
   describe '#dir_matcher' do
     let(:matchers) do
       [matcher_allow_a, matcher_ignore_b, matcher_mixed_c, matcher_allow_b]

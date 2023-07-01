@@ -16,10 +16,6 @@ class PathList
       @parts.empty?
     end
 
-    def start_with?(value)
-      @parts[0] == value
-    end
-
     def dup
       d = super
       d.parts = @parts.dup
@@ -30,10 +26,6 @@ class PathList
       @parts.concat(array)
 
       self
-    end
-
-    def end_with?(part)
-      @parts[-1] == part
     end
 
     def length
