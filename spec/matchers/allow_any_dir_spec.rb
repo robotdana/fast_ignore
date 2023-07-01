@@ -76,16 +76,6 @@ RSpec.describe PathList::Matchers::AllowAnyDir do
     end
   end
 
-  describe '#without_matcher' do
-    it 'returns Blank if matcher is self' do
-      expect(subject.without_matcher(subject)).to be PathList::Matchers::Blank
-    end
-
-    it 'returns self otherwise' do
-      expect(subject.without_matcher(PathList::Matchers::Blank)).to be subject
-    end
-  end
-
   describe '#dir_matcher' do
     it 'returns Allow' do
       expect(subject.dir_matcher).to be PathList::Matchers::Allow

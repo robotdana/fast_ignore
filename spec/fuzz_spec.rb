@@ -8,7 +8,8 @@ RSpec.describe Fuzz do
   around do |e|
     original_verbose = $VERBOSE
     $VERBOSE = false
-    within_temp_dir { e.run }
+    e.run
+  ensure
     $VERBOSE = original_verbose
   end
 

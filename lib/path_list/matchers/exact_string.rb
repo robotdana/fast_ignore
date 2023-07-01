@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'set'
+
 class PathList
   module Matchers
     class ExactString < Base

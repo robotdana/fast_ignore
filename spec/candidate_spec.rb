@@ -51,7 +51,7 @@ RSpec.describe PathList::Candidate do
 
   describe '#exists?' do
     context 'when reading from the file system' do
-      around { |e| within_temp_dir { e.run } }
+      within_temp_dir
 
       let(:exists) { nil }
 
@@ -119,7 +119,7 @@ RSpec.describe PathList::Candidate do
 
   describe '#first_line' do
     context 'when reading from the file system' do
-      around { |e| within_temp_dir { e.run } }
+      within_temp_dir
 
       let(:full_path) { './foo' }
 

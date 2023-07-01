@@ -13,6 +13,8 @@ class PathList
 
   def initialize
     @matcher = Matchers::Allow
+    @dir_matcher = nil
+    @file_matcher = nil
   end
 
   protected

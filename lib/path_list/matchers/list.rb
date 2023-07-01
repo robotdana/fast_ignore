@@ -52,13 +52,6 @@ class PathList
       attr_reader :weight
       attr_reader :polarity
 
-      def without_matcher(matcher)
-        return Blank if matcher == self
-
-        new_matchers = matchers.map { |m| m.without_matcher(matcher) }
-        new_matchers == matchers ? self : self.class.build(new_matchers)
-      end
-
       def dir_matcher
         new_matchers = matchers.map(&:dir_matcher)
         return self unless new_matchers != matchers

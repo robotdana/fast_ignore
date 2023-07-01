@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList do
-  around { |e| within_temp_dir { e.run } }
+  within_temp_dir
 
   let(:root) { Dir.pwd }
 

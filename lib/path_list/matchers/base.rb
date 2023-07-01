@@ -36,13 +36,6 @@ class PathList
         self
       end
 
-      # filter matchers
-      def without_matcher(matcher)
-        return Blank if matcher == self
-
-        self
-      end
-
       alias_method :dir_matcher, :itself
       alias_method :file_matcher, :itself
     end

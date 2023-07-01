@@ -16,9 +16,11 @@ keep:
   - ignore!
   - only
   - only!
-  - all
-  - all!
-  - any
-  - any!
+  - union!
+  - union
+  - intersection!
+  - intersection
+  - '&'
+  - '|'
   - gitignore
   - gitignore!

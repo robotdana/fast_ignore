@@ -4,9 +4,8 @@ class PathList
   class Candidate
     attr_reader :full_path
     attr_writer :first_line
-    attr_writer :tree
 
-    def initialize(full_path, directory, exists, tree = nil)
+    def initialize(full_path, directory, exists)
       @full_path = full_path
       @full_path_downcase = nil
       @directory = directory
@@ -15,7 +14,6 @@ class PathList
 
       @child_candidates = nil
       @children = nil
-      @tree = tree
     end
 
     def full_path_downcase
@@ -32,19 +30,12 @@ class PathList
       @child_candidates ||= begin
         prepend_path = @full_path == '/' ? '' : @full_path
 
-        @tree&.map do |child_name, grandchildren|
-          if grandchildren
-            self.class.new("#{prepend_path}/#{child_name}", true, true, grandchildren)
-          else
-            self.class.new("#{prepend_path}/#{child_name}", false, true)
-          end
-        end ||
-          children.map { |filename| self.class.new("#{prepend_path}/#{filename}", nil, true) }
+        children.map { |filename| self.class.new("#{prepend_path}/#{filename}", nil, true) }
       end
     end
 
     def children
-      @children ||= @tree&.keys || ::Dir.children(@full_path)
+      @children ||= ::Dir.children(@full_path)
     end
 
     def directory?

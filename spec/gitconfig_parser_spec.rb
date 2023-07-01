@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe PathList::GitconfigParser do
-  around { |e| within_temp_dir { e.run } }
+  within_temp_dir
 
   it 'returns nil for empty file' do
     create_file('', path: '.gitconfig')

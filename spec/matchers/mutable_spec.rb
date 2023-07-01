@@ -87,25 +87,6 @@ RSpec.describe PathList::Matchers::Mutable do
     end
   end
 
-  describe '#without_matcher' do
-    it 'returns Blank if matcher is self' do
-      expect(subject.without_matcher(subject)).to be PathList::Matchers::Blank
-    end
-
-    it 'passes to the matcher and returns self' do
-      allow(matcher).to receive(:without_matcher).with(matcher)
-      expect(subject.without_matcher(matcher)).to be subject
-      expect(matcher).to have_received(:without_matcher).with(matcher)
-    end
-
-    it 'passes to the matcher and replaces its matcher with the response, and returns self' do
-      allow(matcher).to receive(:without_matcher).with(matcher).and_return(PathList::Matchers::Blank)
-      expect(subject.without_matcher(matcher)).to be subject
-      expect(subject.matcher).to be PathList::Matchers::Blank
-      expect(matcher).to have_received(:without_matcher).with(matcher)
-    end
-  end
-
   describe '#dir_matcher' do
     it 'passes to the matcher and returns self' do
       allow(matcher).to receive(:dir_matcher)

@@ -3,41 +3,23 @@
 class PathList
   module Gitignore
     class << self
-      def build(root:, index: true, config: true, indexes_array: [])
+      def build(root:, config: true)
         root = PathExpander.expand_path_pwd(root || '.')
+        collector = build_collector(root)
 
-        build_index_matcher(root, index, indexes_array) || build_and_append_to_collecting_matcher(root, config)
+        append(collector, root, GlobalGitignore.path(root: root)) if config
+        append(collector, root, '.git/info/exclude')
+        append(collector, root, '.gitignore')
+
+        Matchers::LastMatch.build([Matchers::Allow, collector, build_dot_git_matcher])
       end
 
       private
 
-      def build_index_matcher(root, index, indexes_array)
-        return unless index && ::File.exist?(PathExpander.expand_path('.git/index', root))
+      def append(collector, root, path)
+        return unless path
 
-        git_index = Matchers::GitIndex.new(root)
-        indexes_array << git_index
-        git_index
-      end
-
-      def build_and_append_to_collecting_matcher(root, config)
-        collector = build_collector(root)
-        append_to_collector(collector, root, config)
-
-        Matchers::LastMatch.build([
-          Matchers::Allow,
-          collector,
-          build_dot_git_matcher
-        ])
-      end
-
-      def append_to_collector(collector, root, config)
-        if config
-          global_gitignore = GlobalGitignore.path(root: root)
-          collector.append(PathExpander.expand_path(global_gitignore, root), root: root) if global_gitignore
-        end
-
-        collector.append(PathExpander.expand_path('.git/info/exclude', root), root: root)
-        collector.append(PathExpander.expand_path('.gitignore', root), root: root)
+        collector.append(PathExpander.expand_path(path, root), root: root)
       end
 
       def build_dot_git_matcher

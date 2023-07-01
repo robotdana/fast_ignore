@@ -34,12 +34,6 @@ RSpec.describe PathList::Matchers::Blank do
     end
   end
 
-  describe '#without_matcher' do
-    it 'returns self' do
-      expect(subject.without_matcher(subject)).to be subject
-    end
-  end
-
   describe '#dir_matcher' do
     it 'returns self' do
       expect(subject.dir_matcher).to be subject

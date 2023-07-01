@@ -3,7 +3,7 @@
 RSpec.describe PathList do
   subject { described_class.gitignore }
 
-  around { |e| within_temp_dir { e.run } }
+  within_temp_dir
 
   let(:root) { Dir.pwd }
   let(:gitignore_path) { File.join(root, '.gitignore') }

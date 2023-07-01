@@ -13,12 +13,6 @@ path_list_a = PathList.gitignore.to_a
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts(finish - start)
 
-print 'PathList.gitignore(index: false).to_a:  '
-start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-path_list_fallback_a = PathList.gitignore(index: false).to_a
-finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-puts(finish - start)
-
 print 'git ls-files:               '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 git_a = `git -c "core.quotepath=off" ls-files --recurse-submodules`.split("\n")
@@ -41,17 +35,6 @@ ignored_by_git_not_by_path_list = (
   git_a.map(&:downcase) -
   untracked_files.map(&:downcase)
 )
-ignored_by_path_list_fallback_not_by_git = (
-  git_a.map(&:downcase) -
-  path_list_fallback_a.map(&:downcase) -
-  files_in_the_index_that_would_be_ignored.map(&:downcase) -
-  files_in_the_index_that_are_deleted.map(&:downcase)
-)
-ignored_by_git_not_by_path_list_fallback = (
-  path_list_fallback_a.map(&:downcase) -
-  git_a.map(&:downcase) -
-  untracked_files.map(&:downcase)
-)
 exit_status = 0
 
 unless ignored_by_path_list_not_by_git.empty?
@@ -63,18 +46,6 @@ end
 unless ignored_by_git_not_by_path_list.empty?
   puts "\e[31mIgnored by git, not by PathList.gitignore:\e[0m"
   ignored_by_git_not_by_path_list.map { |f| puts f }
-  exit_status = 1
-end
-
-unless ignored_by_path_list_fallback_not_by_git.empty?
-  puts "\e[31mIgnored by PathList.gitignore(index: false), not by git:\e[0m"
-  ignored_by_path_list_fallback_not_by_git.map { |f| puts f }
-  exit_status = 1
-end
-
-unless ignored_by_git_not_by_path_list_fallback.empty?
-  puts "\e[31mIgnored by git, not by PathList.gitignore(index: false):\e[0m"
-  ignored_by_git_not_by_path_list_fallback.map { |f| puts f }
   exit_status = 1
 end
 
