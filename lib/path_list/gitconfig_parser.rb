@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'strscan'
+
 class PathList
   class GitconfigParser
     def self.parse(file, root: Dir.pwd, nesting: 1)
@@ -34,7 +35,7 @@ class PathList
     def read_file(path)
       return unless ::File.readable?(path)
 
-      file = StringScanner.new(::File.read(path))
+      file = ::StringScanner.new(::File.read(path))
 
       until file.eos?
         if file.skip(/(\s+|[#;].*\n)/)

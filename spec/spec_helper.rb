@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-# if RUBY_PLATFORM != 'java'
-#   module Warning # leftovers:allow
-#     def warn(msg) # leftovers:allow
-#       raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed') || $allow_warning
-#     end
-#   end
-# end
+if RUBY_PLATFORM != 'java'
+  module Warning # leftovers:allow
+    def warn(msg) # leftovers:allow
+      raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed') || $allow_warning
+    end
+  end
+end
 
 $doing_include = false
 

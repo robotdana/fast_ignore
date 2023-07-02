@@ -99,7 +99,7 @@ RSpec::Matchers.define(:have_inspect_value) do |expected|
   end
 end
 
-RSpec::Matchers.define(:have_instance_variables) do |expected|
+RSpec::Matchers.define(:have_instance_variables) do |expected| # leftovers:keep
   match do |actual|
     @actual = actual.instance_variables.to_h { |ivar| [ivar, actual.instance_variable_get(ivar)] }
     expect(@actual).to match(expected)

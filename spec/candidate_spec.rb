@@ -25,7 +25,7 @@ RSpec.describe PathList::Candidate do
   end
 
   describe '#parent' do
-    before { allow(File).to receive_messages(exists?: nil, lstat: nil, directory?: nil) }
+    before { allow(File).to receive_messages(exist?: nil, lstat: nil, directory?: nil) }
 
     it 'returns a candidate for the parent with preset directory value' do
       expect(candidate.parent).to be_like described_class.new('/path/from/root', true)
@@ -47,8 +47,6 @@ RSpec.describe PathList::Candidate do
 
   describe '#exists?' do
     within_temp_dir
-
-    let(:exists) { nil }
 
     context 'when the file exists' do
       let(:full_path) { './foo' }
@@ -91,8 +89,6 @@ RSpec.describe PathList::Candidate do
 
   describe '#children' do
     within_temp_dir
-
-    let(:exists) { nil }
 
     context 'when the directory has children' do
       let(:full_path) { './foo' }

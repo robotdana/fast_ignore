@@ -49,7 +49,7 @@ RSpec.describe PathList::Matchers::LastMatch do
             # impossible polarities
             next if list.include?([:ignore, :allow]) || list.include?([:allow, :ignore])
 
-            result = list.map(&:first).compact.last
+            result = list.filter_map(&:first).last
 
             it "returns #{result.inspect} when built from #{list}" do
               list = list.map do |(mock_result, polarity)|

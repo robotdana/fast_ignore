@@ -77,7 +77,6 @@ class PathList
 
       attr_writer :matcher
       attr_accessor :collect_matcher
-      attr_reader :root_downcase
 
       private
 

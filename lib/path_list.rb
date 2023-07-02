@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'strscan'
-
 class PathList
   class Error < StandardError; end
 

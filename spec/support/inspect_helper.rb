@@ -2,7 +2,7 @@
 
 module InspectHelper
   def default_inspect_value(object)
-    Object.instance_method(:inspect).bind(object).call
+    Object.instance_method(:inspect).bind_call(object)
   end
 
   def debug_match(matcher, candidate)

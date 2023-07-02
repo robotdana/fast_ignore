@@ -58,7 +58,7 @@ class PathList
 
     def only!(*patterns, read_from_file: nil, format: nil, root: nil)
       and_matcher(
-  	     Patterns.build(patterns, read_from_file: read_from_file, format: format, root: root, polarity: :allow).build
+        Patterns.build(patterns, read_from_file: read_from_file, format: format, root: root, polarity: :allow).build
       )
     end
 

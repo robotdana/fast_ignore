@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'strscan'
+
 class PathList
   class GitignoreRuleScanner < ::StringScanner
     def character_class_end?

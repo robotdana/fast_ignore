@@ -23,7 +23,7 @@ PathList.gitignore.sort == `git ls-files`.split("\n").sort
 - supports a glob-like format for unsurprising ARGV use ([`PathList.only(ARGV, format: :glob)`](#format_glob))
 - supports matching by shebang rather than filename for extensionless files [`PathList.only("ruby", format: :shebang)`](#format_shebang)
 
-- Supports ruby 2.6-3.2.x & jruby
+- Supports ruby 2.7-3.2.x & jruby
 
 ## Installation
 

@@ -3,7 +3,6 @@
 class PathList
   class Candidate
     attr_reader :full_path
-    attr_writer :first_line
 
     def initialize(full_path, directory = nil, first_line = nil)
       @full_path = full_path
