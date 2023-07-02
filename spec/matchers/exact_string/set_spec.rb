@@ -9,24 +9,24 @@ RSpec.describe PathList::Matchers::ExactString::Set do
   it { is_expected.to be_frozen }
 
   describe '#match' do
-    it { expect(subject.match(PathList::Candidate.new('/one/path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/One/Path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/two/path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/Two/Path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/one', nil, nil))).to be_nil }
-    it { expect(subject.match(PathList::Candidate.new('one/path', nil, nil))).to be_nil }
-    it { expect(subject.match(PathList::Candidate.new('/one/path/', nil, nil))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('/one/path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/Two/Path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/one'))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('one/path'))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('/one/path/'))).to be_nil }
 
     context 'when polarity is :ignore' do
       let(:polarity) { :ignore }
 
-      it { expect(subject.match(PathList::Candidate.new('/one/path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/One/Path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/two/path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/Two/Path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/one', nil, nil))).to be_nil }
-      it { expect(subject.match(PathList::Candidate.new('one/path', nil, nil))).to be_nil }
-      it { expect(subject.match(PathList::Candidate.new('/one/path/', nil, nil))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('/one/path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/Two/Path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/one'))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('one/path'))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('/one/path/'))).to be_nil }
     end
   end
 

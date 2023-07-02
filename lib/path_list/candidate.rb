@@ -5,12 +5,12 @@ class PathList
     attr_reader :full_path
     attr_writer :first_line
 
-    def initialize(full_path, directory, exists)
+    def initialize(full_path, directory = nil, first_line = nil)
       @full_path = full_path
       @full_path_downcase = nil
       @directory = directory
-      @exists = exists
-      @first_line = nil
+      @exists = nil
+      @first_line = first_line
 
       @child_candidates = nil
       @children = nil
@@ -23,26 +23,28 @@ class PathList
     def parent
       return if @full_path == '/'
 
-      self.class.new(::File.dirname(@full_path), true, true)
+      self.class.new(::File.dirname(@full_path), true)
     end
 
     def child_candidates
       @child_candidates ||= begin
         prepend_path = @full_path == '/' ? '' : @full_path
 
-        children.map { |filename| self.class.new("#{prepend_path}/#{filename}", nil, true) }
+        children.map { |filename| self.class.new("#{prepend_path}/#{filename}") }
       end
     end
 
     def children
       @children ||= ::Dir.children(@full_path)
+    rescue ::SystemCallError
+      @children = []
     end
 
     def directory?
       return @directory unless @directory.nil?
 
       @directory = ::File.lstat(@full_path).directory?
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENAMETOOLONG, ::Errno::ENOTDIR, ::Errno::EPERM
+    rescue ::SystemCallError
       @exists ||= false
       @directory = false
     end
@@ -51,14 +53,14 @@ class PathList
       return @exists unless @exists.nil?
 
       @exists = ::File.exist?(@full_path)
-    rescue ::Errno::EACCES, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
+    rescue ::SystemCallError
       @exists = false
     end
 
     alias_method :original_inspect, :inspect # leftovers:keep
 
     def inspect
-      "#<PathList::Candidate #{@full_path}>"
+      "#<PathList::Candidate #{@full_path}#{'/' if directory?}>"
     end
 
     # how long can a shebang be?
@@ -81,7 +83,8 @@ class PathList
         else
           ''
         end
-      rescue ::EOFError, ::SystemCallError
+      rescue ::IOError, ::SystemCallError
+        @exists ||= false
         ''
       ensure
         file&.close

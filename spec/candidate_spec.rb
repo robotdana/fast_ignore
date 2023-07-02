@@ -4,15 +4,13 @@ RSpec.describe PathList::Candidate do
   subject(:candidate) do
     described_class.new(
       full_path,
-      directory,
-      exists
+      directory
     )
   end
 
   let(:full_path) { "/path/from/root/#{filename}" }
   let(:filename) { 'filename' }
   let(:directory) { false }
-  let(:exists) { true }
 
   describe '#original_inspect' do
     it 'returns the default inspect' do
@@ -29,13 +27,11 @@ RSpec.describe PathList::Candidate do
   describe '#parent' do
     before { allow(File).to receive_messages(exists?: nil, lstat: nil, directory?: nil) }
 
-    it 'returns a candidate for the parent with preset values' do
-      expect(candidate.parent).to be_like described_class.new('/path/from/root', true, true)
+    it 'returns a candidate for the parent with preset directory value' do
+      expect(candidate.parent).to be_like described_class.new('/path/from/root', true)
       expect(candidate.parent).to have_attributes(
-        directory?: true,
-        exists?: true
+        directory?: true
       )
-      expect(File).not_to have_received(:exists?)
       expect(File).not_to have_received(:directory?)
       expect(File).not_to have_received(:lstat)
     end
@@ -50,69 +46,45 @@ RSpec.describe PathList::Candidate do
   end
 
   describe '#exists?' do
-    context 'when reading from the file system' do
-      within_temp_dir
+    within_temp_dir
 
-      let(:exists) { nil }
+    let(:exists) { nil }
 
-      context 'when the file exists' do
-        let(:full_path) { './foo' }
+    context 'when the file exists' do
+      let(:full_path) { './foo' }
 
-        before { create_file_list 'foo' }
+      before { create_file_list 'foo' }
 
-        it 'is memoized when true' do
-          allow(File).to receive(:exist?).and_call_original
+      it 'is memoized when true' do
+        allow(File).to receive(:exist?).and_call_original
 
-          expect(candidate.exists?).to be true
-          expect(File).to have_received(:exist?).once
-          expect(candidate.exists?).to be true
-          expect(File).to have_received(:exist?).once
-        end
-      end
-
-      context 'when the file does not exist' do
-        let(:full_path) { './foo' }
-
-        it 'is memoized when false' do
-          allow(File).to receive(:exist?).and_call_original
-
-          expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).with('./foo').once
-          expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).with('./foo').once
-        end
-
-        it 'is false when there is an error' do
-          allow(File).to receive(:exist?).and_call_original
-          allow(File).to receive(:exist?).with(full_path).and_raise(Errno::EACCES)
-
-          expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).once
-          expect(candidate.exists?).to be false
-          expect(File).to have_received(:exist?).once
-        end
+        expect(candidate.exists?).to be true
+        expect(File).to have_received(:exist?).once
+        expect(candidate.exists?).to be true
+        expect(File).to have_received(:exist?).once
       end
     end
 
-    context 'when not reading from the file system' do
-      before { hide_const('::File') }
+    context 'when the file does not exist' do
+      let(:full_path) { './foo' }
 
-      context 'when the file exists' do
-        let(:exists) { true }
+      it 'is memoized when false' do
+        allow(File).to receive(:exist?).and_call_original
 
-        it 'is true when true' do
-          expect(candidate.exists?).to be true
-          expect(candidate.exists?).to be true
-        end
+        expect(candidate.exists?).to be false
+        expect(File).to have_received(:exist?).with('./foo').once
+        expect(candidate.exists?).to be false
+        expect(File).to have_received(:exist?).with('./foo').once
       end
 
-      context 'when the file does not exist' do
-        let(:exists) { false }
+      it 'is false when there is an error' do
+        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:exist?).with(full_path).and_raise(Errno::EACCES)
 
-        it 'is false when false' do
-          expect(candidate.exists?).to be false
-          expect(candidate.exists?).to be false
-        end
+        expect(candidate.exists?).to be false
+        expect(File).to have_received(:exist?).once
+        expect(candidate.exists?).to be false
+        expect(File).to have_received(:exist?).once
       end
     end
   end

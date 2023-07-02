@@ -75,26 +75,6 @@ RSpec.describe PathList do
     it 'returns false nonexistent files' do
       expect(subject.include?('utter/nonsense')).to be false
     end
-
-    it 'can be shortcut with directory:' do
-      create_file_list 'a'
-      expect(subject.include?('a', directory: false)).to be true
-    end
-
-    it 'returns false for a directory by default' do
-      create_file_list 'a'
-      expect(subject.include?('a', directory: true)).to be false
-    end
-
-    it 'can be lied to with directory: false' do
-      create_file_list 'a/b'
-      expect(subject.include?('a', directory: false)).to be true
-    end
-
-    it 'can be lied to with directory: true' do
-      create_file_list 'a/b'
-      expect(subject.include?('a/b', directory: true)).to be false
-    end
   end
 
   describe '#match?' do
@@ -109,9 +89,19 @@ RSpec.describe PathList do
       expect(subject.match?('a/')).to be true
     end
 
-    it 'can be allowed with with a non-dir' do
+    it 'can be shortcut with directory:' do
       create_file_list 'a'
-      expect(subject.match?('a', exists: true, directory: false)).to be true
+      expect(subject.match?('a', directory: false)).to be true
+    end
+
+    it 'can be lied to with directory: false' do
+      create_file_list 'a/b'
+      expect(subject.match?('a', directory: false)).to be true
+    end
+
+    it 'can be lied to with directory: true' do
+      create_file_list 'a/b'
+      expect(subject.match?('a/b', directory: true)).to be true
     end
   end
 
@@ -168,28 +158,44 @@ RSpec.describe PathList do
       expect(subject).to match_files('foo')
     end
 
-    it 'rescues soft links to nowhere' do
-      create_file_list 'foo_target', '.gitignore'
-      create_symlink('foo' => 'foo_target')
-      FileUtils.rm('foo_target')
+    context 'with soft links to nowhere' do
+      before do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+        FileUtils.rm('foo_target')
+      end
 
-      expect(subject.include?('foo')).to be false
-      expect(subject.include?('foo', directory: true)).to be false
-      expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
+      it 'rescues errors in PathList methods', :aggregate_failures do
+        expect(subject.include?('foo')).to be false
+        expect(subject.match?('foo')).to be true
+        expect(subject.to_a).to contain_exactly('.gitignore', 'foo')
+      end
+
+      it "doesn't rescue the yielded block" do
+        expect { subject.each { |x| File.read(x) }.to_a }.to raise_error(Errno::ENOENT)
+      end
     end
 
-    it 'rescues soft link loops' do
-      create_file_list 'foo_target', '.gitignore'
-      create_symlink('foo' => 'foo_target')
-      FileUtils.rm('foo_target')
-      create_symlink('foo_target' => 'foo')
+    context 'with soft link loops' do
+      before do
+        create_file_list 'foo_target', '.gitignore'
+        create_symlink('foo' => 'foo_target')
+        FileUtils.rm('foo_target')
+        create_symlink('foo_target' => 'foo')
+      end
 
-      expect(subject.include?('foo')).to be false
-      expect(subject.include?('foo', directory: true)).to be false
-      expect(subject.select { |x| File.read(x) }.to_a).to contain_exactly('.gitignore')
+      it 'rescues errors in PathList methods', :aggregate_failures do
+        expect(subject.include?('foo')).to be false
+        expect(subject.match?('foo')).to be true
+        expect(subject.to_a).to contain_exactly('.gitignore', 'foo', 'foo_target')
+      end
+
+      it "doesn't rescue the yielded block" do
+        expect { subject.each { |x| File.read(x) }.to_a }.to raise_error(Errno::ELOOP)
+      end
     end
 
-    it 'allows soft links to directories' do
+    it 'treats soft links to directories as files rather than the directories they point to' do
       create_file_list 'foo_target/foo_child'
       gitignore 'foo_target'
 
@@ -197,11 +203,12 @@ RSpec.describe PathList do
       expect(subject).to allow_exactly('foo', '.gitignore')
     end
 
-    it 'allows soft links' do
-      create_file_list 'foo_target', '.gitignore'
-      create_symlink('foo' => 'foo_target')
+    it 'matches soft links as their own paths not the paths they point to' do
+      create_file_list 'foo_target'
+      gitignore 'foo_target'
 
-      expect(subject).to allow_exactly('foo', 'foo_target', '.gitignore')
+      create_symlink('foo' => 'foo_target')
+      expect(subject).to allow_exactly('foo', '.gitignore')
     end
 
     it 'returns hidden files' do
@@ -259,7 +266,6 @@ RSpec.describe PathList do
           gitignore '#this is just a comment', path: 'a/.gitignore'
           gitignore '/d', path: 'a/b/.gitignore'
 
-
           expect(subject).not_to match_files('b/c', 'a/b/c', 'b/d')
           expect(subject).to match_files('a/b/d')
         end
@@ -274,7 +280,6 @@ RSpec.describe PathList do
 
       gitignore_path_list = described_class.gitignore
       gitignore_only_path_list = gitignore_path_list.only(['bar', 'baz'])
-
 
       expect(gitignore_path_list).not_to allow_files('bar')
       expect(gitignore_path_list).to allow_files('baz', 'foo')
@@ -704,13 +709,13 @@ RSpec.describe PathList do
 
   describe '.intersection' do
     it 'can combine with AND any number of path lists' do
-      path_list = described_class.only('a','b','c')
+      path_list = described_class.only('a', 'b', 'c')
       intersection_path_list = path_list.intersection(
-        described_class.only('b','c','d'),
-        described_class.only('a','b','d')
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'b', 'd')
       )
 
-      expect(path_list).to allow_files('a','b','c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       expect(intersection_path_list).to allow_files('b')
@@ -720,10 +725,10 @@ RSpec.describe PathList do
 
   describe '&' do
     it 'can combine with AND one other path lists' do
-      path_list = described_class.only('a','b','c')
-      intersection_path_list = path_list & described_class.only('b','c','d')
+      path_list = described_class.only('a', 'b', 'c')
+      intersection_path_list = path_list & described_class.only('b', 'c', 'd')
 
-      expect(path_list).to allow_files('a','b','c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       expect(intersection_path_list).to allow_files('b', 'c')
@@ -733,13 +738,13 @@ RSpec.describe PathList do
 
   describe '.intersection!' do
     it 'can combine with AND any number of path lists, modifying the receiver' do
-      path_list = described_class.only('a','b','c')
-      expect(path_list).to allow_files('a','b','c')
+      path_list = described_class.only('a', 'b', 'c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       intersection_path_list = path_list.intersection!(
-        described_class.only('b','c','d'),
-        described_class.only('a','b','d')
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'b', 'd')
       )
 
       expect(path_list).to allow_files('b')
@@ -752,13 +757,13 @@ RSpec.describe PathList do
 
   describe '.union' do
     it 'can combine with OR any number of path lists' do
-      path_list = described_class.only('a','b','c')
+      path_list = described_class.only('a', 'b', 'c')
       union_path_list = path_list.union(
-        described_class.only('b','c','d'),
-        described_class.only('a','e')
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'e')
       )
 
-      expect(path_list).to allow_files('a','b','c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       expect(union_path_list).to allow_files('a', 'b', 'c', 'd', 'e')
@@ -768,10 +773,10 @@ RSpec.describe PathList do
 
   describe '|' do
     it 'can combine with OR one of path lists' do
-      path_list = described_class.only('a','b','c')
-      union_path_list = path_list | described_class.only('b','c','d')
+      path_list = described_class.only('a', 'b', 'c')
+      union_path_list = path_list | described_class.only('b', 'c', 'd')
 
-      expect(path_list).to allow_files('a','b','c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       expect(union_path_list).to allow_files('a', 'b', 'c', 'd')
@@ -781,14 +786,14 @@ RSpec.describe PathList do
 
   describe '.union!' do
     it 'can combine with AND any number of path lists, modifying the receiver' do
-      path_list = described_class.only('a','b','c')
+      path_list = described_class.only('a', 'b', 'c')
 
-      expect(path_list).to allow_files('a','b','c')
+      expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
 
       union_path_list = path_list.union!(
-        described_class.only('b','c','d'),
-        described_class.only('a','e')
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'e')
       )
 
       expect(path_list).to allow_files('a', 'b', 'c', 'd', 'e')
@@ -809,8 +814,8 @@ RSpec.describe PathList do
       end
     end
 
-    context 'with missing only from_file value' do
-      subject(:path_list) { described_class.only(from_file: './nonsense') }
+    context 'with missing only read_from_file value' do
+      subject(:path_list) { described_class.only(read_from_file: './nonsense') }
 
       it 'returns all files' do
         create_file_list 'foo', 'bar'
@@ -819,7 +824,7 @@ RSpec.describe PathList do
     end
 
     context 'with subdir includes file' do
-      subject(:path_list) { described_class.only(from_file: 'a/.includes_file') }
+      subject(:path_list) { described_class.only(read_from_file: 'a/.includes_file') }
 
       it 'recognises subdir includes file' do
         create_file '/b/d', 'c', path: 'a/.includes_file'
@@ -832,7 +837,7 @@ RSpec.describe PathList do
     context 'with an unanchored include' do
       subject(:path_list) { described_class.only('**/b') }
 
-      it "#match? doesn't match directories implicitly", :aggregate_failures do
+      it '#match? matches directories implicitly', :aggregate_failures do
         create_file_list 'a/b', 'b/a'
 
         expect(subject.match?('a/')).to be true
@@ -850,8 +855,9 @@ RSpec.describe PathList do
         expect(subject.match?('a')).to be true
         expect(subject.match?('b')).to be false
         expect(subject.match?('c')).to be false
+        expect(subject.match?('a/b/c')).to be true
         expect(subject.include?('a/b')).to be true
-        expect(subject.include?('a/b/c', exists: true)).to be true
+        expect(subject.include?('a/b/c')).to be false
         expect(subject.include?('b/a')).to be false
         expect(subject.match?(Pathname.pwd.dirname)).to be true
       end
@@ -1074,7 +1080,7 @@ RSpec.describe PathList do
     end
 
     context 'when given include shebang rule scoped by a file' do
-      subject(:path_list) { described_class.only(from_file: 'a/.include', format: :shebang) }
+      subject(:path_list) { described_class.only(read_from_file: 'a/.include', format: :shebang) }
 
       it 'matches files with or sub to that directory' do
         create_file <<~RUBY, path: 'a/foo'
@@ -1173,7 +1179,7 @@ RSpec.describe PathList do
         expect(subject).not_to allow_files('bar', 'baz', 'baz.rb')
       end
 
-      it 'uses content given to include?, ignoring the actual content' do
+      it 'uses content given to match?, ignoring the actual content' do
         actual_content = <<~BASH
           #!/usr/bin/env bash
 
@@ -1189,7 +1195,7 @@ RSpec.describe PathList do
         create_file actual_content, path: 'foo'
 
         expect(subject.include?('foo')).to be false
-        expect(subject.include?('foo', content: fake_content)).to be true
+        expect(subject.match?('foo', content: fake_content)).to be true
       end
     end
 
@@ -1308,7 +1314,7 @@ RSpec.describe PathList do
 
   describe '.ignore' do
     context 'when given a file other than gitignore' do
-      subject(:path_list) { described_class.ignore(from_file: 'fancyignore') }
+      subject(:path_list) { described_class.ignore(read_from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file' do
         gitignore 'bar'
@@ -1320,7 +1326,7 @@ RSpec.describe PathList do
     end
 
     context 'when given a file including gitignore' do
-      subject(:path_list) { described_class.gitignore.ignore(from_file: 'fancyignore') }
+      subject(:path_list) { described_class.gitignore.ignore(read_from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file and the gitignore file' do
         gitignore 'bar'
@@ -1357,13 +1363,13 @@ RSpec.describe PathList do
       subject(:path_list) { described_class.ignore('a/') }
 
       it "doesn't cache dirs as non dirs" do
-        expect(subject.include?('a', directory: false, exists: true)).to be true
-        expect(subject.include?('a/b', directory: false, exists: true)).to be false
+        expect(subject.match?('a', directory: false)).to be true
+        expect(subject.match?('a/b', directory: false)).to be false
       end
     end
 
     context 'when given ignore shebang rule scoped by a file' do
-      subject(:path_list) { described_class.ignore(from_file: 'a/.ignore', format: :shebang) }
+      subject(:path_list) { described_class.ignore(read_from_file: 'a/.ignore', format: :shebang) }
 
       it 'matches based on the file directory' do
         create_file <<~RUBY, path: 'a/foo'

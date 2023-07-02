@@ -18,8 +18,9 @@
     - FastIgnore.new(root: "./subdir").each is now PathList.each("./subdir")
     - root for each set of patterns is still handled at PathList.only or PathList.ignore time and can be set independently
   - Dir.chdir can now happen within PathList.each block
-  - FastIgnore.allowed? is now PathList.include? to be closer to ruby expectations
-  - FastIgnore.allowed?(include_directories: true) is now PathList.match?
+  - FastIgnore.allowed? is now PathList.include? and PathList.match? to be closer to ruby expectations
+    - include? is for when you just want the 'would this be in the .to_a output'. it excludes directories, and non-existent files
+    - match? is for when you want to test a hypothetical file or directory against the patterns, it can be given directory: or content: to override those values.
   - Almost the entire codebase has been refactored to allow for these changes
   - A lot of minor fixes i've forgotten
 

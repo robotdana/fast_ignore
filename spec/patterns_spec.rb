@@ -4,7 +4,7 @@ RSpec.describe PathList::Patterns do
   subject(:matchers) do
     described_class.build(
       patterns_arg,
-      from_file: from_file,
+      read_from_file: read_from_file,
       format: format_arg,
       root: root,
       polarity: polarity
@@ -12,14 +12,14 @@ RSpec.describe PathList::Patterns do
   end
 
   let(:patterns) { [] }
-  let(:patterns_arg) { from_file ? [] : Array(patterns) }
-  let(:from_file) { nil }
+  let(:patterns_arg) { read_from_file ? [] : Array(patterns) }
+  let(:read_from_file) { nil }
   let(:format_arg) { nil }
   let(:root) { nil }
   let(:polarity) { :ignore }
 
   around do |e|
-    if from_file
+    if read_from_file
       within_temp_dir { e.run }
     else
       e.run
@@ -27,7 +27,7 @@ RSpec.describe PathList::Patterns do
   end
 
   before do
-    stub_file patterns.join("\n"), from_file if from_file
+    stub_file patterns.join("\n"), read_from_file if read_from_file
   end
 
   describe 'with blank patterns' do

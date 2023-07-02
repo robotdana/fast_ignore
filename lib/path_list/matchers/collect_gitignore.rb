@@ -25,13 +25,13 @@ class PathList
         @matcher.match(candidate)
       end
 
-      def append(from_file, root: nil)
-        return if @loaded.include?(from_file)
+      def append(file, root: nil)
+        return if @loaded.include?(file)
 
-        @loaded << from_file
+        @loaded << file
 
         patterns = Patterns.new(
-          from_file: from_file,
+          read_from_file: file,
           root: (root || PathExpander.expand_path_pwd('.')),
           format: Builder::Gitignore
         )

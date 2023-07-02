@@ -15,9 +15,11 @@ module TempDirHelper
       path = Pathname.pwd.join(path)
       path.parent.mkpath
 
-      unless path.exist?
-        if lines.empty?
-          path.write('')
+      if lines.empty?
+        path.write('') unless path.exist?
+      else
+        if path.exist?
+          raise Errno::EEXIST unless path.read.chomp == lines.join("\n").chomp
         else
           path.write(lines.join("\n"))
         end

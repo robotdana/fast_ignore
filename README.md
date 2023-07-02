@@ -20,10 +20,10 @@ PathList.gitignore.sort == `git ls-files`.split("\n").sort
   - reads the global gitignore file mentioned in your git config
 
 - supports gitignore-style denylist and *allowlist*. ([`PathList.ignore`, `PathList.only`](#ignore_only))
-- supports a glob-like format for unsurprising ARGV use ([`PathList.only(ARGV, format: :argv)`](#format_glob))
+- supports a glob-like format for unsurprising ARGV use ([`PathList.only(ARGV, format: :glob)`](#format_glob))
 - supports matching by shebang rather than filename for extensionless files [`PathList.only("ruby", format: :shebang)`](#format_shebang)
 
-- Supports ruby 2.6-3.1.x & jruby
+- Supports ruby 2.6-3.2.x & jruby
 
 ## Installation
 
@@ -44,24 +44,24 @@ $ gem install path_list
 
 ## Usage
 
-- Build a `PathList` by chaining [`.gitignore`](#gitignore) [`.only`](#ignore_only), [`.ignore`](#ignore_only), combining with [`.any`](#any), or [`.and`](#and)
+- Build a `PathList` by chaining [`.gitignore`](#gitignore) [`.only`](#ignore_only), [`.ignore`](#ignore_only), and combining these chains with [`.union`](#union), or [`.intersection`](#intersection)
 
-- Yield each of the files not ignored by your PathList with [`.each`](#each_map_to_a_find_etc) or other enumerable methods.
-- Test if a file path is not ignored by your PathList with [`.include?` or `===`](#include).
-- Test if a file path or its parent is not ignored by your PathList with [`.match?`](#match).
+- Yield each of the files not ignored by your PathList with [`.each`](#each_map_to_a_etc) or other enumerable methods.
+- Test if a file path would be yielded by this PathList with [`.include?` or `===`](#include).
+- Test if a file or directory path would hypothetically be matchable by your PathList with [`.match?`](#match).
 
 ```ruby
 PathList.gitignore.each { |file| puts "#{file} is not ignored by git" }
 PathList.only('*.rb', '!config/').each { |file| puts "#{file} is a ruby file not in the config directory" }
-PathList.ignore(from_file: '.dockerignore').each { |file| puts "#{file} would be copied with dockerfile COPY" }
+PathList.ignore(read_from_file: '.dockerignore').each { |file| puts "#{file} would be copied with dockerfile COPY" }
 
 PathList.gitignore.include?("is/this/file/gitignored")
-PathList.gitignore.match?("is/this/")
+PathList.gitignore.match?("is/this")
 ```
 
-**Note: If you want use the same PathList match rules more than once, save the instance to a variable to avoid having to read and parse the gitignore file and gitconfig files over and over again**
+**Note: If you want use the same PathList match rules more than once, save the instance to a variable to avoid having to read and parse the patterns over and over again**
 
-### `each`, `map`, `to_a`, `find`, etc...
+### `each`, `map`, `to_a`, etc...
 
 `each` will successively yield each of the files not ignored by your PathList.
 
@@ -78,7 +78,7 @@ PathList.gitignore.each.with_index { |file, index| puts "#{file}#{index}" }
 Give `each` a path to start from instead of defaulting to the current working directory:
 
 ```ruby
-PathList.gitignore.each("a/subdirectory") { |file| puts "#{file}#{index}" }
+PathList.gitignore.each("./within/a/subdirectory") { |file| puts "#{file}#{index}" }
 PathList.each("/") { |file| puts "#{file}" } # traverse a whole filesystem?
 ```
 
@@ -89,15 +89,10 @@ PathList.gitignore.to_a
 PathList.gitignore.map { |file| file.upcase }
 ```
 
-And returns an enumerator for chaining when called without a block
-
-```ruby
-PathList.gitignore.each.with_index { |file, index| puts "#{file}#{index}" }
-```
-
 ### `#include?`
 
-To check if a single path is allowed, use
+Check if a single path would be yielded
+
 ```ruby
 PathList.include?("relative/path")
 PathList.include?("./relative/path")
@@ -108,8 +103,8 @@ PathList.include?(Pathname.new("/stdlib/pathname"))
 
 This is also available as `===` so you can use a PathList instance in case statements.
 ```ruby
-gitignore_matcher ||= PathList.gitignore
-ruby_matcher ||= PathList.only("*.rb")
+gitignore_matcher = PathList.gitignore
+ruby_matcher = PathList.only("*.rb")
 
 case my_path
 when gitignore_matcher then "git ls-files"
@@ -117,55 +112,46 @@ when ruby_file_matcher then "Dir.glob('**/*.rb')"
 end
 ```
 
-#### directory: true/false/nil
-
-default: `nil`
-
-If your code already knows the path to test is/not a directory (or wants to lie about whether it is/is not a directory), you can pass `directory: true` or `directory: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `directory: nil` or nothing)
-
-```ruby
-PathList.include?("path", directory: false) # matches `path` as a file
-PathList.include?("path", directory: true)  # matches `path` as a directory
-PathList.include?("path", directory: nil)   # matches path as whatever it is on the filesystem
-PathList.include?("path")                   # or as a file if it doesn't exist on the file system
-```
-
-#### content: true/false/nil
-
-default: `nil`
-
-If your code already knows the path to test is has a particular text content (or wants to lie about the content), you can pass `content: true` or `content: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `content: nil` or nothing)
-
-```ruby
-PathList.include?("path", content: "#!/usr/bin/env ruby\n\nputs 'hello'") # matches ruby shebang
-PathList.include?("path", content: "#!/usr/bin/env bash\n\necho 'hello'") # matches bash shebang
-PathList.include?("path", content: nil) # matches as whatever the file content is on the filesystem
-PathList.include?("path")               # or as an empty file if it doesn't actually exist
-```
-
-#### exists: true/false/nil
-
-default: `nil`
-
-If your code already knows the path to test exists (or wants to lie about its existence), you can pass `exists: true` or `exists: false` as an argument to `include?`. (to have PathList ask the file system, you can pass `exists: nil` or nothing)
-
-```ruby
-PathList.include?('path', exists: true)  # will check the path regardless of whether it actually truly exists
-PathList.include?('path', exists: false) # will always return false
-PathList.include?('path', exists: nil)   # asks the filesystem
-```
-
 ### `#match?`
 
-Like [`#include?`](#include) except also will be true if the given path **could contain** a file that is not ignored by the path list
+Looser than [`include?`](#include), it also returns true for directories that could contain files in the PathList,
+or even for paths that don't exist but could hypothetically match the PathList.
 
 ```ruby
-PathList.gitignore.include?('my_directory/my_file') # given this returns true
-PathList.gitignore.include?('my_directory') # returns false, as it's a directory, not a file that would be yielded by each.
-PathList.gitignore.match?('my_directory')   # returns true, because it *could contain* 'my_file'
+PathList.include?('my_directory/my_file') # given this returns true
+PathList.include?('my_directory') # returns false, as it's a directory, not a file that would be yielded by each.
+PathList.match?('my_directory') # returns true, because it *could contain* 'my_file'
+PathList.match?('my_directory/my_file', directory: true) # you can lie about whether a file is a directory
+PathList.match?('my_directory/my_file.sh', content: '#!/bin/ruby') # you can also just lie about the content
 ```
 
-This also supports the same performance arguments as [`#include?`](#include)
+#### `match?(path, directory: true|false|nil)`
+
+default: `nil`
+
+By default, PathList will check that path on the file system, and if it can't be read, or doesn't exist it will assume  this is not a directory. (symlinks aren't considered directories even if they point to directories)
+
+If you want to lie about whether something is a directory, pass `true` or `false` to `directory:`.
+
+```ruby
+PathList.match?("path", directory: false) # will match as a file
+PathList.match?("path", directory: true) # will as a directory
+PathList.match?("path", directory: nil) # will match as its reality, or default to as a file
+```
+
+#### `match?(path, content: String)`
+
+default: `nil`
+
+When checking a shebang rule, by default PathList will read the first line of that file, and if it can't be read, or doesn't exist it will assume it's empty.
+
+If you want to lie about the file content, pass a string to `content:`.
+
+```ruby
+PathList.match?("path", content: "#!/usr/bin/env ruby\n\nputs 'hello'") # will match as ruby shebang
+PathList.match?("path", content: "#!/usr/bin/env bash\n\necho 'hello'") # will match as bash shebang
+PathList.match?("path", content: nil) # will match as whatever the file content is on the filesystem, or an empty file
+```
 
 ### `gitignore`
 
@@ -173,7 +159,7 @@ This is intended to mimic the behaviour of `git ls-files`.
 
 Because `git ls-files` uses its own index rather than what's actually on the file system it might not be a perfect match, [see these limitations](#limitations). This will also probably end up with differently sorted entries.
 
-When using `gitignore`: the .gitignore file in the current directory is loaded, plus any .gitignore files in its subdirectories, the global git ignore file as described in git config, and .git/info/exclude. any `.git` directories are also excluded.
+When using `gitignore`: the .gitignore file in the current directory is loaded, plus any .gitignore files in its subdirectories, the global git ignore file as described in git config, and .git/info/exclude.
 
 ```ruby
 PathList.gitignore.to_a
@@ -195,8 +181,7 @@ PathList.only("tmp/*", "!tmp/.keep", "log").to_a
 PathList.only(["tmp/*", "!tmp/.keep", "log"]).to_a
 ```
 
-`.only([])` will be ignored.
-
+An empty `.only([])` will be discarded and won't affect results.
 
 There is an equivalent bang method available:
 
@@ -205,9 +190,9 @@ There is an equivalent bang method available:
 path_list = PathList.new
 path_list.ignore!("tmp/*", "!tmp/.keep")
 path_list.ignore!("log/*", "!log/.keep")
-path_list.only!("*.rb")
+path_list.only!("*.*")
 
-PathList.ignore("tmp/*", "!tmp/.keep").ignore("log/*", "!log/.keep").only("*.rb")
+PathList.ignore("tmp/*", "!tmp/.keep").ignore("log/*", "!log/.keep").only("*.*")
 ```
 
 #### `root:`
@@ -217,22 +202,20 @@ Use `root:` to define the location for parsing rules beginning with or containin
 PathList.ignore("/cache/*", root: "tmp").to_a
 ```
 
-#### `from_file:`
+#### `read_from_file:`
 
 Instead of listing rules themselves, can specify other gitignore-style files to parse for only/ignore rules.
-Missing files will raise an `Errno::ENOENT` error.
-
-The location of the files will affect any rules beginning with or containing `/`.
 
 ```ruby
-PathList.only(from_file: '.dockerfile').to_a
-PathList.only(from_file: ['.dockerfile', '.prettierignore']).to_a
+PathList.only(read_from_file: './subdir/.dockerignore').to_a
+PathList.ignore(read_from_file: '.prettierignore').to_a
 ```
 
-Relative paths are relative to the `root:` directory (defaulting to the current directory).
+By default, the location of the files is the root for any rules beginning with or containing `/` when using the :gitignore format. you can override this with `root:`.
+Also, Relative paths are relative to the `root:` directory (defaulting to the current directory).
 
 ```ruby
-PathList.ignore(from_file: '.dockerfile', root: './subdir').to_a
+PathList.ignore(read_from_file: '.dockerignore', root: './subdir').to_a
 ```
 
 #### format: :gitignore
@@ -280,7 +263,7 @@ PathList.only(
 PathList.only('./relative_to_root_dir', format: :glob, root: './subdir')
 ```
 
-### any()
+### .union
 
 by default chained rules combine with AND.
 
@@ -290,26 +273,34 @@ PathList.gitignore.only("*.rb").ignore("/vendor/")
 
 will be any ruby files not ignored by git, and not in the vendor directory.
 
-To instead combine with OR use an `any` chain
+To instead combine with OR use `union` chain.
 
 ```ruby
-PathList.gitignore.any(
-  PathList.only("*.rb"),
-  PathList.only("ruby", format: :shebang)
-)
+PathList.only("*.rb").union(PathList.only("ruby", format: :shebang))
 ```
 
 this would match ruby files that have an .rb extension or a ruby shebang, that aren't ignored by git.
 
-### and()
+```ruby
+PathList.only("*.rb") | PathList.only("ruby", format: :shebang)
+```
+You can also define unions with the `|` operator.
+
+### intersection
 
 merge other PathList instances into one matcher
 
 ```ruby
 # these are equivalent
-PathList.gitignore.and(PathList.only("*.rb"), PathList.ignore("/vendor/"))
+PathList.gitignore.intersection(PathList.only("*.rb"), PathList.ignore("/vendor/"))
 PathList.gitignore.only("*.rb").ignore("/vendor/")
 ```
+
+```ruby
+PathList.gitignore.only("*.rb") & PathList.ignore("/vendor/")
+```
+You can also define intersections with the `&` operator.
+
 
 ## Limitations
 - PathList always matches patterns case-insensitively. (git varies by filesystem).
@@ -327,18 +318,20 @@ PathList.gitignore.only("*.rb").ignore("/vendor/")
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/robotdana/path_list.
 
-Some tools that may help:
+Some tools in the that may help with development:
 
 - `bin/setup`: install development dependencies
 - `bundle exec rspec`: run all tests
 - `bundle exec rake`: run all tests and linters
 - `bin/console`: open a `pry` console with everything required for experimenting
-- `bin/ls [argv_rules]`: the equivalent of `git ls-files`
-- `bin/prof/ls [argv_rules]`: ruby-prof report for `bin/ls`
-- `bin/time [argv_rules]`: the average time for 30 runs of `bin/ls`<br>
-  This repo is too small to stress bin/time more than 0.01s, switch to a repo with thousands of files and find the average time before and after changes.
 - `bin/compare`: compare the speed and output of `PathList.gitignore` and `git ls-files`.
   (suppressing differences that are because of known [limitations](#limitations))
+
+- `bin/ls [argv_rules]`: the equivalent of `git ls-files`
+- `bin/parse`: prints the matchers that have been prepared
+- `bin/prof/ls [argv_rules]`: ruby-prof report for `bin/ls`
+- `bin/prof/parse [argv_rules]:` ruby-prof report for `bin/parse`
+- `bin/time [argv_rules]`: the average time for 30 runs of `bin/ls`
 
 ## License
 

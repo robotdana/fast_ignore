@@ -10,34 +10,32 @@ class PathList
     }.freeze
 
     class << self
-      def build(patterns, from_file: nil, format: nil, root: nil, polarity: :ignore)
-        raise Error, 'Only use one of *patterns, from_file:' if (patterns && !patterns.empty?) && from_file
+      def build(patterns, read_from_file: nil, format: nil, root: nil, polarity: :ignore)
+        if (patterns && !patterns.empty?) && read_from_file
+          raise Error, 'use only one of `*patterns` or `read_from_file:`'
+        end
 
         format = BUILDERS.fetch(format || :gitignore, format)
-        unless format < Builder
-          puts format.inspect
-          raise Error,
-                "format: is not a recognized format. use one of #{BUILDERS.keys} or a class inheriting from #{Builder}"
-        end
+        raise Error, "`format:` must be one of #{BUILDERS.keys.map(&:inspect)}" unless format < Builder
 
         root = PathExpander.expand_path_pwd(root) if root
 
-        if from_file
-          from_file = PathExpander.expand_path(from_file, root)
-          root ||= ::File.dirname(from_file)
+        if read_from_file
+          read_from_file = PathExpander.expand_path(read_from_file, root)
+          root ||= ::File.dirname(read_from_file)
         else
           patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
         end
 
         root ||= PathExpander.expand_path_pwd(root)
 
-        new(patterns: patterns, from_file: from_file, format: format, root: root, polarity: polarity)
+        new(patterns: patterns, read_from_file: read_from_file, format: format, root: root, polarity: polarity)
       end
     end
 
-    def initialize(patterns: nil, from_file: nil, format: nil, root: nil, polarity: :ignore)
+    def initialize(patterns: nil, read_from_file: nil, format: nil, root: nil, polarity: :ignore)
       @patterns = patterns
-      @from_file = from_file
+      @read_from_file = read_from_file
       @format = format
       @root = root
       @polarity = polarity
@@ -72,8 +70,8 @@ class PathList
     private
 
     def read_patterns
-      if @from_file
-        ::File.exist?(@from_file) ? ::File.readlines(@from_file) : []
+      if @read_from_file
+        ::File.exist?(@read_from_file) ? ::File.readlines(@read_from_file) : []
       else
         @patterns
       end

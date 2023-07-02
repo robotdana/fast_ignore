@@ -9,20 +9,20 @@ RSpec.describe PathList::Matchers::ExactString do
   it { is_expected.to be_frozen }
 
   describe '#match' do
-    it { expect(subject.match(PathList::Candidate.new('/exact/path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/Exact/Path', nil, nil))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/exact', nil, nil))).to be_nil }
-    it { expect(subject.match(PathList::Candidate.new('exact/path', nil, nil))).to be_nil }
-    it { expect(subject.match(PathList::Candidate.new('/exact/path/', nil, nil))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('/exact/path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/Exact/Path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/exact'))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('exact/path'))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('/exact/path/'))).to be_nil }
 
     context 'when polarity is :ignore' do
       let(:polarity) { :ignore }
 
-      it { expect(subject.match(PathList::Candidate.new('/exact/path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/Exact/Path', nil, nil))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/exact', nil, nil))).to be_nil }
-      it { expect(subject.match(PathList::Candidate.new('exact/path', nil, nil))).to be_nil }
-      it { expect(subject.match(PathList::Candidate.new('/exact/path/', nil, nil))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('/exact/path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/Exact/Path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/exact'))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('exact/path'))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('/exact/path/'))).to be_nil }
     end
   end
 

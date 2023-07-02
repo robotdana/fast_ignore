@@ -4,47 +4,36 @@ class PathList
   module QueryMethods
     include ::Enumerable
 
-    def include?(path, directory: nil, content: nil, exists: nil)
+    def include?(path)
       full_path = PathExpander.expand_path_pwd(path)
-      candidate = Candidate.new(full_path, directory, exists)
-      return false if candidate.directory?
-      return false unless candidate.exists?
+      candidate = Candidate.new(full_path)
+      return false if !candidate.exists? || candidate.directory?
 
-      candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
         file_matcher.match(candidate) == :allow
     end
     alias_method :member?, :include?
+    alias_method :===, :include?
 
     def to_proc
       method(:include?).to_proc
     end
 
-    def match?(path, directory: nil, content: nil, exists: nil)
+    def match?(path, directory: nil, content: nil)
       full_path = PathExpander.expand_path_pwd(path)
-      candidate = Candidate.new(full_path, directory, exists)
-      return false unless candidate.exists?
+      content = content.slice(/\A#!.*$/).downcase || '' if content
+      candidate = Candidate.new(full_path, directory, content)
 
-      candidate.first_line = content.slice(/\A#!.*$/).downcase || '' if content
       recursive_match?(candidate.parent, dir_matcher) &&
         @matcher.match(candidate) == :allow
-    end
-
-    def ===(path)
-      full_path = PathExpander.expand_path_pwd(path)
-      candidate = Candidate.new(full_path, nil, nil)
-      return false if candidate.directory?
-      return false unless candidate.exists?
-
-      recursive_match?(candidate.parent, dir_matcher) &&
-        file_matcher.match(candidate) == :allow
     end
 
     def each(root = '.', &block)
       return enum_for(:each, root) unless block
 
       root = PathExpander.expand_path_pwd(root)
-      root_candidate = Candidate.new(root, nil, nil)
+      root_candidate = Candidate.new(root)
+      return unless root_candidate.exists?
       return unless recursive_match?(root_candidate.parent, dir_matcher)
 
       relative_root = root == '/' ? root : "#{root}/"
@@ -66,8 +55,6 @@ class PathList
 
         yield(candidate.full_path.delete_prefix(relative_root))
       end
-    rescue ::Errno::ENOENT, ::Errno::EACCES, ::Errno::ENOTDIR, ::Errno::ELOOP, ::Errno::ENAMETOOLONG, Errno::EPERM
-      nil
     end
 
     def recursive_match?(candidate, matcher)

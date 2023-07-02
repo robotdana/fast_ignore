@@ -9,12 +9,12 @@ class PathList
         new.gitignore!(root: root, config: config)
       end
 
-      def only(*patterns, from_file: nil, format: nil, root: nil)
-        new.only!(*patterns, from_file: from_file, format: format, root: root)
+      def only(*patterns, read_from_file: nil, format: nil, root: nil)
+        new.only!(*patterns, read_from_file: read_from_file, format: format, root: root)
       end
 
-      def ignore(*patterns, from_file: nil, format: nil, root: nil)
-        new.ignore!(*patterns, from_file: from_file, format: format, root: root)
+      def ignore(*patterns, read_from_file: nil, format: nil, root: nil)
+        new.ignore!(*patterns, read_from_file: read_from_file, format: format, root: root)
       end
     end
 
@@ -22,28 +22,28 @@ class PathList
       dup.gitignore!(root: root, config: config)
     end
 
-    def ignore(*patterns, from_file: nil, format: nil, root: nil)
-      dup.ignore!(*patterns, from_file: from_file, format: format, root: root)
+    def ignore(*patterns, read_from_file: nil, format: nil, root: nil)
+      dup.ignore!(*patterns, read_from_file: read_from_file, format: format, root: root)
     end
 
-    def only(*patterns, from_file: nil, format: nil, root: nil)
-      dup.only!(*patterns, from_file: from_file, format: format, root: root)
+    def only(*patterns, read_from_file: nil, format: nil, root: nil)
+      dup.only!(*patterns, read_from_file: read_from_file, format: format, root: root)
     end
 
     def union(*path_lists)
       dup.union!(*path_lists)
     end
 
-    def |(path_list)
-      dup.union!(path_list)
+    def |(other)
+      dup.union!(other)
     end
 
     def intersection(*path_lists)
       dup.intersection!(*path_lists)
     end
 
-    def &(path_list)
-      dup.intersection!(path_list)
+    def &(other)
+      dup.intersection!(other)
     end
 
     def gitignore!(root: nil, config: true)
@@ -52,12 +52,14 @@ class PathList
       self
     end
 
-    def ignore!(*patterns, from_file: nil, format: nil, root: nil)
-      and_matcher(Patterns.build(patterns, from_file: from_file, format: format, root: root).build)
+    def ignore!(*patterns, read_from_file: nil, format: nil, root: nil)
+      and_matcher(Patterns.build(patterns, read_from_file: read_from_file, format: format, root: root).build)
     end
 
-    def only!(*patterns, from_file: nil, format: nil, root: nil)
-      and_matcher(Patterns.build(patterns, from_file: from_file, format: format, root: root, polarity: :allow).build)
+    def only!(*patterns, read_from_file: nil, format: nil, root: nil)
+      and_matcher(
+  	     Patterns.build(patterns, read_from_file: read_from_file, format: format, root: root, polarity: :allow).build
+      )
     end
 
     def intersection!(*path_lists)
