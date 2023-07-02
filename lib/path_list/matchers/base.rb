@@ -15,9 +15,6 @@ class PathList
 
       # inspect
       alias_method :original_inspect, :inspect # leftovers:keep
-      def inspect
-        "#{self.class}.new"
-      end
 
       # sort
       def weight

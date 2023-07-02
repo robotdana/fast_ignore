@@ -18,6 +18,12 @@ RSpec.describe PathList::Matchers::PathRegexpWrapper do
 
   it { is_expected.to be_frozen }
 
+  describe '.build' do
+    it 'is Blank when the matcher is Blank' do
+      expect(described_class.build(regexp, PathList::Matchers::Blank)).to be PathList::Matchers::Blank
+    end
+  end
+
   describe '#match' do
     let(:path) { 'my/file.rb' }
     let(:regexp) { /file.rb\z/ }

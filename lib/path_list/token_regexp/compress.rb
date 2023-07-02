@@ -27,9 +27,6 @@ class PathList
             elsif :any == parts_2
               parts[0, 3] = []
               change = true
-            elsif parts.length == 2
-              parts.clear
-              change = true
             end
           elsif parts.length == 1 && (:end_anchor == parts_0 || :dir == parts_0 || :start_anchor == parts_0)
             parts.clear

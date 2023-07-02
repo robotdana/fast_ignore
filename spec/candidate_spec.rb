@@ -89,6 +89,52 @@ RSpec.describe PathList::Candidate do
     end
   end
 
+  describe '#children' do
+    within_temp_dir
+
+    let(:exists) { nil }
+
+    context 'when the directory has children' do
+      let(:full_path) { './foo' }
+
+      before { create_file_list 'foo/bar', 'foo/baz' }
+
+      it 'is memoized' do
+        allow(Dir).to receive(:children).and_call_original
+
+        expect(candidate.children).to contain_exactly('bar', 'baz')
+        expect(Dir).to have_received(:children).once
+        expect(candidate.children).to contain_exactly('bar', 'baz')
+        expect(Dir).to have_received(:children).once
+      end
+    end
+
+    context 'when the directory is empty' do
+      let(:full_path) { './foo' }
+
+      before { create_dir 'foo' }
+
+      it 'is memoized' do
+        allow(Dir).to receive(:children).and_call_original
+
+        expect(candidate.children).to be_empty
+        expect(Dir).to have_received(:children).once
+        expect(candidate.children).to be_empty
+        expect(Dir).to have_received(:children).once
+      end
+
+      it 'is empty array when there is an error' do
+        allow(Dir).to receive(:children).and_call_original
+        allow(Dir).to receive(:children).with(full_path).and_raise(Errno::EACCES)
+
+        expect(candidate.children).to eq []
+        expect(Dir).to have_received(:children).once
+        expect(candidate.children).to eq []
+        expect(Dir).to have_received(:children).once
+      end
+    end
+  end
+
   describe '#first_line' do
     context 'when reading from the file system' do
       within_temp_dir

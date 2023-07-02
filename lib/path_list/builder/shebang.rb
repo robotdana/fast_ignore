@@ -28,14 +28,6 @@ class PathList
 
       # also allow all directories in case they include a file with the matching shebang file
       def build_implicit
-        return Matchers::AllowAnyDir unless @root
-
-        Matchers::MatchIfDir.build(build_parent_matcher)
-      end
-
-      private
-
-      def build_parent_matcher
         ancestors = @root_re.dup.concat([:dir, :any_dir]).ancestors # rubocop:disable Style/ConcatArrayLiterals
 
         exact, regexp = ancestors.partition(&:exact_path?)

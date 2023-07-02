@@ -17,6 +17,12 @@ RSpec.describe PathList::Matchers::MatchUnlessDir do
 
   it { is_expected.to be_frozen }
 
+  describe '.build' do
+    it 'is Blank when the matcher is Blank' do
+      expect(described_class.build(PathList::Matchers::Blank)).to be PathList::Matchers::Blank
+    end
+  end
+
   describe '#match' do
     let(:directory) { false }
     let(:candidate) do

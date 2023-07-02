@@ -15,8 +15,8 @@ class PathList
           raise Error, 'use only one of `*patterns` or `read_from_file:`'
         end
 
-        format = BUILDERS.fetch(format || :gitignore, format)
-        raise Error, "`format:` must be one of #{BUILDERS.keys.map(&:inspect)}" unless format < Builder
+        format = BUILDERS.fetch(format || :gitignore, nil)
+        raise Error, "`format:` must be one of #{BUILDERS.keys.map(&:inspect).join(', ')}" unless format
 
         root = PathExpander.expand_path_pwd(root) if root
 

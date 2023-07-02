@@ -37,6 +37,17 @@ RSpec.describe PathList do
       expect(subject.each).to be_a Enumerator
     end
 
+    it 'copes with being given fs root' do
+      whatever_file_we_get = subject.each('/').first
+      expect(whatever_file_we_get).not_to start_with('/')
+      # use lstat because it could be a symlink to nowhere and File.exist? will be sad
+      expect(File.lstat("/#{whatever_file_we_get}")).to be_a File::Stat
+    end
+
+    it 'copes with being given nonsense root' do
+      expect(subject.each('nonsense').to_a).to be_empty
+    end
+
     context 'when given root as a child dir' do
       subject(:to_a) { described_class.new.each(Dir.pwd + '/bar').to_a }
 
@@ -269,6 +280,68 @@ RSpec.describe PathList do
           expect(subject).not_to match_files('b/c', 'a/b/c', 'b/d')
           expect(subject).to match_files('a/b/d')
         end
+      end
+    end
+
+    context 'with config' do
+      before do
+        allow(PathList::GlobalGitignore).to receive(:path).and_return(Pathname.pwd.join('.my-config'))
+        create_file '/bar', path: '.my-config'
+      end
+
+      it 'config: false suppresses trying to load the config' do
+        gitignore '/foo'
+
+        subject = described_class.gitignore(config: false)
+        expect(subject).to allow_files('bar', 'baz')
+        expect(subject).not_to allow_files('foo')
+        expect(PathList::GlobalGitignore).not_to have_received(:path)
+      end
+
+      it 'config: true will load the config, treating rules as relative to the git root' do
+        gitignore '/foo', path: 'subdir/.gitignore'
+
+        subject = described_class.gitignore(config: true, root: 'subdir')
+        Dir.chdir 'subdir'
+
+        expect(subject).to allow_files('baz')
+        expect(subject).not_to allow_files('foo', 'bar')
+        expect(PathList::GlobalGitignore).to have_received(:path)
+      end
+
+      it 'config: true will load the config, treating rules as relative to the git root defaulting to pwd' do
+        gitignore '/foo'
+
+        subject = described_class.gitignore(config: true)
+
+        expect(subject).to allow_files('baz')
+        expect(subject).not_to allow_files('foo', 'bar')
+        expect(PathList::GlobalGitignore).to have_received(:path)
+      end
+    end
+
+    context 'with null config' do
+      before do
+        allow(PathList::GlobalGitignore).to receive(:path).and_return(nil)
+      end
+
+      it 'config: false suppresses trying to load the config' do
+        gitignore '/foo'
+
+        subject = described_class.gitignore(config: false)
+        expect(subject).to allow_files('bar', 'baz')
+        expect(subject).not_to allow_files('foo')
+        expect(PathList::GlobalGitignore).not_to have_received(:path)
+      end
+
+      it 'config: true will try to load the config but is ok with it being nil' do
+        gitignore '/foo'
+
+        subject = described_class.gitignore(config: true)
+
+        expect(subject).to allow_files('baz', 'bar')
+        expect(subject).not_to allow_files('foo')
+        expect(PathList::GlobalGitignore).to have_received(:path)
       end
     end
   end
@@ -823,6 +896,23 @@ RSpec.describe PathList do
       end
     end
 
+    context 'with only read_from_file value and patterns' do
+      subject(:path_list) { described_class.only('nonsense', read_from_file: './nonsense') }
+
+      it 'raises an error' do
+        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `read_from_file:`')
+      end
+    end
+
+    context 'with nonsense format: value' do
+      subject(:path_list) { described_class.only('pattern', format: :nonsense) }
+
+      it 'raises an error' do
+        expect { subject }
+          .to raise_error(PathList::Error, '`format:` must be one of :glob, :gitignore, :shebang, :exact')
+      end
+    end
+
     context 'with subdir includes file' do
       subject(:path_list) { described_class.only(read_from_file: 'a/.includes_file') }
 
@@ -1222,6 +1312,33 @@ RSpec.describe PathList do
       end
     end
 
+    context 'with full-name shebang args with trailing non word characters' do
+      subject(:path_list) { described_class.only('#!/usr/bin/env ruby -', format: :shebang) }
+
+      it "doesn't need a word boundary after the non-word character" do
+        create_file <<~RUBY, path: 'foo'
+          #!/usr/bin/env ruby --disable-all
+
+          puts('ok')
+        RUBY
+
+        create_file <<~RUBY, path: 'baz'
+          #!/usr/bin/env ruby -w
+
+          puts('ok')
+        RUBY
+
+        create_file <<~BASH, path: 'bar'
+          #!/usr/bin/env bash
+
+          echo -e "no"
+        BASH
+
+        expect(subject).to allow_files('foo', 'baz')
+        expect(subject).not_to allow_files('bar')
+      end
+    end
+
     context 'with shebang args and root down a level' do
       subject(:path_list) { described_class.only('ruby', root: 'sub', format: :shebang) }
 
@@ -1334,6 +1451,23 @@ RSpec.describe PathList do
 
         expect(subject).not_to allow_files('foo', 'bar')
         expect(subject).to allow_files('baz')
+      end
+    end
+
+    context 'with ignore read_from_file value and patterns' do
+      subject(:path_list) { described_class.ignore('nonsense', read_from_file: './nonsense') }
+
+      it 'raises an error' do
+        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `read_from_file:`')
+      end
+    end
+
+    context 'with nonsense format: value' do
+      subject(:path_list) { described_class.ignore('pattern', format: :nonsense) }
+
+      it 'raises an error' do
+        expect { subject }
+          .to raise_error(PathList::Error, '`format:` must be one of :glob, :gitignore, :shebang, :exact')
       end
     end
 

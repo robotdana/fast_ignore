@@ -1323,6 +1323,10 @@ RSpec.describe PathList::Builder::Gitignore do
           it { expect(build('foo')).to be_like PathList::Matchers::PathRegexp.new(%r{/foo\z}, :allow) }
         end
 
+        describe 'Everything' do
+          it { expect(build('*')).to be_like PathList::Matchers::Allow }
+        end
+
         describe 'A line starting with # serves as a comment.' do
           it { expect(build('#foo')).to be_like PathList::Matchers::Blank }
           it { expect(build('# foo')).to be_like PathList::Matchers::Blank }
@@ -3385,6 +3389,10 @@ RSpec.describe PathList::Builder::Gitignore do
               PathList::Matchers::PathRegexp.new(%r{/foo/}, :allow)
             ])
           end
+        end
+
+        describe 'Everything' do
+          it { expect(build('*')).to be_like PathList::Matchers::Allow }
         end
 
         describe 'A line starting with # serves as a comment.' do

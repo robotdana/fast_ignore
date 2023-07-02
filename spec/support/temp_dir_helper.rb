@@ -28,6 +28,10 @@ module TempDirHelper
       path
     end
 
+    def create_dir(path)
+      Pathname.pwd.join(path).mkpath
+    end
+
     def create_symlink(arg)
       link, target = arg.to_a.first
 

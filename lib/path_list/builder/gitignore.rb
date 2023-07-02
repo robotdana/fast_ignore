@@ -60,10 +60,6 @@ class PathList
         end
       end
 
-      def anchored?
-        @anchored
-      end
-
       def nothing_emitted?
         !@emitted
       end
@@ -196,8 +192,6 @@ class PathList
       end
 
       def build_parent_matcher
-        return AllowAnyDir unless anchored? || @root
-
         ancestors = @re.ancestors
         return Matchers::AllowAnyDir if ancestors.any?(&:empty?)
 
