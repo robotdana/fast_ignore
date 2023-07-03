@@ -2,7 +2,7 @@
 
 class PathList
   class Builder
-    include Autoloader
+    Autoloader.autoload(self)
 
     def initialize(rule, polarity, root)
       @rule = rule

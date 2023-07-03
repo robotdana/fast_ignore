@@ -4,7 +4,7 @@ class PathList
   class TokenRegexp
     class EscapedString < ::String; end
 
-    include Autoloader
+    Autoloader.autoload(self)
 
     attr_reader :parts
 

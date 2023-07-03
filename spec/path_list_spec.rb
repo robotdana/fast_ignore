@@ -128,23 +128,23 @@ RSpec.describe PathList do
     it 'creates a sensible list of matchers' do
       gitignore 'foo', 'bar/'
 
-      expect(subject.send(:dir_matcher)).to be_like PathList::Matchers::LastMatch.new([
-        PathList::Matchers::Allow,
-        PathList::Matchers::CollectGitignore.new(
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
-          PathList::Matchers::Mutable.new(
-            PathList::Matchers::PathRegexp.new(
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch.new([
+        PathList::Matcher::Allow,
+        PathList::Matcher::CollectGitignore.new(
+          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
+          PathList::Matcher::Mutable.new(
+            PathList::Matcher::PathRegexp.new(
               %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
             )
           )
         ),
-        PathList::Matchers::PathRegexp.new(%r{/\.git\z}, :ignore)
+        PathList::Matcher::PathRegexp.new(%r{/\.git\z}, :ignore)
       ])
 
-      expect(subject.send(:file_matcher)).to be_like PathList::Matchers::LastMatch::Two.new([
-        PathList::Matchers::Allow,
-        PathList::Matchers::Mutable.new(
-          PathList::Matchers::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore)
+      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
+        PathList::Matcher::Allow,
+        PathList::Matcher::Mutable.new(
+          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore)
         )
       ])
     end
@@ -1286,6 +1286,23 @@ RSpec.describe PathList do
 
         expect(subject.include?('foo')).to be false
         expect(subject.match?('foo', content: fake_content)).to be true
+      end
+
+      it 'non-shebang content still overrides the content' do
+        actual_content = <<~RUBY
+          #!/usr/bin/env ruby
+
+          puts('hidden')
+        RUBY
+
+        fake_content = <<~RUBY
+          puts('no')
+        RUBY
+
+        create_file actual_content, path: 'foo'
+
+        expect(subject.include?('foo')).to be true
+        expect(subject.match?('foo', content: fake_content)).to be false
       end
     end
 

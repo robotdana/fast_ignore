@@ -237,7 +237,7 @@ end
 benchmark('casecmp-downcase') do
   Benchmark.ips do |x|
     x.config(config)
-    @string = "PathList::Matchers::CollectGitignore#file_matcher"
+    @string = "PathList::Matcher::CollectGitignore#file_matcher"
     @string_downcase = "pathlist::matchers::collectgitignore#file_matcher"
     x.report(:casecmp_2) { string = @string; 2.times { (string <=> @string_downcase).zero? } }
     x.report(:downcase_equal_2) { string = @string.downcase; 2.times { string == @string_downcase } }
@@ -264,9 +264,9 @@ end
 benchmark('regexp-i-downcase') do
   Benchmark.ips do |x|
     x.config(config)
-    @string = "PathList::Matchers::CollectGitignore#file_matcher"
+    @string = "PathList::Matcher::CollectGitignore#file_matcher"
     @string_downcase = "pathlist::matchers::collectgitignore#file_matcher"
-    @re_i = /\Apathlist::Matchers::collectGitignore#file_matcher\z/i
+    @re_i = /\Apathlist::Matcher::collectGitignore#file_matcher\z/i
     @re = /\Apathlist::matchers::collectgitignore#file_matcher\z/
 
     raise unless @re_i.match?(@string)

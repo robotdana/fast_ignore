@@ -13,11 +13,11 @@ RSpec.describe PathList::Builder::ExactPath do
 
     it 'builds a regex that matches parent and child somethings' do
       expect(matcher).to be_like(
-        PathList::Matchers::Any::Two.new([
-          PathList::Matchers::MatchIfDir.new(
-            PathList::Matchers::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+        PathList::Matcher::Any::Two.new([
+          PathList::Matcher::MatchIfDir.new(
+            PathList::Matcher::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
           ),
-          PathList::Matchers::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+          PathList::Matcher::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
         ])
       )
     end
@@ -27,11 +27,11 @@ RSpec.describe PathList::Builder::ExactPath do
 
       it 'builds a regex that matches parent and child somethings' do
         expect(matcher).to be_like(
-          PathList::Matchers::Any::Two.new([
-            PathList::Matchers::MatchIfDir.new(
-              PathList::Matchers::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+          PathList::Matcher::Any::Two.new([
+            PathList::Matcher::MatchIfDir.new(
+              PathList::Matcher::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
             ),
-            PathList::Matchers::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+            PathList::Matcher::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
           ])
         )
       end
@@ -93,7 +93,7 @@ RSpec.describe PathList::Builder::ExactPath do
 
     it 'builds a matcher that matches exact something' do
       expect(matcher).to be_like(
-        PathList::Matchers::ExactString.new('/path/to/exact/something', :ignore)
+        PathList::Matcher::ExactString.new('/path/to/exact/something', :ignore)
       )
     end
 

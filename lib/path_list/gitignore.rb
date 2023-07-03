@@ -11,7 +11,7 @@ class PathList
         append(collector, root, '.git/info/exclude')
         append(collector, root, '.gitignore')
 
-        Matchers::LastMatch.build([Matchers::Allow, collector, build_dot_git_matcher])
+        Matcher::LastMatch.build([Matcher::Allow, collector, build_dot_git_matcher])
       end
 
       private
@@ -23,8 +23,8 @@ class PathList
       end
 
       def build_dot_git_matcher
-        Matchers::MatchIfDir.new(
-          Matchers::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
+        Matcher::MatchIfDir.new(
+          Matcher::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
         )
       end
 
@@ -33,9 +33,9 @@ class PathList
         root_re_children = root_re.dup
         root_re_children.replace_end :dir
 
-        Matchers::CollectGitignore.build(
-          Matchers::MatchIfDir.new(
-            Matchers::PathRegexp.build([root_re_children.parts, root_re.parts], :allow)
+        Matcher::CollectGitignore.build(
+          Matcher::MatchIfDir.new(
+            Matcher::PathRegexp.build([root_re_children.parts, root_re.parts], :allow)
           )
         )
       end

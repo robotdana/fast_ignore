@@ -18,10 +18,10 @@ class PathList
         pattern.append_string shebang
         pattern.append_part :word_boundary if shebang.match?(/\w\z/)
 
-        Matchers::MatchUnlessDir.build(
-          Matchers::PathRegexpWrapper.build(
+        Matcher::MatchUnlessDir.build(
+          Matcher::PathRegexpWrapper.build(
             %r{\A#{Regexp.escape(@root.downcase)}/(?:.*/)?[^/\.]*\z},
-            Matchers::ShebangRegexp.build([pattern.parts], @polarity)
+            Matcher::ShebangRegexp.build([pattern.parts], @polarity)
           )
         )
       end
@@ -31,10 +31,10 @@ class PathList
         ancestors = @root_re.dup.concat([:dir, :any_dir]).ancestors # rubocop:disable Style/ConcatArrayLiterals
 
         exact, regexp = ancestors.partition(&:exact_path?)
-        exact = Matchers::ExactString.build(exact.map(&:to_s), :allow)
-        regexp = Matchers::PathRegexp.build(regexp.map(&:parts), :allow)
+        exact = Matcher::ExactString.build(exact.map(&:to_s), :allow)
+        regexp = Matcher::PathRegexp.build(regexp.map(&:parts), :allow)
 
-        Matchers::MatchIfDir.build(Matchers::Any.build([exact, regexp]))
+        Matcher::MatchIfDir.build(Matcher::Any.build([exact, regexp]))
       end
     end
   end

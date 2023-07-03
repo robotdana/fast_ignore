@@ -254,7 +254,7 @@ RSpec/MultipleMemoizedHelpers:
 
 Lint/MissingSuper:
   Exclude:
-    - 'lib/path_list/matchers/*'
+    - 'lib/path_list/matcher/*'
 
 Metrics/ParameterLists:
   Max: 6

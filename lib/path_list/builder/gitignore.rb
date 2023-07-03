@@ -13,6 +13,21 @@ class PathList
         @emitted = false
       end
 
+      def build
+        process_rule
+
+        @return || build_matcher
+      end
+
+      def build_implicit
+        process_rule
+        return Matcher::Blank if negated?
+
+        @return || build_implicit_matcher
+      end
+
+      private
+
       def prepare_regexp_builder
         @re = if @root && @root != '/'
           PathRegexp.new_from_path(@root, [:dir, :any_dir])
@@ -28,12 +43,12 @@ class PathList
       end
 
       def blank!
-        @return ||= Matchers::Blank
+        @return ||= Matcher::Blank
         throw :abort_build
       end
 
       def unmatchable_rule!
-        @return ||= (@default_polarity == :allow ? Matchers::Invalid : Matchers::Blank)
+        @return ||= (@default_polarity == :allow ? Matcher::Invalid : Matcher::Blank)
         throw :abort_build
       end
 
@@ -82,10 +97,10 @@ class PathList
         break!
       end
 
-      def process_backslash(builder = @re)
+      def process_backslash
         return unless @s.backslash?
 
-        if builder.append_string(@s.next_character)
+        if @re.append_string(@s.next_character)
           emitted!
         else
           unmatchable_rule!
@@ -174,52 +189,39 @@ class PathList
         @main_re ||= @re.dup.compress
 
         matcher = if @main_re.empty?
-          @rule_polarity == :ignore ? Matchers::Ignore : Matchers::Allow
+          @rule_polarity == :ignore ? Matcher::Ignore : Matcher::Allow
         elsif @re.exact_path?
-          Matchers::ExactString.build([@main_re.to_s.downcase], @rule_polarity)
+          Matcher::ExactString.build([@main_re.to_s.downcase], @rule_polarity)
         else
-          Matchers::PathRegexp.build([@main_re.parts], @rule_polarity)
+          Matcher::PathRegexp.build([@main_re.parts], @rule_polarity)
         end
 
-        matcher = Matchers::MatchIfDir.build(matcher) if dir_only?
+        matcher = Matcher::MatchIfDir.build(matcher) if dir_only?
         matcher
-      end
-
-      def build
-        process_rule
-
-        @return || build_matcher
       end
 
       def build_parent_matcher
         ancestors = @re.ancestors
-        return Matchers::AllowAnyDir if ancestors.any?(&:empty?)
+        return Matcher::AllowAnyDir if ancestors.any?(&:empty?)
 
         exact, regexp = ancestors.partition(&:exact_path?)
-        exact = Matchers::ExactString.build(exact.map(&:to_s), :allow)
-        regexp = Matchers::PathRegexp.build(regexp.map(&:parts), :allow)
+        exact = Matcher::ExactString.build(exact.map(&:to_s), :allow)
+        regexp = Matcher::PathRegexp.build(regexp.map(&:parts), :allow)
 
-        Matchers::MatchIfDir.build(Matchers::Any.build([exact, regexp]))
+        Matcher::MatchIfDir.build(Matcher::Any.build([exact, regexp]))
       end
 
       def build_child_matcher
         @child_re = @re.dup
         @child_re.replace_end(:dir)
         child = @child_re.compress.parts
-        return Matchers::Allow if child.empty?
+        return Matcher::Allow if child.empty?
 
-        Matchers::PathRegexp.build([child], :allow)
-      end
-
-      def build_implicit
-        process_rule
-        return Matchers::Blank if negated?
-
-        @return || build_implicit_matcher
+        Matcher::PathRegexp.build([child], :allow)
       end
 
       def build_implicit_matcher
-        Matchers::Any.build([
+        Matcher::Any.build([
           build_parent_matcher,
           build_child_matcher
         ])

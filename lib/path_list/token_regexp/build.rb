@@ -66,14 +66,9 @@ class PathList
           end_anchor: '\\z',
           start_anchor: '\\A',
           word_boundary: '\\b',
-          character_class_non_slash_open: '(?!/)[',
-          character_class_negation: '^',
-          character_class_dash: '-',
-          character_class_close: ']',
           any_non_dot_non_dir: '[^\/\.]*',
           nil => ''
         }
-          .compare_by_identity
           .tap do |h|
             h.default_proc = lambda { |_, k|
               if k.is_a?(EscapedString)
@@ -99,7 +94,6 @@ class PathList
           any_non_dot_non_dir: 9998,
           nil => 0
         }
-          .compare_by_identity
           .tap { |h| h.default_proc = ->(_, k) { k.length } }
           .freeze
 

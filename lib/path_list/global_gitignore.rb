@@ -33,31 +33,31 @@ class PathList
         ignore_path.strip!
         return '' if ignore_path.empty? # don't expand path in this case
 
-        ::File.expand_path(ignore_path)
+        PathExpander.expand_path_pwd(ignore_path)
       end
 
       def default_user_config_path
         return if env('GIT_CONFIG_GLOBAL')
 
-        ::File.expand_path('git/config', default_config_home)
+        PathExpander.expand_path('git/config', default_config_home)
       end
 
       def default_global_gitignore_path
-        ::File.expand_path('git/ignore', default_config_home)
+        PathExpander.expand_path('git/ignore', default_config_home)
       end
 
       def repo_config_path(root)
-        ::File.expand_path('.git/config', root)
+        PathExpander.expand_path('.git/config', root)
       end
 
       def global_config_path
-        ::File.expand_path(env('GIT_CONFIG_GLOBAL', '~/.gitconfig'))
+        PathExpander.expand_path_pwd(env('GIT_CONFIG_GLOBAL', '~/.gitconfig'))
       end
 
       def system_config_path
         return if env?('GIT_CONFIG_NOSYSTEM')
 
-        ::File.expand_path(env('GIT_CONFIG_SYSTEM', '/usr/local/etc/gitconfig'))
+        PathExpander.expand_path_pwd(env('GIT_CONFIG_SYSTEM', '/usr/local/etc/gitconfig'))
       end
 
       def default_config_home

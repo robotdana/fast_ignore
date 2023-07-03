@@ -34,9 +34,11 @@ class PathList
     end
 
     def children
-      @children ||= ::Dir.children(@full_path)
-    rescue ::SystemCallError
-      @children = []
+      @children ||= begin
+        ::Dir.children(@full_path)
+      rescue ::SystemCallError
+        []
+      end
     end
 
     def directory?

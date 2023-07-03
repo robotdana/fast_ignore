@@ -15,8 +15,8 @@ class PathList
           raise Error, 'use only one of `*patterns` or `read_from_file:`'
         end
 
-        format = BUILDERS.fetch(format || :gitignore, nil)
-        raise Error, "`format:` must be one of #{BUILDERS.keys.map(&:inspect).join(', ')}" unless format
+        builder = BUILDERS.fetch(format || :gitignore, nil)
+        raise Error, "`format:` must be one of #{BUILDERS.keys.map(&:inspect).join(', ')}" unless builder
 
         root = PathExpander.expand_path_pwd(root) if root
 
@@ -29,14 +29,14 @@ class PathList
 
         root ||= PathExpander.expand_path_pwd(root)
 
-        new(patterns: patterns, read_from_file: read_from_file, format: format, root: root, polarity: polarity)
+        new(patterns: patterns, read_from_file: read_from_file, builder: builder, root: root, polarity: polarity).build
       end
     end
 
-    def initialize(patterns: nil, read_from_file: nil, format: nil, root: nil, polarity: :ignore)
+    def initialize(builder:, root:, patterns: nil, read_from_file: nil, polarity: :ignore)
       @patterns = patterns
       @read_from_file = read_from_file
-      @format = format
+      @builder = builder
       @root = root
       @polarity = polarity
     end
@@ -50,21 +50,20 @@ class PathList
     end
 
     def build_only_matcher
-      pattern_builders = read_patterns.map { |rule| @format.new(rule, @polarity, @root) }
+      pattern_builders = read_patterns.map { |rule| @builder.new(rule, @polarity, @root) }
 
-      implicit = Matchers::Any.build(pattern_builders.map(&:build_implicit))
-      explicit = Matchers::LastMatch.build(pattern_builders.map(&:build))
+      implicit = Matcher::Any.build(pattern_builders.map(&:build_implicit))
+      explicit = Matcher::LastMatch.build(pattern_builders.map(&:build))
 
-      return Matchers::Allow if implicit == Matchers::Blank && explicit == Matchers::Blank
+      return Matcher::Allow if implicit == Matcher::Blank && explicit == Matcher::Blank
 
-      Matchers::LastMatch.build([Matchers::Ignore, implicit, explicit])
+      Matcher::LastMatch.build([Matcher::Ignore, implicit, explicit])
     end
 
-    def build_ignore_matcher(default = Matchers::Allow)
-      matchers = read_patterns
-      matchers.map! { |rule| @format.new(rule, @polarity, @root).build }
+    def build_ignore_matcher(default = Matcher::Allow)
+      matchers = read_patterns.map { |rule| @builder.new(rule, @polarity, @root).build }
       matchers.unshift(default)
-      Matchers::LastMatch.build(matchers)
+      Matcher::LastMatch.build(matchers)
     end
 
     private
@@ -73,7 +72,7 @@ class PathList
       if @read_from_file
         ::File.exist?(@read_from_file) ? ::File.readlines(@read_from_file) : []
       else
-        @patterns
+        @patterns || []
       end
     end
   end
