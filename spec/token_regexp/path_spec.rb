@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::PathRegexp do
+RSpec.describe PathList::TokenRegexp::Path do
   describe '#exact_path?' do
     it 'is true for fixed path input from path' do
       expect(described_class.new_from_path('this/that/another')).to be_exact_path

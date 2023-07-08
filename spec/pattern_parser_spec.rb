@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Patterns do
+RSpec.describe PathList::PatternParser do
   subject(:matchers) do
     described_class.build(
       patterns_arg,
-      read_from_file: read_from_file,
+      patterns_from_file: patterns_from_file,
       format: format_arg,
       root: root,
       polarity: polarity
@@ -12,14 +12,14 @@ RSpec.describe PathList::Patterns do
   end
 
   let(:patterns) { [] }
-  let(:patterns_arg) { read_from_file ? [] : Array(patterns) }
-  let(:read_from_file) { nil }
+  let(:patterns_arg) { patterns_from_file ? [] : Array(patterns) }
+  let(:patterns_from_file) { nil }
   let(:format_arg) { nil }
   let(:root) { nil }
   let(:polarity) { :ignore }
 
   around do |e|
-    if read_from_file
+    if patterns_from_file
       within_temp_dir { e.run }
     else
       e.run
@@ -27,7 +27,7 @@ RSpec.describe PathList::Patterns do
   end
 
   before do
-    stub_file patterns.join("\n"), read_from_file if read_from_file
+    stub_file patterns.join("\n"), patterns_from_file if patterns_from_file
   end
 
   describe 'with blank patterns' do
@@ -137,10 +137,10 @@ RSpec.describe PathList::Patterns do
     end
   end
 
-  context 'with patterns: ["*", "!./foo", "!/a/b/c/baz"], root: "/a/b/c", format: :glob' do
+  context 'with patterns: ["*", "!./foo", "!/a/b/c/baz"], root: "/a/b/c", format: :glob_gitignore' do
     let(:patterns) { ['*', '!./foo', '!/a/b/c/baz'] }
     let(:root) { '/a/b/c' }
-    let(:format_arg) { :glob }
+    let(:format_arg) { :glob_gitignore }
 
     context 'when ignore' do
       let(:polarity) { :ignore }

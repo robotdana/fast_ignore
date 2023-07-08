@@ -2,9 +2,12 @@
 
 class PathList
   class Matcher
+    # @api private
     class LastMatch < List
       Autoloader.autoload(self)
 
+      # @param (see List.compress)
+      # @return (see List.compress)
       def self.compress(matchers)
         matchers = super(matchers)
 
@@ -15,20 +18,15 @@ class PathList
         matchers.slice!(0, index) if (index = matchers.rindex(Matcher::Allow))
         matchers.slice!(0, index) if (index = matchers.rindex(Matcher::Ignore))
 
-        matchers = matchers
+        matchers
           .chunk_while { |a, b| a.polarity != :mixed && a.polarity == b.polarity }
           .flat_map { |chunk| Any.compress(chunk).reverse }
           .chunk_while { |a, b| a.squashable_with?(b) }
           .map { |list| list.length == 1 ? list.first : list.first.squash(list, true) }
-
-        # this is to pass one test, maybe we don't need that test?
-        matchers.reverse!
-        matchers.uniq!
-        matchers.reverse!
-
-        matchers
       end
 
+      # @param (see Matcher#match)
+      # @return (see Matcher#match)
       def match(candidate)
         @matchers.reverse_each do |matcher|
           val = matcher.match(candidate)

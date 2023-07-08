@@ -9,11 +9,11 @@ RSpec.describe PathList::Matcher::ShebangRegexp do
   it { is_expected.to be_frozen }
 
   describe '#match' do
-    let(:first_line) { "#!/usr/bin/env ruby\n" }
+    let(:shebang) { "#!/usr/bin/env ruby\n" }
     let(:regexp_tokens) { [['ruby']] }
     let(:filename) { 'file.rb' }
 
-    let(:candidate) { instance_double(PathList::Candidate, 'candidate', first_line: first_line) }
+    let(:candidate) { instance_double(PathList::Candidate, 'candidate', shebang: shebang) }
 
     context 'without an extension' do
       let(:filename) { 'my_script' }

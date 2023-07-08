@@ -2,55 +2,63 @@
 
 class PathList
   class Matcher
+    # @api private
     class PathRegexpWrapper < Wrapper
-      def self.build(rule, matcher)
+      # @param regexp [Regexp]
+      # @param (see Wrapper.build)
+      # @return (see Wrapper.build)
+      def self.build(regexp, matcher)
         return Blank if matcher == Blank
 
-        new(rule, matcher)
+        new(regexp, matcher)
       end
 
-      def initialize(rule, matcher)
-        @rule = rule
+      # @param regexp [Regexp]
+      # @param (see Wrapper.build)
+      # @return (see Wrapper.build)
+      def initialize(regexp, matcher)
+        @regexp = regexp
 
         super(matcher)
       end
 
+      # @param regexp [Regexp]
+      # @param (see Matcher#match)
+      # @return (see Matcher#match)
       def match(candidate)
-        @matcher.match(candidate) if @rule.match?(candidate.full_path_downcase)
+        @matcher.match(candidate) if @regexp.match?(candidate.full_path_downcase)
       end
 
+      # @return (see Matcher#inspect)
       def inspect
-        "#{self.class}.new(\n  #{@rule.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
+        "#{self.class}.new(\n  #{@regexp.inspect},\n#{@matcher.inspect.gsub(/^/, '  ')}\n)"
       end
 
+      # @return (see Matcher#weight)
       attr_reader :weight
 
+      # @param (see Matcher#squashable_with?)
+      # @return (see Matcher#squashable_with?)
       def squashable_with?(other)
         other.instance_of?(self.class) &&
-          @rule == other.rule
-      end
-
-      def ==(other)
-        other.instance_of?(self.class) &&
-          @rule == other.rule &&
-          @matcher == other.matcher
+          @regexp == other.regexp
       end
 
       protected
 
-      attr_reader :rule
+      attr_reader :regexp
 
       private
 
       def calculate_weight
         # chaos guesses
-        (@rule.inspect.length / 4.0) + 2 + @matcher.weight
+        (@regexp.inspect.length / 4.0) + 2 + @matcher.weight
       end
 
       def new_with_matcher(matcher)
         return Blank if matcher == Blank
 
-        self.class.new(@rule, matcher)
+        self.class.new(@regexp, matcher)
       end
     end
   end

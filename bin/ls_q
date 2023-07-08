@@ -3,4 +3,4 @@
 
 require_relative '../lib/path_list'
 
-PathList.gitignore.only(ARGV, format: :glob).to_a
+PathList.gitignore.only(ARGV, format: :glob_gitignore).to_a

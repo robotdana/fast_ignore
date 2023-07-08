@@ -175,9 +175,8 @@ Style/Alias:
 Style/CollectionMethods:
   Enabled: true
 
-# we don't rdoc
-Style/Documentation:
-  Enabled: false
+Style/DocumentationMethod:
+  Enabled: true
 
 # this can mess with the balance of symmetric cases
 Style/IfInsideElse:

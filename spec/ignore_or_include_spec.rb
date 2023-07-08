@@ -951,9 +951,9 @@ RSpec.describe PathList do
     it_behaves_like 'the gitignore documentation'
   end
 
-  describe '.ignore(read_from_file:)' do
+  describe '.ignore(patterns_from_file:)' do
     subject do
-      described_class.ignore(read_from_file: gitignore_path)
+      described_class.ignore(patterns_from_file: gitignore_path)
     end
 
     it_behaves_like 'the gitignore documentation'
@@ -998,9 +998,9 @@ RSpec.describe PathList do
     end
   end
 
-  describe 'only(read_from_file:)' do
+  describe '.only(patterns_from_file:)' do
     subject do
-      described_class.only(read_from_file: include_path)
+      described_class.only(patterns_from_file: include_path)
     end
 
     around do |example|
@@ -1017,7 +1017,7 @@ RSpec.describe PathList do
       subject do
         Dir.chdir File.join(root, '..') do
           described_class.only(
-            read_from_file: include_path,
+            patterns_from_file: include_path,
             root: root
           )
         end

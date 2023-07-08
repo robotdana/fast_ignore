@@ -3,7 +3,7 @@
 
 require_relative '../lib/path_list'
 
-path_list = PathList.gitignore.only(ARGV, format: :glob)
+path_list = PathList.gitignore.only(ARGV, format: :glob_gitignore)
 path_list.to_a
 
 puts path_list.inspect

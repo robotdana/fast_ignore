@@ -2,48 +2,58 @@
 
 class PathList
   class Matcher
+    # @api private
+    # @abstract
     class MatchRegexp < Matcher
+      # @param regexp_tokens [Array<Symbol, String, TokenRegexp::EscapedString>]
+      # @param polarity [:allow, :ignore]
+      # @return (see Matcher.build)
       def self.build(regexp_tokens, polarity)
         return Blank if regexp_tokens.all?(&:empty?)
 
         new(TokenRegexp::Build.build(regexp_tokens), polarity, regexp_tokens)
       end
 
-      def initialize(rule, polarity, regexp_tokens = nil)
+      # @param Regexp
+      # @param regexp_tokens [Array<Symbol, String, TokenRegexp::EscapedString>]
+      # @param polarity [:allow, :ignore]
+      def initialize(regexp, polarity, regexp_tokens = nil)
         @polarity = polarity
         @regexp_tokens = regexp_tokens
-        @rule = rule
+        @regexp = regexp
         @weight = calculate_weight
 
         freeze
       end
 
+      # @return (see Matcher#inspect)
       def inspect
-        "#{self.class}.new(#{@rule.inspect}, #{@polarity.inspect})"
+        "#{self.class}.new(#{@regexp.inspect}, #{@polarity.inspect})"
       end
 
+      # @return (see Matcher#weight)
       attr_reader :weight
+
+      # @return (see Matcher#polarity)
       attr_reader :polarity
 
+      # @param (see Matcher#squashable_with?)
+      # @return (see Matcher#squashable_with?)
       def squashable_with?(other)
         other.instance_of?(self.class) &&
           @polarity == other.polarity
       end
 
-      def squash(list, _)
+      # @param (see Matcher#squash)
+      # @return (see Matcher#squash)
+      def squash(list, _preserve_order)
         self.class.build(list.flat_map { |l| l.regexp_tokens }, @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
-      end
-
-      def ==(other)
-        other.instance_of?(self.class) &&
-          @polarity == other.polarity &&
-          @rule == other.rule
       end
 
       protected
 
       attr_reader :regexp_tokens
-      attr_reader :rule
+      attr_reader :regexp
     end
   end
 end

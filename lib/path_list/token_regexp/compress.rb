@@ -2,8 +2,11 @@
 
 class PathList
   class TokenRegexp
+    # @api private
     module Compress
       class << self
+        # @param parts [Array<Symbol, String, EscapedString>]
+        # @return [Array<Symbol, String, EscapedString>]
         def compress!(parts)
           loop do
             next if compress_any!(parts)
@@ -47,10 +50,6 @@ class PathList
           change
         end
 
-        # compress_run!(:any, parts) && change = true
-        # compress_run!(:any, parts) && change = true
-        # compress_2_keep_first!(:any, :any_dir, parts) && change = true
-        # compress_2_keep_first!(:any, :any_non_dir, parts) && change = true
         def compress_any!(parts)
           change = false
           from_index = nil
@@ -68,9 +67,6 @@ class PathList
           change
         end
 
-        # compress_run!(:any_dir, parts) && change = true
-        # compress_replace_1!(:any_dir, :any_non_dir, parts, :any) && change = true
-        # compress_replace_1!(:any_dir, :any, parts, :any) && change = true
         def compress_any_dir!(parts)
           change = false
           from_index = nil
@@ -90,9 +86,6 @@ class PathList
           change
         end
 
-        # compress_run!(:any_non_dir, parts) && change = true
-        # compress_replace_1!(:any_non_dir, :any_dir, parts, :any_dir) && change = true
-        # compress_replace_1!(:any_non_dir, :any, parts, :any) && change = true
         def compress_any_non_dir!(parts)
           change = false
           from_index = nil

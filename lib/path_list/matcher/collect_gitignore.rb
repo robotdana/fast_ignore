@@ -2,35 +2,49 @@
 
 class PathList
   class Matcher
+    # @api private
     class CollectGitignore < Wrapper
-      def self.build(collect_matcher)
-        new(collect_matcher)
+      # @param collect_matcher [Matcher]
+      # @param matcher [Matcher]
+      # @return (see Matcher.build)
+      def self.build(collect_matcher, matcher = Blank)
+        dir_matcher = Mutable.new(matcher.dir_matcher)
+        file_matcher = Mutable.new(matcher.file_matcher)
+        matcher = Any.build([MatchIfDir.new(dir_matcher), MatchUnlessDir.new(file_matcher)])
+        new(collect_matcher, matcher, dir_matcher, file_matcher)
       end
 
-      def initialize(collect_matcher, matcher = nil)
+      # @param collect_matcher [Matcher]
+      # @param matcher [Matcher]
+      def initialize(collect_matcher, matcher = Blank, dir_matcher = matcher.dir_matcher,
+        file_matcher = matcher.file_matcher)
         @collect_matcher = collect_matcher
         @loaded = [] # not frozen
 
-        # matcher || is here just for test setup
-        @dir_matcher = Mutable.new(matcher || Blank).dir_matcher
-        @file_matcher = Mutable.new(matcher || Blank).file_matcher
-        @matcher = matcher || Any.build([MatchIfDir.new(@dir_matcher), MatchUnlessDir.new(@file_matcher)])
+        @dir_matcher = dir_matcher
+        @file_matcher = file_matcher
+        @matcher = matcher
 
         freeze
       end
 
+      # @param (see Matcher#match)
+      # @return (see Matcher#match)
       def match(candidate)
         collect(candidate) if @collect_matcher.match(candidate) == :allow
 
         @matcher.match(candidate)
       end
 
+      # @param file [String]
+      # @param root [String]
+      # @return [void]
       def append(file, root:)
         return if @loaded.include?(file)
 
         @loaded << file
 
-        patterns = Patterns.new(read_from_file: file, root: root, builder: Builder::Gitignore)
+        patterns = PatternParser.new(patterns_from_file: file, root: root, parser: PatternParser::Gitignore)
         new_matcher = patterns.build_ignore_matcher(Blank)
 
         return if new_matcher == Blank
@@ -39,6 +53,7 @@ class PathList
         @file_matcher.matcher = LastMatch.build([@file_matcher.matcher, new_matcher.file_matcher])
       end
 
+      # @return (see Matcher#inspect)
       def inspect
         "#{self.class}.new(\n#{
           @collect_matcher.inspect.gsub(/^/, '  ')
@@ -47,14 +62,18 @@ class PathList
         }\n)"
       end
 
+      # @return (see Matcher#weight)
       def weight
         @collect_matcher.weight + @matcher.weight
       end
 
-      def squashable_with?(_)
+      # @param (see Matcher#squashable_with?)
+      # @return (see Matcher#squashable_with?)
+      def squashable_with?(_other)
         false
       end
 
+      # @return (see Matcher#dir_matcher)
       def dir_matcher
         new_parent = dup
         new_parent.matcher = @dir_matcher
@@ -62,12 +81,8 @@ class PathList
         new_parent.freeze
       end
 
+      # @return (see Matcher#file_matcher)
       attr_reader :file_matcher
-
-      def ==(other)
-        other.instance_of?(self.class) &&
-          other.collect_matcher == @collect_matcher
-      end
 
       protected
 

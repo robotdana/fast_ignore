@@ -2,14 +2,14 @@
 
 # rubocop:disable Style/RedundantRegexpEscape
 
-RSpec.describe PathList::Builder::Gitignore do
-  let(:method_name) { :build }
+RSpec.describe PathList::PatternParser::Gitignore do
+  let(:method_name) { :matcher }
   let(:polarity) { :ignore }
   let(:root) { nil }
 
-  def build(rule)
+  def build(pattern)
     described_class
-      .new(rule, polarity, root)
+      .new(pattern, polarity, root)
       .send(method_name)
   end
 
@@ -1957,8 +1957,8 @@ RSpec.describe PathList::Builder::Gitignore do
     end
   end
 
-  describe '#build_implicit' do
-    let(:method_name) { :build_implicit }
+  describe '#implicit_matcher' do
+    let(:method_name) { :implicit_matcher }
 
     describe 'polarity: :allow, root: "/a/path"' do
       let(:polarity) { :allow }

@@ -2,8 +2,11 @@
 
 class PathList
   class TokenRegexp
+    # @api private
     module Build
       class << self
+        # @param parts_arrays [Array<Array<Symbol, String, EscapedString>>]
+        # @return [Regexp]
         def build(parts_arrays)
           if parts_arrays.length == 1
             Regexp.new(parts_arrays.first.map { |p| PARTS_HASH[p] }.join)
@@ -12,13 +15,19 @@ class PathList
           end
         end
 
+        # @param parts_array [Array<Symbol, String, EscapedString>]
+        # @return [String]
         def build_literal_s(parts_array)
           parts_array.map { |p| LITERAL_PARTS_HASH[p] }.join
         end
 
+        # @param parts_array [Array<Symbol, String, EscapedString>]
+        # @return [EscapedString]
         def build_character_class(parts_array)
           EscapedString.new(parts_array.map { |p| CHARACTER_CLASS_PARTS_HASH[p] }.join)
         end
+
+        private
 
         def build_regexp_string_from_hash(parts_hash)
           if parts_hash.length == 1

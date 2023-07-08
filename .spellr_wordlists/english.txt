@@ -12,6 +12,7 @@ chdir
 codebase
 coinflip
 collectgitignore
+commonmarker
 config
 cov
 cyclomatic
@@ -35,6 +36,7 @@ esque
 ewah
 excludesfile
 extensionless
+fakehome
 fancyignore
 filesystem
 filetree
@@ -63,6 +65,7 @@ initializable
 ips
 janky
 jruby
+jsx
 klass
 kwargs
 llo
@@ -117,6 +120,7 @@ symlinks
 tmp
 todo
 toplevel
+tsx
 ttributes
 txt
 unanchorable
@@ -135,5 +139,6 @@ xconfig
 xdescribe
 xdg
 xit
+yieldparam
 zeitwerk
 zsh

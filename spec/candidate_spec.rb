@@ -131,7 +131,7 @@ RSpec.describe PathList::Candidate do
     end
   end
 
-  describe '#first_line' do
+  describe '#shebang' do
     context 'when reading from the file system' do
       within_temp_dir
 
@@ -144,7 +144,7 @@ RSpec.describe PathList::Candidate do
           puts('it saves the first 64 characters by default, not that many')
         RUBY
 
-        expect(candidate.first_line).to eq "#!/usr/bin/env ruby\n\nputs('it saves the first 64 characters by d"
+        expect(candidate.shebang).to eq "#!/usr/bin/env ruby\n\nputs('it saves the first 64 characters by d"
       end
 
       it 'returns the first line of a long shebang' do
@@ -154,7 +154,7 @@ RSpec.describe PathList::Candidate do
           puts('yes')
         RUBY
 
-        expect(candidate.first_line)
+        expect(candidate.shebang)
           .to eq "#!/usr/bin/env ruby -w --disable-gems --verbose --enable-frozen-string-literal\n"
       end
 
@@ -163,7 +163,7 @@ RSpec.describe PathList::Candidate do
           #!/usr/bin/env ruby
         RUBY
 
-        expect(candidate.first_line).to eq "#!/usr/bin/env ruby\n"
+        expect(candidate.shebang).to eq "#!/usr/bin/env ruby\n"
       end
 
       it 'returns the first line of one line if it has a shebang and no trailing newline' do
@@ -171,7 +171,7 @@ RSpec.describe PathList::Candidate do
           #!/usr/bin/env ruby
         RUBY
 
-        expect(candidate.first_line).to eq '#!/usr/bin/env ruby'
+        expect(candidate.shebang).to eq '#!/usr/bin/env ruby'
       end
 
       it 'returns an empty string if the first line is different' do
@@ -181,7 +181,7 @@ RSpec.describe PathList::Candidate do
           puts('no')
         RUBY
 
-        expect(candidate.first_line).to eq ''
+        expect(candidate.shebang).to eq ''
       end
 
       it 'returns an empty string if there is one line and no shebang' do
@@ -189,7 +189,7 @@ RSpec.describe PathList::Candidate do
           puts('no')
         RUBY
 
-        expect(candidate.first_line).to eq ''
+        expect(candidate.shebang).to eq ''
       end
 
       it 'returns an empty string if there is one line with no trailing newline and no shebang' do
@@ -197,13 +197,13 @@ RSpec.describe PathList::Candidate do
           puts('no')
         RUBY
 
-        expect(candidate.first_line).to eq ''
+        expect(candidate.shebang).to eq ''
       end
 
       it 'returns an empty string if there an error creating the file object' do
         allow(File).to receive(:new).and_raise(SystemCallError, 'error')
 
-        expect(candidate.first_line).to eq ''
+        expect(candidate.shebang).to eq ''
       end
     end
   end

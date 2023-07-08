@@ -2,33 +2,43 @@
 
 class PathList
   class Matcher
+    # @api private
     class Mutable < Wrapper
+      # @param (see Wrapper.build)
+      # @return (see Wrapper.build)
       def self.build(wrapper = Blank)
         new(wrapper)
       end
 
+      # @param (see Wrapper.build)
       def initialize(matcher)
         @matcher = matcher
 
         # not frozen!
       end
 
+      # @param value [PathList::Matcher]
       def matcher=(value)
         @matcher = value
         @weight = nil
       end
 
+      # @return (see Matcher#weight)
       def weight
         @weight ||= @matcher.weight + 1
       end
 
+      # @param (see Matcher#squashable_with?)
+      # @return (see Matcher#squashable_with?)
       alias_method :squashable_with?, :equal?
 
-      def squash(_, _)
+      # @param (see Matcher#squash)
+      # @return (see Matcher#squash)
+      def squash(_list, _preserve_order)
         self
       end
 
-      alias_method :==, :equal?
+      # @return [PathList:Matcher]
       attr_reader :matcher
 
       private

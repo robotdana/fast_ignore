@@ -1,10 +1,26 @@
 # frozen_string_literal: true
 
 class PathList
-  class Builder
-    class Gitignore < Builder
-      def initialize(rule, polarity, root) # rubocop:disable Lint/MissingSuper
-        @s = GitignoreRuleScanner.new(rule)
+  class PatternParser
+    # Match using the format used in gitignore files by git, plus many others,
+    # such as `.dockerignore` or `.eslintignore`
+    #
+    # This format will be used by PathList for {PathList#gitignore},
+    # and for {PathList#only} and {PathList#ignore} with `format: :gitignore`
+    # The `root:` in those methods is used as the file location for patterns that start with or include `/`
+    #
+    # When used with `only`, it will also allow all potentially containing directories (with a lower priority).
+    #
+    # @see https://git-scm.com/docs/gitignore#_pattern_format
+    class Gitignore
+      Autoloader.autoload(self)
+
+      # @api private
+      # @param pattern [String]
+      # @param polarity [:ignore, :allow]
+      # @param root [String]
+      def initialize(pattern, polarity, root)
+        @s = RuleScanner.new(pattern)
         @default_polarity = polarity
         @rule_polarity = polarity
         @root = root
@@ -13,13 +29,17 @@ class PathList
         @emitted = false
       end
 
-      def build
+      # @api private
+      # @return [PathList::Matcher]
+      def matcher
         process_rule
 
         @return || build_matcher
       end
 
-      def build_implicit
+      # @api private
+      # @return [PathList::Matcher]
+      def implicit_matcher
         process_rule
         return Matcher::Blank if negated?
 
@@ -30,9 +50,9 @@ class PathList
 
       def prepare_regexp_builder
         @re = if @root && @root != '/'
-          PathRegexp.new_from_path(@root, [:dir, :any_dir])
+          TokenRegexp::Path.new_from_path(@root, [:dir, :any_dir])
         else
-          PathRegexp.new([:start_anchor, :dir, :any_dir])
+          TokenRegexp::Path.new([:start_anchor, :dir, :any_dir])
         end
 
         @start_any_dir_position = @re.length - 1

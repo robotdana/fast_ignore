@@ -5,11 +5,16 @@ require 'set'
 class PathList
   class Matcher
     class ExactString
+      # @api private
       class Set < ExactString
+        # @param (see ExactString.build)
+        # @return (see ExactString.build)
         def self.build(set, polarity)
           ExactString.build(set, polarity)
         end
 
+        # @param (see .build)
+        # @return (see .build)
         def initialize(set, polarity) # rubocop:disable Lint/MissingSuper
           @set = set.to_set
           @weight = (set.length / 100.0) + 1
@@ -18,21 +23,19 @@ class PathList
           freeze
         end
 
+        # @param (see Matcher#match)
+        # @return (see Matcher#match)
         def match(candidate)
           @polarity if @set.include?(candidate.full_path_downcase)
         end
 
+        # @return (see Matcher#inspect)
         def inspect
           "#{self.class}.new([#{@set.map(&:inspect).join(', ')}], #{@polarity.inspect})"
         end
 
+        # @return set [Set]
         attr_reader :set
-
-        def ==(other)
-          other.instance_of?(self.class) &&
-            @polarity == other.polarity &&
-            @set == other.set
-        end
       end
     end
   end

@@ -41,7 +41,7 @@ RSpec.describe Fuzz do
       puts gitignore
 
       expect do
-        PathList.ignore(gitignore, format: :glob)
+        PathList.ignore(gitignore, format: :glob_gitignore)
       end.not_to raise_error
     end
   end

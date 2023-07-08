@@ -71,6 +71,49 @@ RSpec.describe PathList do
       end
     end
 
+    context 'when higher dir is git root' do
+      subject { described_class.gitignore }
+
+      it 'finds the gitignore files and treats that as the root rather than pwd' do
+        create_file_list 'bar/foo', 'bar/baz', 'bar/bee', 'bar/fez'
+        gitignore 'baz', '/foo'
+        gitignore 'fez', path: '.git/info/exclude'
+        gitignore '/bee', path: 'bar/.gitignore'
+
+        Dir.chdir('bar') do
+          expect(subject.each.to_a).to contain_exactly('.gitignore', 'foo')
+        end
+      end
+    end
+
+    context 'when higher dir is git root but it is outside of """"HOME""""' do
+      subject { described_class.gitignore }
+
+      it 'stops when it gets to home and defaults to the pwd' do
+        create_file_list '.git/index', 'fakehome/baz/foo', 'fakehome/baz/bar'
+        gitignore 'baz', 'foo'
+        gitignore 'bar', path: 'fakehome/baz/.gitignore'
+        allow(Dir).to receive(:home).and_return(File.join(Dir.pwd, 'FakeHome'))
+        Dir.chdir('fakehome/baz') do
+          expect(subject.each.to_a).to contain_exactly('.gitignore', 'foo')
+        end
+      end
+    end
+
+    context 'when higher dir is not git root' do
+      subject { described_class.gitignore }
+
+      it 'treats pwd as root' do
+        create_file_list 'bar/foo', 'bar/baz', 'bar/bee', 'bar/fez'
+        gitignore 'baz', '/foo'
+        gitignore '/bee', path: 'bar/.gitignore'
+
+        Dir.chdir('bar') do
+          expect(subject.each.to_a).to contain_exactly('foo', 'fez', 'baz', '.gitignore')
+        end
+      end
+    end
+
     context 'when given root with a trailing slash' do
       subject(:to_a) { described_class.new.each(Dir.pwd + '/bar/').to_a }
 
@@ -128,25 +171,27 @@ RSpec.describe PathList do
     it 'creates a sensible list of matchers' do
       gitignore 'foo', 'bar/'
 
-      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch.new([
-        PathList::Matcher::Allow,
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
         PathList::Matcher::CollectGitignore.new(
           PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
           PathList::Matcher::Mutable.new(
-            PathList::Matcher::PathRegexp.new(
-              %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
-            )
+            PathList::Matcher::LastMatch::Two.new([
+              PathList::Matcher::Allow,
+              PathList::Matcher::PathRegexp.new(
+                %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
+              )
+            ])
           )
         ),
         PathList::Matcher::PathRegexp.new(%r{/\.git\z}, :ignore)
       ])
 
-      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
-        PathList::Matcher::Allow,
-        PathList::Matcher::Mutable.new(
+      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::Mutable.new(
+        PathList::Matcher::LastMatch::Two.new([
+          PathList::Matcher::Allow,
           PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore)
-        )
-      ])
+        ])
+      )
     end
 
     it 'can match files with case equality' do
@@ -285,7 +330,7 @@ RSpec.describe PathList do
 
     context 'with config' do
       before do
-        allow(PathList::GlobalGitignore).to receive(:path).and_return(Pathname.pwd.join('.my-config'))
+        allow(PathList::Gitconfig::CoreExcludesfile).to receive(:path).and_return(Pathname.pwd.join('.my-config'))
         create_file '/bar', path: '.my-config'
       end
 
@@ -295,7 +340,7 @@ RSpec.describe PathList do
         subject = described_class.gitignore(config: false)
         expect(subject).to allow_files('bar', 'baz')
         expect(subject).not_to allow_files('foo')
-        expect(PathList::GlobalGitignore).not_to have_received(:path)
+        expect(PathList::Gitconfig::CoreExcludesfile).not_to have_received(:path)
       end
 
       it 'config: true will load the config, treating rules as relative to the git root' do
@@ -306,7 +351,7 @@ RSpec.describe PathList do
 
         expect(subject).to allow_files('baz')
         expect(subject).not_to allow_files('foo', 'bar')
-        expect(PathList::GlobalGitignore).to have_received(:path)
+        expect(PathList::Gitconfig::CoreExcludesfile).to have_received(:path)
       end
 
       it 'config: true will load the config, treating rules as relative to the git root defaulting to pwd' do
@@ -316,13 +361,13 @@ RSpec.describe PathList do
 
         expect(subject).to allow_files('baz')
         expect(subject).not_to allow_files('foo', 'bar')
-        expect(PathList::GlobalGitignore).to have_received(:path)
+        expect(PathList::Gitconfig::CoreExcludesfile).to have_received(:path)
       end
     end
 
     context 'with null config' do
       before do
-        allow(PathList::GlobalGitignore).to receive(:path).and_return(nil)
+        allow(PathList::Gitconfig::CoreExcludesfile).to receive(:path).and_return(nil)
       end
 
       it 'config: false suppresses trying to load the config' do
@@ -331,7 +376,7 @@ RSpec.describe PathList do
         subject = described_class.gitignore(config: false)
         expect(subject).to allow_files('bar', 'baz')
         expect(subject).not_to allow_files('foo')
-        expect(PathList::GlobalGitignore).not_to have_received(:path)
+        expect(PathList::Gitconfig::CoreExcludesfile).not_to have_received(:path)
       end
 
       it 'config: true will try to load the config but is ok with it being nil' do
@@ -341,7 +386,7 @@ RSpec.describe PathList do
 
         expect(subject).to allow_files('baz', 'bar')
         expect(subject).not_to allow_files('foo')
-        expect(PathList::GlobalGitignore).to have_received(:path)
+        expect(PathList::Gitconfig::CoreExcludesfile).to have_received(:path)
       end
     end
   end
@@ -532,7 +577,7 @@ RSpec.describe PathList do
       expect(gitignore_ignore_path_list).to allow_files('baz')
     end
 
-    context 'when combined with .intersection' do
+    context 'when combined with #intersection' do
       it 'works for .gitignore and .only' do
         gitignore 'bar'
 
@@ -614,7 +659,7 @@ RSpec.describe PathList do
       end
     end
 
-    context 'when combined with .intersection!' do
+    context 'when combined with #intersection!' do
       it 'works for .gitignore and .only' do
         gitignore 'bar'
 
@@ -697,7 +742,7 @@ RSpec.describe PathList do
       end
     end
 
-    context 'when combined with .union' do
+    context 'when combined with #union' do
       it 'works for .gitignore and .only' do
         gitignore 'bar', 'foo'
 
@@ -780,7 +825,7 @@ RSpec.describe PathList do
     end
   end
 
-  describe '.intersection' do
+  describe '#intersection' do
     it 'can combine with AND any number of path lists' do
       path_list = described_class.only('a', 'b', 'c')
       intersection_path_list = path_list.intersection(
@@ -790,6 +835,19 @@ RSpec.describe PathList do
 
       expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
+
+      expect(intersection_path_list).to allow_files('b')
+      expect(intersection_path_list).not_to allow_files('a', 'c', 'd')
+    end
+  end
+
+  describe '.intersection' do
+    it 'can combine with AND any number of path lists' do
+      intersection_path_list = described_class.intersection(
+        described_class.only('a', 'b', 'c'),
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'b', 'd')
+      )
 
       expect(intersection_path_list).to allow_files('b')
       expect(intersection_path_list).not_to allow_files('a', 'c', 'd')
@@ -809,7 +867,7 @@ RSpec.describe PathList do
     end
   end
 
-  describe '.intersection!' do
+  describe '#intersection!' do
     it 'can combine with AND any number of path lists, modifying the receiver' do
       path_list = described_class.only('a', 'b', 'c')
       expect(path_list).to allow_files('a', 'b', 'c')
@@ -828,7 +886,7 @@ RSpec.describe PathList do
     end
   end
 
-  describe '.union' do
+  describe '#union' do
     it 'can combine with OR any number of path lists' do
       path_list = described_class.only('a', 'b', 'c')
       union_path_list = path_list.union(
@@ -838,6 +896,19 @@ RSpec.describe PathList do
 
       expect(path_list).to allow_files('a', 'b', 'c')
       expect(path_list).not_to allow_files('d')
+
+      expect(union_path_list).to allow_files('a', 'b', 'c', 'd', 'e')
+      expect(union_path_list).not_to allow_files('f', 'g', 'h')
+    end
+  end
+
+  describe '.union' do
+    it 'can combine with OR any number of path lists' do
+      union_path_list = described_class.union(
+        described_class.only('a', 'b', 'c'),
+        described_class.only('b', 'c', 'd'),
+        described_class.only('a', 'e')
+      )
 
       expect(union_path_list).to allow_files('a', 'b', 'c', 'd', 'e')
       expect(union_path_list).not_to allow_files('f', 'g', 'h')
@@ -857,7 +928,7 @@ RSpec.describe PathList do
     end
   end
 
-  describe '.union!' do
+  describe '#union!' do
     it 'can combine with AND any number of path lists, modifying the receiver' do
       path_list = described_class.only('a', 'b', 'c')
 
@@ -887,8 +958,8 @@ RSpec.describe PathList do
       end
     end
 
-    context 'with missing only read_from_file value' do
-      subject(:path_list) { described_class.only(read_from_file: './nonsense') }
+    context 'with nonsense only patterns_from_file filename value' do
+      subject(:path_list) { described_class.only(patterns_from_file: './nonsense') }
 
       it 'returns all files' do
         create_file_list 'foo', 'bar'
@@ -897,10 +968,10 @@ RSpec.describe PathList do
     end
 
     context 'with only read_from_file value and patterns' do
-      subject(:path_list) { described_class.only('nonsense', read_from_file: './nonsense') }
+      subject(:path_list) { described_class.only('nonsense', patterns_from_file: './nonsense') }
 
       it 'raises an error' do
-        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `read_from_file:`')
+        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `patterns_from_file:`')
       end
     end
 
@@ -909,12 +980,12 @@ RSpec.describe PathList do
 
       it 'raises an error' do
         expect { subject }
-          .to raise_error(PathList::Error, '`format:` must be one of :glob, :gitignore, :shebang, :exact')
+          .to raise_error(PathList::Error, '`format:` must be one of :glob_gitignore, :gitignore, :shebang, :exact')
       end
     end
 
-    context 'with subdir includes file' do
-      subject(:path_list) { described_class.only(read_from_file: 'a/.includes_file') }
+    context 'with subdir only file' do
+      subject(:path_list) { described_class.only(patterns_from_file: 'a/.includes_file') }
 
       it 'recognises subdir includes file' do
         create_file '/b/d', 'c', path: 'a/.includes_file'
@@ -1048,7 +1119,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an array of argv_rules with absolute paths and gitignore' do
-      subject(:path_list) { described_class.gitignore.only(['./bar', "#{Dir.pwd}/baz"], format: :glob) }
+      subject(:path_list) { described_class.gitignore.only(['./bar', "#{Dir.pwd}/baz"], format: :glob_gitignore) }
 
       it 'resolves the paths to the current directory' do
         gitignore 'bar'
@@ -1059,7 +1130,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an argv rule with an unexpandable user path' do
-      subject(:path_list) { described_class.only('~not-a-user635728345/foo', format: :glob) }
+      subject(:path_list) { described_class.only('~not-a-user635728345/foo', format: :glob_gitignore) }
 
       it 'treats it as literal' do
         expect(subject).not_to allow_files('foo')
@@ -1068,7 +1139,9 @@ RSpec.describe PathList do
     end
 
     context 'when given an array of negated argv_rules with absolute paths and gitignore' do
-      subject(:path_list) { described_class.gitignore.only(['*', '!./foo', "!#{Dir.pwd}/baz"], format: :glob) }
+      subject(:path_list) do
+        described_class.gitignore.only(['*', '!./foo', "!#{Dir.pwd}/baz"], format: :glob_gitignore)
+      end
 
       it 'resolves the paths even when negated' do
         gitignore 'bar'
@@ -1079,7 +1152,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an array of unanchored argv_rules' do
-      subject(:path_list) { described_class.only(['**/foo', '*baz'], format: :glob) }
+      subject(:path_list) { described_class.only(['**/foo', '*baz'], format: :glob_gitignore) }
 
       it 'treats the rules as unanchored' do
         expect(subject).not_to allow_files('bar/bar')
@@ -1088,7 +1161,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an argv_rules with ending /' do
-      subject(:path_list) { described_class.only(['./foo/'], format: :glob) }
+      subject(:path_list) { described_class.only(['./foo/'], format: :glob_gitignore) }
 
       it 'treats the rule as dir only' do
         expect(subject).not_to allow_files('bar/foo')
@@ -1097,7 +1170,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an array of anchored argv_rules with absolute paths and gitignore' do
-      subject(:path_list) { described_class.only(['foo', 'baz'], format: :glob) }
+      subject(:path_list) { described_class.only(['foo', 'baz'], format: :glob_gitignore) }
 
       it 'anchors the rules to the given dir, for performance reasons' do
         expect(subject).not_to allow_files('bar/foo', 'bar/baz')
@@ -1106,7 +1179,7 @@ RSpec.describe PathList do
     end
 
     context 'when given an array of argv_rules and include_rules' do
-      subject(:path_list) { described_class.only(['foo', 'baz']).only('foo', 'bar', format: :glob) }
+      subject(:path_list) { described_class.only(['foo', 'baz']).only('foo', 'bar', format: :glob_gitignore) }
 
       it 'adds the rulesets, they must pass both lists' do
         expect(subject).not_to allow_files('baz', 'bar')
@@ -1170,7 +1243,7 @@ RSpec.describe PathList do
     end
 
     context 'when given include shebang rule scoped by a file' do
-      subject(:path_list) { described_class.only(read_from_file: 'a/.include', format: :shebang) }
+      subject(:path_list) { described_class.only(patterns_from_file: 'a/.include', format: :shebang) }
 
       it 'matches files with or sub to that directory' do
         create_file <<~RUBY, path: 'a/foo'
@@ -1448,7 +1521,7 @@ RSpec.describe PathList do
 
   describe '.ignore' do
     context 'when given a file other than gitignore' do
-      subject(:path_list) { described_class.ignore(read_from_file: 'fancyignore') }
+      subject(:path_list) { described_class.ignore(patterns_from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file' do
         gitignore 'bar'
@@ -1460,7 +1533,7 @@ RSpec.describe PathList do
     end
 
     context 'when given a file including gitignore' do
-      subject(:path_list) { described_class.gitignore.ignore(read_from_file: 'fancyignore') }
+      subject(:path_list) { described_class.gitignore.ignore(patterns_from_file: 'fancyignore') }
 
       it 'ignores files based on the non-gitignore file and the gitignore file' do
         gitignore 'bar'
@@ -1472,10 +1545,10 @@ RSpec.describe PathList do
     end
 
     context 'with ignore read_from_file value and patterns' do
-      subject(:path_list) { described_class.ignore('nonsense', read_from_file: './nonsense') }
+      subject(:path_list) { described_class.ignore('nonsense', patterns_from_file: './nonsense') }
 
       it 'raises an error' do
-        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `read_from_file:`')
+        expect { subject }.to raise_error(PathList::Error, 'use only one of `*patterns` or `patterns_from_file:`')
       end
     end
 
@@ -1484,7 +1557,7 @@ RSpec.describe PathList do
 
       it 'raises an error' do
         expect { subject }
-          .to raise_error(PathList::Error, '`format:` must be one of :glob, :gitignore, :shebang, :exact')
+          .to raise_error(PathList::Error, '`format:` must be one of :glob_gitignore, :gitignore, :shebang, :exact')
       end
     end
 
@@ -1520,7 +1593,7 @@ RSpec.describe PathList do
     end
 
     context 'when given ignore shebang rule scoped by a file' do
-      subject(:path_list) { described_class.ignore(read_from_file: 'a/.ignore', format: :shebang) }
+      subject(:path_list) { described_class.ignore(patterns_from_file: 'a/.ignore', format: :shebang) }
 
       it 'matches based on the file directory' do
         create_file <<~RUBY, path: 'a/foo'

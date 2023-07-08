@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 class PathList
+  # @api private
+  # Zero dependency zeitwerk
   module Autoloader
-    # zero dependency zeitwerk
-
     class << self
+      # Autoload a namespace like zeitwerk does
+      # @param klass [Class, Module] the namespace to autoload
+      # @return [void]
       def autoload(klass)
         ::Dir[glob_children(klass)].each_entry do |path|
           klass.autoload(class_from_path(path), path)

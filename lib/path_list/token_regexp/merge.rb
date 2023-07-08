@@ -2,8 +2,11 @@
 
 class PathList
   class TokenRegexp
+    # @api private
     module Merge
       class << self
+        # @param [Array<T>]
+        # @return [Hash{T=>Hash{T => Hash{T =>...}, nil}, nil]
         def merge(arrays)
           tree_hash_proc = ->(h, k) { h[k] = Hash.new(&tree_hash_proc) }
           tree = Hash.new(&tree_hash_proc)

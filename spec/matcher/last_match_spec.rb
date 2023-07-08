@@ -153,19 +153,6 @@ RSpec.describe PathList::Matcher::LastMatch do
       ])).to be_like(PathList::Matcher::Invalid)
     end
 
-    it 'removes duplicates kept apart by polarity chunks, keeping the last' do
-      expect(described_class.build([
-        matcher_allow_a,
-        PathList::Matcher::AllowAnyDir,
-        matcher_ignore_b,
-        PathList::Matcher::AllowAnyDir
-      ])).to be_like(described_class.new([
-        matcher_allow_a,
-        matcher_ignore_b,
-        PathList::Matcher::AllowAnyDir
-      ]))
-    end
-
     it 'removes duplicates next to each other' do
       expect(described_class.build([
         PathList::Matcher::AllowAnyDir,
