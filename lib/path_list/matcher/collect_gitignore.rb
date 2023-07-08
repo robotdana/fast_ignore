@@ -87,7 +87,7 @@ class PathList
       protected
 
       attr_writer :matcher
-      attr_accessor :collect_matcher
+      attr_writer :collect_matcher
 
       private
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby --disable-all
+#!/usr/bin/env -S ruby --disable-all
 # frozen_string_literal: true
 
 # use mac terminal not vs code terminal

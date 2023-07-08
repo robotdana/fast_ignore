@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby --disable-all
+#!/usr/bin/env -S ruby --disable-all
 # frozen_string_literal: true
 
 print "require 'path_list':      "
@@ -39,13 +39,17 @@ exit_status = 0
 
 unless ignored_by_path_list_not_by_git.empty?
   puts "\e[31mIgnored by PathList.gitignore, not by git:\e[0m"
-  ignored_by_path_list_not_by_git.map { |f| puts f }
+  puts ignored_by_path_list_not_by_git.join("\n")
+  puts "Debug: "
+  system("git", "check-ignore", "-vn", "--no-index", *ignored_by_path_list_not_by_git)
   exit_status = 1
 end
 
 unless ignored_by_git_not_by_path_list.empty?
   puts "\e[31mIgnored by git, not by PathList.gitignore:\e[0m"
-  ignored_by_git_not_by_path_list.map { |f| puts f }
+  puts ignored_by_git_not_by_path_list.join("\n")
+  puts "Debug: "
+  system("git", "check-ignore", "-vn", "--no-index", *ignored_by_git_not_by_path_list)
   exit_status = 1
 end
 

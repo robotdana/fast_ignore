@@ -9,6 +9,7 @@ baz
 boofoo
 changelog
 chdir
+chkstk
 codebase
 coinflip
 collectgitignore
@@ -59,6 +60,7 @@ heredoc
 i'm
 i've
 idx
+ignorecase
 includefile
 includeif
 initializable
@@ -115,11 +117,13 @@ submodules
 substring
 sudo
 svg
+swapcase
 symlink
 symlinks
 tmp
 todo
 toplevel
+torvolds
 tsx
 ttributes
 txt
@@ -135,10 +139,12 @@ usr
 utf
 warmup
 webpack
+xargs
 xconfig
 xdescribe
 xdg
 xit
+yardoc
 yieldparam
 zeitwerk
 zsh

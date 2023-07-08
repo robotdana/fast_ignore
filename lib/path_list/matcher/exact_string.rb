@@ -59,10 +59,6 @@ class PathList
       def set
         ::Set[@item]
       end
-
-      protected
-
-      attr_reader :item
     end
   end
 end
