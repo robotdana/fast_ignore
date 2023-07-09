@@ -72,11 +72,14 @@ klass
 kwargs
 llo
 lookahead
+macos
 mascheck
 memoize
 memoized
 middleware
 msb
+mydir
+mypath
 nestedly
 nocov
 noninfringement
@@ -115,6 +118,7 @@ subdir
 submodule
 submodules
 substring
+subwords
 sudo
 svg
 swapcase

@@ -211,7 +211,7 @@ class PathList
         matcher = if @main_re.empty?
           @rule_polarity == :ignore ? Matcher::Ignore : Matcher::Allow
         elsif @re.exact_path?
-          Matcher::ExactString.build([@main_re.to_s.downcase], @rule_polarity)
+          Matcher::ExactString.build([@main_re.to_s], @rule_polarity)
         else
           Matcher::PathRegexp.build([@main_re.parts], @rule_polarity)
         end

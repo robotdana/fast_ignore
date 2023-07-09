@@ -39,6 +39,7 @@ RSpec.configure do |config|
   config.before do
     Kernel.srand config.seed
     stub_blank_global_config
+    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
   end
 
   config.example_status_persistence_file_path = '.rspec_status'

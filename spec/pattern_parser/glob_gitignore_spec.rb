@@ -3,6 +3,10 @@
 # rubocop:disable Style/RedundantRegexpEscape
 
 RSpec.describe PathList::PatternParser::GlobGitignore do
+  before do
+    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+  end
+
   let(:method_name) { :matcher }
   let(:polarity) { :ignore }
   let(:root) { nil }
@@ -116,7 +120,7 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matcher::MatchIfDir.new(
-                  PathList::Matcher::ExactString.new('/a/path/ȋ', :ignore)
+                  PathList::Matcher::ExactString.new('/a/path/Ȋ', :ignore)
                 )
             end
           end

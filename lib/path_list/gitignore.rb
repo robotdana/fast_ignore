@@ -9,7 +9,7 @@ class PathList
       # @return [PathList::Matcher]
       def build(root:, config: true)
         root = if root
-          PathExpander.expand_path_pwd(root)
+          CanonicalPath.full_path(root)
         else
           find_root
         end
@@ -40,7 +40,7 @@ class PathList
       def append(collector, root, path)
         return unless path
 
-        collector.append(PathExpander.expand_path(path, root), root: root)
+        collector.append(CanonicalPath.full_path_from(path, root), root: root)
       end
 
       def build_dot_git_matcher

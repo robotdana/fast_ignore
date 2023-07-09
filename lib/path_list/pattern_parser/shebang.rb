@@ -45,7 +45,8 @@ class PathList
 
         Matcher::MatchUnlessDir.build(
           Matcher::PathRegexpWrapper.build(
-            %r{\A#{Regexp.escape(@root.downcase)}/(?:.*/)?[^/\.]*\z},
+            # TODO: consider if this needs splitting, i don't think it does?
+            Regexp.new("\\A#{Regexp.escape(@root)}/(?:.*/)?[^/\\.]*\\z", CanonicalPath.case_insensitive? ? 1 : 0),
             Matcher::ShebangRegexp.build([regexp.parts], @polarity)
           )
         )

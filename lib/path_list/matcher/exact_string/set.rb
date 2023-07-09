@@ -7,6 +7,8 @@ class PathList
     class ExactString
       # @api private
       class Set < ExactString
+        Autoloader.autoload(self)
+
         # @param (see ExactString.build)
         # @return (see ExactString.build)
         def self.build(set, polarity)
@@ -26,7 +28,7 @@ class PathList
         # @param (see Matcher#match)
         # @return (see Matcher#match)
         def match(candidate)
-          @polarity if @set.include?(candidate.full_path_downcase)
+          @polarity if @set.include?(candidate.full_path)
         end
 
         # @return (see Matcher#inspect)

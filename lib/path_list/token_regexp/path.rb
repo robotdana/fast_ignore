@@ -11,7 +11,7 @@ class PathList
         new(
           [:start_anchor] +
           path.delete_prefix('/').split('/').flat_map do |part|
-            [:dir, part]
+            [:dir, CanonicalPath.case_insensitive? ? part.downcase : part]
           end +
           tail
         )
@@ -45,6 +45,20 @@ class PathList
         end
         rules[-1].compress
         rules
+      end
+
+      # @param (see TokenRegexp#append_string)
+      # @return (see TokenRegexp#append_string)
+      def append_string(value)
+        return unless value
+
+        append_part(
+          if CanonicalPath.case_insensitive?
+            value.downcase
+          else
+            value
+          end
+        )
       end
     end
   end

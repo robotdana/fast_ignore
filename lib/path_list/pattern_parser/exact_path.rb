@@ -14,14 +14,14 @@ class PathList
       # @param polarity [:ignore, :allow]
       # @param root [String]
       def initialize(pattern, polarity, root)
-        @path = PathExpander.expand_path(pattern, root)
+        @path = CanonicalPath.full_path_from(pattern, root)
         @polarity = polarity
       end
 
       # @api private
       # @return [PathList::Matcher]
       def matcher
-        Matcher::ExactString.new(@path, @polarity)
+        Matcher::ExactString.build([@path], @polarity)
       end
 
       # @api private

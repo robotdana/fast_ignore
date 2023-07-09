@@ -93,6 +93,7 @@ GEM
       rubocop-capybara (~> 2.17)
       rubocop-factory_bot (~> 2.22)
     ruby-prof (0.18.0)
+    ruby-prof (0.18.0-x64-mingw32)
     ruby-prof-flamegraph (0.3.0)
       ruby-prof (~> 0.13)
     ruby-progressbar (1.13.0)
@@ -117,7 +118,10 @@ GEM
     yard (0.9.34)
 
 PLATFORMS
+  universal-java-1.8
   universal-java-11
+  x64-mingw-ucrt
+  x64-mingw32
   x86_64-darwin-20
   x86_64-darwin-22
   x86_64-linux

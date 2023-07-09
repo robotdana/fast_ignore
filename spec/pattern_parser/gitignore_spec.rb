@@ -3,6 +3,10 @@
 # rubocop:disable Style/RedundantRegexpEscape
 
 RSpec.describe PathList::PatternParser::Gitignore do
+  before do
+    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+  end
+
   let(:method_name) { :matcher }
   let(:polarity) { :ignore }
   let(:root) { nil }
@@ -114,7 +118,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matcher::MatchIfDir.new(
-                  PathList::Matcher::PathRegexp.new(%r{\A/a/path/(?:.*/)?ȋ\z}, :ignore)
+                  PathList::Matcher::PathRegexp.new(%r{\A/a/path/(?:.*/)?Ȋ\z}, :ignore)
                 )
             end
           end
@@ -760,7 +764,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matcher::MatchIfDir.new(
-                  PathList::Matcher::PathRegexp.new(%r{/ȋ\z}, :ignore)
+                  PathList::Matcher::PathRegexp.new(%r{/Ȋ\z}, :ignore)
                 )
             end
           end
@@ -1410,7 +1414,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
             it 'handles this specific edge case i stumbled across' do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matcher::MatchIfDir.new(
-                  PathList::Matcher::PathRegexp.new(%r{/ȋ\z}, :allow)
+                  PathList::Matcher::PathRegexp.new(%r{/Ȋ\z}, :allow)
                 )
             end
           end
@@ -2156,7 +2160,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
                       PathList::Matcher::PathRegexp.new(%r{\A/a/path/}, :allow)
                     ])
                   ),
-                  PathList::Matcher::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?ȋ/}, :allow)
+                  PathList::Matcher::PathRegexp.new(%r{\A\/a\/path\/(?:.*\/)?Ȋ/}, :allow)
                 ])
             end
           end
@@ -3507,7 +3511,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
               expect(build('Ȋ/'))
                 .to be_like PathList::Matcher::Any::Two.new([
                   PathList::Matcher::AllowAnyDir,
-                  PathList::Matcher::PathRegexp.new(%r{/ȋ/}, :allow)
+                  PathList::Matcher::PathRegexp.new(%r{/Ȋ/}, :allow)
                 ])
             end
           end

@@ -499,7 +499,7 @@ class PathList
   #     "would be matched by Dir.glob('**/*.rb')"
   #   end
   def include?(path)
-    full_path = PathExpander.expand_path_pwd(path)
+    full_path = CanonicalPath.full_path(path)
     candidate = Candidate.new(full_path)
     return false if !candidate.exists? || candidate.directory?
 
@@ -541,8 +541,8 @@ class PathList
   #   PathList.match?('my_directory/my_file', directory: true) # you can lie about whether a file is a directory
   #   PathList.match?('my_directory/my_file', content: '#!/bin/ruby') # you can also just lie about the content
   def match?(path, directory: nil, content: nil)
-    full_path = PathExpander.expand_path_pwd(path)
-    content = content.slice(/\A#!.*$/)&.downcase || '' if content
+    full_path = CanonicalPath.full_path(path)
+    content = content.slice(/\A#!.*$/) || '' if content
     candidate = Candidate.new(full_path, directory, content)
 
     recursive_match?(candidate.parent, dir_matcher) &&
@@ -572,7 +572,7 @@ class PathList
   def each(root = '.', &block)
     return enum_for(:each, root) unless block
 
-    root = PathExpander.expand_path_pwd(root)
+    root = CanonicalPath.full_path(root)
     root_candidate = Candidate.new(root)
     return self unless root_candidate.exists?
     return self unless recursive_match?(root_candidate.parent, dir_matcher)

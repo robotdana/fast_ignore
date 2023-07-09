@@ -7,12 +7,15 @@ class PathList
       class << self
         # @param parts_arrays [Array<Array<Symbol, String, EscapedString>>]
         # @return [Regexp]
-        def build(parts_arrays)
-          if parts_arrays.length == 1
-            Regexp.new(parts_arrays.first.map { |p| PARTS_HASH[p] }.join)
-          else
-            Regexp.new(build_regexp_string_from_hash(Merge.merge(parts_arrays)))
-          end
+        def build(parts_arrays, flags = 0)
+          Regexp.new(
+            if parts_arrays.length == 1
+              parts_arrays.first.map { |p| PARTS_HASH[p] }.join
+            else
+              build_regexp_string_from_hash(Merge.merge(parts_arrays))
+            end,
+            flags
+          )
         end
 
         # @param parts_array [Array<Symbol, String, EscapedString>]
@@ -49,7 +52,7 @@ class PathList
           nil => ''
         }
           .compare_by_identity
-          .tap { |h| h.default_proc = ->(_, k) { k.downcase } }
+          .tap { |h| h.default_proc = ->(_, k) { k } }
           .freeze
 
         private_constant :LITERAL_PARTS_HASH
@@ -61,7 +64,7 @@ class PathList
           character_class_close: ']'
         }
           .compare_by_identity
-          .tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k).downcase } }
+          .tap { |h| h.default_proc = ->(_, k) { ::Regexp.escape(k) } }
           .freeze
 
         private_constant :CHARACTER_CLASS_PARTS_HASH
@@ -83,7 +86,7 @@ class PathList
               if k.is_a?(EscapedString)
                 k
               else
-                ::Regexp.escape(k).downcase
+                ::Regexp.escape(k)
               end
             }
           end

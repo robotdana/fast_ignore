@@ -26,7 +26,7 @@ class PathList
       # @param (see Matcher#match)
       # @return (see Matcher#match)
       def match(candidate)
-        @matcher.match(candidate) if @regexp.match?(candidate.full_path_downcase)
+        @matcher.match(candidate) if @regexp.match?(candidate.full_path)
       end
 
       # @return (see Matcher#inspect)

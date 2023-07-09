@@ -3,10 +3,15 @@
 RSpec.describe PathList::PatternParser::ExactPath do
   subject(:matcher) { described_class.new(path, polarity, nil).matcher }
 
+  let(:case_insensitive) { false }
   let(:path) { '/path/to/exact/something' }
   let(:candidate_path) { path }
   let(:candidate) { PathList::Candidate.new(candidate_path, true) }
   let(:polarity) { :allow }
+
+  before do
+    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(case_insensitive)
+  end
 
   describe '#implicit_matcher' do
     subject(:matcher) { described_class.new(path, polarity, nil).implicit_matcher }
@@ -18,6 +23,21 @@ RSpec.describe PathList::PatternParser::ExactPath do
             PathList::Matcher::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
           ),
           PathList::Matcher::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+        ])
+      )
+    end
+
+    it 'builds a regex that matches parent and child somethings when case insensitive' do
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
+
+      expect(matcher).to be_like(
+        PathList::Matcher::Any::Two.new([
+          PathList::Matcher::MatchIfDir.new(
+            PathList::Matcher::ExactString::Set::CaseInsensitive.new(
+              ['/', '/path', '/path/to', '/path/to/exact'], :allow
+            )
+          ),
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A/path/to/exact/something/}, :allow)
         ])
       )
     end
@@ -35,6 +55,21 @@ RSpec.describe PathList::PatternParser::ExactPath do
           ])
         )
       end
+
+      it 'builds a regex that matches parent and child somethings when case insensitive' do
+        allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
+
+        expect(matcher).to be_like(
+          PathList::Matcher::Any::Two.new([
+            PathList::Matcher::MatchIfDir.new(
+              PathList::Matcher::ExactString::Set::CaseInsensitive.new(
+                ['/', '/path', '/path/to', '/path/to/exact'], :allow
+              )
+            ),
+            PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A/path/to/exact/something/}, :allow)
+          ])
+        )
+      end
     end
 
     it "doesn't need to match exact path" do
@@ -46,8 +81,16 @@ RSpec.describe PathList::PatternParser::ExactPath do
         .to be :allow
     end
 
-    it 'matches most parent path regardless of case' do
-      expect(matcher.match(PathList::Candidate.new('/PATH', true))).to be :allow
+    it 'matches exact case' do
+      expect(matcher.match(PathList::Candidate.new('/PATH', true))).to be_nil
+    end
+
+    context 'when case insensitive' do
+      let(:case_insensitive) { true }
+
+      it 'matches most parent path regardless of case' do
+        expect(matcher.match(PathList::Candidate.new('/PATH', true))).to be :allow
+      end
     end
 
     it 'matches parent path' do
@@ -101,8 +144,16 @@ RSpec.describe PathList::PatternParser::ExactPath do
       expect(matcher.match(PathList::Candidate.new(path, true))).to be :ignore
     end
 
-    it 'matches exact path case insensitively' do
-      expect(matcher.match(PathList::Candidate.new(path.upcase, true))).to be :ignore
+    it 'matches exact case' do
+      expect(matcher.match(PathList::Candidate.new(path.upcase, true))).to be_nil
+    end
+
+    context 'when case insensitive' do
+      let(:case_insensitive) { true }
+
+      it 'matches most parent path regardless of case' do
+        expect(matcher.match(PathList::Candidate.new(path.upcase, true))).to be :ignore
+      end
     end
 
     it "doesn't match most parent path" do

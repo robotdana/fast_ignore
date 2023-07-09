@@ -67,7 +67,7 @@ class PathList
             include_path = scan_value(file)
 
             value = self.class.parse(
-              PathExpander.expand_path(include_path, ::File.dirname(path)),
+              CanonicalPath.full_path_from(include_path, ::File.dirname(path)),
               root: root,
               nesting: nesting + 1
             )

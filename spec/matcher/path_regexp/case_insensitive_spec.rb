@@ -1,28 +1,20 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Matcher::PathRegexp do
+RSpec.describe PathList::Matcher::PathRegexp::CaseInsensitive do
   subject { described_class.build(regexp_tokens, polarity) }
 
   let(:polarity) { :allow }
   let(:regexp_tokens) { [['a']] }
 
-  before do
-    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
-  end
-
   it { is_expected.to be_frozen }
 
   describe '.build' do
-    it 'is case sensitive when the system is' do
+    it 'is just always case insensitive' do
+      # because the only reason we are building one is squashing existing ones
       allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
 
+      # The regexp isn't case sensitive because that's slower, instead we downcase everything, already.
       expect(subject).to be_like(described_class.new(/a/, :allow, [['a']]))
-    end
-
-    it 'is case insensitive when the system is' do
-      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
-
-      expect(subject).to be_like(described_class::CaseInsensitive.new(/a/, :allow, [['a']]))
     end
   end
 
@@ -31,7 +23,7 @@ RSpec.describe PathList::Matcher::PathRegexp do
     let(:regexp_tokens) { [['file.rb']] }
 
     let(:candidate) do
-      instance_double(PathList::Candidate, 'candidate', full_path: "/#{path}")
+      instance_double(PathList::Candidate, 'candidate', full_path_downcase: "/#{path.downcase}")
     end
 
     context 'with a matching rule' do
@@ -62,7 +54,7 @@ RSpec.describe PathList::Matcher::PathRegexp do
   end
 
   describe '#inspect' do
-    it { expect(subject).to have_inspect_value 'PathList::Matcher::PathRegexp.new(/a/, :allow)' }
+    it { expect(subject).to have_inspect_value 'PathList::Matcher::PathRegexp::CaseInsensitive.new(/a/, :allow)' }
   end
 
   describe '#weight' do

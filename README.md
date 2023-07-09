@@ -61,7 +61,7 @@ See the [full PathList documentation](docs/PathList).
 
 ## Limitations
 
-- PathList always matches patterns case-insensitively. (git varies by filesystem).
+- PathList matches patterns according to the case sensitively of the current directory when it was loaded. (git depends on the value of core.ignorecase).
 - PathList always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
 - git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. PathList assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined (why?), set git's built-in way to override this by setting this environment variable `export GIT_CONFIG_SYSTEM='/the/actual/location'` in your shell profile.
 - Because git looks at its own index objects and PathList looks at the filesystem there may be some differences between `PathList.gitignore` and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead which parses the .git/index file.

@@ -29,16 +29,16 @@ class PathList
         parser = PARSERS.fetch(format || :gitignore, nil)
         raise Error, "`format:` must be one of #{PARSERS.keys.map(&:inspect).join(', ')}" unless parser
 
-        root = PathExpander.expand_path_pwd(root) if root
+        root = CanonicalPath.full_path(root) if root
 
         if patterns_from_file
-          patterns_from_file = PathExpander.expand_path_pwd(patterns_from_file)
+          patterns_from_file = CanonicalPath.full_path(patterns_from_file)
           root ||= ::File.dirname(patterns_from_file)
         else
           patterns = patterns.flatten.flat_map { |string| string.to_s.lines }
         end
 
-        root ||= PathExpander.expand_path_pwd(root)
+        root ||= CanonicalPath.full_path(root)
 
         new(patterns: patterns, patterns_from_file: patterns_from_file, parser: parser, root: root,
             polarity: polarity).matcher

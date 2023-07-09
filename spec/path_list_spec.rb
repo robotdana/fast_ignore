@@ -168,17 +168,47 @@ RSpec.describe PathList do
       expect(subject).to allow_exactly('foo', 'bar')
     end
 
-    it 'creates a sensible list of matchers' do
+    it 'creates a sensible list of matchers when case insensitive' do
       gitignore 'foo', 'bar/'
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
 
       expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
         PathList::Matcher::CollectGitignore.new(
-          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
+          PathList::Matcher::Mutable.new(
+            PathList::Matcher::LastMatch::Two.new([
+              PathList::Matcher::Allow,
+              PathList::Matcher::PathRegexp::CaseInsensitive.new(
+                %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
+              )
+            ])
+          )
+        ),
+        PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{/\.git\z}, :ignore)
+      ])
+
+      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::Mutable.new(
+        PathList::Matcher::LastMatch::Two.new([
+          PathList::Matcher::Allow,
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(
+            %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore
+          )
+        ])
+      )
+    end
+
+    it 'creates a sensible list of matchers when case sensitive' do
+      gitignore 'foo', 'bar/'
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
+        PathList::Matcher::CollectGitignore.new(
+          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}(?:\z|/)}, :allow),
           PathList::Matcher::Mutable.new(
             PathList::Matcher::LastMatch::Two.new([
               PathList::Matcher::Allow,
               PathList::Matcher::PathRegexp.new(
-                %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
+                %r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?(?:foo\z|bar\z)}, :ignore
               )
             ])
           )
@@ -189,7 +219,7 @@ RSpec.describe PathList do
       expect(subject.send(:file_matcher)).to be_like PathList::Matcher::Mutable.new(
         PathList::Matcher::LastMatch::Two.new([
           PathList::Matcher::Allow,
-          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore)
+          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?foo\z}, :ignore)
         ])
       )
     end
@@ -203,12 +233,16 @@ RSpec.describe PathList do
     end
 
     it 'matches uppercase paths to lowercase patterns' do
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
+
       gitignore 'foo'
 
       expect(subject).to match_files('FOO')
     end
 
     it 'matches lowercase paths to uppercase patterns' do
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
+
       gitignore 'FOO'
 
       expect(subject).to match_files('foo')
@@ -1643,9 +1677,15 @@ RSpec.describe PathList do
         described_class.ignore('RUBY', format: :shebang)
       end
 
-      it 'matches regardless of case' do
+      it 'matches case sensitively' do
         create_file <<~RUBY, path: 'foo'
           #!/usr/bin/env ruby -w
+
+          puts('no')
+        RUBY
+
+        create_file <<~RUBY, path: 'UpperFoo'
+          #!/usr/bin/env RUBY -w
 
           puts('no')
         RUBY
@@ -1656,8 +1696,8 @@ RSpec.describe PathList do
           echo ok
         BASH
 
-        expect(subject).not_to allow_files('foo')
-        expect(subject).to allow_files('bar')
+        expect(subject).not_to allow_files('UpperFoo')
+        expect(subject).to allow_files('foo', 'bar')
       end
     end
 
@@ -1666,9 +1706,15 @@ RSpec.describe PathList do
         described_class.ignore('ruby', format: :shebang)
       end
 
-      it 'matches regardless of case' do
+      it 'matches case sensitively' do
         create_file <<~RUBY, path: 'foo'
           #!/USR/BIN/ENV RUBY
+
+          puts('no')
+        RUBY
+
+        create_file <<~RUBY, path: 'lower_foo'
+          #!/usr/bin/env ruby -w
 
           puts('no')
         RUBY
@@ -1679,8 +1725,8 @@ RSpec.describe PathList do
           echo ok
         BASH
 
-        expect(subject).not_to allow_files('foo')
-        expect(subject).to allow_files('bar')
+        expect(subject).not_to allow_files('lower_foo')
+        expect(subject).to allow_files('foo', 'bar')
       end
     end
   end

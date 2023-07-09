@@ -94,9 +94,9 @@ class PathList
         first_line = file.sysread(64)
         if first_line.start_with?('#!')
           if first_line.include?("\n")
-            first_line.downcase
+            first_line
           else
-            ::File.open(@full_path, &:readline).downcase
+            ::File.open(@full_path, &:readline)
           end
         else
           ''

@@ -9,9 +9,13 @@ class PathList
       # @param polarity [:allow, :ignore]
       # @return (see Matcher.build)
       def self.build(regexp_tokens, polarity)
-        return Blank if regexp_tokens.all?(&:empty?)
+        new(build_regexp(regexp_tokens), polarity, regexp_tokens)
+      end
 
-        new(TokenRegexp::Build.build(regexp_tokens), polarity, regexp_tokens)
+      # @param regexp_tokens [Array<Symbol, String, TokenRegexp::EscapedString>]
+      # @return [Regexp]
+      def self.build_regexp(regexp_tokens)
+        TokenRegexp::Build.build(regexp_tokens)
       end
 
       # @param Regexp

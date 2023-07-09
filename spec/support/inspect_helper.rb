@@ -7,7 +7,7 @@ module InspectHelper
 
   def debug_match(matcher, candidate)
     unless candidate.is_a?(PathList::Candidate)
-      candidate = PathList::Candidate.new(PathList::PathExpander.expand_path_pwd(candidate))
+      candidate = PathList::Candidate.new(PathList::CanonicalPath.full_path(candidate))
     end
 
     puts "#{matcher.inspect}\n => #{matcher.match(candidate).inspect}\n---" if matcher.respond_to?(:match)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe PathList::Matcher::ExactString::Set do
+RSpec.describe PathList::Matcher::ExactString::Set::CaseInsensitive do
   subject { described_class.new(strings, polarity) }
 
   let(:polarity) { :allow }
@@ -10,8 +10,8 @@ RSpec.describe PathList::Matcher::ExactString::Set do
 
   describe '#match' do
     it { expect(subject.match(PathList::Candidate.new('/one/path'))).to be :allow }
-    it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be_nil }
-    it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be_nil }
+    it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be :allow }
+    it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be :allow }
     it { expect(subject.match(PathList::Candidate.new('/Two/Path'))).to be :allow }
     it { expect(subject.match(PathList::Candidate.new('/one'))).to be_nil }
     it { expect(subject.match(PathList::Candidate.new('one/path'))).to be_nil }
@@ -21,8 +21,8 @@ RSpec.describe PathList::Matcher::ExactString::Set do
       let(:polarity) { :ignore }
 
       it { expect(subject.match(PathList::Candidate.new('/one/path'))).to be :ignore }
-      it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be_nil }
-      it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be_nil }
+      it { expect(subject.match(PathList::Candidate.new('/One/Path'))).to be :ignore }
+      it { expect(subject.match(PathList::Candidate.new('/two/path'))).to be :ignore }
       it { expect(subject.match(PathList::Candidate.new('/Two/Path'))).to be :ignore }
       it { expect(subject.match(PathList::Candidate.new('/one'))).to be_nil }
       it { expect(subject.match(PathList::Candidate.new('one/path'))).to be_nil }
@@ -32,11 +32,11 @@ RSpec.describe PathList::Matcher::ExactString::Set do
 
   describe '.build' do
     it 'calls .build on ExactString' do
-      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
 
       allow(PathList::Matcher::ExactString).to receive(:build).and_call_original
       expect(described_class.build(strings, polarity))
-        .to be_like(described_class.new(strings, polarity))
+        .to be_like(described_class.new(['/one/path', '/two/path'], polarity))
 
       expect(PathList::Matcher::ExactString).to have_received(:build)
     end
@@ -44,8 +44,9 @@ RSpec.describe PathList::Matcher::ExactString::Set do
 
   describe '#inspect' do
     it do
-      expect(subject)
-        .to have_inspect_value 'PathList::Matcher::ExactString::Set.new(["/one/path", "/Two/Path"], :allow)'
+      expect(subject).to have_inspect_value(
+        'PathList::Matcher::ExactString::Set::CaseInsensitive.new(["/one/path", "/two/path"], :allow)'
+      )
     end
   end
 
@@ -76,7 +77,7 @@ RSpec.describe PathList::Matcher::ExactString::Set do
 
   describe '#squash' do
     it 'squashes the list, building the right size' do
-      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+      allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
 
       other = PathList::Matcher::ExactString.new('/other/path', polarity)
 
@@ -84,7 +85,7 @@ RSpec.describe PathList::Matcher::ExactString::Set do
 
       expect(squashed).to be_like(
         described_class.new(
-          ['/one/path', '/Two/Path', '/other/path'], polarity
+          ['/one/path', '/two/path', '/other/path'], polarity
         )
       )
     end

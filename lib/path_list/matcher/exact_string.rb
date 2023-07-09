@@ -14,9 +14,18 @@ class PathList
       def self.build(set, polarity)
         case set.length
         when 0 then Blank
-        when 1 then new(set.first, polarity)
+        when 1
+          if CanonicalPath.case_insensitive?
+            self::CaseInsensitive.new(set.first, polarity)
+          else
+            new(set.first, polarity)
+          end
         else
-          self::Set.new(set, polarity)
+          if CanonicalPath.case_insensitive?
+            self::Set::CaseInsensitive.new(set, polarity)
+          else
+            self::Set.new(set, polarity)
+          end
         end
       end
 
@@ -32,7 +41,7 @@ class PathList
       # @param (see Matcher#match)
       # @return (see Matcher#match)
       def match(candidate)
-        return @polarity if @item == candidate.full_path_downcase
+        return @polarity if @item == candidate.full_path
       end
 
       # @return (see Matcher#inspect)

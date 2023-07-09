@@ -47,7 +47,7 @@ class PathList
           pattern = "#{negated_sigil}#{pattern}"
         elsif pattern.match?(%r{(?:\A[~/]|\A\.{1,2}/|(?:[^\\]|\A)(?:\\{2})*/\.\./)})
           dir_only! if pattern.match?(%r{/\s*\z}) # expand_path will remove it
-          pattern = "#{negated_sigil}#{PathExpander.expand_path(pattern, root)}"
+          pattern = "#{negated_sigil}#{CanonicalPath.full_path_from(pattern, root)}"
           root = '/'
         else
           pattern = "#{negated_sigil}/#{pattern}"

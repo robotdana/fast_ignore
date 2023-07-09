@@ -11,6 +11,11 @@ RSpec.describe PathList::PatternParser do
     )
   end
 
+  before do
+    allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+    stub_file patterns.join("\n"), patterns_from_file if patterns_from_file
+  end
+
   let(:patterns) { [] }
   let(:patterns_arg) { patterns_from_file ? [] : Array(patterns) }
   let(:patterns_from_file) { nil }
@@ -24,10 +29,6 @@ RSpec.describe PathList::PatternParser do
     else
       e.run
     end
-  end
-
-  before do
-    stub_file patterns.join("\n"), patterns_from_file if patterns_from_file
   end
 
   describe 'with blank patterns' do
