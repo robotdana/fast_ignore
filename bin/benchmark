@@ -221,6 +221,25 @@ benchmark('bsearch-or-include') do
   end
 end
 
+benchmark('add-trailing-slash') do
+  Benchmark.ips do |x|
+    x.config(config)
+    @string_slash = '/'
+    @string_trailing_slash = 'D:/'
+    @string_no_trailing_slash = '/bin'
+
+    x.report(:string_slash_end_with) { (@string_slash.end_with?('/') ? @string_slash : "#{@string_slash}/") + "str" }
+    x.report(:string_trailing_slash_end_with) { (@string_trailing_slash.end_with?('/') ? @string_trailing_slash : "#{@string_trailing_slash}/") + "str" }
+    x.report(:string_no_trailing_slash_end_with) { (@string_no_trailing_slash.end_with?('/') ? @string_no_trailing_slash : "#{@string_no_trailing_slash}/") + "str" }
+
+    x.report(:string_slash_file_join) { ::File.join(@string_slash, "str") }
+    x.report(:string_trailing_slash_file_join) { ::File.join(@string_trailing_slash, "str") }
+    x.report(:string_no_trailing_slash_file_join) { ::File.join(@string_no_trailing_slash, "str") }
+
+    x.compare!
+  end
+end
+
 benchmark('one-element-hash') do
   Benchmark.ips do |x|
     x.config(config)

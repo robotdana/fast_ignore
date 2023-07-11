@@ -21,6 +21,8 @@ class PathList
       # @param (see Matcher#match)
       # @return (see Matcher#match)
       def match(candidate)
+        puts "#{__FILE__}:#{__LINE__}, @regexp: #{@regexp}"
+        puts "#{__FILE__}:#{__LINE__}, candidate.full_path: #{candidate.full_path}"
         @polarity if @regexp.match?(candidate.full_path)
       end
 

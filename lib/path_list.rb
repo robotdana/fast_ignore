@@ -577,7 +577,7 @@ class PathList
     return self unless root_candidate.exists?
     return self unless recursive_match?(root_candidate.parent, dir_matcher)
 
-    relative_root = root == '/' ? root : "#{root}/"
+    relative_root = root.end_with?('/') ? root : "#{root}/"
 
     recursive_each(root_candidate, relative_root, dir_matcher, file_matcher, &block)
 

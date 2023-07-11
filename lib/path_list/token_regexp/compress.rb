@@ -8,6 +8,7 @@ class PathList
         # @param parts [Array<Symbol, String, EscapedString>]
         # @return [Array<Symbol, String, EscapedString>]
         def compress!(parts)
+          puts "#{__FILE__}:#{__LINE__}, parts (before): #{parts}"
           loop do
             next if compress_any!(parts)
             next if compress_any_dir!(parts)
@@ -17,6 +18,7 @@ class PathList
 
             break
           end
+          puts "#{__FILE__}:#{__LINE__}, parts (after): #{parts}"
         end
 
         private

@@ -29,10 +29,10 @@ class PathList
     #   the containing directory as a Candidate,
     #   or nil if this is already the root
     def parent
-      puts "@full_path: #{@full_path}"
-      return if @full_path == '/'
+      puts "#{__FILE__}:#{__LINE__}, @full_path: #{@full_path}"
+      return if @full_path.end_with?('/') # '/' on unix X:/ on win
 
-      puts "::File.dirname(@full_path): #{::File.dirname(@full_path)}"
+      puts "#{__FILE__}:#{__LINE__}, ::File.dirname(@full_path): #{::File.dirname(@full_path)}"
       self.class.new(::File.dirname(@full_path), true)
     end
 
@@ -40,9 +40,9 @@ class PathList
     #   the children of this as Candidates
     def child_candidates
       @child_candidates ||= begin
-        prepend_path = @full_path == '/' ? '' : @full_path
+        prepend_path = @full_path.end_with?('/') ? @full_path : "#{@full_path}/"
 
-        children.map { |filename| self.class.new("#{prepend_path}/#{filename}") }
+        children.map { |filename| self.class.new("#{prepend_path}#{filename}") }
       end
     end
 
