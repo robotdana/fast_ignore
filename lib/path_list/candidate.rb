@@ -29,8 +29,10 @@ class PathList
     #   the containing directory as a Candidate,
     #   or nil if this is already the root
     def parent
+      puts "@full_path: #{@full_path}"
       return if @full_path == '/'
 
+      puts "::File.dirname(@full_path): #{::File.dirname(@full_path)}"
       self.class.new(::File.dirname(@full_path), true)
     end
 

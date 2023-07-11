@@ -85,6 +85,7 @@ nocov
 noninfringement
 nosystem
 ofo
+ompare
 oop
 params
 pathlist

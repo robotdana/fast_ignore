@@ -27,6 +27,7 @@ GEM
     jar-dependencies (0.4.1)
     jaro_winkler (1.5.6)
     jaro_winkler (1.5.6-java)
+    jruby-win32ole (0.8.5)
     json (2.6.3)
     json (2.6.3-java)
     language_server-protocol (3.17.0.3)
@@ -136,6 +137,7 @@ DEPENDENCIES
   commonmarker
   debug
   get_process_mem
+  jruby-win32ole
   leftovers (>= 0.4.0)
   path_list!
   pry
