@@ -80,13 +80,13 @@ RSpec.describe PathList::Matcher::PathRegexp::CaseInsensitive do
     it { is_expected.not_to be_squashable_with(PathList::Matcher::Allow) }
 
     it 'is squashable with the same polarity values' do
-      other = described_class.build([['b']], :allow)
+      other = described_class.build([['bb']], :allow)
 
       expect(subject).to be_squashable_with(other)
     end
 
     it 'is not squashable with a different polarity value' do
-      other = described_class.build([['b']], :ignore)
+      other = described_class.build([['bb']], :ignore)
 
       expect(subject).not_to be_squashable_with(other)
     end
@@ -95,7 +95,7 @@ RSpec.describe PathList::Matcher::PathRegexp::CaseInsensitive do
   describe '#squash' do
     it 'squashes the regexps together' do
       subject
-      other = described_class.build([['b']], polarity)
+      other = described_class.build([['bb']], polarity)
 
       allow(described_class).to receive(:new).and_call_original
       squashed = subject.squash([subject, other], true)
@@ -104,7 +104,7 @@ RSpec.describe PathList::Matcher::PathRegexp::CaseInsensitive do
       expect(squashed).not_to be subject
       expect(squashed).not_to be other
 
-      expect(squashed).to be_like(described_class.new(/(?:a|b)/, polarity))
+      expect(squashed).to be_like(described_class.new(/(?:a|bb)/, polarity))
     end
   end
 

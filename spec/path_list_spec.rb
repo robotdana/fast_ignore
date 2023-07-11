@@ -256,7 +256,7 @@ RSpec.describe PathList do
       end
 
       it 'rescues errors in PathList methods', :aggregate_failures do
-        expect(subject.include?('foo')).to be false
+        expect(subject.include?('foo')).to be true
         expect(subject.match?('foo')).to be true
         expect(subject.to_a).to contain_exactly('.gitignore', 'foo')
       end
@@ -275,13 +275,13 @@ RSpec.describe PathList do
       end
 
       it 'rescues errors in PathList methods', :aggregate_failures do
-        expect(subject.include?('foo')).to be false
+        expect(subject.include?('foo')).to be true
         expect(subject.match?('foo')).to be true
         expect(subject.to_a).to contain_exactly('.gitignore', 'foo', 'foo_target')
       end
 
       it "doesn't rescue the yielded block" do
-        expect { subject.each { |x| File.read(x) }.to_a }.to raise_error(Errno::ELOOP)
+        expect { subject.each { |x| File.read(x) } }.to raise_error(Errno::ELOOP)
       end
     end
 

@@ -3,7 +3,7 @@
 RSpec.describe PathList::Matcher::All::Allow do
   subject { described_class.new(matchers) }
 
-  let(:matcher_allow_a) { instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1, polarity: :allow) }
+  let(:matcher_allow_a) { instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1.1, polarity: :allow) }
   let(:matcher_allow_b) { instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2, polarity: :allow) }
   let(:matcher_allow_c) { instance_double(PathList::Matcher, 'matcher_allow_c', weight: 3, polarity: :allow) }
   let(:matcher_allow_d) { instance_double(PathList::Matcher, 'matcher_allow_d', weight: 4, polarity: :allow) }
@@ -45,7 +45,7 @@ RSpec.describe PathList::Matcher::All::Allow do
 
   describe '#weight' do
     it 'is the matchers plus 1' do
-      expect(subject.weight).to eq 7
+      expect(subject.weight).to eq 7.1
     end
   end
 

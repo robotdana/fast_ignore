@@ -8,13 +8,17 @@ class PathList
       # @param tail [Array<Symbol, String, EscapedString>]
       # @return [TokenRegexp::Path]
       def self.new_from_path(path, tail = [:end_anchor])
-        new(
-          [:start_anchor] +
-          path.delete_prefix('/').split('/').flat_map do |part|
-            [:dir, CanonicalPath.case_insensitive? ? part.downcase : part]
-          end +
-          tail
-        )
+        parts = [:start_anchor]
+        split = path.split('/')
+        (parts << (CanonicalPath.case_insensitive? ? split[0].downcase : split[0])) if split[0] && !split[0].empty?
+        (parts << :dir) if split.length == 1 || (split.empty? && path == '/')
+        split.drop(1).each do |part|
+          parts << :dir
+          parts << (CanonicalPath.case_insensitive? ? part.downcase : part)
+        end
+        parts.concat(tail)
+
+        new(parts)
       end
 
       # @return [Boolean]
@@ -34,12 +38,15 @@ class PathList
 
       # @return [Array<TokenRegexp::Path>]
       def ancestors
-        prev_rule = [:start_anchor]
-        rules = [self.class.new([:start_anchor, :dir, :end_anchor])]
+        prev_rule = []
+        rules = []
         parts = @parts
         any_dir_index = parts.index(:any) || parts.index(:any_dir)
         parts = parts[0, any_dir_index] + [:any, :dir] if any_dir_index
-        parts.slice_before(:dir).to_a[1...-1].each do |chunk|
+        parts = parts.slice_before(:dir)
+        prev_rule.concat(parts.first)
+        rules << self.class.new(prev_rule + [:dir, :end_anchor])
+        parts.to_a[1...-1].each do |chunk|
           prev_rule.concat(chunk)
           rules << self.class.new(prev_rule + [:end_anchor])
         end

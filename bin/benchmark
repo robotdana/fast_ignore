@@ -99,6 +99,46 @@ benchmark('or-or-any') do
   end
 end
 
+
+benchmark('bang-bang') do
+  Benchmark.ips do |x|
+    x.config(config)
+    x.report(:nil_bang_nil, '!nil.nil?')
+    x.report(:nil_bang_bang, '!!nil')
+    x.report(:nil_ternary, 'nil ? true : false')
+    x.report(:truthy_ref_bang_nil, '![].nil?')
+    x.report(:truthy_ref_bang_bang, '!![]')
+    x.report(:truthy_ref_ternary, '[] ? true : false')
+    x.report(:truthy_bang_nil, '!1.nil?')
+    x.report(:truthy_bang_bang, '!!1')
+    x.report(:truthy_ternary, '1 ? true : false')
+    x.report(:true_bang_nil, '!true.nil?')
+    x.report(:true_bang_bang, '!!true')
+    x.report(:true_ternary, 'true ? true : false')
+    x.report(:false_bang_nil, '!false.nil?')
+    x.report(:false_bang_bang, '!!false')
+    x.report(:false_ternary, 'false ? true : false')
+    x.compare!
+  end
+end
+
+benchmark('nil-not-false') do
+  Benchmark.ips do |x|
+    x.config(config)
+    x.report(:nil_nil, 'nil.nil?')
+    x.report(:nil_eq_false, 'nil || false == nil')
+    x.report(:true_nil, 'true.nil?')
+    x.report(:true_eq_false, 'true || false == true')
+    x.report(:false_nil, 'false.nil?')
+    x.report(:false_eq_false, 'false || false == false')
+    x.report(:truthy_nil, '1.nil?')
+    x.report(:truthy_eq_false, '1 || false == 1')
+    x.report(:truthy_ref_nil, '[].nil?')
+    x.report(:truthy_ref_eq_false, '[] || false == []')
+    x.compare!
+  end
+end
+
 benchmark('hash-merge') do
   Benchmark.ips do |x|
     x.config(config)

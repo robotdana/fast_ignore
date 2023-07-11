@@ -3,14 +3,14 @@
 RSpec.describe PathList::Matcher::All::Two do
   subject { described_class.new(matchers) }
 
-  let(:matcher_allow_a) { instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1, polarity: :allow) }
-  let(:matcher_allow_b) { instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2, polarity: :allow) }
+  let(:matcher_allow_a) { instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1.1, polarity: :allow) }
+  let(:matcher_allow_b) { instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2.1, polarity: :allow) }
 
-  let(:matcher_ignore_a) { instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1, polarity: :ignore) }
-  let(:matcher_ignore_b) { instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2, polarity: :ignore) }
+  let(:matcher_ignore_a) { instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1.2, polarity: :ignore) }
+  let(:matcher_ignore_b) { instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2.2, polarity: :ignore) }
 
-  let(:matcher_mixed_a) { instance_double(PathList::Matcher, 'matcher_mixed_a', weight: 1, polarity: :mixed) }
-  let(:matcher_mixed_b) { instance_double(PathList::Matcher, 'matcher_mixed_b', weight: 2, polarity: :mixed) }
+  let(:matcher_mixed_a) { instance_double(PathList::Matcher, 'matcher_mixed_a', weight: 1.3, polarity: :mixed) }
+  let(:matcher_mixed_b) { instance_double(PathList::Matcher, 'matcher_mixed_b', weight: 2.3, polarity: :mixed) }
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b] }
 
@@ -47,7 +47,7 @@ RSpec.describe PathList::Matcher::All::Two do
 
   describe '#weight' do
     it 'is the matchers plus 1' do
-      expect(subject.weight).to eq 4
+      expect(subject.weight).to be_within(0.001).of(4.3)
     end
   end
 

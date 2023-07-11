@@ -31,7 +31,7 @@ class PathList
 
         loop do
           return dir if ::File.exist?("#{dir}/.git")
-          return pwd if dir.casecmp(home).zero? || dir == '/'
+          return pwd if dir.casecmp(home).zero? || dir.end_with?('/')
 
           dir = ::File.dirname(dir)
         end

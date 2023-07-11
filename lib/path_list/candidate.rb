@@ -13,7 +13,7 @@ class PathList
       @full_path = full_path
       @full_path_downcase = nil
       @directory = directory
-      @exists = nil
+
       @shebang = shebang
 
       @child_candidates = nil
@@ -29,10 +29,8 @@ class PathList
     #   the containing directory as a Candidate,
     #   or nil if this is already the root
     def parent
-      puts "#{__FILE__}:#{__LINE__}, @full_path: #{@full_path}"
       return if @full_path.end_with?('/') # '/' on unix X:/ on win
 
-      puts "#{__FILE__}:#{__LINE__}, ::File.dirname(@full_path): #{::File.dirname(@full_path)}"
       self.class.new(::File.dirname(@full_path), true)
     end
 
@@ -56,23 +54,32 @@ class PathList
       end
     end
 
-    # @return [Boolean] whether this path is a directory (false for symlinks to directories)
-    def directory?
-      return @directory unless @directory.nil?
+    # :nocov:
+    if ::RUBY_PLATFORM == 'jruby' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
+      # @return [Boolean] whether this path is a directory (false for symlinks to directories)
+      puts 'WE ARE WINDOWS JRUBY'
+      def directory?
+        return @directory unless @directory.nil?
 
-      @directory = ::File.lstat(@full_path).directory?
-    rescue ::SystemCallError
-      @exists ||= false
-      @directory = false
+        @directory = if ::File.symlink?(@full_path)
+          false
+        else
+          lstat&.directory? || false
+        end
+      end
+      # :nocov:
+    else
+      # @return [Boolean] whether this path is a directory (false for symlinks to directories)
+      def directory?
+        return @directory unless @directory.nil?
+
+        @directory = lstat&.directory? || false
+      end
     end
 
     # @return [Boolean] whether this path exists
     def exists?
-      return @exists unless @exists.nil?
-
-      @exists = ::File.exist?(@full_path)
-    rescue ::SystemCallError
-      @exists = false
+      lstat ? true : false
     end
 
     alias_method :original_inspect, :inspect # leftovers:keep
@@ -104,11 +111,21 @@ class PathList
           ''
         end
       rescue ::IOError, ::SystemCallError
-        @exists ||= false
+        @lstat ||= nil
         ''
       ensure
         file&.close
       end
+    end
+
+    private
+
+    def lstat
+      return @lstat if defined?(@lstat)
+
+      @lstat = ::File.lstat(@full_path)
+    rescue ::SystemCallError
+      @lstat = nil
     end
   end
 end

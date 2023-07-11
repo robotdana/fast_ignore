@@ -3,7 +3,7 @@
 RSpec.describe PathList::Matcher::All::Ignore do
   subject { described_class.new(matchers) }
 
-  let(:matcher_ignore_a) { instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1, polarity: :ignore) }
+  let(:matcher_ignore_a) { instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1.1, polarity: :ignore) }
   let(:matcher_ignore_b) { instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2, polarity: :ignore) }
   let(:matcher_ignore_c) { instance_double(PathList::Matcher, 'matcher_ignore_c', weight: 3, polarity: :ignore) }
   let(:matcher_ignore_d) { instance_double(PathList::Matcher, 'matcher_ignore_d', weight: 4, polarity: :ignore) }
@@ -45,7 +45,7 @@ RSpec.describe PathList::Matcher::All::Ignore do
 
   describe '#weight' do
     it 'is the matchers plus 1' do
-      expect(subject.weight).to eq 7
+      expect(subject.weight).to eq 7.1
     end
   end
 

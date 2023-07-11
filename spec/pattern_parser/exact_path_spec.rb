@@ -4,7 +4,7 @@ RSpec.describe PathList::PatternParser::ExactPath do
   subject(:matcher) { described_class.new(path, polarity, nil).matcher }
 
   let(:case_insensitive) { false }
-  let(:path) { '/path/to/exact/something' }
+  let(:path) { "#{FSROOT}path/to/exact/something" }
   let(:candidate_path) { path }
   let(:candidate) { PathList::Candidate.new(candidate_path, true) }
   let(:polarity) { :allow }
@@ -20,9 +20,11 @@ RSpec.describe PathList::PatternParser::ExactPath do
       expect(matcher).to be_like(
         PathList::Matcher::Any::Two.new([
           PathList::Matcher::MatchIfDir.new(
-            PathList::Matcher::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+            PathList::Matcher::ExactString::Set.new(
+              [FSROOT, "#{FSROOT}path", "#{FSROOT}path/to", "#{FSROOT}path/to/exact"], :allow
+            )
           ),
-          PathList::Matcher::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+          PathList::Matcher::PathRegexp.new(%r{\A#{FSROOT}path/to/exact/something/}o, :allow)
         ])
       )
     end
@@ -34,24 +36,29 @@ RSpec.describe PathList::PatternParser::ExactPath do
         PathList::Matcher::Any::Two.new([
           PathList::Matcher::MatchIfDir.new(
             PathList::Matcher::ExactString::Set::CaseInsensitive.new(
-              ['/', '/path', '/path/to', '/path/to/exact'], :allow
+              [
+                FSROOT_LOWER, "#{FSROOT_LOWER}path", "#{FSROOT_LOWER}path/to",
+                "#{FSROOT_LOWER}path/to/exact"
+              ], :allow
             )
           ),
-          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A/path/to/exact/something/}, :allow)
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A#{FSROOT_LOWER}path/to/exact/something/}o, :allow)
         ])
       )
     end
 
     describe 'with root and relative path' do
-      subject(:matcher) { described_class.new('./exact/something', polarity, '/path/to').implicit_matcher }
+      subject(:matcher) { described_class.new('./exact/something', polarity, "#{FSROOT}path/to").implicit_matcher }
 
       it 'builds a regex that matches parent and child somethings' do
         expect(matcher).to be_like(
           PathList::Matcher::Any::Two.new([
             PathList::Matcher::MatchIfDir.new(
-              PathList::Matcher::ExactString::Set.new(['/', '/path', '/path/to', '/path/to/exact'], :allow)
+              PathList::Matcher::ExactString::Set.new(
+                [FSROOT, "#{FSROOT}path", "#{FSROOT}path/to", "#{FSROOT}path/to/exact"], :allow
+              )
             ),
-            PathList::Matcher::PathRegexp.new(%r{\A/path/to/exact/something/}, :allow)
+            PathList::Matcher::PathRegexp.new(%r{\A#{FSROOT}path/to/exact/something/}o, :allow)
           ])
         )
       end
@@ -63,10 +70,13 @@ RSpec.describe PathList::PatternParser::ExactPath do
           PathList::Matcher::Any::Two.new([
             PathList::Matcher::MatchIfDir.new(
               PathList::Matcher::ExactString::Set::CaseInsensitive.new(
-                ['/', '/path', '/path/to', '/path/to/exact'], :allow
+                [
+                  FSROOT_LOWER, "#{FSROOT_LOWER}path", "#{FSROOT_LOWER}path/to",
+                  "#{FSROOT_LOWER}path/to/exact"
+                ], :allow
               )
             ),
-            PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A/path/to/exact/something/}, :allow)
+            PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A#{FSROOT_LOWER}path/to/exact/something/}o, :allow)
           ])
         )
       end
@@ -77,24 +87,24 @@ RSpec.describe PathList::PatternParser::ExactPath do
     end
 
     it 'matches most parent path' do
-      expect(matcher.match(PathList::Candidate.new('/path', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path", true)))
         .to be :allow
     end
 
     it 'matches exact case' do
-      expect(matcher.match(PathList::Candidate.new('/PATH', true))).to be_nil
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}PATH", true))).to be_nil
     end
 
     context 'when case insensitive' do
       let(:case_insensitive) { true }
 
       it 'matches most parent path regardless of case' do
-        expect(matcher.match(PathList::Candidate.new('/PATH', true))).to be :allow
+        expect(matcher.match(PathList::Candidate.new("#{FSROOT}PATH", true))).to be :allow
       end
     end
 
     it 'matches parent path' do
-      expect(matcher.match(PathList::Candidate.new('/path/to', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path/to", true)))
         .to be :allow
     end
 
@@ -114,17 +124,17 @@ RSpec.describe PathList::PatternParser::ExactPath do
     end
 
     it "doesn't match parent path starting with the same string" do
-      expect(matcher.match(PathList::Candidate.new('/path/to/exact-ish/something', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path/to/exact-ish/something", true)))
         .to be_nil
     end
 
     it "doesn't match path sibling" do
-      expect(matcher.match(PathList::Candidate.new('/path/to/exact/other', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path/to/exact/other", true)))
         .to be_nil
     end
 
     it "doesn't match path concatenation" do
-      expect(matcher.match(PathList::Candidate.new('/pathtoexactsomething', true))) # spellr:disable-line
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}pathtoexactsomething", true))) # spellr:disable-line
         .to be_nil
     end
   end
@@ -136,7 +146,7 @@ RSpec.describe PathList::PatternParser::ExactPath do
 
     it 'builds a matcher that matches exact something' do
       expect(matcher).to be_like(
-        PathList::Matcher::ExactString.new('/path/to/exact/something', :ignore)
+        PathList::Matcher::ExactString.new("#{FSROOT}path/to/exact/something", :ignore)
       )
     end
 
@@ -157,12 +167,12 @@ RSpec.describe PathList::PatternParser::ExactPath do
     end
 
     it "doesn't match most parent path" do
-      expect(matcher.match(PathList::Candidate.new('/path', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path", true)))
         .to be_nil
     end
 
     it "doesn't match parent path" do
-      expect(matcher.match(PathList::Candidate.new('/path/to', true)))
+      expect(matcher.match(PathList::Candidate.new("#{FSROOT}path/to", true)))
         .to be_nil
     end
 

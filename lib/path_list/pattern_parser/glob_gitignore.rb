@@ -20,6 +20,10 @@ class PathList
     # - Patterns containing with `/../` are resolved relative to the `root:` directory
     # - Patterns beginning with `*` (or `!*`) will match any descendant of the `root:` directory
     # - Other patterns match children (not descendants) of the `root:` directory
+    # - Additionally, on windows
+    #   - \ is treated as a path separator, not an escape character.
+    #     There is no cross-platform escape character when using :glob_gitignore format.
+    #   - Patterns beginning with `c:/`, `d:\`, or `!c:/`, or etc are absolute.
     # @example
     #   PathList.only(ARGV, format: :glob_gitignore)
     #   PathList.only(
@@ -33,9 +37,13 @@ class PathList
     #     format: :glob_gitignore
     #   ).to_a
     #   PathList.only('./relative_to_root_dir', format: :glob_gitignore, root: './subdir')
+    #   # on windows
+    #   PathList.only('c:\root\path', 'relative\to\current\dir, format: :glob_gitignore)
     # @see https://git-scm.com/docs/gitignore#_pattern_format
     # @see ::PathList::PatternParser::Gitignore
     class GlobGitignore < Gitignore
+      Autoloader.autoload(self)
+
       # @api private
       # @param pattern [String]
       # @param polarity [:ignore, :allow]
@@ -44,13 +52,15 @@ class PathList
         pattern = +'' if pattern.start_with?('#')
         negated_sigil = '!' if pattern.delete_prefix!('!')
         if pattern.start_with?('*')
-          pattern = "#{negated_sigil}#{pattern}"
-        elsif pattern.match?(%r{(?:\A[~/]|\A\.{1,2}/|(?:[^\\]|\A)(?:\\{2})*/\.\./)})
-          dir_only! if pattern.match?(%r{/\s*\z}) # expand_path will remove it
+          pattern = "#{negated_sigil}#{pattern.tr(::File::ALT_SEPARATOR.to_s, ::File::SEPARATOR)}"
+        elsif pattern.match?(EXPANDABLE_PATH)
+          dir_only! if pattern.match?(%r{[/\\]\s*\z}) # expand_path will remove it
+
           pattern = "#{negated_sigil}#{CanonicalPath.full_path_from(pattern, root)}"
-          root = '/'
+          root = nil
+          @anchored = true
         else
-          pattern = "#{negated_sigil}/#{pattern}"
+          pattern = "#{negated_sigil}/#{pattern.tr(::File::ALT_SEPARATOR.to_s, ::File::SEPARATOR)}"
         end
 
         super(pattern, polarity, root)

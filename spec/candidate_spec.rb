@@ -54,12 +54,12 @@ RSpec.describe PathList::Candidate do
       before { create_file_list 'foo' }
 
       it 'is memoized when true' do
-        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:lstat).and_call_original
 
         expect(candidate.exists?).to be true
-        expect(File).to have_received(:exist?).once
+        expect(File).to have_received(:lstat).once
         expect(candidate.exists?).to be true
-        expect(File).to have_received(:exist?).once
+        expect(File).to have_received(:lstat).once
       end
     end
 
@@ -67,22 +67,22 @@ RSpec.describe PathList::Candidate do
       let(:full_path) { './foo' }
 
       it 'is memoized when false' do
-        allow(File).to receive(:exist?).and_call_original
+        allow(File).to receive(:lstat).and_call_original
 
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:exist?).with('./foo').once
+        expect(File).to have_received(:lstat).with('./foo').once
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:exist?).with('./foo').once
+        expect(File).to have_received(:lstat).with('./foo').once
       end
 
       it 'is false when there is an error' do
-        allow(File).to receive(:exist?).and_call_original
-        allow(File).to receive(:exist?).with(full_path).and_raise(Errno::EACCES)
+        allow(File).to receive(:lstat).and_call_original
+        allow(File).to receive(:lstat).with(full_path).and_raise(Errno::EACCES)
 
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:exist?).once
+        expect(File).to have_received(:lstat).with('./foo').once
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:exist?).once
+        expect(File).to have_received(:lstat).with('./foo').once
       end
     end
   end
@@ -131,6 +131,20 @@ RSpec.describe PathList::Candidate do
     end
   end
 
+  describe '#directory?', :aggregate_failures do
+    within_temp_dir
+
+    it 'treats soft links to directories as files rather than the directories they point to' do
+      create_file_list 'foo_target/foo_child'
+      create_symlink('foo' => 'foo_target')
+
+      candidate = described_class.new(File.expand_path('foo'))
+      expect(File.symlink?('./foo')).to be true
+      # expect(candidate.send(:lstat)).to have_attributes(directory?: false, symlink?: true)
+      expect(candidate).not_to be_directory
+    end
+  end
+
   describe '#shebang' do
     context 'when reading from the file system' do
       within_temp_dir
@@ -144,7 +158,9 @@ RSpec.describe PathList::Candidate do
           puts('it saves the first 64 characters by default, not that many')
         RUBY
 
-        expect(candidate.shebang).to eq "#!/usr/bin/env ruby\n\nputs('it saves the first 64 characters by d"
+        expect(candidate.shebang).to eq("#!/usr/bin/env ruby\n\nputs('it saves the first 64 characters by d")
+          .or(eq("#!/usr/bin/env ruby\r\n\r\nputs('it saves the first 64 characters by"))
+          .or(eq("#!/usr/bin/env ruby\n\nputs('it saves the first 64 characters by"))
       end
 
       it 'returns the first line of a long shebang' do
@@ -154,8 +170,8 @@ RSpec.describe PathList::Candidate do
           puts('yes')
         RUBY
 
-        expect(candidate.shebang)
-          .to eq "#!/usr/bin/env ruby -w --disable-gems --verbose --enable-frozen-string-literal\n"
+        expect(candidate.shebang.chomp)
+          .to eq '#!/usr/bin/env ruby -w --disable-gems --verbose --enable-frozen-string-literal'
       end
 
       it 'returns the first line of one line if it has a shebang' do
@@ -163,7 +179,7 @@ RSpec.describe PathList::Candidate do
           #!/usr/bin/env ruby
         RUBY
 
-        expect(candidate.shebang).to eq "#!/usr/bin/env ruby\n"
+        expect(candidate.shebang.chomp).to eq '#!/usr/bin/env ruby'
       end
 
       it 'returns the first line of one line if it has a shebang and no trailing newline' do

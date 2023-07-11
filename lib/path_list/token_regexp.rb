@@ -9,7 +9,7 @@ class PathList
     Autoloader.autoload(self)
 
     # @return [Array<Symbol, String, EscapedString>]
-    attr_reader :parts
+    attr_accessor :parts
 
     # @param parts [Array<Symbol, String, EscapedString>]
     def initialize(parts = [])
@@ -72,9 +72,6 @@ class PathList
       append_part(value)
     end
 
-    protected
-
     # @param value [Array<Symbol, String, EscapedString>]
-    attr_writer :parts
   end
 end

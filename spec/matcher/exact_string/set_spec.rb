@@ -45,7 +45,7 @@ RSpec.describe PathList::Matcher::ExactString::Set do
   describe '#inspect' do
     it do
       expect(subject)
-        .to have_inspect_value 'PathList::Matcher::ExactString::Set.new(["/one/path", "/Two/Path"], :allow)'
+        .to have_inspect_value 'PathList::Matcher::ExactString::Set.new(["/Two/Path", "/one/path"], :allow)'
     end
   end
 

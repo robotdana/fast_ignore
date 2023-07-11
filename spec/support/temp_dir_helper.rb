@@ -66,7 +66,7 @@ module TempDirHelper
     yield
   ensure
     Dir.chdir(original_dir)
-    dir&.rmtree
+    ::FileUtils.remove_dir(dir.to_s, true) if dir
   end
 end
 

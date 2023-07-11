@@ -9,6 +9,7 @@ module StubFileHelper
 
   def stub_file(*lines, path:)
     stub_file_original
+    path = ::File.expand_path(path)
 
     stub_file_attributes(lines.join("\n")).each do |method, value|
       stub = allow(::File).to receive(method).with(path)

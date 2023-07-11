@@ -4,7 +4,7 @@ RSpec.describe PathList::Matcher::LastMatch::Ignore do
   subject { described_class.new(matchers) }
 
   let(:matcher_ignore_a) do
-    instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1.1, polarity: :ignore, squashable_with?: false)
   end
   let(:matcher_ignore_b) do
     instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2, polarity: :ignore, squashable_with?: false)
@@ -53,7 +53,7 @@ RSpec.describe PathList::Matcher::LastMatch::Ignore do
 
   describe '#weight' do
     it 'is the matchers halved' do
-      expect(subject.weight).to eq 3
+      expect(subject.weight).to eq 3.05
     end
   end
 

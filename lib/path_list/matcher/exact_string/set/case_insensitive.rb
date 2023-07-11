@@ -17,8 +17,6 @@ class PathList
           # @param (see Matcher#match)
           # @return (see Matcher#match)
           def match(candidate)
-            puts "#{__FILE__}:#{__LINE__}, @set: #{@set}"
-            puts "#{__FILE__}:#{__LINE__}, candidate.full_path_downcase: #{candidate.full_path_downcase}"
             @polarity if @set.include?(candidate.full_path_downcase)
           end
         end

@@ -5,7 +5,7 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
 
   let(:default_ignore_path) { "#{home}/.config/git/ignore" }
 
-  let(:home) { Dir.home }
+  let(:home) { File.expand_path(Dir.home) }
   let(:root) { Dir.pwd }
 
   let(:config_content) { "[core]\n\texcludesfile = #{excludesfile_value}\n" }
@@ -66,7 +66,15 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
       let(:excludesfile_value) { '"~/.global_gitignore_in_quotes' } # no closing quote
 
       it 'returns nil instead of default' do
+        allow(Warning).to receive(:warn)
         expect(subject).to be_nil
+        expect(Warning).to have_received(:warn).with(<<~MESSAGE)
+          PathList gitconfig parser failed
+          Unexpected character in quoted value
+          #{Dir.pwd}/.git/config:2:46
+          \texcludesfile = "~/.global_gitignore_in_quotes
+                                                        ^
+        MESSAGE
       end
 
       context 'when there is a valid global config file defined' do
@@ -78,7 +86,15 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
         end
 
         it 'still returns nil because any config is invalid' do
+          allow(Warning).to receive(:warn)
           expect(subject).to be_nil
+          expect(Warning).to have_received(:warn).with(<<~MESSAGE)
+            PathList gitconfig parser failed
+            Unexpected character in quoted value
+            #{Dir.pwd}/.git/config:2:46
+            \texcludesfile = "~/.global_gitignore_in_quotes
+                                                          ^
+          MESSAGE
         end
       end
     end
@@ -117,7 +133,7 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
       end
 
       it 'returns a literal unquoted value for the path' do
-        expect(subject).to eq '/system/gitignore'
+        expect(subject).to eq "#{FSROOT}system/gitignore"
       end
 
       context 'with GIT_CONFIG_NOSYSTEM set' do
@@ -167,7 +183,12 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
       end
 
       it 'returns nil, because git considers that a fatal error' do
+        allow(Warning).to receive(:warn)
         expect(subject).to be_nil
+        expect(Warning).to have_received(:warn).with(<<~MESSAGE.chomp)
+          PathList gitconfig parser failed
+          Invalid value "nonsense" for $GIT_CONFIG_NOSYSTEM
+        MESSAGE
       end
     end
   end

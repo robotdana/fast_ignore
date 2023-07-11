@@ -25,9 +25,10 @@ class PathList
         @rule_polarity = polarity
         @root = root
 
-        @dir_only = false
+        @dir_only ||= false
         @emitted = false
         @return = nil
+        @anchored ||= false
       end
 
       # @api private
@@ -50,10 +51,12 @@ class PathList
       private
 
       def prepare_regexp_builder
-        @re = if @root && @root != '/'
-          TokenRegexp::Path.new_from_path(@root, [:dir, :any_dir])
+        @re = if @root.nil?
+          TokenRegexp::Path.new([:start_anchor])
+        elsif @root.end_with?('/')
+          TokenRegexp::Path.new_from_path(@root, [:any_dir])
         else
-          TokenRegexp::Path.new([:start_anchor, :dir, :any_dir])
+          TokenRegexp::Path.new_from_path(@root, [:dir, :any_dir])
         end
 
         @start_any_dir_position = @re.length - 1
@@ -182,7 +185,7 @@ class PathList
           blank! if @s.hash?
           negated! if @s.exclamation_mark?
           prepare_regexp_builder
-          anchored! if @s.slash?
+          anchored! if !@anchored && @s.slash?
 
           catch :break do
             loop do

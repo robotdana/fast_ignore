@@ -2,13 +2,18 @@
 
 if RUBY_PLATFORM != 'java'
   module Warning # leftovers:allow
-    # def warn(msg) # leftovers:allow
-    #   raise msg unless msg.start_with?('PathList deprecation:', 'PathList gitconfig parser failed') || $allow_warning
-    # end
+    def warn(msg) # leftovers:allow
+      raise msg
+    end
   end
 end
 
 $doing_include = false
+
+if RUBY_PLATFORM == 'java'
+  Encoding.default_external = 'utf-8'
+  Encoding.default_internal = 'utf-8'
+end
 
 require 'fileutils'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
@@ -17,13 +22,12 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
-require_relative 'support/actual_git_ls_files'
-require_relative 'support/inspect_helper'
-require_relative 'support/temp_dir_helper'
-require_relative 'support/stub_env_helper'
-require_relative 'support/stub_file_helper'
-require_relative 'support/stub_global_gitignore_helper'
-require_relative 'support/matchers'
+PathList.only('support/*.rb', root: __dir__).each(__dir__) do |file|
+  require_relative file
+end
+
+FSROOT = File.expand_path('/')
+FSROOT_LOWER = FSROOT.downcase
 
 RSpec.configure do |config|
   config.expect_with :rspec do |c|

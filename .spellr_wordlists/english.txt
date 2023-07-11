@@ -2,6 +2,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaazzz
 allowlist
 appendables
 argv
+ath
 attributesfile
 backport
 barfoo
@@ -44,6 +45,7 @@ filetree
 flamegraph
 fnmatch
 frotz
+fsroot
 gemfile
 gitattributes
 gitconfig
@@ -61,6 +63,7 @@ i'm
 i've
 idx
 ignorecase
+ime
 includefile
 includeif
 initializable
@@ -141,6 +144,7 @@ unrecursive
 unstaged
 untr
 upcase
+urrent
 usr
 utf
 warmup

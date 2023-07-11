@@ -53,7 +53,8 @@ RSpec.describe PathList do
       end
     end
 
-    describe 'literal backslashes in filenames' do
+    # can't have literal backslashes in filenames in windows
+    describe 'literal backslashes in filenames', skip: windows? do
       it "never matches backslashes when they're not in the pattern" do
         gitignore 'foo'
 
@@ -89,11 +90,12 @@ RSpec.describe PathList do
       end
     end
 
-    describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
+    # can't end with literal backslashes in filenames in windows
+    describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")', skip: windows? do
       it 'ignores trailing spaces in the gitignore file' do
         gitignore 'foo  '
 
-        expect(subject).not_to match_files('foo  ', 'foo ')
+        expect(subject).not_to match_files('foo  ', 'foo ', 'foo\\')
         expect(subject).to match_files('foo')
       end
 
@@ -138,13 +140,6 @@ RSpec.describe PathList do
 
         it 'ignores directories but not files or symbolic links that match patterns ending with /' do
           gitignore 'foo/'
-
-          expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz', create: false)
-          expect(subject).to match_files('foo/bar', create: false)
-        end
-
-        it 'handles this specific edge case i stumbled across' do
-          gitignore "Ȋ/\nfoo/"
 
           expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz', create: false)
           expect(subject).to match_files('foo/bar', create: false)
@@ -944,6 +939,13 @@ RSpec.describe PathList do
           end
         end
       end
+    end
+
+    it 'handles this specific edge case i stumbled across' do
+      gitignore "Ȋ/\nfoo/"
+
+      expect(subject).not_to match_files('bar/foo', 'baz/foo', 'bar/baz')
+      expect(subject).to match_files('foo/bar')
     end
   end
 

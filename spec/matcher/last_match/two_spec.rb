@@ -4,27 +4,27 @@ RSpec.describe PathList::Matcher::LastMatch::Two do
   subject { described_class.new(matchers) }
 
   let(:matcher_allow_a) do
-    instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1.1, polarity: :allow, squashable_with?: false)
   end
 
   let(:matcher_allow_b) do
-    instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2.1, polarity: :allow, squashable_with?: false)
   end
 
   let(:matcher_ignore_a) do
-    instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_ignore_a', weight: 1.2, polarity: :ignore, squashable_with?: false)
   end
 
   let(:matcher_ignore_b) do
-    instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2, polarity: :ignore, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_ignore_b', weight: 2.2, polarity: :ignore, squashable_with?: false)
   end
 
   let(:matcher_mixed_a) do
-    instance_double(PathList::Matcher, 'matcher_mixed_a', weight: 1, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_mixed_a', weight: 1.3, polarity: :mixed, squashable_with?: false)
   end
 
   let(:matcher_mixed_b) do
-    instance_double(PathList::Matcher, 'matcher_mixed_b', weight: 2, polarity: :mixed, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_mixed_b', weight: 2.3, polarity: :mixed, squashable_with?: false)
   end
 
   let(:matchers) { [matcher_allow_a, matcher_ignore_b] }
@@ -62,7 +62,7 @@ RSpec.describe PathList::Matcher::LastMatch::Two do
 
   describe '#weight' do
     it 'is the matchers halved' do
-      expect(subject.weight).to eq 1.5
+      expect(subject.weight).to be_within(0.001).of(1.65)
     end
   end
 

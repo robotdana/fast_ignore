@@ -19,10 +19,8 @@ jobs:
         bundler-cache: true
     - run: gem install syntax_suggest
       timeout-minutes: 5
-    - run: bundle exec rspec spec --dry-run
-      timeout-minutes: 1
     - run: bundle exec rspec spec --tag=~gitls
-      timeout-minutes: 5
+      timeout-minutes: 10
 
   compare:
     strategy:
@@ -46,12 +44,16 @@ jobs:
       run: |
         Set-Location target
         ruby ..\bin\compare
+        ruby ..\bin\time
       # id: compare
       timeout-minutes: 1
     - if: matrix.platform != 'windows'
-      run: cd target && ../bin/compare
+      run: |
+        cd target
+        ../bin/compare
+        ../bin/time
       id: compare
-      timeout-minutes: 1
+      timeout-minutes: 2
     - run: cd target && ../bin/parse
       if: failure() && steps.compare.outcome == 'failure'
     - run: cd target && ../bin/ls

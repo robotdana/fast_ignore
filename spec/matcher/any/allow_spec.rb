@@ -4,7 +4,7 @@ RSpec.describe PathList::Matcher::Any::Allow do
   subject { described_class.new(matchers) }
 
   let(:matcher_allow_a) do
-    instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1, polarity: :allow, squashable_with?: false)
+    instance_double(PathList::Matcher, 'matcher_allow_a', weight: 1.1, polarity: :allow, squashable_with?: false)
   end
   let(:matcher_allow_b) do
     instance_double(PathList::Matcher, 'matcher_allow_b', weight: 2, polarity: :allow, squashable_with?: false)
@@ -53,7 +53,7 @@ RSpec.describe PathList::Matcher::Any::Allow do
 
   describe '#weight' do
     it 'is the matchers halved' do
-      expect(subject.weight).to eq 3
+      expect(subject.weight).to eq 3.05
     end
   end
 

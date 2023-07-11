@@ -22,7 +22,7 @@ class PathList
         chars_before_our_line = @scanner.string.match(/\A(?:.*\n){#{lineno - 1}}/)[0].length
         col = @scanner.pos - chars_before_our_line
         @scanner.pos = chars_before_our_line
-        line = @scanner.scan(/^[^\n]*/)
+        line = @scanner.scan(/^[^\r\n]*/)
         @scanner.pos = chars_before_our_line + col
 
         <<~MESSAGE

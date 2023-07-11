@@ -24,9 +24,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-          it { expect(build('')).to be_like PathList::Matcher::Blank }
-          it { expect(build(' ')).to be_like PathList::Matcher::Blank }
-          it { expect(build("\t")).to be_like PathList::Matcher::Blank }
+          it { expect(build('')).to eq PathList::Matcher::Blank }
+          it { expect(build(' ')).to eq PathList::Matcher::Blank }
+          it { expect(build("\t")).to eq PathList::Matcher::Blank }
         end
 
         describe 'The simple case' do
@@ -36,9 +36,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
         end
 
         describe 'A line starting with # serves as a comment.' do
-          it { expect(build('#foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('# foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('#')).to be_like PathList::Matcher::Blank }
+          it { expect(build('#foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('# foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('#')).to eq PathList::Matcher::Blank }
 
           it 'must be the first character' do
             expect(build(' #foo'))
@@ -61,7 +61,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'never matches a literal backslash at the end of the pattern' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Blank
+              .to eq PathList::Matcher::Blank
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
@@ -88,7 +88,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'considers trailing backslashes to never be matched' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Blank
+              .to eq PathList::Matcher::Blank
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
@@ -138,7 +138,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'treats a double slash as matching nothing' do
               expect(build('doc//frotz'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -490,7 +490,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'empty class matches nothing' do
               expect(build('b[]b'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it "doesn't match a slash even if you specify it middle" do
@@ -507,12 +507,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing' do
               expect(build('a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [ followed by \ matches nothing' do
               expect(build('a[\\'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an escaped [ is literal' do
@@ -527,12 +527,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing when negated' do
               expect(build('!a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [bc matches nothing' do
               expect(build('a[bc'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -559,7 +559,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'matches nothing with double slash' do
               expect(build('**//foo'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
@@ -672,9 +672,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-          it { expect(build('')).to be_like PathList::Matcher::Blank }
-          it { expect(build(' ')).to be_like PathList::Matcher::Blank }
-          it { expect(build("\t")).to be_like PathList::Matcher::Blank }
+          it { expect(build('')).to eq PathList::Matcher::Blank }
+          it { expect(build(' ')).to eq PathList::Matcher::Blank }
+          it { expect(build("\t")).to eq PathList::Matcher::Blank }
         end
 
         describe 'The simple case' do
@@ -682,9 +682,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
         end
 
         describe 'A line starting with # serves as a comment.' do
-          it { expect(build('#foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('# foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('#')).to be_like PathList::Matcher::Blank }
+          it { expect(build('#foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('# foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('#')).to eq PathList::Matcher::Blank }
 
           it 'must be the first character' do
             expect(build(' #foo'))
@@ -707,7 +707,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'never matches a literal backslash at the end of the pattern' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Blank
+              .to eq PathList::Matcher::Blank
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
@@ -734,7 +734,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'considers trailing backslashes to never be matched' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Blank
+              .to eq PathList::Matcher::Blank
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
@@ -784,7 +784,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'treats a double slash as matching nothing' do
               expect(build('doc//frotz'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -1136,7 +1136,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'empty class matches nothing' do
               expect(build('b[]b'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it "doesn't match a slash even if you specify it middle" do
@@ -1153,12 +1153,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing' do
               expect(build('a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [ followed by \ matches nothing' do
               expect(build('a[\\'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an escaped [ is literal' do
@@ -1173,12 +1173,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing when negated' do
               expect(build('!a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [bc matches nothing' do
               expect(build('a[bc'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -1205,7 +1205,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'matches nothing with double slash' do
               expect(build('**//foo'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
@@ -1318,9 +1318,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-          it { expect(build('')).to be_like PathList::Matcher::Blank }
-          it { expect(build(' ')).to be_like PathList::Matcher::Blank }
-          it { expect(build("\t")).to be_like PathList::Matcher::Blank }
+          it { expect(build('')).to eq PathList::Matcher::Blank }
+          it { expect(build(' ')).to eq PathList::Matcher::Blank }
+          it { expect(build("\t")).to eq PathList::Matcher::Blank }
         end
 
         describe 'The simple case' do
@@ -1332,9 +1332,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
         end
 
         describe 'A line starting with # serves as a comment.' do
-          it { expect(build('#foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('# foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('#')).to be_like PathList::Matcher::Blank }
+          it { expect(build('#foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('# foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('#')).to eq PathList::Matcher::Blank }
 
           it 'must be the first character' do
             expect(build(' #foo'))
@@ -1357,7 +1357,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'never matches a literal backslash at the end of the pattern' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
@@ -1384,7 +1384,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'considers trailing backslashes to never be matched' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
@@ -1434,7 +1434,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'treats a double slash as matching nothing' do
               expect(build('doc//frotz'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -1786,7 +1786,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'empty class matches nothing' do
               expect(build('b[]b'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it "doesn't match a slash even if you specify it middle" do
@@ -1803,12 +1803,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing' do
               expect(build('a['))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an unfinished [ followed by \ matches nothing' do
               expect(build('a[\\'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an escaped [ is literal' do
@@ -1823,12 +1823,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing when negated' do
               expect(build('!a['))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an unfinished [bc matches nothing' do
               expect(build('a[bc'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -1855,7 +1855,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'matches nothing with double slash' do
               expect(build('**//foo'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
@@ -1970,9 +1970,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-          it { expect(build('')).to be_like PathList::Matcher::Blank }
-          it { expect(build(' ')).to be_like PathList::Matcher::Blank }
-          it { expect(build("\t")).to be_like PathList::Matcher::Blank }
+          it { expect(build('')).to eq PathList::Matcher::Blank }
+          it { expect(build(' ')).to eq PathList::Matcher::Blank }
+          it { expect(build("\t")).to eq PathList::Matcher::Blank }
         end
 
         describe 'The simple case' do
@@ -1994,9 +1994,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
         end
 
         describe 'A line starting with # serves as a comment.' do
-          it { expect(build('#foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('# foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('#')).to be_like PathList::Matcher::Blank }
+          it { expect(build('#foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('# foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('#')).to eq PathList::Matcher::Blank }
 
           it 'must be the first character' do
             expect(build(' #foo'))
@@ -2043,7 +2043,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'never matches a literal backslash at the end of the pattern' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
@@ -2102,7 +2102,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'considers trailing backslashes to never be matched' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
@@ -2185,7 +2185,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'treats a double slash as matching nothing' do
               expect(build('doc//frotz'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -2224,7 +2224,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
           describe 'any matching file excluded by a previous pattern will become included again.' do
             it 'includes previously excluded files' do
               expect(build('!foo'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -3010,7 +3010,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'empty class matches nothing' do
               expect(build('b[]b'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it "doesn't match a slash even if you specify it middle" do
@@ -3041,12 +3041,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing' do
               expect(build('a['))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an unfinished [ followed by \ matches nothing' do
               expect(build('a[\\'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an escaped [ is literal' do
@@ -3078,12 +3078,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
             it 'assumes an unfinished [ matches nothing when negated' do
               # nothing matches anything for implicit when negated.
               expect(build('!a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [bc matches nothing' do
               expect(build('a[bc'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -3123,7 +3123,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'matches nothing with double slash' do
               expect(build('**//foo'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do
@@ -3381,9 +3381,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
       describe 'from the gitignore documentation' do
         describe 'A blank line matches no files, so it can serve as a separator for readability.' do
-          it { expect(build('')).to be_like PathList::Matcher::Blank }
-          it { expect(build(' ')).to be_like PathList::Matcher::Blank }
-          it { expect(build("\t")).to be_like PathList::Matcher::Blank }
+          it { expect(build('')).to eq PathList::Matcher::Blank }
+          it { expect(build(' ')).to eq PathList::Matcher::Blank }
+          it { expect(build("\t")).to eq PathList::Matcher::Blank }
         end
 
         describe 'The simple case' do
@@ -3400,9 +3400,9 @@ RSpec.describe PathList::PatternParser::Gitignore do
         end
 
         describe 'A line starting with # serves as a comment.' do
-          it { expect(build('#foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('# foo')).to be_like PathList::Matcher::Blank }
-          it { expect(build('#')).to be_like PathList::Matcher::Blank }
+          it { expect(build('#foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('# foo')).to eq PathList::Matcher::Blank }
+          it { expect(build('#')).to eq PathList::Matcher::Blank }
 
           it 'must be the first character' do
             expect(build(' #foo'))
@@ -3434,7 +3434,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'never matches a literal backslash at the end of the pattern' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
@@ -3473,7 +3473,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
           it 'considers trailing backslashes to never be matched' do
             expect(build('foo\\'))
-              .to be_like PathList::Matcher::Invalid
+              .to eq PathList::Matcher::Invalid
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
@@ -3536,7 +3536,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'treats a double slash as matching nothing' do
               expect(build('doc//frotz'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -3565,7 +3565,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
           describe 'any matching file excluded by a previous pattern will become included again.' do
             it 'includes previously excluded files' do
               expect(build('!foo'))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
           end
 
@@ -4065,7 +4065,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'empty class matches nothing' do
               expect(build('b[]b'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it "doesn't match a slash even if you specify it middle" do
@@ -4086,12 +4086,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing' do
               expect(build('a['))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an unfinished [ followed by \ matches nothing' do
               expect(build('a[\\'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'assumes an escaped [ is literal' do
@@ -4110,12 +4110,12 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'assumes an unfinished [ matches nothing when negated' do
               expect(build('!a['))
-                .to be_like PathList::Matcher::Blank
+                .to eq PathList::Matcher::Blank
             end
 
             it 'assumes an unfinished [bc matches nothing' do
               expect(build('a[bc'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
           end
 
@@ -4148,7 +4148,7 @@ RSpec.describe PathList::PatternParser::Gitignore do
 
             it 'matches nothing with double slash' do
               expect(build('**//foo'))
-                .to be_like PathList::Matcher::Invalid
+                .to eq PathList::Matcher::Invalid
             end
 
             it 'matches all directories when only **/ (interpreted as ** then the trailing / for dir only)' do

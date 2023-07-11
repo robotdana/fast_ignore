@@ -19,7 +19,7 @@ class PathList
       def class_from_path(path)
         name = ::File.basename(path).delete_suffix('.rb')
 
-        if name == 'version'
+        if name == 'version' || name == 'expandable_path'
           name.upcase
         else
           name.gsub(/(?:^|_)(\w)/, &:upcase).delete('_')

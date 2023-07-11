@@ -33,7 +33,7 @@ class PathList
 
         # @return (see Matcher#inspect)
         def inspect
-          "#{self.class}.new([#{@set.map(&:inspect).join(', ')}], #{@polarity.inspect})"
+          "#{self.class}.new([#{@set.to_a.sort.map(&:inspect).join(', ')}], #{@polarity.inspect})"
         end
 
         # @return set [Set]

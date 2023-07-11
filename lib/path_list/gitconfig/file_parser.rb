@@ -51,7 +51,7 @@ class PathList
         file = ::StringScanner.new(::File.read(path))
 
         until file.eos?
-          if file.skip(/(\s+|[#;].*\n)/)
+          if file.skip(/(\s+|[#;].*\r?\n)/)
             # skip
           elsif file.skip(/\[core\]/i)
             self.section = :core
@@ -61,9 +61,9 @@ class PathList
             self.section = include_if(file) ? :include : :not_include
           elsif file.skip(/\[[\w.]+( "([^\0\\"]|\\(\\{2})*"|\\{2}*)+")?\]/)
             self.section = :other
-          elsif section == :core && file.skip(/excludesfile\s*=(\s|\\\n)*/i)
+          elsif section == :core && file.skip(/excludesfile\s*=(\s|\\\r?\n)*/i)
             self.value = scan_value(file)
-          elsif section == :include && file.skip(/path\s*=(\s|\\\n)*/)
+          elsif section == :include && file.skip(/path\s*=(\s|\\\r?\n)*/)
             include_path = scan_value(file)
 
             value = self.class.parse(
@@ -73,9 +73,9 @@ class PathList
             )
             self.value = value if value
             self.section = :include
-          elsif file.skip(/[a-zA-Z0-9]\w*\s*([#;].*)?\n/)
+          elsif file.skip(/[a-zA-Z0-9]\w*\s*([#;].*)?\r?\n/)
             nil
-          elsif file.skip(/[a-zA-Z0-9]\w*\s*=(\s|\\\n)*/)
+          elsif file.skip(/[a-zA-Z0-9]\w*\s*=(\s|\\\r?\n)*/)
             skip_value(file)
           else
             raise ParseError.new('Unexpected character', scanner: file, path: path)
@@ -84,7 +84,7 @@ class PathList
       end
 
       def scan_condition_value(file)
-        if file.scan(/([^\0\\\n"]|\\(\\{2})*"|\\{2}*)+(?="\])/)
+        if file.scan(/([^\0\\\r\n"]|\\(\\{2})*"|\\{2}*)+(?="\])/)
           value = file.matched
           file.skip(/"\]/)
           value
@@ -94,7 +94,7 @@ class PathList
       end
 
       def skip_condition_value(file)
-        unless file.skip(/([^\0\\\n"]|\\(\\{2})*"|\\{2}*)+"\]/)
+        unless file.skip(/([^\0\\\r\n"]|\\(\\{2})*"|\\{2}*)+"\]/)
           raise ParseError.new('Unexpected character in condition', scanner: file, path: path)
         end
       end
@@ -135,7 +135,7 @@ class PathList
       def scan_value(file)
         value = +''
         until file.eos?
-          if file.skip(/\\\n/)
+          if file.skip(/\\\r?\n/)
             # continue
           elsif file.skip(/\\\\/)
             value << '\\'
@@ -152,7 +152,7 @@ class PathList
           elsif within_quotes
             if file.skip(/"/)
               self.within_quotes = false
-            elsif file.scan(/[^"\\\n]+/)
+            elsif file.scan(/[^"\\\n\r]+/)
               value << file.matched
             else
               raise ParseError.new('Unexpected character in quoted value', scanner: file, path: path)
@@ -161,7 +161,7 @@ class PathList
             self.within_quotes = true
           elsif file.scan(/[^;#"\s\\]+/)
             value << file.matched
-          elsif file.skip(/\s*[;#\n]/)
+          elsif file.skip(/\s*[;#\n\r]/)
             break
           elsif file.scan(/\s+/) # rubocop:disable Lint/DuplicateBranch
             value << file.matched
@@ -179,14 +179,14 @@ class PathList
 
       def skip_value(file)
         until file.eos?
-          if file.skip(/\\(?:\n|\\|n|t|b|")/)
+          if file.skip(/\\(?:\r?\n|\\|n|t|b|")/)
             nil
           elsif file.skip(/\\/)
             raise ParseError.new('Unrecognized escape sequence in value', scanner: file, path: path)
           elsif within_quotes
             if file.skip(/"/)
               self.within_quotes = false
-            elsif file.skip(/[^"\\\n]+/)
+            elsif file.skip(/[^"\\\n\r]+/)
               nil
             else
               raise ParseError.new('Unexpected character in quoted value', scanner: file, path: path)
@@ -195,7 +195,7 @@ class PathList
             self.within_quotes = true
           elsif file.skip(/[^;#"\s\\]+/) # rubocop:disable Lint/DuplicateBranch
             nil
-          elsif file.skip(/\s*[;#\n]/)
+          elsif file.skip(/\s*[;#\n\r]/)
             break
           elsif file.skip(/\s+/) # rubocop:disable Lint/DuplicateBranch
             nil
