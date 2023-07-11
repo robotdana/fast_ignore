@@ -27,6 +27,7 @@ class PathList
 
         @dir_only = false
         @emitted = false
+        @return = nil
       end
 
       # @api private
@@ -173,7 +174,7 @@ class PathList
       end
 
       def process_rule
-        return if @rule_processed
+        return if defined?(@rule_processed)
 
         @rule_processed = true
 

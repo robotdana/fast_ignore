@@ -91,6 +91,7 @@ pathlist
 pathspec
 performant
 prettierignore
+proctable
 pwd
 quotepath
 rackup

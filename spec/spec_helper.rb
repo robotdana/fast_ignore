@@ -11,6 +11,7 @@ end
 $doing_include = false
 
 require 'fileutils'
+require 'get_process_mem'
 FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
 
 require 'bundler/setup'
@@ -37,6 +38,7 @@ RSpec.configure do |config|
   end
 
   config.before do
+    puts "Memory usage: #{GetProcessMem.new.mb}"
     Kernel.srand config.seed
     stub_blank_global_config
     allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
