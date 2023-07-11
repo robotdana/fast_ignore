@@ -24,10 +24,7 @@ platforms :ruby do
   gem 'yard'
 end
 
-gem 'get_process_mem'
-gem 'jruby-win32ole'
 gem 'rspec', '~> 3.0'
 gem 'syntax_suggest'
-gem 'sys-proctable'
 
 gemspec
