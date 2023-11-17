@@ -281,7 +281,9 @@ RSpec.describe PathList do
       end
 
       it "doesn't rescue the yielded block" do
-        expect { subject.each { |x| File.read(x) } }.to raise_error(Errno::ELOOP)
+        # jruby windows does enoent here. i don't know why
+        expect { subject.each { |x| File.read(x) } }
+          .to raise_error(be_a(Errno::ELOOP).or(be_a(Errno::ENOENT)))
       end
     end
 

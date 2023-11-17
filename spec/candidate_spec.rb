@@ -140,7 +140,8 @@ RSpec.describe PathList::Candidate do
 
       candidate = described_class.new(File.expand_path('foo'))
       expect(File.symlink?('./foo')).to be true
-      # expect(candidate.send(:lstat)).to have_attributes(directory?: false, symlink?: true)
+      expect(File.stat('./foo')).to have_attributes(directory?: false, symlink?: true)
+      expect(candidate.send(:lstat)).to have_attributes(directory?: false, symlink?: true)
       expect(candidate).not_to be_directory
     end
   end

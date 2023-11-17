@@ -55,13 +55,14 @@ class PathList
     end
 
     # :nocov:
-    if ::RUBY_PLATFORM == 'jruby' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
+    if ::RUBY_PLATFORM == 'java' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
       # @return [Boolean] whether this path is a directory (false for symlinks to directories)
-      puts 'WE ARE WINDOWS JRUBY'
       def directory?
         return @directory unless @directory.nil?
 
         @directory = if ::File.symlink?(@full_path)
+          warn 'Symlink lstat'
+          warn lstat.inspect
           false
         else
           lstat&.directory? || false
