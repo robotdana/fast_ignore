@@ -11,6 +11,8 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
   let(:polarity) { :ignore }
   let(:root) { nil }
 
+  let(:escape_character) { windows? ? '`' : '\\' }
+
   def build(pattern)
     described_class
       .new(+pattern, polarity, root)
@@ -35,14 +37,14 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
 
         describe 'The windows case' do
           before do
+            # use windows expand_path:
             allow(File).to receive(:expand_path).and_call_original
-            # use windows regexp:
             allow(File).to receive(:expand_path).with('/').and_return('D:/')
-            stub_const('::File::ALT_SEPARATOR', '\\')
-
-            # treat these as absolute
             allow(File).to receive(:expand_path)
-              .with(a_string_matching(%r{D:[\\/]foo[\\/]bar[\\/]?}), '/a/path').and_return('D:/foo/bar')
+              .with(a_string_matching(%r{D:/.*}), '/a/path') do |path, _|
+                path.tr('\\\\', '/').delete_suffix('/')
+              end
+            stub_const('::File::ALT_SEPARATOR', '\\')
 
             silence_warnings do
               load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/expandable_path.rb', __dir__)
@@ -60,6 +62,7 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
           it { expect(build('D:/foo/bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
           it { expect(build('D:\\foo\\bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
           it { expect(build('D:\foo/bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
+          it { expect(build('D:\`f`o`o`/`b`a`r')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
 
           it do
             expect(build('D:/foo/bar/'))
@@ -123,59 +126,59 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
               .to be_like PathList::Matcher::ExactString.new('/a/path/ #foo', :ignore)
           end
 
-          describe 'Put a backslash ("\") in front of patterns that begin with a hash', skip: windows? do
+          describe 'Put a backslash ("\") in front of patterns that begin with a hash' do
             it do
-              expect(build('\\#foo'))
+              expect(build("#{escape_character}#foo"))
                 .to be_like PathList::Matcher::ExactString.new('/a/path/#foo', :ignore)
             end
           end
         end
 
-        describe 'literal backslashes in filenames', skip: windows? do
+        describe 'literal backslashes in filenames' do
           it 'matches an escaped backslash at the end of the pattern' do
-            expect(build('foo\\\\'))
-              .to be_like PathList::Matcher::ExactString.new('/a/path/foo\\', :ignore)
+            expect(build("foo#{escape_character}#{escape_character}"))
+              .to be_like PathList::Matcher::ExactString.new("/a/path/foo#{escape_character}", :ignore)
           end
 
           it 'never matches a literal backslash at the end of the pattern' do
-            expect(build('foo\\'))
+            expect(build("foo#{escape_character}"))
               .to eq PathList::Matcher::Blank
           end
 
           it 'matches an escaped backslash at the start of the pattern' do
-            expect(build('\\\\foo'))
-              .to be_like PathList::Matcher::ExactString.new('/a/path/\\foo', :ignore)
+            expect(build("#{escape_character}#{escape_character}foo"))
+              .to be_like PathList::Matcher::ExactString.new("/a/path/#{escape_character}foo", :ignore)
           end
 
           it 'matches a literal escaped f at the start of the pattern' do
-            expect(build('\\foo'))
+            expect(build("#{escape_character}foo"))
               .to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore)
           end
         end
 
-        describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")', skip: windows? do
+        describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")' do
           it 'ignores trailing spaces in the gitignore file' do
             expect(build('foo  '))
               .to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore)
           end
 
           it "doesn't ignore trailing spaces if there's a backslash" do
-            expect(build('foo \\ '))
+            expect(build("foo #{escape_character} "))
               .to be_like PathList::Matcher::ExactString.new('/a/path/foo  ', :ignore)
           end
 
           it 'considers trailing backslashes to never be matched' do
-            expect(build('foo\\'))
+            expect(build("foo#{escape_character}"))
               .to eq PathList::Matcher::Blank
           end
 
           it "doesn't ignore trailing spaces if there's a backslash before every space" do
-            expect(build('foo\\ \\ '))
+            expect(build("foo#{escape_character} #{escape_character} "))
               .to be_like PathList::Matcher::ExactString.new('/a/path/foo  ', :ignore)
           end
 
           it "doesn't ignore just that trailing spaces if there's a backslash before the non last space" do
-            expect(build('foo\\  '))
+            expect(build("foo#{escape_character}  "))
               .to be_like PathList::Matcher::ExactString.new('/a/path/foo ', :ignore)
           end
         end
@@ -250,8 +253,8 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
           describe 'Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!"' do
             # for example, "\!important!.txt".'
 
-            it 'matches files starting with a literal ! if its preceded by a backslash', skip: windows? do
-              expect(build('\!important!.txt'))
+            it 'matches files starting with a literal ! if its preceded by a backslash' do
+              expect(build("#{escape_character}!important!.txt"))
                 .to be_like PathList::Matcher::ExactString.new('/a/path/!important!.txt', :ignore)
             end
           end
@@ -377,33 +380,33 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^d]\z}, :ignore)
             end
 
-            it 'treats escaped backward character class range as the first character of the range', skip: windows? do
-              expect(build('a[\\]-\\[]'))
+            it 'treats escaped backward character class range as the first character of the range' do
+              expect(build("a[#{escape_character}]-#{escape_character}[]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\]]\z}, :ignore)
             end
 
-            it 'treats negated escaped backward character class range as the first char of range', skip: windows? do
-              expect(build('a[^\\]-\\[]'))
+            it 'treats negated escaped backward character class range as the first char of range' do
+              expect(build("a[^#{escape_character}]-#{escape_character}[]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\]]\z}, :ignore)
             end
 
-            it 'treats a escaped character class range as as a range', skip: windows? do
-              expect(build('a[\\[-\\]]'))
+            it 'treats a escaped character class range as as a range' do
+              expect(build("a[#{escape_character}[-#{escape_character}]]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\[-\]]\z}, :ignore)
             end
 
-            it 'treats a negated escaped character class range as a range', skip: windows? do
-              expect(build('a[^\\[-\\]]'))
+            it 'treats a negated escaped character class range as a range' do
+              expect(build("a[^#{escape_character}[-#{escape_character}]]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\[-\]]\z}, :ignore)
             end
 
-            it 'treats an unnecessarily escaped character class range as a range', skip: windows? do
-              expect(build('a[\\a-\\c]'))
+            it 'treats an unnecessarily escaped character class range as a range' do
+              expect(build("a[#{escape_character}a-#{escape_character}c]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c]\z}, :ignore)
             end
 
-            it 'treats a negated unnecessarily escaped character class range as a range', skip: windows? do
-              expect(build('a[^\\a-\\c]'))
+            it 'treats a negated unnecessarily escaped character class range as a range' do
+              expect(build("a[^#{escape_character}a-#{escape_character}c]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^a-c]\z}, :ignore)
             end
 
@@ -546,8 +549,8 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[/\^]\z}, :ignore)
             end
 
-            it '[\\^] matches literal ^', skip: windows? do
-              expect(build('a[\^]'))
+            it '[\\^] matches literal ^' do
+              expect(build("a[#{escape_character}^]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\^]\z}, :ignore)
             end
 
@@ -588,18 +591,18 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 .to eq PathList::Matcher::Blank
             end
 
-            it 'assumes an unfinished [ followed by \ matches nothing', skip: windows? do
-              expect(build('a[\\'))
+            it 'assumes an unfinished [ followed by \ matches nothing' do
+              expect(build("a[#{escape_character}"))
                 .to eq PathList::Matcher::Blank
             end
 
-            it 'assumes an escaped [ is literal', skip: windows? do
-              expect(build('a\\['))
+            it 'assumes an escaped [ is literal' do
+              expect(build("a#{escape_character}["))
                 .to be_like PathList::Matcher::ExactString.new('/a/path/a[', :ignore)
             end
 
-            it 'assumes an escaped [ is literal inside a group', skip: windows? do
-              expect(build('a[\\[]'))
+            it 'assumes an escaped [ is literal inside a group' do
+              expect(build("a[#{escape_character}[]"))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\[]\z}, :ignore)
             end
 

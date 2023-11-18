@@ -18,6 +18,7 @@ class PathList
 
       @child_candidates = nil
       @children = nil
+      @ftype = nil
     end
 
     # @return [String] full path downcased
@@ -54,33 +55,16 @@ class PathList
       end
     end
 
-    # :nocov:
-    if ::RUBY_PLATFORM == 'java' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
-      # @return [Boolean] whether this path is a directory (false for symlinks to directories)
-      def directory?
-        return @directory unless @directory.nil?
+    # @return [Boolean] whether this path is a directory (false for symlinks to directories)
+    def directory?
+      return @directory unless @directory.nil?
 
-        @directory = if ::File.symlink?(@full_path)
-          warn 'Symlink lstat'
-          warn lstat.inspect
-          false
-        else
-          lstat&.directory? || false
-        end
-      end
-      # :nocov:
-    else
-      # @return [Boolean] whether this path is a directory (false for symlinks to directories)
-      def directory?
-        return @directory unless @directory.nil?
-
-        @directory = lstat&.directory? || false
-      end
+      @directory = ftype == 'directory'
     end
 
     # @return [Boolean] whether this path exists
     def exists?
-      lstat ? true : false
+      ftype != 'error'
     end
 
     alias_method :original_inspect, :inspect # leftovers:keep
@@ -112,7 +96,7 @@ class PathList
           ''
         end
       rescue ::IOError, ::SystemCallError
-        @lstat ||= nil
+        @ftype ||= 'error'
         ''
       ensure
         file&.close
@@ -121,12 +105,29 @@ class PathList
 
     private
 
-    def lstat
-      return @lstat if defined?(@lstat)
+    # :nocov:
+    # https://github.com/jruby/jruby/issues/8018
+    # ftype follows symlinks on jruby on windows.
+    if ::RUBY_PLATFORM == 'java' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
+      refine ::File do
+        # :nodoc:
+        def ftype(path)
+          if ::File.symlink?(path)
+            'link'
+          else
+            super
+          end
+        end
+      end
+    end
+    # :nocov:
 
-      @lstat = ::File.lstat(@full_path)
+    def ftype
+      return @ftype if @ftype
+
+      @ftype = ::File.ftype(@full_path)
     rescue ::SystemCallError
-      @lstat = nil
+      @ftype = 'error'
     end
   end
 end

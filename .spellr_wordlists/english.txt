@@ -137,6 +137,7 @@ tsx
 ttributes
 txt
 unanchorable
+unc
 unexpandable
 unfuck
 unnegated

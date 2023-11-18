@@ -20,10 +20,13 @@ class PathList
     # - Patterns containing with `/../` are resolved relative to the `root:` directory
     # - Patterns beginning with `*` (or `!*`) will match any descendant of the `root:` directory
     # - Other patterns match children (not descendants) of the `root:` directory
-    # - Additionally, on windows
-    #   - \ is treated as a path separator, not an escape character.
-    #     There is no cross-platform escape character when using :glob_gitignore format.
-    #   - Patterns beginning with `c:/`, `d:\`, or `!c:/`, or etc are absolute.
+    # - Additionally, on windows:
+    #   - either / or \ (slash or backslash) can be used as path separators.
+    #   - therefore \ (backslash) isn't available to be used as an escape character
+    #   - instead ` (grave accent) is used as an escape character
+    #   - patterns beginning with `c:/`, `d:\`, or `!c:/`, or etc are absolute.
+    #   - a path beginning with / or \ is a shortcut for the current working directory drive.
+    # - there is no cross platform escape character, this is intended to match the current shell
     # @example
     #   PathList.only(ARGV, format: :glob_gitignore)
     #   PathList.only(
@@ -51,19 +54,34 @@ class PathList
       def initialize(pattern, polarity, root)
         pattern = +'' if pattern.start_with?('#')
         negated_sigil = '!' if pattern.delete_prefix!('!')
+        pattern = normalize_slash(pattern)
         if pattern.start_with?('*')
-          pattern = "#{negated_sigil}#{pattern.tr(::File::ALT_SEPARATOR.to_s, ::File::SEPARATOR)}"
+          pattern = "#{negated_sigil}#{pattern}"
         elsif pattern.match?(EXPANDABLE_PATH)
-          dir_only! if pattern.match?(%r{[/\\]\s*\z}) # expand_path will remove it
+          dir_only! if pattern.match?(%r{/\s*\z}) # expand_path will remove it
 
           pattern = "#{negated_sigil}#{CanonicalPath.full_path_from(pattern, root)}"
           root = nil
           @anchored = true
         else
-          pattern = "#{negated_sigil}/#{pattern.tr(::File::ALT_SEPARATOR.to_s, ::File::SEPARATOR)}"
+          pattern = "#{negated_sigil}/#{pattern}"
         end
 
-        super(pattern, polarity, root)
+        super(normalize_escape(pattern), polarity, root)
+      end
+
+      private
+
+      def normalize_slash(pattern)
+        return pattern unless ::File::ALT_SEPARATOR
+
+        pattern.tr('\\', '/')
+      end
+
+      def normalize_escape(pattern)
+        return pattern unless ::File::ALT_SEPARATOR
+
+        pattern.tr('`', '\\')
       end
     end
   end

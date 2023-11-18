@@ -25,7 +25,7 @@ RSpec.describe PathList::Candidate do
   end
 
   describe '#parent' do
-    before { allow(File).to receive_messages(exist?: nil, lstat: nil, directory?: nil) }
+    before { allow(File).to receive_messages(exist?: nil, ftype: nil, directory?: nil) }
 
     it 'returns a candidate for the parent with preset directory value' do
       expect(candidate.parent).to be_like described_class.new('/path/from/root', true)
@@ -33,7 +33,7 @@ RSpec.describe PathList::Candidate do
         directory?: true
       )
       expect(File).not_to have_received(:directory?)
-      expect(File).not_to have_received(:lstat)
+      expect(File).not_to have_received(:ftype)
     end
 
     context 'when the path is /' do
@@ -54,12 +54,12 @@ RSpec.describe PathList::Candidate do
       before { create_file_list 'foo' }
 
       it 'is memoized when true' do
-        allow(File).to receive(:lstat).and_call_original
+        allow(File).to receive(:ftype).and_call_original
 
         expect(candidate.exists?).to be true
-        expect(File).to have_received(:lstat).once
+        expect(File).to have_received(:ftype).once
         expect(candidate.exists?).to be true
-        expect(File).to have_received(:lstat).once
+        expect(File).to have_received(:ftype).once
       end
     end
 
@@ -67,22 +67,22 @@ RSpec.describe PathList::Candidate do
       let(:full_path) { './foo' }
 
       it 'is memoized when false' do
-        allow(File).to receive(:lstat).and_call_original
+        allow(File).to receive(:ftype).and_call_original
 
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:lstat).with('./foo').once
+        expect(File).to have_received(:ftype).with('./foo').once
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:lstat).with('./foo').once
+        expect(File).to have_received(:ftype).with('./foo').once
       end
 
       it 'is false when there is an error' do
-        allow(File).to receive(:lstat).and_call_original
-        allow(File).to receive(:lstat).with(full_path).and_raise(Errno::EACCES)
+        allow(File).to receive(:ftype).and_call_original
+        allow(File).to receive(:ftype).with(full_path).and_raise(Errno::EACCES)
 
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:lstat).with('./foo').once
+        expect(File).to have_received(:ftype).with('./foo').once
         expect(candidate.exists?).to be false
-        expect(File).to have_received(:lstat).with('./foo').once
+        expect(File).to have_received(:ftype).with('./foo').once
       end
     end
   end
@@ -139,9 +139,6 @@ RSpec.describe PathList::Candidate do
       create_symlink('foo' => 'foo_target')
 
       candidate = described_class.new(File.expand_path('foo'))
-      expect(File.symlink?('./foo')).to be true
-      expect(File.stat('./foo')).to have_attributes(directory?: false, symlink?: true)
-      expect(candidate.send(:lstat)).to have_attributes(directory?: false, symlink?: true)
       expect(candidate).not_to be_directory
     end
   end

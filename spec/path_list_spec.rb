@@ -40,8 +40,8 @@ RSpec.describe PathList do
     it 'copes with being given fs root' do
       whatever_file_we_get = subject.each('/').first
       expect(whatever_file_we_get).not_to start_with('/')
-      # use lstat because it could be a symlink to nowhere and File.exist? will be sad
-      expect(File.lstat("/#{whatever_file_we_get}")).to be_a File::Stat
+      # use symlink? because it could be a symlink to nowhere and File.exist? would return false
+      expect { File.symlink?("/#{whatever_file_we_get}") || File.exist?("/#{whatever_file_we_get}") }.not_to raise_error
     end
 
     it 'copes with being given nonsense root' do

@@ -268,6 +268,16 @@ benchmark('add-trailing-slash') do
     @string_trailing_slash = 'D:/'
     @string_no_trailing_slash = '/bin'
 
+    raise unless "/str" == (@string_slash.end_with?('/') ? @string_slash : "#{@string_slash}/") + "str"
+    raise unless "D:/str" == (@string_trailing_slash.end_with?('/') ? @string_trailing_slash : "#{@string_trailing_slash}/") + "str"
+    raise unless "/bin/str" == (@string_no_trailing_slash.end_with?('/') ? @string_no_trailing_slash : "#{@string_no_trailing_slash}/") + "str"
+    raise unless "/str" == ::File.join(@string_slash, "str")
+    raise unless "D:/str" == ::File.join(@string_trailing_slash, "str")
+    raise unless "/bin/str" == ::File.join(@string_no_trailing_slash, "str")
+    raise unless "/str" == @string_slash.sub(/(?<!\/)\z/, '/') + "str"
+    raise unless "D:/str" == @string_trailing_slash.sub(/(?<!\/)\z/, '/') + "str"
+    raise unless "/bin/str" == @string_no_trailing_slash.sub(/(?<!\/)\z/, '/') + "str"
+
     x.report(:string_slash_end_with) { (@string_slash.end_with?('/') ? @string_slash : "#{@string_slash}/") + "str" }
     x.report(:string_trailing_slash_end_with) { (@string_trailing_slash.end_with?('/') ? @string_trailing_slash : "#{@string_trailing_slash}/") + "str" }
     x.report(:string_no_trailing_slash_end_with) { (@string_no_trailing_slash.end_with?('/') ? @string_no_trailing_slash : "#{@string_no_trailing_slash}/") + "str" }
@@ -275,6 +285,10 @@ benchmark('add-trailing-slash') do
     x.report(:string_slash_file_join) { ::File.join(@string_slash, "str") }
     x.report(:string_trailing_slash_file_join) { ::File.join(@string_trailing_slash, "str") }
     x.report(:string_no_trailing_slash_file_join) { ::File.join(@string_no_trailing_slash, "str") }
+
+    x.report(:string_slash_sub) { @string_slash.sub(/(?<!\/)\z/, '/') + "str" }
+    x.report(:string_trailing_slash_sub) { @string_trailing_slash.sub(/(?<!\/)\z/, '/') + "str" }
+    x.report(:string_no_trailing_slash_sub) { @string_no_trailing_slash.sub(/(?<!\/)\z/, '/') + "str" }
 
     x.compare!
   end
