@@ -16,7 +16,7 @@ if RUBY_PLATFORM == 'java'
 end
 
 require 'fileutils'
-FileUtils.rm_rf(File.join(__dir__, '..', 'coverage'))
+FileUtils.rm_rf(File.join(__dir__, '..', 'coverage')) if ENV['COVERAGE']
 
 require 'bundler/setup'
 

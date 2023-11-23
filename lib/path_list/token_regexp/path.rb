@@ -36,6 +36,27 @@ class PathList
         self
       end
 
+      # @return [void]
+      def up_a_level
+        return if @parts.count(:dir) <= 1
+
+        @parts.pop # remove trailing dir
+        @parts.pop until end_with_dir?
+      end
+
+      # @return [void]
+      def remove_trailing_dir
+        return if @parts.count(:dir) <= 1
+
+        @parts.pop if @parts.last == :dir
+      end
+
+      # @return [Boolean]
+      def end_with_dir?
+        last = @parts.last
+        last == :dir || last == :any_dir
+      end
+
       # @return [Array<TokenRegexp::Path>]
       def ancestors
         prev_rule = []

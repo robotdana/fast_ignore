@@ -109,25 +109,28 @@ class PathList
     # https://github.com/jruby/jruby/issues/8018
     # ftype follows symlinks on jruby on windows.
     if ::RUBY_PLATFORM == 'java' && ::RbConfig::CONFIG['host_os'].match?(/mswin|mingw/)
-      refine ::File do
-        # :nodoc:
-        def ftype(path)
-          if ::File.symlink?(path)
-            'link'
-          else
-            super
-          end
+      # :nodoc:
+      def ftype
+        return @ftype if @ftype
+
+        @ftype = if ::File.symlink?(@full_path)
+          'link'
+        else
+          ::File.ftype(@full_path)
         end
+      rescue ::SystemCallError
+        @ftype = 'error'
       end
-    end
-    # :nocov:
+      # :nocov:
+    else
+      # :nodoc:
+      def ftype
+        return @ftype if @ftype
 
-    def ftype
-      return @ftype if @ftype
-
-      @ftype = ::File.ftype(@full_path)
-    rescue ::SystemCallError
-      @ftype = 'error'
+        @ftype = ::File.ftype(@full_path)
+      rescue ::SystemCallError
+        @ftype = 'error'
+      end
     end
   end
 end

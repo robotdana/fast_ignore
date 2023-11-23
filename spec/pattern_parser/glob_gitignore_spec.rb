@@ -35,53 +35,380 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
           it { expect(build('foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
         end
 
+        describe 'root only' do
+          it do
+            expect(build('/'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new(FSROOT, :ignore)
+              )
+          end
+        end
+
+        describe 'initial ~' do
+          let(:home) { PathList::CanonicalPath.full_path('~') }
+
+          it { expect(build('~')).to be_like PathList::Matcher::ExactString.new(home, :ignore) }
+
+          context 'with ~user', skip: ('Not applicable on windows' if windows?) do
+            it do
+              expect(build("~#{os_user}"))
+                .to be_like PathList::Matcher::ExactString.new(home, :ignore)
+            end
+
+            it do
+              expect(build("~#{os_user}/foo"))
+                .to be_like PathList::Matcher::ExactString.new("#{home}/foo", :ignore)
+            end
+
+            it do
+              expect(build("~#{os_user}/"))
+                .to be_like PathList::Matcher::MatchIfDir.new(
+                  PathList::Matcher::ExactString.new(home, :ignore)
+                )
+            end
+          end
+
+          it do
+            expect(build('~not-a-user635728345'))
+              .to be_like PathList::Matcher::ExactString
+                .new('/a/path/~not-a-user635728345', :ignore)
+          end
+
+          it do
+            expect(build('~/'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new(home, :ignore)
+              )
+          end
+
+          it do
+            expect(build('~/.'))
+              .to be_like PathList::Matcher::ExactString.new(home, :ignore)
+          end
+
+          it do
+            expect(build('./~'))
+              .to be_like PathList::Matcher::ExactString.new('/a/path/~', :ignore)
+          end
+
+          it do
+            expect(build('~not-a-user635728345/'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path/~not-a-user635728345', :ignore)
+              )
+          end
+        end
+
+        describe 'initial ../' do
+          it { expect(build('../foo')).to be_like PathList::Matcher::ExactString.new('/a/foo', :ignore) }
+          it { expect(build('../../foo')).to be_like PathList::Matcher::ExactString.new('/foo', :ignore) }
+          it { expect(build('../../../foo')).to be_like PathList::Matcher::ExactString.new('/foo', :ignore) }
+          it { expect(build('..foo')).to be_like PathList::Matcher::ExactString.new('/a/path/..foo', :ignore) }
+        end
+
+        describe 'mid /../' do
+          it { expect(build('bar/../foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
+          it { expect(build('bar/../../foo')).to be_like PathList::Matcher::ExactString.new('/a/foo', :ignore) }
+          it { expect(build('bar/../../../foo')).to be_like PathList::Matcher::ExactString.new('/foo', :ignore) }
+          it { expect(build('bar/../../../../foo')).to be_like PathList::Matcher::ExactString.new('/foo', :ignore) }
+
+          it do
+            expect(build('bar/**/../foo'))
+              .to be_like PathList::Matcher::ExactString.new('/a/path/bar/foo', :ignore)
+          end
+
+          it do
+            expect(build('bar/**/**/../foo'))
+              .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/bar/(?:.*/)?foo\z}, :ignore)
+          end
+
+          it { expect(build('bar**/../foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
+          it { expect(build('bar../foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar../foo', :ignore) }
+          it { expect(build('bar/..foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar/..foo', :ignore) }
+        end
+
+        describe 'trailing /..' do
+          it { expect(build('bar/..')).to be_like PathList::Matcher::ExactString.new('/a/path', :ignore) }
+          it { expect(build('b[ai]r/..')).to be_like PathList::Matcher::ExactString.new('/a/path', :ignore) }
+          it { expect(build('ba[rb]/..')).to be_like PathList::Matcher::ExactString.new('/a/path', :ignore) }
+
+          it { expect(build('bar/../..')).to be_like PathList::Matcher::ExactString.new('/a', :ignore) }
+          it { expect(build('b[ai]r/../..')).to be_like PathList::Matcher::ExactString.new('/a', :ignore) }
+          it { expect(build('ba[rb]/../..')).to be_like PathList::Matcher::ExactString.new('/a', :ignore) }
+
+          it { expect(build('bar/../../..')).to be_like PathList::Matcher::ExactString.new('/', :ignore) }
+          it { expect(build('bar/../../../..')).to be_like PathList::Matcher::ExactString.new('/', :ignore) }
+
+          it { expect(build('bar..')).to be_like PathList::Matcher::ExactString.new('/a/path/bar..', :ignore) }
+          it { expect(build('bar../..')).to be_like PathList::Matcher::ExactString.new('/a/path', :ignore) }
+        end
+
+        describe 'trailing /../' do
+          it do
+            expect(build('bar/../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+
+          it do
+            expect(build('b[ai]r/../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+
+          it do
+            expect(build('ba[rb]/../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar/../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a', :ignore)
+              )
+          end
+
+          it do
+            expect(build('b[ai]r/../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a', :ignore)
+              )
+          end
+
+          it do
+            expect(build('ba[rb]/../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar/../../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar/../../../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path/bar..', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+        end
+
+        describe 'only ../' do
+          it do
+            expect(build('..'))
+              .to be_like PathList::Matcher::ExactString.new('/a', :ignore)
+          end
+
+          it do
+            expect(build('../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a', :ignore)
+              )
+          end
+
+          it do
+            expect(build('../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/', :ignore)
+              )
+          end
+
+          it do
+            expect(build('../../../'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/', :ignore)
+              )
+          end
+        end
+
+        describe 'initial ./' do
+          it { expect(build('./foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
+          it { expect(build('././foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
+
+          it { expect(build('.foo')).to be_like PathList::Matcher::ExactString.new('/a/path/.foo', :ignore) }
+          it { expect(build('./.foo')).to be_like PathList::Matcher::ExactString.new('/a/path/.foo', :ignore) }
+        end
+
+        describe 'mid /./' do
+          it { expect(build('bar/./foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar/foo', :ignore) }
+          it { expect(build('bar/././foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar/foo', :ignore) }
+
+          it { expect(build('bar./foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar./foo', :ignore) }
+          it { expect(build('bar/.foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar/.foo', :ignore) }
+
+          it { expect(build('bar././foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar./foo', :ignore) }
+          it { expect(build('bar/./.foo')).to be_like PathList::Matcher::ExactString.new('/a/path/bar/.foo', :ignore) }
+        end
+
+        describe 'trailing /.' do
+          it { expect(build('bar/.')).to be_like PathList::Matcher::ExactString.new('/a/path/bar', :ignore) }
+          it { expect(build('bar/./.')).to be_like PathList::Matcher::ExactString.new('/a/path/bar', :ignore) }
+
+          it { expect(build('bar.')).to be_like PathList::Matcher::ExactString.new('/a/path/bar.', :ignore) }
+          it { expect(build('bar./.')).to be_like PathList::Matcher::ExactString.new('/a/path/bar.', :ignore) }
+        end
+
+        describe 'trailing /./' do
+          it do
+            expect(build('bar/./'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path/bar', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar/././'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path/bar', :ignore)
+              )
+          end
+
+          it do
+            expect(build('bar./'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path/bar.', :ignore)
+              )
+          end
+        end
+
+        describe 'only ./' do
+          it do
+            expect(build('.'))
+              .to be_like PathList::Matcher::ExactString.new('/a/path', :ignore)
+          end
+
+          it do
+            expect(build('./'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+
+          it do
+            expect(build('./.'))
+              .to be_like PathList::Matcher::ExactString.new('/a/path', :ignore)
+          end
+
+          it do
+            expect(build('././'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new('/a/path', :ignore)
+              )
+          end
+        end
+
         describe 'The windows case' do
+          let(:drive_letter) { windows? ? File.expand_path('/')[0] : 'D' }
+
           before do
+            next if windows?
+
             # use windows expand_path:
             allow(File).to receive(:expand_path).and_call_original
-            allow(File).to receive(:expand_path).with('/').and_return('D:/')
             allow(File).to receive(:expand_path)
-              .with(a_string_matching(%r{D:/.*}), '/a/path') do |path, _|
-                path.tr('\\\\', '/').delete_suffix('/')
-              end
+              .with(%r{\A(?:#{drive_letter}:)?[\\/]\z})
+              .and_return("#{drive_letter}:/")
             stub_const('::File::ALT_SEPARATOR', '\\')
 
             silence_warnings do
-              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/expandable_path.rb', __dir__)
+              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
             end
           end
 
           after do
-            allow(File).to receive(:expand_path).with('/').and_call_original
+            next if windows?
+
+            allow(File).to receive(:expand_path).and_call_original
+            # i need this to be as i expect for the rest of the tests, and i'm not sure how to unstub it properly:
+            stub_const('::File::ALT_SEPARATOR', windows? ? '\\' : nil)
 
             silence_warnings do
-              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/expandable_path.rb', __dir__)
+              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
             end
           end
 
-          it { expect(build('D:/foo/bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
-          it { expect(build('D:\\foo\\bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
-          it { expect(build('D:\foo/bar')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
-          it { expect(build('D:\`f`o`o`/`b`a`r')).to be_like PathList::Matcher::ExactString.new('D:/foo/bar', :ignore) }
-
           it do
-            expect(build('D:/foo/bar/'))
-              .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('D:/foo/bar', :ignore))
+            expect(build('/'))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/", :ignore)
+              )
           end
 
           it do
-            expect(build('D:\\foo\\bar/'))
-              .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('D:/foo/bar', :ignore))
+            expect(build("#{drive_letter}:/"))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/", :ignore)
+              )
           end
 
           it do
-            expect(build('D:\\foo/bar/'))
-              .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('D:/foo/bar', :ignore))
+            expect(build("#{drive_letter}:/foo/bar"))
+              .to be_like PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
           end
 
           it do
-            expect(build('D:\\foo/bar\\'))
-              .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('D:/foo/bar', :ignore))
+            expect(build("#{drive_letter}:\\foo\\bar"))
+              .to be_like PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+          end
+
+          it do
+            expect(build("#{drive_letter}:\\foo/bar"))
+              .to be_like PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+          end
+
+          it do
+            expect(build("#{drive_letter}:\\`f`o`o`/`b`a`r"))
+              .to be_like PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+          end
+
+          it do
+            expect(build("#{drive_letter}:/foo/bar/"))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+              )
+          end
+
+          it do
+            expect(build("#{drive_letter}:\\foo\\bar/"))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+              )
+          end
+
+          it do
+            expect(build("#{drive_letter}:\\foo/bar/"))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+              )
+          end
+
+          it do
+            expect(build("#{drive_letter}:\\foo/bar\\"))
+              .to be_like PathList::Matcher::MatchIfDir.new(
+                PathList::Matcher::ExactString.new("#{drive_letter}:/foo/bar", :ignore)
+              )
           end
 
           it do
@@ -110,10 +437,390 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 PathList::Matcher::PathRegexp.new(%r{\A/a/path/(?:.*/)?foo/bar\z}o, :ignore)
               )
           end
+
+          describe 'initial ~' do
+            let(:home) { PathList::CanonicalPath.full_path('~') }
+
+            it { expect(build('~')).to be_like PathList::Matcher::ExactString.new(home, :ignore) }
+
+            it do
+              expect(build('~not-a-user635728345'))
+                .to be_like PathList::Matcher::ExactString
+                  .new('/a/path/~not-a-user635728345', :ignore)
+            end
+
+            it do
+              expect(build('~/'))
+                .to be_like PathList::Matcher::MatchIfDir.new(
+                  PathList::Matcher::ExactString.new(home, :ignore)
+                )
+            end
+
+            it do
+              expect(build('~\\'))
+                .to be_like PathList::Matcher::MatchIfDir.new(
+                  PathList::Matcher::ExactString.new(home, :ignore)
+                )
+            end
+
+            it do
+              expect(build('~/.'))
+                .to be_like PathList::Matcher::ExactString.new(home, :ignore)
+            end
+
+            it do
+              expect(build('~\\.'))
+                .to be_like PathList::Matcher::ExactString.new(home, :ignore)
+            end
+
+            it do
+              expect(build('./~'))
+                .to be_like PathList::Matcher::ExactString.new('/a/path/~', :ignore)
+            end
+
+            it do
+              expect(build('.\\~'))
+                .to be_like PathList::Matcher::ExactString.new('/a/path/~', :ignore)
+            end
+
+            it do
+              expect(build('~not-a-user635728345/'))
+                .to be_like PathList::Matcher::MatchIfDir.new(
+                  PathList::Matcher::ExactString.new('/a/path/~not-a-user635728345', :ignore)
+                )
+            end
+
+            it do
+              expect(build('~not-a-user635728345\\'))
+                .to be_like PathList::Matcher::MatchIfDir.new(
+                  PathList::Matcher::ExactString.new('/a/path/~not-a-user635728345', :ignore)
+                )
+            end
+          end
+
+          describe '"[]" matches one character in a selected range' do
+            it 'matches a single character in a character class' do
+              expect(build('a[ab]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[ab]\z}, :ignore)
+            end
+
+            it 'matches a single character in a character class range' do
+              expect(build('a[a-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c]\z}, :ignore)
+            end
+
+            it 'treats a backward character class range as only the first character of the range' do
+              expect(build('a[d-a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[d]\z}, :ignore)
+            end
+
+            it 'treats a negated backward character class range as only the first character of the range' do
+              expect(build('a[^d-a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^d]\z}, :ignore)
+            end
+
+            it 'treats escaped backward character class range as the first character of the range' do
+              expect(build('a[`]-`[]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\]]\z}, :ignore)
+            end
+
+            it 'treats negated escaped backward character class range as the first char of range' do
+              expect(build('a[^`]-`[]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\]]\z}, :ignore)
+            end
+
+            it 'treats a escaped character class range as as a range' do
+              expect(build('a[`[-`]]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\[-\]]\z}, :ignore)
+            end
+
+            it 'treats a negated escaped character class range as a range' do
+              expect(build('a[^`[-`]]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\[-\]]\z}, :ignore)
+            end
+
+            it 'treats an unnecessarily escaped character class range as a range' do
+              expect(build('a[`a-`c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c]\z}, :ignore)
+            end
+
+            it 'treats a negated unnecessarily escaped character class range as a range' do
+              expect(build('a[^`a-`c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^a-c]\z}, :ignore)
+            end
+
+            it 'treats a backward character class range with other options as only the first character of the range' do
+              expect(build('a[d-ba]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[da]\z}, :ignore)
+            end
+
+            it 'treats a negated backward character class range with other chars as the first character of the range' do
+              expect(build('a[^d-ba]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^da]\z}, :ignore)
+            end
+
+            it 'treats a backward char class range with other initial options as the first char of the range' do
+              expect(build('a[ad-b]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[ad]\z}, :ignore)
+            end
+
+            it 'treats a negated backward char class range with other initial options as the first char of the range' do
+              expect(build('a[^ad-b]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^ad]\z}, :ignore)
+            end
+
+            it 'treats a equal character class range as only the first character of the range' do
+              expect(build('a[d-d]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[d]\z}, :ignore)
+            end
+
+            it 'treats a negated equal character class range as only the first character of the range' do
+              expect(build('a[^d-d]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^d]\z}, :ignore)
+            end
+
+            it 'interprets a / after a character class range as not there' do
+              expect(build('a[a-c/]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c/]\z}, :ignore)
+            end
+
+            it 'interprets a \\ after a character class range as not there' do
+              expect(build('a[a-c\\]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c\\]\z}, :ignore)
+            end
+
+            it 'interprets a / before a character class range as not there' do
+              expect(build('a[/a-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[/a-c]\z}, :ignore)
+            end
+
+            it 'interprets a \\ before a character class range as not there' do
+              expect(build('a[\\a-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\\a-c]\z}, :ignore)
+            end
+
+            # TODO: confirm if that matches a slash character
+            it 'interprets a / before the dash in a character class range as any character from / to c' do
+              expect(build('a[+/-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\+/-c]\z}, :ignore)
+            end
+
+            it 'interprets a \\ before the dash in a character class range as any character from \\ to c' do
+              expect(build('a[+\\-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\+\\-c]\z}, :ignore)
+            end
+
+            it 'interprets a / after the dash in a character class range as any character from start to /' do
+              expect(build('a["-/c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-/c]\z}, :ignore)
+            end
+
+            it 'interprets a \\ after the dash in a character class range as any character from start to \\' do
+              expect(build('a["-\\c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-\\c]\z}, :ignore)
+            end
+
+            it 'interprets a slash then dash then character to be a character range' do
+              expect(build('a[/-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[/-c]\z}, :ignore)
+            end
+
+            it 'interprets a backslash then dash then character to be a character range' do
+              expect(build('a[\\-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\\-c]\z}, :ignore)
+            end
+
+            it 'interprets a character then dash then slash to be a character range' do
+              expect(build('a["-/]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-/]\z}, :ignore)
+            end
+
+            it 'interprets a character then dash then backslash to be a character range' do
+              expect(build('a["-\\]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-\\]\z}, :ignore)
+            end
+
+            context 'without raising warnings' do
+              # these edge cases raise warnings
+              # they're edge-casey enough if you hit them you deserve warnings.
+              before { allow(Warning).to receive(:warn) }
+
+              it 'interprets dash dash character as a character range beginning with -' do
+                expect(build('a[--c]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\--c]\z}, :ignore)
+              end
+
+              it 'interprets character dash dash as a character range ending with -' do
+                expect(build('a["--]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-\-]\z}, :ignore)
+              end
+
+              it 'interprets dash dash dash as a character range of only with -' do
+                expect(build('a[---]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\-]\z}, :ignore)
+              end
+
+              it 'interprets character dash dash dash as a character range of only with " to - with literal -' do
+                # for some reason this as a regexp literal triggers the warning raise
+                # and building it with Regexp.new results in a regexp that is identical but not equal
+                expect(build('a["---]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(
+                    Regexp.new('\\A/a/path/a(?!\/)["-\\-\\-]\\z'), :ignore
+                  )
+              end
+
+              it 'interprets dash dash dash character as a character range of only - with literal c' do
+                expect(build('a[---c]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\-c]\z}, :ignore)
+              end
+
+              it 'interprets character dash dash character as a character range ending with - and a literal c' do
+                # this could just as easily be interpreted the other way around (" is the literal, --c is the range),
+                # but ruby regex and git seem to treat this edge case the same
+                expect(build('a["--c]'))
+                  .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)["-\-c]\z}, :ignore)
+              end
+            end
+
+            it '^ is not' do
+              expect(build('a[^a-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^a-c]\z}, :ignore)
+            end
+
+            # this doesn't appear to be documented anywhere i just stumbled onto it
+            it '! is also not' do
+              expect(build('a[!a-c]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^a-c]\z}, :ignore)
+            end
+
+            it '[^/] matches everything' do
+              expect(build('a[^/]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^/]\z}, :ignore)
+            end
+
+            it '[^\\] matches everything' do
+              expect(build('a[^\\]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\\]\z}, :ignore)
+            end
+
+            it '[^^] matches everything except literal ^' do
+              expect(build('a[^^]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\^]\z}, :ignore)
+            end
+
+            it '[^/a] matches everything except a' do
+              expect(build('a[^/a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^/a]\z}, :ignore)
+            end
+
+            it '[^\\a] matches everything except a' do
+              expect(build('a[^\\a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[^\\a]\z}, :ignore)
+            end
+
+            it '[/^a] matches literal ^ and a' do
+              expect(build('a[/^a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[/\^a]\z}, :ignore)
+            end
+
+            it '[\\^a] matches literal ^ and a' do
+              expect(build('a[\\^a]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\\\^a]\z}, :ignore)
+            end
+
+            it '[/^] matches literal ^' do
+              expect(build('a[/^]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[/\^]\z}, :ignore)
+            end
+
+            it '[\\^] matches literal ^' do
+              expect(build('a[\\^]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\\\^]\z}, :ignore)
+            end
+
+            it '[`^] matches literal ^' do
+              expect(build('a[`^]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\^]\z}, :ignore)
+            end
+
+            it 'later ^ is literal' do
+              expect(build('a[a-c^]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[a-c\^]\z}, :ignore)
+            end
+
+            it "doesn't match a slash even if you specify it last" do
+              expect(build('b[i/]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/b(?!/)[i/]b\z}, :ignore)
+            end
+
+            it "doesn't match a slash even if you specify it alone" do
+              expect(build('b[/]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/b(?!/)[/]b\z}, :ignore)
+            end
+
+            it 'empty class matches nothing' do
+              expect(build('b[]b'))
+                .to eq PathList::Matcher::Blank
+            end
+
+            it "doesn't match a slash even if you specify it middle" do
+              expect(build('b[i/a]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(
+                  %r{\A/a/path/b(?!/)[i/a]b\z}, :ignore
+                )
+            end
+
+            it "doesn't match a backslash even if you specify it middle" do
+              expect(build('b[i\\a]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(
+                  %r{\A/a/path/b(?!/)[i\\a]b\z}, :ignore
+                )
+            end
+
+            it "doesn't match a slash even if you specify it start" do
+              expect(build('b[/ai]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/b(?!/)[/ai]b\z}, :ignore)
+            end
+
+            it "doesn't match a backslash even if you specify it start" do
+              expect(build('b[\\ai]b'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/b(?!/)[\\ai]b\z}, :ignore)
+            end
+
+            it 'assumes an unfinished [ matches nothing' do
+              expect(build('a['))
+                .to eq PathList::Matcher::Blank
+            end
+
+            it 'assumes an unfinished [ followed by \ matches nothing' do
+              expect(build('a[`'))
+                .to eq PathList::Matcher::Blank
+            end
+
+            it 'assumes an escaped [ is literal' do
+              expect(build('a`['))
+                .to be_like PathList::Matcher::ExactString.new('/a/path/a[', :ignore)
+            end
+
+            it 'assumes an escaped [ is literal inside a group' do
+              expect(build('a[`[]'))
+                .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[\[]\z}, :ignore)
+            end
+
+            it 'assumes an unfinished [ matches nothing when negated' do
+              expect(build('!a['))
+                .to eq PathList::Matcher::Blank
+            end
+
+            it 'assumes an unfinished [bc matches nothing' do
+              expect(build('a[bc'))
+                .to eq PathList::Matcher::Blank
+            end
+          end
         end
 
         describe 'leading ./ means current directory based on the root' do
-          it { expect(build('./foo')).to be_like PathList::Matcher::ExactString.new("#{FSROOT}a/path/foo", :ignore) }
+          it { expect(build('./foo')).to be_like PathList::Matcher::ExactString.new('/a/path/foo', :ignore) }
         end
 
         describe 'A line starting with # serves as a comment.' do
@@ -337,7 +1044,10 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
             end
           end
 
-          describe '"?" matches any one character except "/"' do
+          describe(
+            '"?" matches any one character except "/"',
+            skip: ('windows behaviour is checked above' if windows?)
+          ) do
             it "matches one character at the beginning if there's a ?" do
               expect(build('?our'))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/[^/]our\z}, :ignore)
@@ -359,7 +1069,10 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
             end
           end
 
-          describe '"[]" matches one character in a selected range' do
+          describe(
+            '"[]" matches one character in a selected range',
+            skip: ('windows behaviour is checked above' if windows?)
+          ) do
             it 'matches a single character in a character class' do
               expect(build('a[ab]'))
                 .to be_like PathList::Matcher::PathRegexp.new(%r{\A/a/path/a(?!/)[ab]\z}, :ignore)

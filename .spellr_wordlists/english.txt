@@ -136,6 +136,7 @@ torvolds
 tsx
 ttributes
 txt
+umc
 unanchorable
 unc
 unexpandable
@@ -143,6 +144,7 @@ unfuck
 unnegated
 unrecursive
 unstaged
+unstub
 untr
 upcase
 urrent

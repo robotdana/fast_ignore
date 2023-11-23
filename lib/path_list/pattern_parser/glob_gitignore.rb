@@ -15,18 +15,18 @@ class PathList
     #
     # Differences from standard gitignore patterns:
     # - Patterns beginning with `/` (or `!/`) are absolute. Not relative to the `root:` directory.
-    # - Patterns beginning with `~` (or `!~`) are resolved relative to the `$HOME` or `~user` directory
+    # - Patterns beginning with `~` (or `!~`) are resolved relative to the home directory or.
     # - Patterns beginning with `./` or `../` (or `!./` or `!../`) are resolved relative to the `root:` directory
-    # - Patterns containing with `/../` are resolved relative to the `root:` directory
     # - Patterns beginning with `*` (or `!*`) will match any descendant of the `root:` directory
     # - Other patterns match children (not descendants) of the `root:` directory
+    # - Patterns containing with `/../` will remove the previous path segment, (`/**/` counts as one path segment)
     # - Additionally, on windows:
     #   - either / or \ (slash or backslash) can be used as path separators.
     #   - therefore \ (backslash) isn't available to be used as an escape character
-    #   - instead ` (grave accent) is used as an escape character
+    #   - instead ` (grave accent) is used as an escape character anywhere a backslash would be used
     #   - patterns beginning with `c:/`, `d:\`, or `!c:/`, or etc are absolute.
-    #   - a path beginning with / or \ is a shortcut for the current working directory drive.
-    # - there is no cross platform escape character, this is intended to match the current shell
+    #   - a path beginning with / or \ is a shortcut for the current working directory's drive.
+    # - there is no cross platform escape character.
     # @example
     #   PathList.only(ARGV, format: :glob_gitignore)
     #   PathList.only(
@@ -47,41 +47,73 @@ class PathList
     class GlobGitignore < Gitignore
       Autoloader.autoload(self)
 
-      # @api private
-      # @param pattern [String]
-      # @param polarity [:ignore, :allow]
-      # @param root [String]
-      def initialize(pattern, polarity, root)
-        pattern = +'' if pattern.start_with?('#')
-        negated_sigil = '!' if pattern.delete_prefix!('!')
-        pattern = normalize_slash(pattern)
-        if pattern.start_with?('*')
-          pattern = "#{negated_sigil}#{pattern}"
-        elsif pattern.match?(EXPANDABLE_PATH)
-          dir_only! if pattern.match?(%r{/\s*\z}) # expand_path will remove it
+      # @return [Boolean]
+      def process_root
+        root = @s.root_end
+        dir_only! if root
+        root ||= @s.root
 
-          pattern = "#{negated_sigil}#{CanonicalPath.full_path_from(pattern, root)}"
-          root = nil
-          @anchored = true
-        else
-          pattern = "#{negated_sigil}/#{pattern}"
+        return false unless root
+
+        @root = ::File.expand_path(root)
+        emitted!
+        true
+      end
+
+      # @return [Boolean]
+      def process_home
+        home = @s.home_slash_end
+        dir_only! if home
+        home ||= @s.home_slash_or_end
+
+        return false unless home
+
+        @root = ::File.expand_path(home)
+        emitted!
+        true
+      rescue ArgumentError
+        @s.unscan
+        nil
+      end
+
+      # @return [true]
+      def process_up_a_level
+        @re.up_a_level
+        emitted!
+        true
+      end
+
+      # @return [Boolean]
+      def end_with_dir?
+        @re.end_with_dir?
+      end
+
+      # @return [void]
+      def process_first_characters
+        if process_root || process_home
+          prepare_regexp_builder
+          anchored!
+          return
         end
 
-        super(normalize_escape(pattern), polarity, root)
+        prepare_regexp_builder
+        return @s.unscan if @s.star?
+
+        anchored!
+        return dir_only! && emitted! if @s.dot_slash_end?
+        return emitted! if @s.dot_slash_or_end?
+        return process_up_a_level && dir_only! if @s.dot_dot_slash_end?
+        return process_up_a_level if @s.dot_dot_slash_or_end?
       end
 
-      private
+      # @return [void]
+      def process_next_characters
+        return dir_only! && emitted! if end_with_dir? && @s.dot_slash_end?
+        return emitted! if end_with_dir? && @s.dot_slash_or_end?
+        return process_up_a_level && dir_only! if end_with_dir? && @s.dot_dot_slash_end?
+        return process_up_a_level if end_with_dir? && @s.dot_dot_slash_or_end?
 
-      def normalize_slash(pattern)
-        return pattern unless ::File::ALT_SEPARATOR
-
-        pattern.tr('\\', '/')
-      end
-
-      def normalize_escape(pattern)
-        return pattern unless ::File::ALT_SEPARATOR
-
-        pattern.tr('`', '\\')
+        super
       end
     end
   end

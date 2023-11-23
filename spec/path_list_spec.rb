@@ -1174,6 +1174,15 @@ RSpec.describe PathList do
       end
     end
 
+    context 'when given an root with an unexpandable user path' do
+      subject(:path_list) { described_class.only('foo', root: '~not-a-user635728345', format: :glob_gitignore) }
+
+      it 'treats it as literal' do
+        expect(subject).not_to allow_files('foo')
+        expect(subject).to allow_files('~not-a-user635728345/foo')
+      end
+    end
+
     context 'when given an array of negated argv_rules with absolute paths and gitignore' do
       subject(:path_list) do
         described_class.gitignore.only(['*', '!./foo', "!#{Dir.pwd}/baz"], format: :glob_gitignore)

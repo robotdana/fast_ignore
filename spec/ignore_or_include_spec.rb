@@ -53,8 +53,10 @@ RSpec.describe PathList do
       end
     end
 
-    # can't have literal backslashes in filenames in windows
-    describe 'literal backslashes in filenames', skip: windows? do
+    describe(
+      'literal backslashes in filenames',
+      skip: ("can't have literal backslashes in filenames in windows" if windows?)
+    ) do
       it "never matches backslashes when they're not in the pattern" do
         gitignore 'foo'
 
@@ -90,8 +92,10 @@ RSpec.describe PathList do
       end
     end
 
-    # can't end with literal backslashes in filenames in windows
-    describe 'Trailing spaces are ignored unless they are quoted with backslash ("\")', skip: windows? do
+    describe(
+      'Trailing spaces are ignored unless they are quoted with backslash ("\")',
+      skip: ("can't end with literal backslashes in filenames in windows" if windows?)
+    ) do
       it 'ignores trailing spaces in the gitignore file' do
         gitignore 'foo  '
 

@@ -15,12 +15,14 @@ class PathList
     class Gitignore
       Autoloader.autoload(self)
 
+      SCANNER = RuleScanner
+
       # @api private
       # @param pattern [String]
       # @param polarity [:ignore, :allow]
       # @param root [String]
       def initialize(pattern, polarity, root)
-        @s = RuleScanner.new(pattern)
+        @s = self.class::SCANNER.new(pattern)
         @default_polarity = polarity
         @rule_polarity = polarity
         @root = root
@@ -51,9 +53,7 @@ class PathList
       private
 
       def prepare_regexp_builder
-        @re = if @root.nil?
-          TokenRegexp::Path.new([:start_anchor])
-        elsif @root.end_with?('/')
+        @re = if @root.end_with?('/')
           TokenRegexp::Path.new_from_path(@root, [:any_dir])
         else
           TokenRegexp::Path.new_from_path(@root, [:dir, :any_dir])
@@ -117,12 +117,13 @@ class PathList
       end
 
       def emit_end
+        @re.remove_trailing_dir
         append_part :end_anchor
         break!
       end
 
-      def process_backslash
-        return unless @s.backslash?
+      def process_escape
+        return unless @s.escape?
 
         if @re.append_string(@s.next_character)
           emitted!
@@ -142,7 +143,7 @@ class PathList
 
         until @s.character_class_end?
           next if process_character_class_range
-          next if process_backslash
+          next if process_escape
           next if append_string(@s.character_class_literal)
 
           unmatchable_rule!
@@ -158,11 +159,9 @@ class PathList
         start = @s.character_class_range_start
         return unless start
 
-        start = start.delete_prefix('\\')
-
         append_string(start)
 
-        finish = @s.character_class_range_end.delete_prefix('\\')
+        finish = @s.character_class_range_end
 
         return true unless start < finish
 
@@ -184,29 +183,37 @@ class PathList
         catch :abort_build do
           blank! if @s.hash?
           negated! if @s.exclamation_mark?
-          prepare_regexp_builder
-          anchored! if !@anchored && @s.slash?
+          process_first_characters
 
           catch :break do
             loop do
-              next if process_backslash
-              next unmatchable_rule! if @s.star_star_slash_slash?
-              next append_part(:any) && dir_only! if @s.star_star_slash_end?
-              next append_part(:any_dir) && anchored! if @s.star_star_slash?
-              next unmatchable_rule! if @s.slash_slash?
-              next append_part(:dir) && append_part(:any) && anchored! if @s.slash_star_star_end?
-              next append_part(:any_non_dir) if @s.star?
-              next dir_only! if @s.slash_end?
-              next append_part(:dir) && anchored! if @s.slash?
-              next append_part(:one_non_dir) if @s.question_mark?
-              next if process_character_class
-              next if append_string(@s.literal)
-              next if append_string(@s.significant_whitespace)
-
-              process_end
+              process_next_characters
             end
           end
         end
+      end
+
+      def process_first_characters
+        prepare_regexp_builder
+        anchored! if !@anchored && @s.slash?
+      end
+
+      def process_next_characters
+        return if process_escape
+        return unmatchable_rule! if @s.star_star_slash_slash?
+        return append_part(:any) && dir_only! if @s.star_star_slash_end?
+        return append_part(:any_dir) && anchored! if @s.star_star_slash?
+        return unmatchable_rule! if @s.slash_slash?
+        return append_part(:dir) && append_part(:any) && anchored! if @s.slash_star_star_end?
+        return append_part(:any_non_dir) if @s.star?
+        return dir_only! if @s.slash_end?
+        return append_part(:dir) && anchored! if @s.slash?
+        return append_part(:one_non_dir) if @s.question_mark?
+        return if process_character_class
+        return if append_string(@s.literal)
+        return if append_string(@s.significant_whitespace)
+
+        process_end
       end
 
       def build_matcher
