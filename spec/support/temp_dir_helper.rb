@@ -7,6 +7,7 @@ module TempDirHelper
   module ClassMethods
     def within_temp_dir
       around { |e| within_temp_dir { e.run } }
+      before { stub_blank_global_config }
     end
   end
 
@@ -57,6 +58,8 @@ module TempDirHelper
   end
 
   def within_temp_dir
+    clear_pattern_cache_now_and_after
+
     dir = Pathname.new(Dir.mktmpdir)
     original_dir = Dir.pwd
     Dir.chdir(dir)

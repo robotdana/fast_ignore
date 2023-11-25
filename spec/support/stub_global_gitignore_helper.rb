@@ -2,6 +2,10 @@
 
 module StubGlobalGitignoreHelper
   def stub_blank_global_config
+    return if defined?(@stub_blank_global_config)
+
+    @stub_blank_global_config = true
+
     stub_env(
       XDG_CONFIG_HOME: nil,
       GIT_CONFIG_GLOBAL: nil,

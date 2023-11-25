@@ -3,7 +3,7 @@
 RSpec.describe PathList::PatternParser do
   subject(:matchers) do
     described_class.build(
-      patterns_arg,
+      patterns: patterns_arg,
       patterns_from_file: patterns_from_file,
       format: format_arg,
       root: root,

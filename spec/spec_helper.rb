@@ -22,7 +22,8 @@ require 'bundler/setup'
 
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
-PathList.only('support/*.rb', root: __dir__).each(__dir__) do |file|
+
+PathList.only('support/**/*.rb', root: __dir__).each(__dir__) do |file|
   require_relative file
 end
 
@@ -42,8 +43,17 @@ RSpec.configure do |config|
 
   config.before do
     Kernel.srand config.seed
-    stub_blank_global_config
+
+    # normalize context
     allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
+    allow(PathList).to receive(:gitignore).and_wrap_original do |original_method, **args|
+      stub_blank_global_config
+      original_method.call(**args)
+    end
+  end
+
+  config.after do
+    PathList::Cache.clear if @clear_pattern_cache_after == true
   end
 
   config.example_status_persistence_file_path = '.rspec_status'

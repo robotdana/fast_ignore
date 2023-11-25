@@ -55,8 +55,6 @@ PathList.gitignore.match?("is/this")
 PathList.gitignore.match?("is/this/hypothetical/directory", directory: true)
 ```
 
-**Note: If you want use the same PathList match rules more than once, save the pathlist to a variable to avoid having to read and parse the patterns over and over again**
-
 See the [full PathList documentation](docs/PathList).
 
 ## Limitations

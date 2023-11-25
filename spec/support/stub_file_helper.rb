@@ -8,6 +8,9 @@ module StubFileHelper
   end
 
   def stub_file(*lines, path:)
+    stub_blank_global_config
+    clear_pattern_cache_now_and_after
+
     stub_file_original
     path = ::File.expand_path(path)
 

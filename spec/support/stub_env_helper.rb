@@ -6,6 +6,9 @@ module StubENVHelper
   end
 
   def stub_env(**values)
+    stub_blank_global_config
+    clear_pattern_cache_now_and_after
+
     stub_env_original
     values.each do |key, value|
       allow(::ENV).to receive(:[]).with(key.to_s).at_least(:once).and_return(value)

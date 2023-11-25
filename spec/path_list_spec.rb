@@ -162,6 +162,46 @@ RSpec.describe PathList do
   describe '.gitignore' do
     subject(:path_list) { described_class.gitignore }
 
+    it 'caches fs calls when setting up the matcher' do
+      allow(PathList::Gitignore).to receive(:new).and_call_original
+
+      10.times { described_class.gitignore }
+
+      expect(PathList::Gitignore).to have_received(:new).once
+    end
+
+    it 'caches fs calls with different pwd separately when setting up the matcher' do
+      allow(PathList::Gitignore).to receive(:new).and_call_original
+      10.times { described_class.gitignore }
+      10.times { Dir.chdir('..') { described_class.gitignore } }
+      Dir.chdir('..') { 10.times { described_class.gitignore } }
+
+      expect(PathList::Gitignore).to have_received(:new).exactly(2).times
+    end
+
+    it 'caches fs calls with different root separately when setting up the matcher' do
+      allow(PathList::Gitignore).to receive(:new).and_call_original
+
+      10.times { described_class.gitignore }
+      10.times { described_class.gitignore(root: '..') }
+
+      expect(PathList::Gitignore).to have_received(:new).exactly(2).times
+      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: '..', config: true).once
+    end
+
+    it 'caches fs calls with different config arg separately when setting up the matcher' do
+      allow(PathList::Gitignore).to receive(:new).and_call_original
+
+      10.times { described_class.gitignore }
+      10.times { described_class.gitignore(config: true) }
+      10.times { described_class.gitignore(config: false) }
+
+      expect(PathList::Gitignore).to have_received(:new).exactly(2).times
+      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: false).once
+    end
+
     it 'returns all files when there is no gitignore' do
       create_file_list 'foo', 'bar'
 
@@ -427,7 +467,38 @@ RSpec.describe PathList do
     end
   end
 
-  describe 'query interface combinations' do
+  describe 'builder interface combinations' do
+    it 'caches fs calls regardless of how things are built' do
+      core_excludes = PathList::Gitconfig::CoreExcludesfile.path(repo_root: '.')
+
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+      allow(PathList::Gitignore).to receive(:new).and_call_original
+
+      10.times { described_class.only('a').gitignore }
+      10.times { described_class.gitignore.only('a') }
+      10.times { described_class.union(described_class.gitignore, described_class.only('a')).gitignore }
+      10.times { described_class.only('a').intersection!(described_class.gitignore, described_class.only('a')) }
+
+      expect(PathList::Gitignore).to have_received(:new).once
+      expect(PathList::PatternParser).to have_received(:new).exactly(4).times
+      expect(PathList::PatternParser)
+        .to have_received(:new)
+        .with(hash_including(patterns: ['a'], polarity: :allow))
+        .once
+      expect(PathList::PatternParser)
+        .to have_received(:new)
+        .with(hash_including(patterns_from_file: File.expand_path('.gitignore'), polarity: :ignore))
+        .once
+      expect(PathList::PatternParser)
+        .to have_received(:new)
+        .with(hash_including(patterns_from_file: File.expand_path('.git/info/exclude'), polarity: :ignore))
+        .once
+      expect(PathList::PatternParser)
+        .to have_received(:new)
+        .with(hash_including(patterns_from_file: core_excludes, polarity: :ignore))
+        .once
+    end
+
     it 'works for .gitignore and #only' do
       gitignore 'bar'
       create_file_list 'foo', 'bar', 'baz'
@@ -1018,6 +1089,98 @@ RSpec.describe PathList do
         expect { subject }
           .to raise_error(PathList::Error, '`format:` must be one of :glob_gitignore, :gitignore, :shebang, :exact')
       end
+    end
+
+    it 'caches fs calls with different pwd separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only('a') }
+      10.times { Dir.chdir('..') { described_class.only('a') } }
+      Dir.chdir('..') { 10.times { described_class.only('a') } }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(2).times
+    end
+
+    it 'caches fs calls with different patterns separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only('a') }
+      10.times { described_class.only('a', 'b') }
+
+      # for simplicity these counts as separate,
+      # though have the same effect and result in the same matchers
+      10.times { described_class.only(['a']) }
+      10.times { described_class.only("a\nb") }
+      10.times { described_class.only('b', 'a') }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(5).times
+      # this gets flattened before calling new
+      # expect(PathList::PatternParser).to have_received(:new).with(hash_including(patterns: [['a']])).once
+      expect(PathList::PatternParser).to have_received(:new).with(hash_including(patterns: ['a'])).exactly(2).times
+      expect(PathList::PatternParser).to have_received(:new).with(hash_including(patterns: ['a', 'b'])).once
+      expect(PathList::PatternParser).to have_received(:new).with(hash_including(patterns: ["a\n", 'b'])).once
+      expect(PathList::PatternParser).to have_received(:new).with(hash_including(patterns: ['b', 'a'])).once
+    end
+
+    it 'caches fs calls with different root separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only('/a', root: '/') }
+      10.times { described_class.only('/a', root: '.') }
+      10.times { described_class.only('/a') }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(3).times
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns: ['/a'], root: FSROOT)).once
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns: ['/a'], root: Dir.pwd)).exactly(2).times
+    end
+
+    it 'caches fs calls with different format separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only('/a', format: :gitignore) }
+      10.times { described_class.only('/a', format: :glob_gitignore) }
+      10.times { described_class.only('/a') }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(2).times
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(
+          patterns: ['/a'], parser: PathList::PatternParser::GlobGitignore
+        )).once
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(
+          patterns: ['/a'], parser: PathList::PatternParser::Gitignore
+        )).once
+    end
+
+    it 'caches fs calls with ignore separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only('a') }
+      10.times { described_class.ignore('a') }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(2).times
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns: ['a'], polarity: :ignore)).once
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns: ['a'], polarity: :allow)).once
+    end
+
+    it 'caches fs calls with different file separately when setting up the matcher' do
+      allow(PathList::PatternParser).to receive(:new).and_call_original
+
+      10.times { described_class.only(patterns_from_file: '.gitignore') }
+      10.times { described_class.only(patterns_from_file: '../.gitignore') }
+      10.times { described_class.only(patterns_from_file: '.dockerignore') }
+
+      expect(PathList::PatternParser).to have_received(:new).exactly(3).times
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns_from_file: File.expand_path('.gitignore'))).once
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns_from_file: File.expand_path('../.gitignore'))).once
+      expect(PathList::PatternParser)
+        .to have_received(:new).with(hash_including(patterns_from_file: File.expand_path('.dockerignore'))).once
     end
 
     context 'with subdir only file' do

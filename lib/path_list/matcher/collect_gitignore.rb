@@ -44,9 +44,13 @@ class PathList
 
         @loaded << file
 
-        patterns = PatternParser.new(patterns_from_file: file, root: root, parser: PatternParser::Gitignore)
-        new_matcher = patterns.build_ignore_matcher(Blank)
-
+        new_matcher = PatternParser.build!(
+          patterns_from_file: file,
+          root: root,
+          parser: PatternParser::Gitignore,
+          default: Blank,
+          polarity: :ignore
+        )
         return if new_matcher == Blank
 
         @dir_matcher.matcher = LastMatch.build([@dir_matcher.matcher, new_matcher.dir_matcher])

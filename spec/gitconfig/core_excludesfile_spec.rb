@@ -11,6 +11,10 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
   let(:config_content) { "[core]\n\texcludesfile = #{excludesfile_value}\n" }
   let(:excludesfile_value) { '~/.global_gitignore' }
 
+  before do
+    stub_blank_global_config
+  end
+
   context 'with no core.excludesfile defined' do
     it 'returns the default path' do
       expect(subject).to eq default_ignore_path

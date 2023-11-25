@@ -225,7 +225,9 @@ class PathList
   # @see .ignore
   # @see #ignore
   def ignore!(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    and_matcher(PatternParser.build(patterns, patterns_from_file: patterns_from_file, format: format, root: root))
+    and_matcher(PatternParser.build(
+      patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :ignore
+    ))
   end
 
   # @!group Only methods
@@ -335,7 +337,7 @@ class PathList
   def only!(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
     and_matcher(
       PatternParser.build(
-        patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :allow
+        patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :allow
       )
     )
   end
