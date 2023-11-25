@@ -14,14 +14,9 @@ keep:
 
   # build
   - ignore
-  - ignore!
   - only
-  - only!
-  - union!
   - union
-  - intersection!
   - intersection
   - '&'
   - '|'
   - gitignore
-  - gitignore!

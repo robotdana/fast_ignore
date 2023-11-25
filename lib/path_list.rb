@@ -53,16 +53,14 @@ class PathList
   # @return [PathList]
   #   a new PathList
   # @example
-  #   PathList.gitignore.only('*.rb')
-  #   path_list = PathList.only('*.rb'); path_list.gitignore!
-  #   PathList.only('*.rb').gitignore(root: Dir.pwd) # don't look for a .git directory
-  #   PathList.only('*.rb').gitignore(root: '../../') # the project root is two directories up
-  #   PathList.only('*.rb').gitignore(config: false) # don't look for a configured core.excludesFile
+  #   PathList.only('*.rb').gitignore # can be chained
+  #   PathList.gitignore(root: Dir.pwd) # don't look for a .git directory
+  #   PathList.gitignore(root: '../../') # the project root is two directories up
+  #   PathList.gitignore(config: false) # don't look for a configured core.excludesFile
   # @see #gitignore
-  # @see #gitignore!
   # @see https://git-scm.com/docs/gitignore#_pattern_format
   def self.gitignore(root: nil, config: true)
-    new.gitignore!(root: root, config: config)
+    new.gitignore(root: root, config: config)
   end
 
   # Return a new PathList that filters files using .gitignore files.
@@ -81,43 +79,14 @@ class PathList
   # @return [PathList]
   #   a new PathList
   # @example
-  #   PathList.gitignore.only('*.rb')
-  #   path_list = PathList.only('*.rb'); path_list.gitignore!
-  #   PathList.only('*.rb').gitignore(root: Dir.pwd) # don't look for a .git directory
-  #   PathList.only('*.rb').gitignore(root: '../../') # the project root is two directories up
-  #   PathList.only('*.rb').gitignore(config: false) # don't look for a configured core.excludesFile
+  #   PathList.only('*.rb').gitignore # can be chained
+  #   PathList.gitignore(root: Dir.pwd) # don't look for a .git directory
+  #   PathList.gitignore(root: '../../') # the project root is two directories up
+  #   PathList.gitignore(config: false) # don't look for a configured core.excludesFile
   # @see .gitignore
-  # @see #gitignore!
   # @see https://git-scm.com/docs/gitignore#_pattern_format
   def gitignore(root: nil, config: true)
-    dup.gitignore!(root: root, config: config)
-  end
-
-  # Update self to filter files using .gitignore files.
-  #
-  # This matcher aims for fidelity with `git ls-files`,
-  # reading the configured core.excludesFile and .gitignore files in subdirectories
-  #
-  # @param root [String, Pathname, #to_s, nil]
-  #   The git repo root. When nil, PathList will search up from the current directory like git does for a directory
-  #   containing `.git/`. If it doesn't find anything, it will default to the current directory.
-  # @param config [Boolean]
-  #   Whether to load the configured `core.excludesFile`.
-  #   When this is false this will only load patterns in `.gitignore` files in the `root:` directory and its children,
-  #   and the `.git/info/exclude` file in the `root:` directory. When true it will also load config files in all the
-  #   locations that git would also look, to find the core.excludesFile.
-  # @return [self]
-  # @example
-  #   PathList.gitignore.only('*.rb')
-  #   path_list = PathList.only('*.rb'); path_list.gitignore!
-  #   PathList.only('*.rb').gitignore(root: Dir.pwd) # don't look for a .git directory
-  #   PathList.only('*.rb').gitignore(root: '../../') # the project root is two directories up
-  #   PathList.only('*.rb').gitignore(config: false) # don't look for a configured core.excludesFile
-  # @see .gitignore
-  # @see #gitignore
-  # @see https://git-scm.com/docs/gitignore#_pattern_format
-  def gitignore!(root: nil, config: true)
-    and_matcher(Gitignore.build(root: root, config: config))
+    new_and_matcher(Gitignore.build(root: root, config: config))
   end
 
   # @!group Ignore methods
@@ -150,12 +119,11 @@ class PathList
   #     a new PathList
   # @example
   #   PathList.ignore('*.md', root: './docs').ignore(patterns_from_file: '.dockerignore')
-  #   PathList.ignore('/bin').ignore!("ruby", format: :shebang)
+  #   PathList.ignore('/bin').ignore("ruby", format: :shebang)
   #   PathList.gitignore.ignore('spec', format: :exact)
   # @see #ignore
-  # @see #ignore!
   def self.ignore(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    new.ignore!(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
+    new.ignore(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
   end
 
   # Return a new PathList that filters out files using the given patterns.
@@ -186,48 +154,15 @@ class PathList
   #     a new PathList
   # @example
   #   PathList.ignore('*.md', root: './docs').ignore(patterns_from_file: '.dockerignore')
-  #   PathList.ignore('/bin').ignore!("ruby", format: :shebang)
+  #   PathList.ignore('/bin').ignore("ruby", format: :shebang)
   #   PathList.gitignore.ignore('spec', format: :exact)
   # @see .ignore
-  # @see #ignore!
   def ignore(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    dup.ignore!(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
-  end
-
-  # Update self to filter out files using the given patterns.
-  #
-  # @overload ignore!(*patterns, format: :gitignore, root: nil)
-  #   @param patterns [Array<String>]
-  #     The list of patterns. Within an array, or as a line-separated string.
-  #     The individual pattern format depends on the `format:` param
-  #   @param root [String, Pathname, #to_s, nil]
-  #     The root for any patterns that need it (e.g. gitignore patterns starting with `/`),
-  #     defaults to the current directory when nil.
-  #   @param format [:gitignore, :glob_gitignore, :exact, :shebang]
-  #     The format of the patterns, see {PatternParser::Gitignore},
-  #     {PatternParser::GlobGitignore},
-  #     {PatternParser::ExactPath},
-  #     {PatternParser::Shebang}
-  #   @return [self]
-  # @overload ignore!(patterns_from_file:, format: :gitignore, root: nil)
-  #   @param patterns_from_file [String, Pathname, #to_s]
-  #     A file to read the list of patterns from, with each pattern on its own line
-  #   @param root [String, Pathname, #to_s, nil]
-  #     The root for any patterns that need it (e.g. gitignore patterns starting with `/`), when nil,
-  #     defaults to the directory containing the patterns_from_file file.
-  #   @param format [:gitignore, :glob_gitignore, :exact, :shebang]
-  #     The format of the rules
-  #   @return [self]
-  # @example
-  #   PathList.ignore('*.md', root: './docs').ignore(patterns_from_file: '.dockerignore')
-  #   PathList.ignore('/bin').ignore!("ruby", format: :shebang)
-  #   PathList.gitignore.ignore('spec', format: :exact)
-  # @see .ignore
-  # @see #ignore
-  def ignore!(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    and_matcher(PatternParser.build(
-      patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :ignore
-    ))
+    new_and_matcher(
+      PatternParser.build(
+        patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :ignore
+      )
+    )
   end
 
   # @!group Only methods
@@ -263,9 +198,8 @@ class PathList
   #   PathList.only(patterns_from_file: './files_to_copy.txt', exact: true)
   #   PathList.only(['bin', 'lib', 'exe', 'README.md', 'LICENSE'])
   # @see #only
-  # @see #only!
   def self.only(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    new.only!(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
+    new.only(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
   end
 
   # Return a new PathList that selects only those files that match given patterns.
@@ -299,43 +233,8 @@ class PathList
   #   PathList.only(patterns_from_file: './files_to_copy.txt', exact: true)
   #   PathList.only(['bin', 'lib', 'exe', 'README.md', 'LICENSE'])
   # @see .only
-  # @see #only!
   def only(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    dup.only!(*patterns, patterns_from_file: patterns_from_file, format: format, root: root)
-  end
-
-  # Update self to select only those files that match given patterns.
-  #
-  # @overload only!(*patterns, format: :gitignore, root: nil)
-  #   @param patterns [Array<String>, Array<Array<String>>, String]
-  #     The list of patterns. Within an array, or as a line-separated string.
-  #     The individual pattern format depends on the `format:` param
-  #   @param root [String, Pathname, #to_s, nil]
-  #     The root for any patterns that need it (e.g. gitignore-style patterns starting with `/`),
-  #     defaults to the current directory when nil.
-  #   @param format [:gitignore, :glob_gitignore, :exact, :shebang]
-  #     The format of the patterns, see {PatternParser::Gitignore},
-  #     {PatternParser::GlobGitignore},
-  #     {PatternParser::ExactPath},
-  #     {PatternParser::Shebang}
-  #   @return [self]
-  # @overload only!(patterns_from_file:, format: :gitignore, root: nil)
-  #   @param patterns_from_file [String, Pathname, #to_s]
-  #     A file to read the list of patterns from, with each pattern on its own line
-  #   @param root [String, Pathname, #to_s, nil]
-  #     The root for any patterns that need it (e.g. gitignore-style patterns starting with `/`),
-  #     when nil, defaults to the directory containing the patterns_from_file file.
-  #   @param format [:gitignore, :glob_gitignore, :exact, :shebang]
-  #     The format of the rules
-  #   @return [self]
-  # @example
-  #   PathList.ignore('CHANGELOG.md').only!('*.md', root: './docs')
-  #   PathList.only(patterns_from_file: './files_to_copy.txt', exact: true)
-  #   PathList.only(['bin', 'lib', 'exe', 'README.md', 'LICENSE'])
-  # @see .only
-  # @see #only
-  def only!(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    and_matcher(
+    new_and_matcher(
       PatternParser.build(
         patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :allow
       )
@@ -354,7 +253,6 @@ class PathList
   #   # is equivalent to
   #   PathList.only(["*.ts", "*.tsx"])
   # @see #union
-  # @see #union!
   # @see #|
   def self.union(path_list, *path_lists)
     path_list.union(*path_lists)
@@ -370,10 +268,11 @@ class PathList
   #   # is equivalent to
   #   PathList.gitignore.only(["*.js", "*.jsx", "*.ts", "*.tsx"])
   # @see .union
-  # @see #union!
   # @see #|
   def union(*path_lists)
-    dup.union!(*path_lists)
+    new_with_matcher(
+      Matcher::Any.build([@matcher, *path_lists.map { |l| l.matcher }]) # rubocop:disable Style/SymbolProc
+    )
   end
 
   # Return a new PathList that matches the receiver OR other.
@@ -387,27 +286,8 @@ class PathList
   #   PathList.gitignore.only(["*.rb", "*.sh"])
   # @see .union
   # @see #union
-  # @see #union!
   def |(other)
-    dup.union!(other)
-  end
-
-  # Update self with path_lists as alternate matchers.
-  #
-  # @param other [PathList]
-  # @return [self]
-  # @example
-  #   my_path_list = PathList.new
-  #   my_path_list.union!(PathList.only("*.rb"), PathList.ignore("*.py"))
-  #   # my_path_list is now equivalent to
-  #   PathList.only("*.rb", "*.py")
-  # @see .union
-  # @see #union
-  # @see #|
-  def union!(*path_lists)
-    self.matcher = Matcher::Any.build([@matcher, *path_lists.map { |l| l.matcher }]) # rubocop:disable Style/SymbolProc
-
-    self
+    union(other)
   end
 
   # @!group Intersection methods
@@ -422,10 +302,9 @@ class PathList
   #   # is equivalent to
   #   PathList.only("*.rb").ignore("/vendor/")
   # @see #intersection
-  # @see #intersection!
   # @see #&
   def self.intersection(*path_lists)
-    new.intersection!(*path_lists)
+    new.intersection(*path_lists)
   end
 
   # Return a new PathList that matches the receiver AND all of path_lists.
@@ -438,10 +317,9 @@ class PathList
   #   # is equivalent to
   #   PathList.gitignore.only("*.rb").ignore("/vendor/")
   # @see .intersection
-  # @see #intersection!
   # @see #&
   def intersection(*path_lists)
-    dup.intersection!(*path_lists)
+    new_and_matcher(Matcher::All.build(path_lists.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc
   end
 
   # Return a new PathList that matchers the receiver AND other.
@@ -455,25 +333,8 @@ class PathList
   #   PathList.gitignore.only("*.rb").ignore("/vendor/")
   # @see .intersection
   # @see #intersection
-  # @see #intersection!
   def &(other)
-    dup.intersection!(other)
-  end
-
-  # Update self with path_lists as additional matchers
-  #
-  # @param other [PathList]
-  # @return [self]
-  # @example
-  #   my_path_list = PathList.gitignore
-  #   my_path_list.intersection!(PathList.only("*.rb"), PathList.ignore("/vendor/"))
-  #   # my_path_list is now equivalent to
-  #   PathList.gitignore.only("*.rb").ignore("/vendor/")
-  # @see .intersection
-  # @see #intersection
-  # @see #&
-  def intersection!(*path_lists)
-    and_matcher(Matcher::All.build(path_lists.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc
+    intersection(other)
   end
 
   # @!group Querying methods
@@ -590,6 +451,12 @@ class PathList
 
   attr_reader :matcher
 
+  def matcher=(new_matcher)
+    @matcher = new_matcher
+    @dir_matcher = nil
+    @file_matcher = nil
+  end
+
   private
 
   def recursive_each(candidate, relative_root, dir_matcher, file_matcher, &block)
@@ -612,16 +479,14 @@ class PathList
     recursive_match?(candidate.parent, matcher) && matcher.match(candidate) == :allow
   end
 
-  def and_matcher(new_matcher)
-    self.matcher = Matcher::All.build([@matcher, new_matcher])
-
-    self
+  def new_with_matcher(matcher)
+    path_list = self.class.new
+    path_list.matcher = matcher
+    path_list
   end
 
-  def matcher=(new_matcher)
-    @matcher = new_matcher
-    @dir_matcher = nil
-    @file_matcher = nil
+  def new_and_matcher(matcher)
+    new_with_matcher(Matcher::All.build([@matcher, matcher]))
   end
 
   def dir_matcher
