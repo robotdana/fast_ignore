@@ -41,7 +41,7 @@ class PathList
       # @param (see Matcher#match)
       # @return (see Matcher#match)
       def match(candidate)
-        return @polarity if @item == candidate.full_path
+        @polarity if @item == candidate.full_path
       end
 
       # @return (see Matcher#inspect)

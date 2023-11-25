@@ -333,7 +333,7 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
             stub_const('::File::ALT_SEPARATOR', '\\')
 
             silence_warnings do
-              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
+              load File.expand_path('../../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
             end
           end
 
@@ -345,7 +345,7 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
             stub_const('::File::ALT_SEPARATOR', windows? ? '\\' : nil)
 
             silence_warnings do
-              load File.expand_path('../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
+              load File.expand_path('../../../lib/path_list/pattern_parser/glob_gitignore/scanner.rb', __dir__)
             end
           end
 

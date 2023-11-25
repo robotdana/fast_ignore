@@ -103,7 +103,8 @@ class PathList
         return dir_only! && emitted! if @s.dot_slash_end?
         return emitted! if @s.dot_slash_or_end?
         return process_up_a_level && dir_only! if @s.dot_dot_slash_end?
-        return process_up_a_level if @s.dot_dot_slash_or_end?
+
+        process_up_a_level if @s.dot_dot_slash_or_end?
       end
 
       # @return [void]

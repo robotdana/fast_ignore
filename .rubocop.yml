@@ -19,7 +19,7 @@ AllCops:
     - bin/benchmark # i have things rubocop doesn't like that i want to keep
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.0
 
 # all of our layout customisations are because we prefer indentation to be
 # always consistently 2 spaces, for blocks, scopes, multiline expressions, etc

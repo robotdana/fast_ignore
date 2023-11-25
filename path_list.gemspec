@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/robotdana/path_list'
   spec.license = 'MIT'
 
-  spec.required_ruby_version = '>= 2.7.0'
+  spec.required_ruby_version = '>= 3.0.0'
 
   if spec.respond_to?(:metadata)
     spec.metadata['homepage_uri'] = spec.homepage

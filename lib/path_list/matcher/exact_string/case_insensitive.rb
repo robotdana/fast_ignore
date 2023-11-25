@@ -22,7 +22,7 @@ class PathList
         # @param (see Matcher#match)
         # @return (see Matcher#match)
         def match(candidate)
-          return @polarity if @item == candidate.full_path_downcase
+          @polarity if @item == candidate.full_path_downcase
         end
       end
     end
