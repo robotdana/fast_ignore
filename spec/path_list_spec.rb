@@ -38,18 +38,18 @@ RSpec.describe PathList do
     end
 
     it 'copes with being given fs root' do
-      whatever_file_we_get = subject.each('/').first
+      whatever_file_we_get = subject.each(root: '/').first
       expect(whatever_file_we_get).not_to start_with('/')
       # use symlink? because it could be a symlink to nowhere and File.exist? would return false
       expect { File.symlink?("/#{whatever_file_we_get}") || File.exist?("/#{whatever_file_we_get}") }.not_to raise_error
     end
 
     it 'copes with being given nonsense root' do
-      expect(subject.each('nonsense').to_a).to be_empty
+      expect(subject.each(root: 'nonsense').to_a).to be_empty
     end
 
     context 'when given root as a child dir' do
-      subject(:to_a) { described_class.new.each(Dir.pwd + '/bar').to_a }
+      subject(:to_a) { described_class.new.each(root: Dir.pwd + '/bar').to_a }
 
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/baz'
@@ -66,7 +66,7 @@ RSpec.describe PathList do
         gitignore 'baz'
 
         Dir.chdir('bar') do
-          expect(subject.each('../').to_a).to contain_exactly('bar/foo', 'fez', '.gitignore')
+          expect(subject.each(root: '../').to_a).to contain_exactly('bar/foo', 'fez', '.gitignore')
         end
       end
     end
@@ -115,7 +115,7 @@ RSpec.describe PathList do
     end
 
     context 'when given root with a trailing slash' do
-      subject(:to_a) { described_class.new.each(Dir.pwd + '/bar/').to_a }
+      subject(:to_a) { described_class.new.each(root: Dir.pwd + '/bar/').to_a }
 
       it 'returns relative to the root' do
         create_file_list 'bar/foo', 'bar/baz', 'fez', 'baz/foo', 'baz/bar'

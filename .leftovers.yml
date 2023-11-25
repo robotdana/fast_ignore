@@ -8,15 +8,17 @@ keep:
   # query
   - include?
   - member?
+  - match?
   - each
   - ===
   - to_proc
 
   # build
+  - gitignore
   - ignore
   - only
   - union
   - intersection
   - '&'
   - '|'
-  - gitignore
+  - all

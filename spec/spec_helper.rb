@@ -23,7 +23,7 @@ require 'bundler/setup'
 require 'simplecov' if ENV['COVERAGE']
 require_relative '../lib/path_list'
 
-PathList.only('support/**/*.rb', root: __dir__).each(__dir__) do |file|
+PathList.only('support/**/*.rb', root: __dir__).each(root: __dir__) do |file|
   require_relative file
 end
 
