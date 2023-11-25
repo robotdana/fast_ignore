@@ -12,17 +12,18 @@ class PathList
       # @param nesting [Integer]
       # @return [String]
       # @raise [ParseError]
-      def self.parse(file, root: Dir.pwd, nesting: 1)
-        new(file, root: root, nesting: nesting).parse
+      def self.parse(file, root: Dir.pwd, nesting: 1, find: :'core.excludesFile')
+        new(file, root: root, nesting: nesting, find: find).parse
       end
 
       # @param file [String]
       # @param root [String]
       # @param nesting [Integer]
-      def initialize(path, root: Dir.pwd, nesting: 1)
+      def initialize(path, root: Dir.pwd, nesting: 1, find: :'core.excludesFile')
         @path = path
         @root = root
         @nesting = nesting
+        @find = find
       end
 
       # @return [String]
@@ -31,17 +32,17 @@ class PathList
         raise ParseError, "Include level too deep #{path}" if nesting >= 10
 
         read_file(path)
-        return unless value
-
-        value
+        self
       end
+
+      attr_accessor :excludesfile
+      attr_accessor :submodule_paths
 
       private
 
       attr_reader :nesting
       attr_reader :path
       attr_reader :root
-      attr_accessor :value
       attr_accessor :within_quotes
       attr_accessor :section
 
@@ -55,23 +56,33 @@ class PathList
             # skip
           elsif file.skip(/\[core\]/i)
             self.section = :core
+          elsif file.skip(/\[(?i:submodule) +"/)
+            self.section = :submodule
+            skip_condition_value(file)
           elsif file.skip(/\[include\]/i)
             self.section = :include
           elsif file.skip(/\[(?i:includeif) +"/)
             self.section = include_if(file) ? :include : :not_include
           elsif file.skip(/\[[\w.]+( "([^\0\\"]|\\(\\{2})*"|\\{2}*)+")?\]/)
             self.section = :other
+          elsif section == :submodule && file.skip(/path\s*=(\s|\\\r?\n)*/i)
+            self.submodule_paths ||= []
+            self.submodule_paths << scan_value(file)
           elsif section == :core && file.skip(/excludesfile\s*=(\s|\\\r?\n)*/i)
-            self.value = scan_value(file)
+            self.excludesfile = scan_value(file)
           elsif section == :include && file.skip(/path\s*=(\s|\\\r?\n)*/)
             include_path = scan_value(file)
 
-            value = self.class.parse(
+            result = self.class.parse(
               CanonicalPath.full_path_from(include_path, ::File.dirname(path)),
               root: root,
               nesting: nesting + 1
             )
-            self.value = value if value
+            self.excludesfile = result.excludesfile if result.excludesfile
+            if result.submodule_paths
+              self.submodule_paths ||= []
+              self.submodule_paths.concat(result.submodule_paths) # i don't actually know if this is relevant
+            end
             self.section = :include
           elsif file.skip(/[a-zA-Z0-9]\w*\s*([#;].*)?\r?\n/)
             nil

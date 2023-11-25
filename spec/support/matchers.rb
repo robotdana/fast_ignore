@@ -49,7 +49,7 @@ RSpec::Matchers.define(:allow_files) do |*expected, create: true|
     @actual = actual.to_a
     expect(@actual).to include(*expected)
 
-    unless actual.is_a?(ActualGitLSFiles)
+    unless actual.is_a?(RealGit)
       expected.each do |path|
         expect(actual).to include(path)
       end
@@ -69,7 +69,7 @@ RSpec::Matchers.define(:allow_files) do |*expected, create: true|
 
     expected.each do |path|
       expect(@actual).not_to include(path)
-      expect(actual).not_to include(path) unless actual.is_a?(ActualGitLSFiles)
+      expect(actual).not_to include(path) unless actual.is_a?(RealGit)
     end
 
     true

@@ -62,7 +62,11 @@ RSpec.describe PathList do
     end
 
     it 'ignore .git by default' do
-      expect(subject).to match_files('.git/WHATEVER')
+      expect(subject).to match_files(
+        '.git/WHATEVER',
+        'submodule/.git', # submodule .git is a file
+        'child_repo/.git/WHATEVER' # repo .git is a directory
+      )
       expect(subject).not_to match_files('WHATEVER')
     end
   end
@@ -73,8 +77,8 @@ RSpec.describe PathList do
     it_behaves_like 'gitignore'
   end
 
-  describe 'git ls-files', :gitls do
-    subject { ActualGitLSFiles.new }
+  describe 'git ls-files', :real_git do
+    subject { RealGit.new }
 
     it_behaves_like 'gitignore'
   end

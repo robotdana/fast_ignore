@@ -54,9 +54,7 @@ class PathList
     end
 
     def build_dot_git_matcher
-      Matcher::MatchIfDir.new(
-        Matcher::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
-      )
+      Matcher::PathRegexp.build([[:dir, '.git', :end_anchor]], :ignore)
     end
 
     def build_collector(root)

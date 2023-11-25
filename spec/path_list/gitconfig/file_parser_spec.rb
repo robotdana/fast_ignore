@@ -6,7 +6,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns nil for empty file' do
     create_file('', path: '.gitconfig')
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'raises for invalid file' do
@@ -36,7 +36,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   end
 
   it 'returns nil for nonexistent file' do
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns nil for file with no [core]' do
@@ -46,7 +46,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         fetch = +refs/heads/*:refs/remotes/origin/*
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns nil for file with [core] but no excludesfile' do
@@ -57,7 +57,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         editor = mate --wait
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns value for file with excludesfile' do
@@ -66,7 +66,21 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
+  end
+
+  it 'returns value for file with submodule.<name>.path' do
+    create_file(<<~GITCONFIG, path: '.gitconfig')
+      [submodule "foo_name"]
+        path = subdir/foo
+      [submodule "bar_project"]
+        path = "subdir"/bar
+      [submodule "baz"]
+        path = "vendor/baz"
+    GITCONFIG
+
+    expect(described_class.parse('.gitconfig').submodule_paths)
+      .to eq(['subdir/foo', 'subdir/bar', 'vendor/baz'])
   end
 
   it 'returns value for file with excludesfile after other stuff' do
@@ -76,7 +90,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file with excludesfile before other stuff' do
@@ -86,7 +100,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         mergeoptions = --no-edit
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file with excludesfile after boolean true key' do
@@ -96,7 +110,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file with [core] after other stuff' do
@@ -108,7 +122,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file with [core] before other stuff' do
@@ -120,7 +134,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         fetch = +refs/heads/*:refs/remotes/origin/*
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns nil for file with commented excludesfile line' do
@@ -129,7 +143,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
       #  excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns value for file with excludesfile in quotes' do
@@ -138,7 +152,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = "~/gitignore"
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesFile in with camel casing' do
@@ -147,7 +161,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesFile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesFile in with uppercase' do
@@ -156,7 +170,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         EXCLUDESFILE = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesFile in uppercase CORE' do
@@ -165,7 +179,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesFile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile after attributesfile in quotes' do
@@ -175,7 +189,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it "doesn't return value for file with excludesfile after attributesfile with line continuation" do
@@ -185,7 +199,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns earlier value for file with excludesfile after attributesfile with line continuation' do
@@ -196,7 +210,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore2
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns later value for file with multiple excludesfile' do
@@ -206,7 +220,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore2
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore2')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore2')
   end
 
   it 'returns value for file with excludesfile partially in quotes' do
@@ -215,7 +229,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git"ignore"
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with escaped quote character' do
@@ -224,7 +238,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git\\"ignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/git"ignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/git"ignore')
   end
 
   it 'returns value for file with excludesfile after attributesfile with escaped quote character' do
@@ -234,7 +248,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with escaped newline (why)' do
@@ -243,7 +257,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git\\nignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq("~/git\nignore")
+    expect(described_class.parse('.gitconfig').excludesfile).to eq("~/git\nignore")
   end
 
   it 'returns value for file with excludesfile after attributesfile with escaped newline' do
@@ -253,7 +267,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with escaped tab' do
@@ -262,7 +276,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git\\tignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq("~/git\tignore")
+    expect(described_class.parse('.gitconfig').excludesfile).to eq("~/git\tignore")
   end
 
   it 'returns value for file with excludesfile after attributesfile with escaped tab' do
@@ -272,7 +286,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with literal space' do
@@ -281,7 +295,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git ignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/git ignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/git ignore')
   end
 
   it 'returns value for file with excludesfile after attributesfile with literal space' do
@@ -291,7 +305,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   # i suspect this may be incorrect and it should actually be turned into a literal space character.
@@ -301,7 +315,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git\tignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq("~/git\tignore")
+    expect(described_class.parse('.gitconfig').excludesfile).to eq("~/git\tignore")
   end
 
   it 'returns value for file with excludesfile after attributesfile with literal tab' do
@@ -311,7 +325,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with literal backspace' do
@@ -320,7 +334,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gith\\bignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile after attributesfile with literal backspace' do
@@ -330,7 +344,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with an escaped literal slash' do
@@ -339,7 +353,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/git\\\\ignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/git\\ignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/git\\ignore')
   end
 
   it 'returns value for file with excludesfile after attributesfile with escaped slash' do
@@ -349,7 +363,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with a ; comment' do
@@ -358,7 +372,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore ; comment
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with a ; comment with no space' do
@@ -367,7 +381,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore;comment
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with a # comment' do
@@ -376,7 +390,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/gitignore # comment
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with excludesfile with a # in quotes' do
@@ -385,7 +399,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = "~/git#ignore"
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/git#ignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/git#ignore')
   end
 
   it 'returns value for file with excludesfile with a ; in quotes' do
@@ -394,13 +408,13 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = "~/git;ignore"
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/git;ignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/git;ignore')
   end
 
   it 'returns value with no trailing whitespace' do
     create_file("[core]\n  excludesfile = ~/gitignore    \n", path: '.gitconfig')
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'returns value for file with trailing whitespace when quoted' do
@@ -409,7 +423,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = "~/gitignore   "
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore   ')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore   ')
   end
 
   it 'continues with escaped newlines' do
@@ -419,7 +433,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
       ignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/gitignore')
   end
 
   it 'raises for file with unclosed quote' do
@@ -584,7 +598,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file when includeif onbranch' do
@@ -600,7 +614,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file when includeif onbranch pattern' do
@@ -616,7 +630,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file when includeif onbranch pattern ending in /' do
@@ -632,7 +646,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns nil for file when includeif onbranch is not the right branch' do
@@ -648,7 +662,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns nil for file when includeif nonsense' do
@@ -664,7 +678,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'returns nil for file when includeif onbranch and no .git dir' do
@@ -678,7 +692,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to be_nil
+    expect(described_class.parse('.gitconfig').excludesfile).to be_nil
   end
 
   it 'raises for file when includeif onbranch with newline' do
@@ -757,7 +771,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file when includeif gitdir/i matches leading **/' do
@@ -771,7 +785,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns value for file when includeif gitdir matches trailing /' do
@@ -785,7 +799,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it "doesn't leak the section for file when included" do
@@ -802,7 +816,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         attributesfile = ~/.gitattributes
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'returns the most recent value when included' do
@@ -818,7 +832,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore2
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore2')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore2')
   end
 
   it 'returns the most recent value after included' do
@@ -835,7 +849,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore2
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 
   it 'raises when including itself' do
@@ -864,6 +878,6 @@ RSpec.describe PathList::Gitconfig::FileParser do
         excludesfile = ~/.gitignore
     GITCONFIG
 
-    expect(described_class.parse('.gitconfig')).to eq('~/.gitignore')
+    expect(described_class.parse('.gitconfig').excludesfile).to eq('~/.gitignore')
   end
 end

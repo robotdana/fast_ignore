@@ -1069,8 +1069,8 @@ RSpec.describe PathList do
     end
   end
 
-  describe 'git ls-files', :gitls do
-    subject { ActualGitLSFiles.new }
+  describe 'git ls-files', :real_git do
+    subject { RealGit.new }
 
     it_behaves_like 'the gitignore documentation'
   end

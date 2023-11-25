@@ -19,7 +19,7 @@ jobs:
         bundler-cache: true
     - run: gem install syntax_suggest
       timeout-minutes: 5
-    - run: bundle exec rspec spec --tag=~gitls
+    - run: bundle exec rspec spec --tag=~real_git
       timeout-minutes: 10
 
   compare:

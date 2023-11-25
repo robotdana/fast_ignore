@@ -32,7 +32,7 @@ class PathList
           return unless config_path
           return unless ::File.readable?(config_path)
 
-          ignore_path = FileParser.parse(config_path)
+          ignore_path = FileParser.parse(config_path).excludesfile
           return unless ignore_path
 
           ignore_path.strip!

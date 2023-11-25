@@ -55,7 +55,7 @@ github
 gitignore
 gitignored
 gitkeep
-gitls
+gitmodules
 gnore
 hashbang
 heredoc
@@ -119,6 +119,7 @@ sherson
 simplecov
 stdin
 stdlib
+subcommand
 subdir
 submodule
 submodules
