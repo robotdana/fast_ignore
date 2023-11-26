@@ -13,6 +13,12 @@ module StubENVHelper
     values.each do |key, value|
       allow(::ENV).to receive(:[]).with(key.to_s).at_least(:once).and_return(value)
     end
+
+    stubbed_env.merge!(values)
+  end
+
+  def stubbed_env
+    @stubbed_env ||= {}
   end
 end
 

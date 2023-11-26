@@ -29,7 +29,7 @@ class PathList
         @polarity = polarity
         @root = root
 
-        @root_re = TokenRegexp::Path.new_from_path(root, [])
+        @root_re = TokenRegexp::Path.new_from_path(root, tail: [:dir, :any_dir])
       end
 
       # @api private
@@ -55,7 +55,7 @@ class PathList
       # @api private
       # @return [PathList::Matcher]
       def implicit_matcher
-        ancestors = @root_re.dup.concat([:dir, :any_dir]).ancestors # rubocop:disable Style/ConcatArrayLiterals
+        ancestors = @root_re.ancestors
 
         exact, regexp = ancestors.partition(&:exact_path?)
         exact = Matcher::ExactString.build(exact.map(&:to_s), :allow)

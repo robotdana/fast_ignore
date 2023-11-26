@@ -8,22 +8,21 @@ class PathList
     # Parse git config file for the core.excludesFile
     class FileParser
       # @param file [String]
-      # @param root [String]
+      # @param git_dir [String]
       # @param nesting [Integer]
       # @return [String]
       # @raise [ParseError]
-      def self.parse(file, root: Dir.pwd, nesting: 1, find: :'core.excludesFile')
-        new(file, root: root, nesting: nesting, find: find).parse
+      def self.parse(file, git_dir: nil, nesting: 1)
+        new(file, git_dir: git_dir, nesting: nesting).parse
       end
 
       # @param file [String]
-      # @param root [String]
+      # @param git_dir [String]
       # @param nesting [Integer]
-      def initialize(path, root: Dir.pwd, nesting: 1, find: :'core.excludesFile')
+      def initialize(path, git_dir: nil, nesting: 1)
         @path = path
-        @root = root
+        @git_dir = git_dir
         @nesting = nesting
-        @find = find
       end
 
       # @return [String]
@@ -42,7 +41,7 @@ class PathList
 
       attr_reader :nesting
       attr_reader :path
-      attr_reader :root
+      attr_reader :git_dir
       attr_accessor :within_quotes
       attr_accessor :section
 
@@ -75,7 +74,7 @@ class PathList
 
             result = self.class.parse(
               CanonicalPath.full_path_from(include_path, ::File.dirname(path)),
-              root: root,
+              git_dir: git_dir,
               nesting: nesting + 1
             )
             self.excludesfile = result.excludesfile if result.excludesfile
@@ -125,22 +124,24 @@ class PathList
 
       def on_branch?(branch_pattern)
         branch_pattern += '**' if branch_pattern.end_with?('/')
-        current_branch = ::File.readable?("#{root}/.git/HEAD") &&
-          ::File.read("#{root}/.git/HEAD").delete_prefix('ref: refs/heads/')
+        current_branch = ::File.readable?("#{git_dir}/HEAD") &&
+          ::File.read("#{git_dir}/HEAD").delete_prefix('ref: refs/heads/')
         return false unless current_branch
 
         # goddamit git what does 'a pattern with standard globbing wildcards' mean
         ::File.fnmatch(branch_pattern, current_branch, ::File::FNM_PATHNAME | ::File::FNM_DOTMATCH)
       end
 
-      def gitdir?(gitdir, path:, case_insensitive: false)
-        gitdir += '**' if gitdir.end_with?('/')
-        gitdir.sub!(%r{\A~/}, Dir.home + '/')
-        gitdir.sub!(/\A\./, path + '/')
-        gitdir = "**/#{gitdir}" unless gitdir.start_with?('/')
+      def gitdir?(gitdir_value, path:, case_insensitive: false)
+        return unless git_dir
+
+        gitdir_value += '**' if gitdir_value.end_with?('/')
+        gitdir_value.sub!(%r{\A~/}, Dir.home + '/')
+        gitdir_value.sub!(/\A\./, path + '/')
+        gitdir_value = "**/#{gitdir_value}" unless gitdir_value.start_with?('/')
         options = ::File::FNM_PATHNAME | ::File::FNM_DOTMATCH
         options |= ::File::FNM_CASEFOLD if case_insensitive
-        ::File.fnmatch(gitdir, ::File.join(root, '.git'), options)
+        ::File.fnmatch(gitdir_value, git_dir, options)
       end
 
       def scan_value(file)

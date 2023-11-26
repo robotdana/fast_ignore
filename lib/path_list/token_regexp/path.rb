@@ -7,8 +7,8 @@ class PathList
       # @param path [String]
       # @param tail [Array<Symbol, String, EscapedString>]
       # @return [TokenRegexp::Path]
-      def self.new_from_path(path, tail = [:end_anchor])
-        parts = [:start_anchor]
+      def self.new_from_path(path, head: [:start_anchor], tail: [:end_anchor])
+        parts = head
         split = path.split('/')
         (parts << (CanonicalPath.case_insensitive? ? split[0].downcase : split[0])) if split[0] && !split[0].empty?
         (parts << :dir) if split.length == 1 || (split.empty? && path == '/')

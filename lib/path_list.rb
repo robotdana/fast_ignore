@@ -40,29 +40,45 @@ class PathList
   end
 
   def gitignore(root: nil, config: true)
-    new_and_matcher(Gitignore.build(root: root, config: config))
+    new_with_matcher(Matcher::All.build([
+      @matcher,
+      Gitignore.build(root: root, config: config),
+      Gitignore.ignore_dot_git_matcher
+    ]))
   end
 
   def ignore(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    new_and_matcher(
+    new_with_matcher(Matcher::All.build([
+      @matcher,
       PatternParser.build(
-        patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :ignore
+        patterns: patterns,
+        patterns_from_file: patterns_from_file,
+        format: format,
+        root: root,
+        polarity: :ignore
       )
-    )
+    ]))
   end
 
   def only(*patterns, patterns_from_file: nil, format: :gitignore, root: nil)
-    new_and_matcher(
+    new_with_matcher(Matcher::All.build([
+      @matcher,
       PatternParser.build(
-        patterns: patterns, patterns_from_file: patterns_from_file, format: format, root: root, polarity: :allow
+        patterns: patterns,
+        patterns_from_file: patterns_from_file,
+        format: format,
+        root: root,
+        polarity: :allow
       )
-    )
+    ]))
   end
 
   def union(path_list, *path_lists)
-    new_with_matcher(
-      Matcher::Any.build([@matcher, path_list.matcher, *path_lists.map { |l| l.matcher }]) # rubocop:disable Style/SymbolProc
-    )
+    new_with_matcher(Matcher::Any.build([
+      @matcher,
+      path_list.matcher,
+      *path_lists.map { |l| l.matcher } # rubocop:disable Style/SymbolProc
+    ]))
   end
 
   def |(other)
@@ -70,9 +86,11 @@ class PathList
   end
 
   def intersection(path_list, *path_lists)
-    new_with_matcher(
-      Matcher::All.build([@matcher, path_list.matcher, path_lists.map { |l| l.matcher }]) # rubocop:disable Style/SymbolProc
-    )
+    new_with_matcher(Matcher::All.build([
+      @matcher,
+      path_list.matcher,
+      path_lists.map { |l| l.matcher } # rubocop:disable Style/SymbolProc
+    ]))
   end
 
   def &(other)
@@ -154,10 +172,6 @@ class PathList
     path_list = self.class.new
     path_list.matcher = matcher
     path_list
-  end
-
-  def new_and_matcher(matcher)
-    new_with_matcher(Matcher::All.build([@matcher, matcher]))
   end
 
   def dir_matcher

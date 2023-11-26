@@ -186,8 +186,8 @@ RSpec.describe PathList do
       10.times { described_class.gitignore(root: '..') }
 
       expect(PathList::Gitignore).to have_received(:new).exactly(2).times
-      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: true).once
-      expect(PathList::Gitignore).to have_received(:new).with(root: '..', config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: File.dirname(Dir.pwd), config: true).once
     end
 
     it 'caches fs calls with different config arg separately when setting up the matcher' do
@@ -198,8 +198,8 @@ RSpec.describe PathList do
       10.times { described_class.gitignore(config: false) }
 
       expect(PathList::Gitignore).to have_received(:new).exactly(2).times
-      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: true).once
-      expect(PathList::Gitignore).to have_received(:new).with(root: nil, config: false).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: false).once
     end
 
     it 'returns all files when there is no gitignore' do
@@ -212,7 +212,11 @@ RSpec.describe PathList do
       gitignore 'foo', 'bar/'
       allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(true)
 
-      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::All::Two.new([
+        PathList::Matcher::LastMatch::Two.new([
+          PathList::Matcher::Allow,
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{/\.git\z}, :ignore)
+        ]),
         PathList::Matcher::CollectGitignore.new(
           PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{\A#{Regexp.escape(Dir.pwd).downcase}(?:\z|/)}, :allow),
           PathList::Matcher::Mutable.new(
@@ -223,25 +227,34 @@ RSpec.describe PathList do
               )
             ])
           )
-        ),
-        PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{/\.git\z}, :ignore)
+        )
       ])
 
-      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::Mutable.new(
+      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::All::Two.new([
         PathList::Matcher::LastMatch::Two.new([
           PathList::Matcher::Allow,
-          PathList::Matcher::PathRegexp::CaseInsensitive.new(
-            %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore
-          )
-        ])
-      )
+          PathList::Matcher::PathRegexp::CaseInsensitive.new(%r{/\.git\z}, :ignore)
+        ]),
+        PathList::Matcher::Mutable.new(
+          PathList::Matcher::LastMatch::Two.new([
+            PathList::Matcher::Allow,
+            PathList::Matcher::PathRegexp::CaseInsensitive.new(
+              %r{\A#{Regexp.escape(Dir.pwd).downcase}/(?:.*/)?foo\z}, :ignore
+            )
+          ])
+        )
+      ])
     end
 
     it 'creates a sensible list of matchers when case sensitive' do
       gitignore 'foo', 'bar/'
       allow(PathList::CanonicalPath).to receive(:case_insensitive?).and_return(false)
 
-      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::LastMatch::Two.new([
+      expect(subject.send(:dir_matcher)).to be_like PathList::Matcher::All::Two.new([
+        PathList::Matcher::LastMatch::Two.new([
+          PathList::Matcher::Allow,
+          PathList::Matcher::PathRegexp.new(%r{/\.git\z}, :ignore)
+        ]),
         PathList::Matcher::CollectGitignore.new(
           PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}(?:\z|/)}, :allow),
           PathList::Matcher::Mutable.new(
@@ -252,16 +265,21 @@ RSpec.describe PathList do
               )
             ])
           )
-        ),
-        PathList::Matcher::PathRegexp.new(%r{/\.git\z}, :ignore)
+        )
       ])
 
-      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::Mutable.new(
+      expect(subject.send(:file_matcher)).to be_like PathList::Matcher::All::Two.new([
         PathList::Matcher::LastMatch::Two.new([
           PathList::Matcher::Allow,
-          PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?foo\z}, :ignore)
-        ])
-      )
+          PathList::Matcher::PathRegexp.new(%r{/\.git\z}, :ignore)
+        ]),
+        PathList::Matcher::Mutable.new(
+          PathList::Matcher::LastMatch::Two.new([
+            PathList::Matcher::Allow,
+            PathList::Matcher::PathRegexp.new(%r{\A#{Regexp.escape(Dir.pwd)}/(?:.*/)?foo\z}, :ignore)
+          ])
+        )
+      ])
     end
 
     it 'can match files with case equality' do
@@ -469,7 +487,8 @@ RSpec.describe PathList do
 
   describe 'builder interface combinations' do
     it 'caches fs calls regardless of how things are built' do
-      core_excludes = PathList::Gitconfig::CoreExcludesfile.path(repo_root: '.')
+      gitignore 'x', path: '.git/info/exclude'
+      core_excludes = PathList::Gitconfig::CoreExcludesfile.path(git_dir: '.git')
 
       allow(PathList::PatternParser).to receive(:new).and_call_original
       allow(PathList::Gitignore).to receive(:new).and_call_original
@@ -480,7 +499,6 @@ RSpec.describe PathList do
       10.times { described_class.only('a').intersection(described_class.gitignore, described_class.only('a')) }
 
       expect(PathList::Gitignore).to have_received(:new).once
-      expect(PathList::PatternParser).to have_received(:new).exactly(4).times
       expect(PathList::PatternParser)
         .to have_received(:new)
         .with(hash_including(patterns: ['a'], polarity: :allow))
@@ -497,6 +515,7 @@ RSpec.describe PathList do
         .to have_received(:new)
         .with(hash_including(patterns_from_file: core_excludes, polarity: :ignore))
         .once
+      expect(PathList::PatternParser).to have_received(:new).exactly(4).times
     end
 
     it 'works for .gitignore and #only' do

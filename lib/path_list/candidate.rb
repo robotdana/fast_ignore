@@ -50,7 +50,7 @@ class PathList
     def children
       @children ||= begin
         ::Dir.children(@full_path)
-      rescue ::SystemCallError
+      rescue ::IOError, ::SystemCallError
         []
       end
     end
@@ -118,7 +118,7 @@ class PathList
         else
           ::File.ftype(@full_path)
         end
-      rescue ::SystemCallError
+      rescue ::IOError, ::SystemCallError
         @ftype = 'error'
       end
       # :nocov:
@@ -128,7 +128,7 @@ class PathList
         return @ftype if @ftype
 
         @ftype = ::File.ftype(@full_path)
-      rescue ::SystemCallError
+      rescue ::IOError, ::SystemCallError
         @ftype = 'error'
       end
     end

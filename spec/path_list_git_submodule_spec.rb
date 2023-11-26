@@ -6,9 +6,9 @@ RSpec.describe PathList do
   let(:root) { Dir.pwd }
 
   shared_examples 'gitignore' do
-    let(:parent_repo) { RealGit.new('./parent_repo') }
-    let(:submodule_foo) { RealGit.new('./submodule_foo') }
-    let(:submodule_bar) { RealGit.new('./submodule_bar') }
+    let(:parent_repo) { real_git('./parent_repo') }
+    let(:submodule_foo) { real_git('./submodule_foo') }
+    let(:submodule_bar) { real_git('./submodule_bar') }
 
     before do
       submodule_bar.commit('--allow-empty')
@@ -17,10 +17,42 @@ RSpec.describe PathList do
       parent_repo.add_submodule(submodule_foo.path)
     end
 
-    # NOTE: .git is a file when a submodule
-    it 'ignore .git in submodule' do
-      subject
+    it 'considers patterns in the global config is relative to submodule root' do
+      gitignore '/a', path: '.global_gitignore'
 
+      parent_repo.configure_excludesfile("#{Dir.pwd}/.global_gitignore")
+      parent_repo.configure_excludesfile("#{Dir.pwd}/.global_gitignore", chdir: "#{Dir.pwd}/parent_repo/submodule_foo")
+      parent_repo.configure_excludesfile("#{Dir.pwd}/.global_gitignore",
+                                         chdir: "#{Dir.pwd}/parent_repo/submodule_foo/submodule_bar")
+
+      create_file_list(
+        'parent_repo/a',
+        'parent_repo/b/a',
+        'parent_repo/submodule_foo/a',
+        'parent_repo/submodule_foo/b/a',
+        'parent_repo/submodule_foo/submodule_bar/a',
+        'parent_repo/submodule_foo/submodule_bar/b/a'
+      )
+
+      Dir.chdir(parent_repo.path) do
+        require 'pry'
+        binding.pry
+
+        expect(subject).to match_files(
+          'a',
+          'submodule_foo/a',
+          'submodule_foo/submodule_bar/a'
+        )
+
+        expect(subject).not_to match_files(
+          'parent_repo/b/a',
+          'parent_repo/submodule_foo/b/a',
+          'parent_repo/submodule_foo/submodule_bar/b/a'
+        )
+      end
+    end
+
+    it 'config relative to submodule' do
       Dir.chdir(parent_repo.path) do
         expect(subject).to match_files(
           '.git/WHATEVER',
@@ -38,7 +70,7 @@ RSpec.describe PathList do
   end
 
   describe '.gitignore' do
-    subject { described_class.gitignore(root: './parent') }
+    subject { described_class.gitignore(root: parent_repo.path) }
 
     it_behaves_like 'gitignore'
   end

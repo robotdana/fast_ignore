@@ -6,10 +6,10 @@ class PathList
     # Find the configured git core.excludesFile
     module CoreExcludesfile
       class << self
-        # @param repo_root [String]
+        # @param git_dir [String]
         # @return [String, nil]
-        def path(repo_root:)
-          ignore_path = gitconfigs_core_excludesfile_path(repo_root) ||
+        def path(git_dir:)
+          ignore_path = gitconfigs_core_excludesfile_path(git_dir) ||
             default_core_excludesfile_path
 
           ignore_path unless ignore_path.empty?
@@ -17,22 +17,22 @@ class PathList
 
         private
 
-        def gitconfigs_core_excludesfile_path(repo_root)
-          gitconfig_core_excludesfile_path(repo_config_path(repo_root)) ||
-            gitconfig_core_excludesfile_path(global_config_path) ||
-            gitconfig_core_excludesfile_path(default_user_config_path) ||
-            gitconfig_core_excludesfile_path(system_config_path)
+        def gitconfigs_core_excludesfile_path(git_dir)
+          gitconfig_core_excludesfile_path(repo_config_path(git_dir), git_dir) ||
+            gitconfig_core_excludesfile_path(global_config_path, git_dir) ||
+            gitconfig_core_excludesfile_path(default_user_config_path, git_dir) ||
+            gitconfig_core_excludesfile_path(system_config_path, git_dir)
         rescue ParseError => e
           ::Warning.warn("PathList gitconfig parser failed\n" + e.message)
 
           ''
         end
 
-        def gitconfig_core_excludesfile_path(config_path)
+        def gitconfig_core_excludesfile_path(config_path, git_dir)
           return unless config_path
           return unless ::File.readable?(config_path)
 
-          ignore_path = FileParser.parse(config_path).excludesfile
+          ignore_path = FileParser.parse(config_path, git_dir: git_dir).excludesfile
           return unless ignore_path
 
           ignore_path.strip!
@@ -51,8 +51,8 @@ class PathList
           CanonicalPath.full_path_from('git/ignore', default_config_home)
         end
 
-        def repo_config_path(root)
-          CanonicalPath.full_path_from('.git/config', root)
+        def repo_config_path(git_dir)
+          CanonicalPath.full_path_from('config', git_dir) if git_dir
         end
 
         def global_config_path

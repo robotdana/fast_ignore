@@ -5,23 +5,29 @@ require 'tempfile'
 class RealGit
   attr_reader :path
 
-  def initialize(path = '.')
+  def initialize(path = '.', env)
     @path = ::File.expand_path(path)
+    @env = env
     FileUtils.mkpath(@path)
     git('init')
+    configure_excludesfile('')
   end
 
-  def git(*subcommand, chdir: @path, out: File::NULL, err: File::NULL, **options)
+  def git(*subcommand, **options)
     system(
+      @env.transform_keys(&:to_s),
       'git',
       '-c', "core.hooksPath=''",
-      '-c', "core.excludesFile=''",
       *subcommand,
-      out: out,
-      err: err,
-      chdir: chdir,
+      chdir: @path,
+      out: File::NULL,
+      err: File::NULL,
       **options
     )
+  end
+
+  def configure_excludesfile(path, **options)
+    git('config', '--local', 'core.excludesfile', path, **options)
   end
 
   def add(*args)
@@ -30,7 +36,7 @@ class RealGit
 
   def commit(*args)
     add
-    git('commit', '-m', 'Commit', *args)
+    git('commit', '-m', 'Commit', '--no-verify', *args)
   end
 
   def add_submodule(path)
@@ -63,4 +69,14 @@ class RealGit
     add('-N')
     ls_files
   end
+end
+
+module RealGitHelper
+  def real_git(path = '.')
+    RealGit.new(path, stubbed_env)
+  end
+end
+
+RSpec.configure do |config|
+  config.include RealGitHelper
 end

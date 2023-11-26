@@ -54,9 +54,9 @@ class PathList
 
       def prepare_regexp_builder
         @re = if @root.end_with?('/')
-          TokenRegexp::Path.new_from_path(@root, [:any_dir])
+          TokenRegexp::Path.new_from_path(@root, tail: [:any_dir])
         else
-          TokenRegexp::Path.new_from_path(@root, [:dir, :any_dir])
+          TokenRegexp::Path.new_from_path(@root, tail: [:dir, :any_dir])
         end
 
         @start_any_dir_position = @re.length - 1

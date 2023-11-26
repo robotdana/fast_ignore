@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
-  subject { described_class.path(repo_root: root) }
+  subject { described_class.path(git_dir: git_dir) }
 
   let(:default_ignore_path) { "#{home}/.config/git/ignore" }
 
   let(:home) { File.expand_path(Dir.home) }
-  let(:root) { Dir.pwd }
+  let(:git_dir) { Dir.pwd + '/.git' }
 
   let(:config_content) { "[core]\n\texcludesfile = #{excludesfile_value}\n" }
   let(:excludesfile_value) { '~/.global_gitignore' }
@@ -43,7 +43,7 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
 
   context 'with excludesfile defined in repo config' do
     before do
-      stub_file(config_content, path: "#{root}/.git/config")
+      stub_file(config_content, path: "#{git_dir}/config")
     end
 
     it 'returns a literal unquoted value for the path' do
@@ -106,7 +106,7 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
 
   context "when repo config exists but doesn't set excludesfile, and global config file does" do
     before do
-      stub_file(<<~GITCONFIG, path: "#{root}/.git/config")
+      stub_file(<<~GITCONFIG, path: "#{git_dir}/config")
         [core]
           attributesfile = ~/.global_gitattributes
       GITCONFIG
