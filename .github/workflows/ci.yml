@@ -7,18 +7,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ['3.0', 3.1, 3.2, ruby-head, jruby-9.4, jruby-head]
+        ruby: ['3.0', 3.1, 3.2, 3.3, 3.4, ruby-head, jruby-9.4, jruby-head]
         platform: [ubuntu, windows, macos]
     continue-on-error: ${{ endsWith(matrix.ruby, 'head') }}
     runs-on: ${{matrix.platform}}-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
-    - run: gem install syntax_suggest
-      timeout-minutes: 5
     - run: bundle exec rspec spec --tag=~real_git
       timeout-minutes: 10
 
@@ -74,16 +72,14 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'
+          ruby-version: '3.4'
           bundler-cache: true
-      - run: gem install syntax_suggest
-        timeout-minutes: 5
       - run: COVERAGE=1 bundle exec rspec
         timeout-minutes: 5
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: 'coverage/*'
@@ -94,7 +90,7 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: 3.2
@@ -107,20 +103,18 @@ jobs:
   spellr:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.2
+        ruby-version: 3.4
         bundler-cache: true
-    - run: gem install syntax_suggest
-      timeout-minutes: 5
     - run: bundle exec spellr
       timeout-minutes: 1
 
   leftovers:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: 3.2
@@ -133,12 +127,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.2
+        ruby-version: 3.4
         bundler-cache: true
-    - run: gem install syntax_suggest
-      timeout-minutes: 5
     - run: bundle exec rake build
       timeout-minutes: 1
