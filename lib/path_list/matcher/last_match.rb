@@ -8,8 +8,8 @@ class PathList
 
       # @param (see List.compress)
       # @return (see List.compress)
-      def self.compress(matchers)
-        matchers = super(matchers)
+      def self.compress(matcher_list)
+        matchers = super
 
         invalid = matchers.delete(Invalid)
         return [Invalid] if matchers.empty? && invalid

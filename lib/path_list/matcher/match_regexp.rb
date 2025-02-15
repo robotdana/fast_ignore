@@ -51,7 +51,8 @@ class PathList
       # @param (see Matcher#squash)
       # @return (see Matcher#squash)
       def squash(list, _preserve_order)
-        self.class.build(list.flat_map { |l| l.regexp_tokens }, @polarity) # rubocop:disable Style/SymbolProc it breaks with protected methods,
+        # protected method, so we can't use SymbolProc
+        self.class.build(list.flat_map { |l| l.regexp_tokens }, @polarity) # rubocop:disable Style/SymbolProc
       end
 
       protected

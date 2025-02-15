@@ -16,7 +16,7 @@ class PathList
         # @param (see ExactString#initialize)
         def initialize(item, polarity)
           item = item.downcase
-          super(item, polarity)
+          super
         end
 
         # @param (see Matcher#match)

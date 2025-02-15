@@ -5,7 +5,7 @@ require 'tempfile'
 class RealGit
   attr_reader :path
 
-  def initialize(path = '.', env)
+  def initialize(path = '.', env) # rubocop:disable Style/OptionalArguments
     @path = ::File.expand_path(path)
     @env = env
     FileUtils.mkpath(@path)

@@ -35,9 +35,6 @@ RSpec.describe PathList do
       )
 
       Dir.chdir(parent_repo.path) do
-        require 'pry'
-        binding.pry
-
         expect(subject).to match_files(
           'a',
           'submodule_foo/a',

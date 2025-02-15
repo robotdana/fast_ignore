@@ -51,7 +51,8 @@ class PathList
       # @return (see Matcher#squash)
       def squash(list, preserve_order)
         new_matcher_class = preserve_order ? LastMatch : Any
-        new_with_matcher(new_matcher_class.build(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc protected
+        # protected method, so we can't use SymbolProc
+        new_with_matcher(new_matcher_class.build(list.map { |l| l.matcher })) # rubocop:disable Style/SymbolProc
       end
 
       # @return (see Matcher#dir_matcher)

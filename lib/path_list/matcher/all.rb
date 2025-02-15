@@ -8,8 +8,8 @@ class PathList
 
       # @param (see List.compress)
       # @return (see List.compress)
-      def self.compress(matchers)
-        matchers = super(matchers) - [Matcher::Allow]
+      def self.compress(matcher_list)
+        matchers = super - [Matcher::Allow]
         return [Matcher::Allow] if matchers.empty?
         return [Matcher::Ignore] if matchers.include?(Matcher::Ignore)
 

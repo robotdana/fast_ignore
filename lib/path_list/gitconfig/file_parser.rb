@@ -133,7 +133,7 @@ class PathList
       end
 
       def gitdir?(gitdir_value, path:, case_insensitive: false)
-        return unless git_dir
+        return false unless git_dir
 
         gitdir_value += '**' if gitdir_value.end_with?('/')
         gitdir_value.sub!(%r{\A~/}, Dir.home + '/')

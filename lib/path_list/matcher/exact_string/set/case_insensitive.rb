@@ -11,7 +11,7 @@ class PathList
           # @param (see ExactString::Set#initialize)
           def initialize(set, polarity)
             set = set.map(&:downcase)
-            super(set, polarity)
+            super
           end
 
           # @param (see Matcher#match)

@@ -59,8 +59,6 @@ class PathList
     def matcher
       @matcher = Matcher::CollectGitignore.build(collect_matcher, Matcher::Allow)
       append(Gitconfig::CoreExcludesfile.path(git_dir: @git_dir)) if @config
-      require 'pry'
-      binding.pry
       append("#{@git_dir}/info/exclude") if @git_dir
       append('.gitignore')
       return @matcher unless @submodule_paths
