@@ -97,6 +97,11 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 PathList::Matcher::ExactString.new('/a/path/~not-a-user635728345', :ignore)
               )
           end
+
+          it 'handles this other edge case i stumbled across' do
+            expect(build('~#/'))
+              .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('/a/path/~#', :ignore))
+          end
         end
 
         describe 'initial ../' do
@@ -495,6 +500,11 @@ RSpec.describe PathList::PatternParser::GlobGitignore do
                 .to be_like PathList::Matcher::MatchIfDir.new(
                   PathList::Matcher::ExactString.new('/a/path/~not-a-user635728345', :ignore)
                 )
+            end
+
+            it 'handles this other edge case i stumbled across' do
+              expect(build('~#/'))
+                .to be_like PathList::Matcher::MatchIfDir.new(PathList::Matcher::ExactString.new('/a/path/~#', :ignore))
             end
           end
 

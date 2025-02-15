@@ -5,7 +5,7 @@
 Find and list files according to various rules, including full support for .gitignore files.
 
 ```ruby
-PathList.gitignore.sort == `git ls-files`.split("\n").sort
+PathList.gitignore == `git ls-files`.split("\n")
 ```
 
 ## Features
@@ -16,7 +16,7 @@ PathList.gitignore.sort == `git ls-files`.split("\n").sort
 - a glob-like format for unsurprising ARGV use
 - shebang matching for extensionless files
 
-Supports ruby 2.7-3.2.x & jruby 9.4
+Supports ruby 2.5-3.4.x & jruby
 
 ## Installation
 
@@ -61,14 +61,12 @@ See the [full PathList documentation](docs/PathList).
 
 - PathList matches patterns according to the case sensitively of the current directory when it was loaded. (git depends on the value of core.ignorecase).
 - PathList always outputs paths as literal UTF-8 characters. (git depends on your core.quotepath setting but by default outputs non ascii paths with octal escapes surrounded by quotes).
-- git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. PathList assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined (why?), set git's built-in way to override this by setting this environment variable `export GIT_CONFIG_SYSTEM='/the/actual/location'` in your shell profile.
+- git has a system-wide config file installed at `$(prefix)/etc/gitconfig`, where `prefix` is defined for git at install time. PathList assumes that it will always be `/usr/local/etc/gitconfig`. if it's important your system config file is looked at, as that's where you have the core.excludesfile defined (why?), use git's built-in way to override this by setting this environment variable `export GIT_CONFIG_SYSTEM='/the/actual/location'`.
 - Because git looks at its own index objects and PathList looks at the filesystem there may be some differences between `PathList.gitignore` and `git ls-files`. To avoid these differences you may want to use the [`git_ls`](https://github.com/robotdana/git_ls) gem instead which parses the .git/index file.
   - Tracked files that were committed before the matching ignore pattern was committed, or were added with `git add --force`, will be returned by `git ls-files`, but not by `PathList.gitignore`.
   - Untracked files will be returned by `PathList.gitignore`, but not by `git ls-files`
-  - Deleted files whose deletions haven't been committed will be returned by `git ls-files`, but not by `PathList.gitignore`
   - On a case insensitive file system, with files in the repo that differ only by case, `git ls-files` will include all case variations, while `PathList.gitignore` will only include whichever variation git placed in the file system.
-  - PathList.gitignore is unaware of submodules and just treats them like regular directories. For example: `git ls-files --recurse-submodules` won't use the parent repo's gitignore on a submodule, while `PathList.gitignore` doesn't know it's a submodule and will.
-  - `PathList.gitignore` will only return the files actually on the file system when using `git sparse-checkout`.
+  - `PathList.gitignore` will only return the files actually on the file system when using `git sparse-checkout`, `git ls-files` will return all of them
 
 ## Contributing
 

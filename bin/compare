@@ -15,25 +15,26 @@ puts(finish - start)
 
 print 'git ls-files:               '
 start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-git_a = `git -c "core.quotepath=off" ls-files --recurse-submodules`.split("\n")
+git_a = (
+  `git -c "core.quotepath=off" ls-files --recurse-submodules --cached --exclude-standard -z`.split("\0") +
+  `git -c "core.quotepath=off" ls-files --others --exclude-standard -z`.split("\0") +
+  `git submodule foreach --recursive 'git -c "core.quotepath=off" ls-files --others --exclude-standard -z'`.split("\0")
+).uniq
 finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 puts(finish - start)
 
 # take into account indexed ignored things
-files_in_the_index_that_would_be_ignored = `git ls-files -ic --exclude-standard`.split("\n")
-files_in_the_index_that_are_deleted = `git diff --no-renames --diff-filter=D --name-only`.split("\n")
-untracked_files = `git ls-files --others --exclude-standard`.split("\n")
+files_in_the_index_that_would_be_ignored =
+  `git ls-files --ignored --cached --exclude-standard --recurse-submodules -z`.split("\0")
 
 ignored_by_path_list_not_by_git = (
   git_a.map(&:downcase) -
   path_list_a.map(&:downcase) -
-  files_in_the_index_that_would_be_ignored.map(&:downcase) -
-  files_in_the_index_that_are_deleted.map(&:downcase)
+  files_in_the_index_that_would_be_ignored.map(&:downcase)
 )
 ignored_by_git_not_by_path_list = (
   path_list_a.map(&:downcase) -
-  git_a.map(&:downcase) -
-  untracked_files.map(&:downcase)
+  git_a.map(&:downcase)
 )
 exit_status = 0
 

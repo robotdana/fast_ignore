@@ -28,14 +28,6 @@ class PathList
       d
     end
 
-    # @param parts [Array<Symbol, String, EscapedString>]
-    # @return [self]
-    def concat(parts)
-      @parts.concat(parts)
-
-      self
-    end
-
     # @return [Integer]
     def length
       @parts.length

@@ -152,8 +152,10 @@ class PathList
     if candidate.directory?
       return unless dir_matcher.match(candidate) == :allow
 
-      candidate.child_candidates.each do |child|
-        recursive_each(child, relative_root, dir_matcher, file_matcher, &block)
+      prepend_path = candidate.full_path.end_with?('/') ? candidate.full_path : "#{candidate.full_path}/"
+
+      candidate.children.each do |filename|
+        recursive_each(Candidate.new("#{prepend_path}#{filename}"), relative_root, dir_matcher, file_matcher, &block)
       end
     else
       return unless file_matcher.match(candidate) == :allow

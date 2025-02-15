@@ -10,20 +10,27 @@ RSpec.describe(PathList::CanonicalPath) do
       allow(described_class).to receive(:case_insensitive?).and_call_original
     end
 
-    let(:mac) { RbConfig::CONFIG['host_os'].include?('darwin') }
+    let(:mac?) { RbConfig::CONFIG['host_os'].include?('darwin') }
 
     it 'matches my system expectations' do
       expect(described_class.case_insensitive?)
-        .to be(windows? || mac)
+        .to be(windows? || mac?)
     end
 
-    it 'matches the fallback that creates a temp file' do
-      test_file = Dir.mktmpdir + '/case_test'
-      File.write(test_file, '')
-      newly_created_file_found_insensitively = File.exist?(test_file.swapcase)
+    it "case_sensitivity isn't known at the root dir", skip: ('Not applicable on windows' if windows?) do
+      expect(described_class.send(:case_sensitivity_at_path, '/')).to be_nil
+    end
 
-      expect(described_class.case_insensitive?)
-        .to be(newly_created_file_found_insensitively)
+    it 'can recurse to find information' do
+      expect(described_class.send(:case_insensitive_dynamic?, FSROOT))
+        .to eq(mac? || windows?)
+    end
+
+    it "but it doesn't have to" do
+      allow(described_class).to receive(:recurse_case_sensitivity)
+      expect(described_class.send(:case_insensitive_dynamic?, Dir.pwd))
+        .to eq(mac? || windows?)
+      expect(described_class).not_to have_received(:recurse_case_sensitivity) unless Dir.pwd == Dir.pwd.swapcase
     end
   end
 
@@ -112,6 +119,21 @@ RSpec.describe(PathList::CanonicalPath) do
         .to eq("#{home}/foo")
     end
 
+    it 'treats fake user home as relative' do
+      expect(described_class.full_path('~nonsense-not-a-user-1437801'))
+        .to eq("#{Dir.pwd}/~nonsense-not-a-user-1437801")
+    end
+
+    it 'treats fake user home with subdir as relative' do
+      expect(described_class.full_path('~nonsense-not-a-user-1437801/foo'))
+        .to eq("#{Dir.pwd}/~nonsense-not-a-user-1437801/foo")
+    end
+
+    it 'expands this weird edge case' do
+      expect(described_class.full_path('~#/'))
+        .to eq("#{Dir.pwd}/~#")
+    end
+
     context 'with ~user', skip: ('Not applicable on windows' if windows?) do
       it 'expands real user home' do
         expect(described_class.full_path("~#{os_user}"))
@@ -122,16 +144,6 @@ RSpec.describe(PathList::CanonicalPath) do
         expect(described_class.full_path("~#{os_user}/foo"))
           .to eq("#{home}/foo")
       end
-    end
-
-    it 'treats fake user home as relative' do
-      expect(described_class.full_path('~nonsense-not-a-user-1437801'))
-        .to eq("#{Dir.pwd}/~nonsense-not-a-user-1437801")
-    end
-
-    it 'treats fake user home with subdir as relative' do
-      expect(described_class.full_path('~nonsense-not-a-user-1437801/foo'))
-        .to eq("#{Dir.pwd}/~nonsense-not-a-user-1437801/foo")
     end
   end
 end

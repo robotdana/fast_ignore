@@ -80,12 +80,12 @@ class PathList
             self.excludesfile = result.excludesfile if result.excludesfile
             if result.submodule_paths
               self.submodule_paths ||= []
-              self.submodule_paths.concat(result.submodule_paths) # i don't actually know if this is relevant
+              self.submodule_paths.concat(result.submodule_paths)
             end
             self.section = :include
-          elsif file.skip(/[a-zA-Z0-9]\w*\s*([#;].*)?\r?\n/)
+          elsif file.skip(/[a-zA-Z0-9-]+\s*([#;].*)?\r?\n/)
             nil
-          elsif file.skip(/[a-zA-Z0-9]\w*\s*=(\s|\\\r?\n)*/)
+          elsif file.skip(/[a-zA-Z0-9-]+\s*=(\s|\\\r?\n)*/)
             skip_value(file)
           else
             raise ParseError.new('Unexpected character', scanner: file, path: path)
@@ -173,7 +173,7 @@ class PathList
             self.within_quotes = true
           elsif file.scan(/[^;#"\s\\]+/)
             value << file.matched
-          elsif file.skip(/\s*[;#\n\r]/)
+          elsif file.skip(/\s*([;#].*$)?([\n\r]+|\z)/)
             break
           elsif file.scan(/\s+/) # rubocop:disable Lint/DuplicateBranch
             value << file.matched
@@ -207,7 +207,7 @@ class PathList
             self.within_quotes = true
           elsif file.skip(/[^;#"\s\\]+/) # rubocop:disable Lint/DuplicateBranch
             nil
-          elsif file.skip(/\s*[;#\n\r]/)
+          elsif file.skip(/\s*([;#].*$)?([\n\r]+|\z)/)
             break
           elsif file.skip(/\s+/) # rubocop:disable Lint/DuplicateBranch
             nil

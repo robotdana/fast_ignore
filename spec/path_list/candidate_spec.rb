@@ -12,9 +12,11 @@ RSpec.describe PathList::Candidate do
   let(:filename) { 'filename' }
   let(:directory) { false }
 
-  describe '#original_inspect' do
-    it 'returns the default inspect' do
-      expect(candidate.original_inspect).to eq default_inspect_value(candidate)
+  if ENV['COVERAGE']
+    describe '#original_inspect' do
+      it 'returns the default inspect' do
+        expect(candidate.original_inspect).to eq default_inspect_value(candidate)
+      end
     end
   end
 

@@ -119,3 +119,45 @@ RSpec::Matchers.define(:be_like) do |expected|
 
   diffable
 end
+
+RSpec::Matchers.define(:pass_or_find_simplified_failing_case) do |string|
+  match do |block|
+    required_for_error = +''
+    rest = string.dup
+    puts rest.inspect
+    @actual = rest
+    begin
+      block.call(rest)
+    rescue StandardError
+      nil
+    else
+      return true
+    end
+
+    until rest.empty?
+      char_under_test = rest.slice!(0)
+      candidate = required_for_error + rest
+
+      begin
+        block.call(candidate)
+      rescue StandardError
+        nil
+      else
+        required_for_error << char_under_test
+      end
+    end
+
+    @actual = required_for_error
+    expect { block.call(required_for_error) }.not_to raise_error
+  end
+
+  failure_message do |actual|
+    "expected #{actual.inspect} to pass (simplified from #{expected.inspect})"
+  end
+
+  diffable
+
+  def supports_block_expectations?
+    true
+  end
+end

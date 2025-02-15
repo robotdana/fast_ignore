@@ -22,3 +22,7 @@ keep:
   - '&'
   - '|'
   - all
+  - any
+
+  # rspec
+  - supports_block_expectations?

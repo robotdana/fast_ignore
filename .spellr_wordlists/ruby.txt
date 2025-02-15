@@ -1,8 +1,11 @@
+defaultbranch
 dotfiles
 endwith
 gitdir
 globbing
 goddamit
+hookspath
 mergeoptions
 onbranch
 rspec
+vscode

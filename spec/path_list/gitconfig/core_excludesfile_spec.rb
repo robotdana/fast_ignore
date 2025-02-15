@@ -191,7 +191,7 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
         expect(subject).to be_nil
         expect(Warning).to have_received(:warn).with(<<~MESSAGE.chomp)
           PathList gitconfig parser failed
-          Invalid value "nonsense" for $GIT_CONFIG_NOSYSTEM
+          Bad boolean environment value "nonsense" for $GIT_CONFIG_NOSYSTEM
         MESSAGE
       end
     end
@@ -259,6 +259,16 @@ RSpec.describe(PathList::Gitconfig::CoreExcludesfile) do
     context 'with GIT_CONFIG_GLOBAL set to /dev/null' do
       before do
         stub_env(GIT_CONFIG_GLOBAL: '/dev/null')
+      end
+
+      it 'returns the default value, ignoring global, respecting xdg for the default ignore dir' do
+        expect(subject).to eq "#{home}/.xconfig/git/ignore"
+      end
+    end
+
+    context 'with GIT_CONFIG_GLOBAL set to empty string' do
+      before do
+        stub_env(GIT_CONFIG_GLOBAL: '')
       end
 
       it 'returns the default value, ignoring global, respecting xdg for the default ignore dir' do

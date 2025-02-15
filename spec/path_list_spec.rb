@@ -186,8 +186,12 @@ RSpec.describe PathList do
       10.times { described_class.gitignore(root: '..') }
 
       expect(PathList::Gitignore).to have_received(:new).exactly(2).times
-      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: true).once
-      expect(PathList::Gitignore).to have_received(:new).with(root: File.dirname(Dir.pwd), config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, git_root: Dir.pwd, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(
+        root: File.dirname(Dir.pwd),
+        git_root: File.dirname(Dir.pwd),
+        config: true
+      ).once
     end
 
     it 'caches fs calls with different config arg separately when setting up the matcher' do
@@ -198,8 +202,8 @@ RSpec.describe PathList do
       10.times { described_class.gitignore(config: false) }
 
       expect(PathList::Gitignore).to have_received(:new).exactly(2).times
-      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: true).once
-      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, config: false).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, git_root: Dir.pwd, config: true).once
+      expect(PathList::Gitignore).to have_received(:new).with(root: Dir.pwd, git_root: Dir.pwd, config: false).once
     end
 
     it 'returns all files when there is no gitignore' do

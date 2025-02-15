@@ -8,11 +8,6 @@ class PathList
     Invalid = Matcher.new
 
     # @api private
-    def Invalid.match(_)
-      nil
-    end
-
-    # @api private
     def Invalid.inspect
       'PathList::Matcher::Invalid'
     end

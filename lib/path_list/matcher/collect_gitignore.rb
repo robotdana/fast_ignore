@@ -85,6 +85,11 @@ class PathList
         new_parent.freeze
       end
 
+      # @return (see Matcher#polarity)
+      def polarity
+        :mixed
+      end
+
       # @return (see Matcher#file_matcher)
       attr_reader :file_matcher
 

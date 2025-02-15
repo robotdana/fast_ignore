@@ -160,5 +160,6 @@ xdg
 xit
 yardoc
 yieldparam
+zaz
 zeitwerk
 zsh

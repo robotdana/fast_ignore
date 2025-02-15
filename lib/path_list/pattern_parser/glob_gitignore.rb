@@ -71,7 +71,7 @@ class PathList
         @root = ::File.expand_path(home)
         emitted!
         true
-      rescue ArgumentError
+      rescue ::StandardError
         @s.unscan
         nil
       end

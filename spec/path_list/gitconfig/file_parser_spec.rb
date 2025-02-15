@@ -88,6 +88,25 @@ RSpec.describe PathList::Gitconfig::FileParser do
       .to eq(['subdir/foo', 'subdir/bar', 'vendor/baz'])
   end
 
+  it 'returns value for file with submodule.<name>.path via included file (why would you do this?)' do
+    create_file(<<~GITCONFIG, path: config_path)
+      [include]
+        path = .gitconfig_include
+    GITCONFIG
+
+    create_file(<<~GITCONFIG, path: '.gitconfig_include')
+      [submodule "foo_name"]
+        path = subdir/foo
+      [submodule "bar_project"]
+        path = "subdir"/bar
+      [submodule "baz"]
+        path = "vendor/baz"
+    GITCONFIG
+
+    expect(parsed_file.submodule_paths)
+      .to eq(['subdir/foo', 'subdir/bar', 'vendor/baz'])
+  end
+
   it 'returns value for file with excludesfile after other stuff' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
@@ -374,6 +393,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns value for file with excludesfile with a ; comment' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
+        attributesfile = ~/gitattributes ; comment
         excludesfile = ~/gitignore ; comment
     GITCONFIG
 
@@ -383,6 +403,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns value for file with excludesfile with a ; comment with no space' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
+        attributesfile = ~/gitattributes;comment
         excludesfile = ~/gitignore;comment
     GITCONFIG
 
@@ -392,6 +413,31 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns value for file with excludesfile with a # comment' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
+        attributesfile = ~/gitattributes # Comment
+        excludesfile = ~/gitignore # comment
+      [advice]
+        statusHints = false # a b
+    GITCONFIG
+
+    expect(parsed_file.excludesfile).to eq('~/gitignore')
+  end
+
+  it 'returns value for file with excludesfile with a # comment with no trailing newline' do
+    create_file(<<~GITCONFIG.chomp, path: config_path)
+      [core]
+        attributesfile = ~/gitattributes # Comment
+        excludesfile = ~/gitignore # comment
+      [advice]
+        statusHints = false # a b
+    GITCONFIG
+
+    expect(parsed_file.excludesfile).to eq('~/gitignore')
+  end
+
+  it 'returns value for file with excludesfile with a # comment with no trailing newline on a scanned value' do
+    create_file(<<~GITCONFIG.chomp, path: config_path)
+      [core]
+        attributesfile = ~/gitattributes # Comment
         excludesfile = ~/gitignore # comment
     GITCONFIG
 
@@ -401,6 +447,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns value for file with excludesfile with a # in quotes' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
+        attributesfile = ~/git#attributes
         excludesfile = "~/git#ignore"
     GITCONFIG
 
@@ -410,6 +457,7 @@ RSpec.describe PathList::Gitconfig::FileParser do
   it 'returns value for file with excludesfile with a ; in quotes' do
     create_file(<<~GITCONFIG, path: config_path)
       [core]
+        attributesfile = ~/git;attributes
         excludesfile = "~/git;ignore"
     GITCONFIG
 
@@ -436,6 +484,17 @@ RSpec.describe PathList::Gitconfig::FileParser do
       [core]
         excludesfile = ~/git\\
       ignore
+    GITCONFIG
+
+    expect(parsed_file.excludesfile).to eq('~/gitignore')
+  end
+
+  it 'skips variables with newlines' do
+    create_file(<<~GITCONFIG, path: config_path)
+      [branch "dev"]
+      	vscode-merge-base = origin/main
+      [core]
+        excludesfile = ~/gitignore
     GITCONFIG
 
     expect(parsed_file.excludesfile).to eq('~/gitignore')
@@ -762,6 +821,26 @@ RSpec.describe PathList::Gitconfig::FileParser do
         [includeif "onbranch:ma\0in"]
                              ^
       MESSAGE
+    end
+  end
+
+  context 'when no git_dir arg' do
+    let(:git_dir) { nil }
+
+    it 'skips checking gitdir' do
+      create_file(<<~GITCONFIG, path: config_path)
+        [includeif "gitdir:**/.git"]
+          path = .gitconfig_include
+        [core]
+          excludesfile = ~/.gitignore2
+      GITCONFIG
+
+      create_file(<<~GITCONFIG, path: '.gitconfig_include')
+        [core]
+          excludesfile = ~/.gitignore
+      GITCONFIG
+
+      expect(parsed_file.excludesfile).to eq('~/.gitignore2')
     end
   end
 

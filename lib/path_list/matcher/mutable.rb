@@ -41,6 +41,11 @@ class PathList
       # @return [PathList:Matcher]
       attr_reader :matcher
 
+      # @return (see Matcher#polarity)
+      def polarity
+        :mixed
+      end
+
       private
 
       def new_with_matcher(matcher)

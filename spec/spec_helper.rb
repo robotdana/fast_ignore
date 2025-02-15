@@ -53,7 +53,7 @@ RSpec.configure do |config|
   end
 
   config.after do
-    PathList::Cache.clear if @clear_pattern_cache_after == true
+    PathList::Cache.clear if defined?(@clear_pattern_cache_after) && @clear_pattern_cache_after == true
   end
 
   config.example_status_persistence_file_path = '.rspec_status'

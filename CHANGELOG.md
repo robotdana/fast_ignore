@@ -2,7 +2,7 @@
 ### Changed
 - Major api change to make this 1.0.0
   - New name! FastIgnore is now PathList
-  - You can now chain rulesets rather than building them from a set of kwargs
+  - You now chain rulesets rather than building them from a set of kwargs
     - FastIgnore.new(gitignore: true) is now PathList.gitignore
     - FastIgnore.new(include_rules: "rule") is now PathList.only("rule")
     - FastIgnore.new(argv_rules: "rule") is now PathList.only("rule", format: :glob_gitignore)
@@ -12,26 +12,23 @@
     - FastIgnore.new(ignore_rules: "rule", include_rules: "rule", gitignore: true) is now PathList.ignore("rule").only("rule").gitignore
   - Shebang rules are now not mixed in with other rules
     - FastIgnore.new(include_rules: "#!: ruby") is now PathList.only("ruby", format: :shebang)
-  - PathLists can be joined with AND or OR
-    - PathList.and(PathList.only("rule"), PathList.only("other rule"))
-    - PathList.any(PathList.only("rule"), PathList.only("other rule"))
   - root for walking the file system can be set at each call time, rather than initialize time
     - FastIgnore.new(root: "./subdir").each is now PathList.each("./subdir")
     - root for each set of patterns is still handled at PathList.only or PathList.ignore time and can be set independently
   - Dir.chdir can now happen within PathList.each block
-  - FastIgnore.allowed? is now PathList.include? and PathList.match? to be closer to ruby expectations
+  - FastIgnore.allowed? is split into PathList.include? and PathList.match? to be closer to ruby expectations
     - include? is for when you just want the 'would this be in the .to_a output'. it excludes directories, and non-existent files
     - match? is for when you want to test a hypothetical file or directory against the patterns, it can be given directory: or content: to override those values.
   - Almost the entire codebase has been refactored to allow for these changes
-  - A lot of minor fixes i've forgotten
+### Added
+  - PathLists can be joined with .intersection or .union
+    - PathList.intersection(PathList.only("rule"), PathList.only("other rule"))
+    - PathList.union(PathList.only("rule"), PathList.only("other rule"))
 
-## v0.18.0 - Never released
-
-### Changed
-- Refactoring that should have no effect on behaviour
 ### Removed
 - Drop support for ruby 2.5 as its been eol for a while
 - Remove deprecated `follow_symlinks:` code.
+
 ### Fixed
 - Fix the order of reading .gitignore files in sub directories that override rules in outer directories
   now it matches git behaviour of appending the files from the outside in

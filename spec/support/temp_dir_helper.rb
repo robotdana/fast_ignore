@@ -12,14 +12,14 @@ module TempDirHelper
   end
 
   module WithinTempDir
-    def create_file(*lines, path:)
+    def create_file(*lines, path:, force: false)
       path = Pathname.pwd.join(path)
       path.parent.mkpath
 
       if lines.empty?
         path.write('') unless path.exist?
       else
-        if path.exist?
+        if !force && path.exist?
           raise Errno::EEXIST unless path.read.chomp == lines.join("\n").chomp
         else
           path.write(lines.join("\n"))
@@ -48,8 +48,8 @@ module TempDirHelper
       end
     end
 
-    def gitignore(*lines, path: '.gitignore')
-      create_file(*lines, path: path)
+    def gitignore(*lines, path: '.gitignore', force: false)
+      create_file(*lines, path: path, force: force)
     end
 
     def within_temp_dir

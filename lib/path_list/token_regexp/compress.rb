@@ -104,7 +104,7 @@ class PathList
 
         def index(parts, from_index, part)
           if from_index
-            parts[from_index..].index(part)&.+ from_index
+            parts[from_index..-1].index(part)&.+ from_index
           else
             parts.index(part)
           end

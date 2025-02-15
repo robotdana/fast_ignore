@@ -8,3 +8,4 @@ TODO.md
 flamegraph.svg
 flamegraph.txt
 .yardoc
+Gemfile.lock

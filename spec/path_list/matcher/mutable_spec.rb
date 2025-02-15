@@ -60,13 +60,13 @@ RSpec.describe PathList::Matcher::Mutable do
     context 'when polarity of matcher is ignore' do
       let(:polarity) { :ignore }
 
-      it { is_expected.to have_attributes(polarity: :ignore) }
+      it { is_expected.to have_attributes(polarity: :mixed) }
     end
 
     context 'when polarity of matcher is allow' do
       let(:polarity) { :allow }
 
-      it { is_expected.to have_attributes(polarity: :allow) }
+      it { is_expected.to have_attributes(polarity: :mixed) }
     end
 
     context 'when polarity of matcher is mixed' do

@@ -16,7 +16,6 @@ class PathList
 
       @shebang = shebang
 
-      @child_candidates = nil
       @children = nil
       @ftype = nil
     end
@@ -33,16 +32,6 @@ class PathList
       return if @full_path.end_with?('/') # '/' on unix X:/ on win
 
       self.class.new(::File.dirname(@full_path), true)
-    end
-
-    # @return [Array<Candidate>]
-    #   the children of this as Candidates
-    def child_candidates
-      @child_candidates ||= begin
-        prepend_path = @full_path.end_with?('/') ? @full_path : "#{@full_path}/"
-
-        children.map { |filename| self.class.new("#{prepend_path}#{filename}") }
-      end
     end
 
     # @return [Array<String>]

@@ -30,19 +30,19 @@ class PathList
 
         def gitconfig_core_excludesfile_path(config_path, git_dir)
           return unless config_path
+          return if config_path.empty?
+          return if config_path == ::File::NULL
           return unless ::File.readable?(config_path)
 
           ignore_path = FileParser.parse(config_path, git_dir: git_dir).excludesfile
           return unless ignore_path
 
           ignore_path.strip!
-          return '' if ignore_path.empty? # don't expand path in this case
-
-          CanonicalPath.full_path(ignore_path)
+          CanonicalPath.full_path_ignore_empty(ignore_path)
         end
 
         def default_user_config_path
-          return if env('GIT_CONFIG_GLOBAL')
+          return if ENV['GIT_CONFIG_GLOBAL']
 
           CanonicalPath.full_path_from('git/config', default_config_home)
         end
@@ -56,38 +56,31 @@ class PathList
         end
 
         def global_config_path
-          CanonicalPath.full_path(env('GIT_CONFIG_GLOBAL', '~/.gitconfig'))
+          CanonicalPath.full_path_ignore_empty(::ENV['GIT_CONFIG_GLOBAL'] || '~/.gitconfig')
         end
 
         def system_config_path
           return if env?('GIT_CONFIG_NOSYSTEM')
 
-          CanonicalPath.full_path(env('GIT_CONFIG_SYSTEM', '/usr/local/etc/gitconfig'))
+          CanonicalPath.full_path_ignore_empty(::ENV['GIT_CONFIG_SYSTEM'] || '/usr/local/etc/gitconfig')
         end
 
         def default_config_home
-          env('XDG_CONFIG_HOME', '~/.config')
-        end
+          value = ::ENV['XDG_CONFIG_HOME']
+          return '~/.config' if !value || value.empty?
 
-        def env(env_var, default = nil)
-          value = ::ENV[env_var]
-
-          if value && (not value.empty?)
-            value
-          else
-            default
-          end
+          value
         end
 
         def env?(env_var)
           value = ::ENV[env_var]
 
-          if value&.match?(/\A(yes|on|true|1)\z/i)
+          if value&.match?(/\A(yes|on|true|\d+)\z/i)
             true
-          elsif !value || value.match?(/\A(no|off|false|0|)\z/i)
+          elsif !value || value.match?(/\A(no|off|false|0|-\d+)\z/i)
             false
           else
-            raise ParseError, "Invalid value #{value.inspect} for $#{env_var}"
+            raise ParseError, "Bad boolean environment value #{value.inspect} for $#{env_var}"
           end
         end
       end
